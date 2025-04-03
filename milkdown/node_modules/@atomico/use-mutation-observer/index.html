@@ -1,0 +1,23 @@
+<my-component id="wc">
+	.
+	<button
+		onclick="
+            wc.firstChild.textContent+='.';
+        "
+	>
+		Increment
+	</button>
+	<button
+		onclick="
+            const span = document.createElement('button');
+            span.textContent = 'Click!';
+            span.setAttribute('onclick',`
+                event.currentTarget.textContent+='.';
+            `)
+            event.currentTarget.parentElement.append(span);
+        "
+	>
+		Append
+	</button>
+</my-component>
+<script type="module" src="./example/index.tsx"></script>

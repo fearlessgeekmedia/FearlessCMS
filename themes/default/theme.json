@@ -1,0 +1,12 @@
+{
+  "name": "Default",
+  "version": "1.0.0",
+  "author": "Fearless Geek Media",
+  "description": "The default theme for FearlessCMS",
+  "license": "MIT",
+  "templates": {
+    "page": "templates/page.html",
+    "post": "templates/post.html",
+    "404": "templates/404.html"
+  }
+}

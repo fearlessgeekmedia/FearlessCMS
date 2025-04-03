@@ -1,0 +1,10 @@
+<form
+	onsubmit="
+	console.log(Object.fromEntries(new FormData(event.currentTarget)))
+	event.preventDefault();
+"
+>
+	<my-component name="checkbox" checked></my-component>
+	<button>Submit</button>
+</form>
+<script type="module" src="./example/index.tsx"></script>
