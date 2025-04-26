@@ -262,6 +262,7 @@ if (!isLoggedIn()) {
                 $template = preg_replace('/\{\{if_content_editor\}\}(.*?)\{\{\/if_content_editor\}\}/s', '$1', $template);
                 $template = preg_replace('/\{\{if_not_content_editor\}\}.*?\{\{\/if_not_content_editor\}\}/s', '', $template);
                 $template = str_replace('{{file_name}}', htmlspecialchars($fileName), $template);
+                // THIS IS THE IMPORTANT LINE:
                 $template = str_replace('{{file_content}}', json_encode($fileContent), $template);
             }
         }
@@ -337,7 +338,7 @@ if (!isLoggedIn()) {
                 <div class="border rounded-lg p-4 '.$activeClass.'">
                     <h3 class="text-lg font-medium mb-2">'.$theme['name'].'</h3>
                     <p class="text-sm text-gray-600 mb-4">'.$theme['description'].'</p>
-<div class="text-sm text-gray-500 mb-4">
+                    <div class="text-sm text-gray-500 mb-4">
                         <p>Version: '.$theme['version'].'</p>
                         <p>Author: '.$theme['author'].'</p>
                     </div>
@@ -347,24 +348,20 @@ if (!isLoggedIn()) {
         }
         
         // Replace the themes content in the template
-        // First approach: using regex to find and replace the section
         $pattern = '/\{\{#themes\}\}.*?\{\{\/themes\}\}/s';
         if (preg_match($pattern, $template)) {
             $template = preg_replace($pattern, $themeList, $template);
         } else {
-            // Alternative approach: Split and join around markers
             $templateParts = explode('{{#themes}}', $template);
             if (count($templateParts) > 1) {
                 $endParts = explode('{{/themes}}', $templateParts[1], 2);
                 if (count($endParts) > 1) {
                     $template = $templateParts[0] . $themeList . $endParts[1];
                 } else {
-                    // If we can't find the closing tag, just replace the grid div with our themes
                     $template = preg_replace('/<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">.*?<\/div>/s', 
                         '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">' . $themeList . '</div>', $template);
                 }
             } else {
-                // Direct replacement of the grid container
                 $template = preg_replace('/<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">.*?<\/div>/s', 
                     '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">' . $themeList . '</div>', $template);
             }

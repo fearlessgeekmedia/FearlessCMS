@@ -6,23 +6,18 @@
     <title>Mission Control - Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
-    <!-- Milkdown Editor Dependencies (Local Files) -->
-    <link rel="stylesheet" href="https://unpkg.com/@milkdown/theme-nord@7.3.5/style.css">
+    <!-- EasyMDE CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
     <style>
         .fira-code {
             font-family: 'Fira Code', monospace;
         }
-        /* Milkdown Editor Styles */
-        .milkdown-container {
+        .easymde-container {
             border: 1px solid #e2e8f0;
             border-radius: 0.375rem;
             min-height: 400px;
+            background: #fff;
         }
-        .milkdown-container .editor {
-            padding: 1rem;
-            min-height: 400px;
-        }
-        /* Loading indicator */
         .editor-loading {
             display: flex;
             justify-content: center;
@@ -65,7 +60,6 @@
     <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div class="bg-white shadow rounded-lg p-6">
             <h2 class="text-2xl font-bold mb-6 fira-code">User Management</h2>
-            
             <div class="mb-8">
                 <h3 class="text-lg font-medium mb-4">Add New User</h3>
                 <form method="POST" class="space-y-4">
@@ -86,7 +80,6 @@
                     </button>
                 </form>
             </div>
-
             <h3 class="text-lg font-medium mb-4">Existing Users</h3>
             <table class="w-full">
                 <thead>
@@ -146,18 +139,13 @@
                     Back to Files
                 </a>
             </div>
-            
             <form method="POST" id="editor-form">
                 <input type="hidden" name="action" value="save_file">
                 <input type="hidden" name="file_name" value="{{file_name}}">
                 <input type="hidden" name="content" id="editor-content">
-                
                 <div class="mb-6">
-                    <div id="editor" class="milkdown-container">
-                        <div class="editor-loading">Loading editor...</div>
-                    </div>
+                    <textarea id="editor-textarea"></textarea>
                 </div>
-                
                 <div class="flex justify-end">
                     <button type="submit" class="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600">
                         Save Changes
@@ -211,13 +199,13 @@
     {{/if_not_content_editor}}
     {{/if_not_user_management}}
 
+    <!-- EasyMDE JS (must come before your integration code) -->
+    <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
     <script>
         function editUser(username) {
             const newUsername = prompt('Enter new username (leave empty to keep current):', username);
             const newPassword = prompt('Enter new password (leave empty to keep current):');
-            
             if (newUsername === null || newPassword === null) return;
-            
             const form = document.createElement('form');
             form.method = 'POST';
             form.innerHTML = `
@@ -229,10 +217,8 @@
             document.body.appendChild(form);
             form.submit();
         }
-
         function deleteUser(username) {
             if (!confirm(`Are you sure you want to delete user "${username}"?`)) return;
-            
             const form = document.createElement('form');
             form.method = 'POST';
             form.innerHTML = `
@@ -243,50 +229,33 @@
             form.submit();
         }
 
-    </script>
-    <script type="module">
-        import { Editor, defaultValueCtx, rootCtx } from "https://cdn.jsdelivr.net/npm/@milkdown/core@7.3.5/+esm";
-        import { nord } from "https://cdn.jsdelivr.net/npm/@milkdown/theme-nord@7.3.5/+esm";
-        import { commonmark } from "https://cdn.jsdelivr.net/npm/@milkdown/preset-commonmark@7.3.5/+esm";
-        // import slash from "https://cdn.jsdelivr.net/npm/@milkdown/plugin-slash@7.3.5/+esm";
-        // import listener from "https://cdn.jsdelivr.net/npm/@milkdown/plugin-listener@7.3.5/+esm";
-        
-        const editorEl = document.getElementById('editor');
-        if (editorEl) {
-            const loadingEl = editorEl.querySelector('.editor-loading');
-            if (loadingEl) loadingEl.remove();
-        
-            const editorContainer = document.createElement('div');
-            editorContainer.className = 'editor';
-            editorEl.appendChild(editorContainer);
-        
+        // EasyMDE Editor Integration
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get initial content from PHP (already injected as a JS string)
             const initialContent = {{file_content}};
-        
-            const editor = await Editor
-                .make()
-                .config((ctx) => {
-                    ctx.set(rootCtx, editorContainer);
-                    ctx.set(defaultValueCtx, initialContent);
-                    nord(ctx);
-                })
-                .use(commonmark)
-                // .use(slash)
-                // .use(listener)
-                .create();
-        
+            const textarea = document.getElementById('editor-textarea');
+            if (textarea) textarea.value = initialContent;
+
+            // Initialize EasyMDE
+            if (textarea) {
+                window.easyMDE = new EasyMDE({
+                    element: textarea,
+                    spellChecker: false,
+                    minHeight: "400px"
+                });
+            }
+
+            // On form submit, get Markdown from EasyMDE and put in hidden input
             const form = document.getElementById('editor-form');
             const contentInput = document.getElementById('editor-content');
             if (form && contentInput) {
                 form.addEventListener('submit', function(e) {
-                    editor.action((ctx) => {
-                        const getMarkdown = ctx.get('markdownSerializer');
-                        const state = ctx.get('editorState');
-                        contentInput.value = getMarkdown(state.doc);
-                    });
+                    if (window.easyMDE && typeof window.easyMDE.value === 'function') {
+                        contentInput.value = window.easyMDE.value();
+                    }
                 });
             }
-        }
-
-    </script>            
+        });
+    </script>
 </body>
 </html>
