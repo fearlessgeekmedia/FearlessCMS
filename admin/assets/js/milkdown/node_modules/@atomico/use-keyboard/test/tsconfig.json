@@ -1,0 +1,10 @@
+{
+	"extends": "@atomico/tsconfig/base.json",
+	"include": ["**/*"],
+	"compilerOptions": {
+		"outDir": "dist",
+		"emitDeclarationOnly": false,
+		"moduleResolution": "Node",
+		"module": "ESNext"
+	}
+}

@@ -10,6 +10,7 @@ session_start();
 // Configuration
 define('ADMIN_CONFIG_DIR', __DIR__ . '/config');
 define('ADMIN_TEMPLATE_DIR', __DIR__ . '/templates');
+define('CONTENT_DIR', __DIR__ . '/../content');
 
 // Create config directory if it doesn't exist
 if (!file_exists(ADMIN_CONFIG_DIR)) {
@@ -185,6 +186,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
+// Handle file saving
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_file') {
+    if (!isLoggedIn()) {
+        $error = 'You must be logged in to edit files';
+    } else {
+        $fileName = $_POST['file_name'] ?? '';
+        $content = $_POST['content'] ?? '';
+        
+        // Validate filename
+        if (empty($fileName) || !preg_match('/^[a-zA-Z0-9_-]+\.md$/', $fileName)) {
+            $error = 'Invalid filename';
+        } else {
+            $filePath = CONTENT_DIR . '/' . $fileName;
+            
+            // Ensure we're only editing files within the content directory
+            $realFilePath = realpath($filePath);
+            $realContentDir = realpath(CONTENT_DIR);
+            
+            if ($realFilePath === false || strpos($realFilePath, $realContentDir) !== 0) {
+                $error = 'Invalid file path';
+            } else {
+                // Save the file
+                if (file_put_contents($filePath, $content) !== false) {
+                    $success = 'File saved successfully';
+                } else {
+                    $error = 'Failed to save file';
+                }
+            }
+        }
+    }
+}
+
 output_template:
 
 // Prevent main site routing from affecting admin
@@ -202,13 +235,49 @@ if (!isLoggedIn()) {
     
     // Check if we're in theme management mode
     $isThemeManagement = isset($_GET['action']) && $_GET['action'] === 'manage_themes';
+    
+    // Check if we're in content editor mode
+    $isContentEditor = isset($_GET['edit']) && !empty($_GET['edit']);
+    
+    // Handle content editing
+    if ($isContentEditor) {
+        $fileName = $_GET['edit'];
+        
+        // Validate and sanitize filename
+        if (!preg_match('/^[a-zA-Z0-9_-]+\.md$/', $fileName)) {
+            $error = 'Invalid filename';
+            $isContentEditor = false;
+        } else {
+            $filePath = CONTENT_DIR . '/' . $fileName;
+            
+            // Check if file exists
+            if (!file_exists($filePath)) {
+                $error = 'File not found';
+                $isContentEditor = false;
+            } else {
+                // Read file content
+                $fileContent = file_get_contents($filePath);
+                
+                // Show content editor
+                $template = preg_replace('/\{\{if_content_editor\}\}(.*?)\{\{\/if_content_editor\}\}/s', '$1', $template);
+                $template = preg_replace('/\{\{if_not_content_editor\}\}.*?\{\{\/if_not_content_editor\}\}/s', '', $template);
+                $template = str_replace('{{file_name}}', htmlspecialchars($fileName), $template);
+                $template = str_replace('{{file_content}}', json_encode($fileContent), $template);
+            }
+        }
+    } else {
+        // Hide content editor
+        $template = preg_replace('/\{\{if_content_editor\}\}.*?\{\{\/if_content_editor\}\}/s', '', $template);
+        $template = preg_replace('/\{\{if_not_content_editor\}\}(.*?)\{\{\/if_not_content_editor\}\}/s', '$1', $template);
+    }
 
-    // Process conditional sections
+    // Process conditional sections for user management
     if ($isUserManagement) {
-        // Show user management section, hide content management
-        $template = preg_replace('/{{if_user_management}}(.*?){{\/if_user_management}}/s', '$1', $template);
-        $template = preg_replace('/{{if_not_user_management}}.*?{{\/if_not_user_management}}/s', '', $template);
-
+        // Show user management section, hide other sections
+        $template = preg_replace('/\{\{if_user_management\}\}(.*?)\{\{\/if_user_management\}\}/s', '$1', $template);
+        $template = preg_replace('/\{\{if_not_user_management\}\}.*?\{\{\/if_not_user_management\}\}/s', '', $template);
+        $template = preg_replace('/\{\{if_theme_management\}\}.*?\{\{\/if_theme_management\}\}/s', '', $template);
+        
         // Get list of users for display
         $users = json_decode(file_get_contents($usersFile), true);
         $userList = '';
@@ -226,12 +295,12 @@ if (!isLoggedIn()) {
         }
         $template = str_replace('{{user_list}}', $userList, $template);
     } else if ($isThemeManagement) {
-        // Show theme management section
-        $template = preg_replace('/{{if_theme_management}}(.*?){{\/if_theme_management}}/s', '$1', $template);
-        $template = preg_replace('/{{if_not_user_management}}.*?{{\/if_not_user_management}}/s', '', $template);
+        // Show theme management section, hide other sections
+        $template = preg_replace('/\{\{if_theme_management\}\}(.*?)\{\{\/if_theme_management\}\}/s', '$1', $template);
+        $template = preg_replace('/\{\{if_user_management\}\}.*?\{\{\/if_user_management\}\}/s', '', $template);
+        $template = preg_replace('/\{\{if_not_user_management\}\}.*?\{\{\/if_not_user_management\}\}/s', '', $template);
         
-        // Sample theme data (replace with your actual data)
-        $themesHTML = '';
+        // Build themes HTML
         $themes = [
             [
                 'id' => 'default',
@@ -251,22 +320,24 @@ if (!isLoggedIn()) {
             ]
         ];
         
-        // Build HTML for themes directly
+        // Build theme list
+        $themeList = '';
         foreach ($themes as $theme) {
             $activeClass = $theme['active'] ? 'ring-2 ring-green-500' : '';
-            $activeLabel = $theme['active'] ? '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">Active Theme</span>' : '';
-            $activateButton = !$theme['active'] ? '
-                <form method="POST" action="">
+            $activeLabel = $theme['active'] ? 
+                '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">Active Theme</span>' : '';
+            $activateButton = !$theme['active'] ? 
+                '<form method="POST" action="">
                     <input type="hidden" name="action" value="activate_theme" />
                     <input type="hidden" name="theme" value="'.$theme['id'].'" />
                     <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Activate Theme</button>
                 </form>' : '';
             
-            $themesHTML .= '
+            $themeList .= '
                 <div class="border rounded-lg p-4 '.$activeClass.'">
                     <h3 class="text-lg font-medium mb-2">'.$theme['name'].'</h3>
                     <p class="text-sm text-gray-600 mb-4">'.$theme['description'].'</p>
-                    <div class="text-sm text-gray-500 mb-4">
+<div class="text-sm text-gray-500 mb-4">
                         <p>Version: '.$theme['version'].'</p>
                         <p>Author: '.$theme['author'].'</p>
                     </div>
@@ -275,27 +346,47 @@ if (!isLoggedIn()) {
                 </div>';
         }
         
-        // Create the theme grid container
-        $themesContainer = '
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            '.$themesHTML.'
-        </div>';
-        
-        // Replace the theme tags with our HTML
-        $template = str_replace('{{#themes}}.*?{{/themes}}', $themesContainer, $template);
-    } else {
-        // Show content management section, hide user management
-        $template = preg_replace('/{{if_user_management}}.*?{{\/if_user_management}}/s', '', $template);
-        $template = preg_replace('/{{if_theme_management}}.*?{{\/if_theme_management}}/s', '', $template);
-        $template = preg_replace('/{{if_not_user_management}}(.*?){{\/if_not_user_management}}/s', '$1', $template);
+        // Replace the themes content in the template
+        // First approach: using regex to find and replace the section
+        $pattern = '/\{\{#themes\}\}.*?\{\{\/themes\}\}/s';
+        if (preg_match($pattern, $template)) {
+            $template = preg_replace($pattern, $themeList, $template);
+        } else {
+            // Alternative approach: Split and join around markers
+            $templateParts = explode('{{#themes}}', $template);
+            if (count($templateParts) > 1) {
+                $endParts = explode('{{/themes}}', $templateParts[1], 2);
+                if (count($endParts) > 1) {
+                    $template = $templateParts[0] . $themeList . $endParts[1];
+                } else {
+                    // If we can't find the closing tag, just replace the grid div with our themes
+                    $template = preg_replace('/<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">.*?<\/div>/s', 
+                        '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">' . $themeList . '</div>', $template);
+                }
+            } else {
+                // Direct replacement of the grid container
+                $template = preg_replace('/<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">.*?<\/div>/s', 
+                    '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">' . $themeList . '</div>', $template);
+            }
+        }
+    } else if (!$isContentEditor) {
+        // Show content management section, hide other sections
+        $template = preg_replace('/\{\{if_not_user_management\}\}(.*?)\{\{\/if_not_user_management\}\}/s', '$1', $template);
+        $template = preg_replace('/\{\{if_user_management\}\}.*?\{\{\/if_user_management\}\}/s', '', $template);
+        $template = preg_replace('/\{\{if_theme_management\}\}.*?\{\{\/if_theme_management\}\}/s', '', $template);
 
         // Get list of content files
-        $contentFiles = glob('../content/*.md');
+        $contentFiles = glob(CONTENT_DIR . '/*.md');
         $contentList = '';
         foreach ($contentFiles as $file) {
             $filename = basename($file);
             $contentList .= "<li class='py-2 px-4 hover:bg-gray-100'>
-                <a href='?edit=" . urlencode($filename) . "'>$filename</a>
+                <div class='flex justify-between items-center'>
+                    <span>" . htmlspecialchars($filename) . "</span>
+                    <a href='?edit=" . urlencode($filename) . "' class='bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600'>
+                        Edit
+                    </a>
+                </div>
             </li>";
         }
 
@@ -308,7 +399,7 @@ if (!isLoggedIn()) {
         $template = str_replace('{{/error}}', '', $template);
         $template = str_replace('{{error}}', "<div class='max-w-7xl mx-auto mt-4 p-4 bg-red-100 text-red-700 rounded'>{$error}</div>", $template);
     } else {
-        $template = preg_replace('/{{#error}}.*?{{\/error}}/s', '', $template);
+        $template = preg_replace('/\{\{#error\}\}.*?\{\{\/error\}\}/s', '', $template);
         $template = str_replace('{{error}}', '', $template);
     }
 
@@ -317,7 +408,7 @@ if (!isLoggedIn()) {
         $template = str_replace('{{/success}}', '', $template);
         $template = str_replace('{{success}}', "<div class='max-w-7xl mx-auto mt-4 p-4 bg-green-100 text-green-700 rounded'>{$success}</div>", $template);
     } else {
-        $template = preg_replace('/{{#success}}.*?{{\/success}}/s', '', $template);
+        $template = preg_replace('/\{\{#success\}\}.*?\{\{\/success\}\}/s', '', $template);
         $template = str_replace('{{success}}', '', $template);
     }
 
@@ -326,3 +417,4 @@ if (!isLoggedIn()) {
 }
 
 echo $template;
+?>

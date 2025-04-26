@@ -6,9 +6,29 @@
     <title>Mission Control - Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
+    <!-- Milkdown Editor Dependencies (Local Files) -->
+    <link rel="stylesheet" href="https://unpkg.com/@milkdown/theme-nord@7.3.5/style.css">
     <style>
         .fira-code {
             font-family: 'Fira Code', monospace;
+        }
+        /* Milkdown Editor Styles */
+        .milkdown-container {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.375rem;
+            min-height: 400px;
+        }
+        .milkdown-container .editor {
+            padding: 1rem;
+            min-height: 400px;
+        }
+        /* Loading indicator */
+        .editor-loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 400px;
+            background-color: #f9fafb;
         }
     </style>
 </head>
@@ -117,7 +137,39 @@
     </div>
     {{/if_theme_management}}
 
+    {{if_content_editor}}
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="bg-white shadow rounded-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold fira-code">Editing: {{file_name}}</h2>
+                <a href="?action=content" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                    Back to Files
+                </a>
+            </div>
+            
+            <form method="POST" id="editor-form">
+                <input type="hidden" name="action" value="save_file">
+                <input type="hidden" name="file_name" value="{{file_name}}">
+                <input type="hidden" name="content" id="editor-content">
+                
+                <div class="mb-6">
+                    <div id="editor" class="milkdown-container">
+                        <div class="editor-loading">Loading editor...</div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end">
+                    <button type="submit" class="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    {{/if_content_editor}}
+
     {{if_not_user_management}}
+    {{if_not_content_editor}}
     <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div class="bg-white shadow rounded-lg p-6">
             <h2 class="text-2xl font-bold mb-6 fira-code">Content Management</h2>
@@ -156,6 +208,7 @@
             </div>
         </div>
     </div>
+    {{/if_not_content_editor}}
     {{/if_not_user_management}}
 
     <script>
@@ -189,6 +242,51 @@
             document.body.appendChild(form);
             form.submit();
         }
+
     </script>
+    <script type="module">
+        import { Editor, defaultValueCtx, rootCtx } from "https://cdn.jsdelivr.net/npm/@milkdown/core@7.3.5/+esm";
+        import { nord } from "https://cdn.jsdelivr.net/npm/@milkdown/theme-nord@7.3.5/+esm";
+        import { commonmark } from "https://cdn.jsdelivr.net/npm/@milkdown/preset-commonmark@7.3.5/+esm";
+        // import slash from "https://cdn.jsdelivr.net/npm/@milkdown/plugin-slash@7.3.5/+esm";
+        // import listener from "https://cdn.jsdelivr.net/npm/@milkdown/plugin-listener@7.3.5/+esm";
+        
+        const editorEl = document.getElementById('editor');
+        if (editorEl) {
+            const loadingEl = editorEl.querySelector('.editor-loading');
+            if (loadingEl) loadingEl.remove();
+        
+            const editorContainer = document.createElement('div');
+            editorContainer.className = 'editor';
+            editorEl.appendChild(editorContainer);
+        
+            const initialContent = {{file_content}};
+        
+            const editor = await Editor
+                .make()
+                .config((ctx) => {
+                    ctx.set(rootCtx, editorContainer);
+                    ctx.set(defaultValueCtx, initialContent);
+                    nord(ctx);
+                })
+                .use(commonmark)
+                // .use(slash)
+                // .use(listener)
+                .create();
+        
+            const form = document.getElementById('editor-form');
+            const contentInput = document.getElementById('editor-content');
+            if (form && contentInput) {
+                form.addEventListener('submit', function(e) {
+                    editor.action((ctx) => {
+                        const getMarkdown = ctx.get('markdownSerializer');
+                        const state = ctx.get('editorState');
+                        contentInput.value = getMarkdown(state.doc);
+                    });
+                });
+            }
+        }
+
+    </script>            
 </body>
 </html>
