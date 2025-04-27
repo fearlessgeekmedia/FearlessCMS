@@ -249,7 +249,6 @@ if (!isLoggedIn()) {
                 $template = preg_replace('/\{\{if_theme_management\}\}.*?\{\{\/if_theme_management\}\}/s', '', $template);
                 $template = preg_replace('/\{\{if_menu_management\}\}.*?\{\{\/if_menu_management\}\}/s', '', $template);
 
-                // The important line: inject as a JS string
                 $template = str_replace('{{file_name}}', htmlspecialchars($fileName), $template);
                 $template = str_replace('{{file_content}}', json_encode($fileContent), $template);
             }
@@ -285,7 +284,53 @@ if (!isLoggedIn()) {
         $template = preg_replace('/\{\{if_not_content_editor\}\}.*?\{\{\/if_not_content_editor\}\}/s', '', $template);
         $template = preg_replace('/\{\{if_menu_management\}\}.*?\{\{\/if_menu_management\}\}/s', '', $template);
 
-        // ... (theme list code as before) ...
+        // Build themes HTML
+        $themes = [
+            [
+                'id' => 'default',
+                'name' => 'Default Theme',
+                'description' => 'The default theme for FearlessCMS',
+                'version' => '1.0',
+                'author' => 'FearlessCMS Team',
+                'active' => true
+            ],
+            [
+                'id' => 'dark',
+                'name' => 'Dark Theme',
+                'description' => 'A dark theme for FearlessCMS',
+                'version' => '1.0',
+                'author' => 'FearlessCMS Team',
+                'active' => false
+            ]
+        ];
+
+        $themeList = '';
+        foreach ($themes as $theme) {
+            $activeClass = $theme['active'] ? 'ring-2 ring-green-500' : '';
+            $activeLabel = $theme['active'] ? 
+                '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">Active Theme</span>' : '';
+            $activateButton = !$theme['active'] ? 
+                '<form method="POST" action="">
+                    <input type="hidden" name="action" value="activate_theme" />
+                    <input type="hidden" name="theme" value="'.$theme['id'].'" />
+                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Activate Theme</button>
+                </form>' : '';
+            
+            $themeList .= '
+                <div class="border rounded-lg p-4 '.$activeClass.'">
+                    <h3 class="text-lg font-medium mb-2">'.$theme['name'].'</h3>
+                    <p class="text-sm text-gray-600 mb-4">'.$theme['description'].'</p>
+                    <div class="text-sm text-gray-500 mb-4">
+                        <p>Version: '.$theme['version'].'</p>
+                        <p>Author: '.$theme['author'].'</p>
+                    </div>
+                    '.$activeLabel.'
+                    '.$activateButton.'
+                </div>';
+        }
+
+        // Replace the {{#themes}} ... {{/themes}} block with the generated HTML
+        $template = preg_replace('/\{\{#themes\}\}.*?\{\{\/themes\}\}/s', $themeList, $template);
     } else if ($isMenuManagement) {
         $menusFile = ADMIN_CONFIG_DIR . '/menus.json';
         $menus = file_exists($menusFile) ? json_decode(file_get_contents($menusFile), true) : [];
@@ -397,14 +442,15 @@ if (!isLoggedIn()) {
         </script>
         HTML;
 
+        // Replace the menu management block with the HTML
         $template = preg_replace('/\{\{if_menu_management\}\}(.*?)\{\{\/if_menu_management\}\}/s', $menuManagementHtml, $template);
+
+        // Remove all other blocks
         $template = preg_replace('/\{\{if_user_management\}\}.*?\{\{\/if_user_management\}\}/s', '', $template);
         $template = preg_replace('/\{\{if_theme_management\}\}.*?\{\{\/if_theme_management\}\}/s', '', $template);
         $template = preg_replace('/\{\{if_content_editor\}\}.*?\{\{\/if_content_editor\}\}/s', '', $template);
         $template = preg_replace('/\{\{if_not_user_management\}\}.*?\{\{\/if_not_user_management\}\}/s', '', $template);
         $template = preg_replace('/\{\{if_not_content_editor\}\}.*?\{\{\/if_not_content_editor\}\}/s', '', $template);
-
-        // No need to str_replace menu_class/menu_items anymore
     } else {
         // Show content management section, hide other sections
         $template = preg_replace('/\{\{if_not_user_management\}\}(.*?)\{\{\/if_not_user_management\}\}/s', '$1', $template);
@@ -453,7 +499,6 @@ if (!isLoggedIn()) {
 
     $template = str_replace('{{username}}', htmlspecialchars($_SESSION['username']), $template);
 }
-
 
 echo $template;
 ?>
