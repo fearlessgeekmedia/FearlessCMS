@@ -1,3 +1,3 @@
-# Contact us
+## Reach out today!
 
-You really ought to call or e-mail us! Testing 1 2 3
+You really ought to call or e-mail us! [service@fearlessgeekmedia.com](mailto:service@fearlessgeekmedia.com)

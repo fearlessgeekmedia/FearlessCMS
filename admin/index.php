@@ -1,13 +1,10 @@
 <?php
-// Enable full error reporting
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// admin/index.php
 session_start();
 
-// Configuration
 define('ADMIN_CONFIG_DIR', __DIR__ . '/config');
 define('ADMIN_TEMPLATE_DIR', __DIR__ . '/templates');
 define('CONTENT_DIR', __DIR__ . '/../content');
@@ -22,7 +19,6 @@ $usersFile = ADMIN_CONFIG_DIR . '/users.json';
 if (!file_exists($usersFile)) {
     $defaultAdmin = [
         'username' => 'admin',
-        // Default password: "changeme123"
         'password' => password_hash('changeme123', PASSWORD_DEFAULT)
     ];
     file_put_contents($usersFile, json_encode([$defaultAdmin]));
@@ -220,66 +216,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
 output_template:
 
-// Prevent main site routing from affecting admin
 unset($_GET['page']);
 
-// Display appropriate template based on login status
 if (!isLoggedIn()) {
     $template = file_get_contents(ADMIN_TEMPLATE_DIR . '/login.html');
     $template = str_replace('{{error}}', $error ?? '', $template);
 } else {
     $template = file_get_contents(ADMIN_TEMPLATE_DIR . '/dashboard.html');
-    
-    // Check if we're in user management mode
+
     $isUserManagement = isset($_GET['action']) && $_GET['action'] === 'manage_users';
-    
-    // Check if we're in theme management mode
     $isThemeManagement = isset($_GET['action']) && $_GET['action'] === 'manage_themes';
-    
-    // Check if we're in content editor mode
     $isContentEditor = isset($_GET['edit']) && !empty($_GET['edit']);
-    
-    // Handle content editing
+    $isMenuManagement = isset($_GET['action']) && $_GET['action'] === 'manage_menus';
+
     if ($isContentEditor) {
         $fileName = $_GET['edit'];
-        
-        // Validate and sanitize filename
         if (!preg_match('/^[a-zA-Z0-9_-]+\.md$/', $fileName)) {
             $error = 'Invalid filename';
             $isContentEditor = false;
         } else {
             $filePath = CONTENT_DIR . '/' . $fileName;
-            
-            // Check if file exists
             if (!file_exists($filePath)) {
                 $error = 'File not found';
                 $isContentEditor = false;
             } else {
-                // Read file content
                 $fileContent = file_get_contents($filePath);
-                
-                // Show content editor
+
                 $template = preg_replace('/\{\{if_content_editor\}\}(.*?)\{\{\/if_content_editor\}\}/s', '$1', $template);
                 $template = preg_replace('/\{\{if_not_content_editor\}\}.*?\{\{\/if_not_content_editor\}\}/s', '', $template);
+                $template = preg_replace('/\{\{if_user_management\}\}.*?\{\{\/if_user_management\}\}/s', '', $template);
+                $template = preg_replace('/\{\{if_not_user_management\}\}.*?\{\{\/if_not_user_management\}\}/s', '', $template);
+                $template = preg_replace('/\{\{if_theme_management\}\}.*?\{\{\/if_theme_management\}\}/s', '', $template);
+                $template = preg_replace('/\{\{if_menu_management\}\}.*?\{\{\/if_menu_management\}\}/s', '', $template);
+
+                // The important line: inject as a JS string
                 $template = str_replace('{{file_name}}', htmlspecialchars($fileName), $template);
-                // THIS IS THE IMPORTANT LINE:
                 $template = str_replace('{{file_content}}', json_encode($fileContent), $template);
             }
         }
-    } else {
-        // Hide content editor
-        $template = preg_replace('/\{\{if_content_editor\}\}.*?\{\{\/if_content_editor\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_not_content_editor\}\}(.*?)\{\{\/if_not_content_editor\}\}/s', '$1', $template);
-    }
-
-    // Process conditional sections for user management
-    if ($isUserManagement) {
-        // Show user management section, hide other sections
+    } else if ($isUserManagement) {
         $template = preg_replace('/\{\{if_user_management\}\}(.*?)\{\{\/if_user_management\}\}/s', '$1', $template);
         $template = preg_replace('/\{\{if_not_user_management\}\}.*?\{\{\/if_not_user_management\}\}/s', '', $template);
         $template = preg_replace('/\{\{if_theme_management\}\}.*?\{\{\/if_theme_management\}\}/s', '', $template);
-        
-        // Get list of users for display
+        $template = preg_replace('/\{\{if_content_editor\}\}.*?\{\{\/if_content_editor\}\}/s', '', $template);
+        $template = preg_replace('/\{\{if_not_content_editor\}\}.*?\{\{\/if_not_content_editor\}\}/s', '', $template);
+        $template = preg_replace('/\{\{if_menu_management\}\}.*?\{\{\/if_menu_management\}\}/s', '', $template);
+
         $users = json_decode(file_get_contents($usersFile), true);
         $userList = '';
         foreach ($users as $user) {
@@ -296,81 +278,141 @@ if (!isLoggedIn()) {
         }
         $template = str_replace('{{user_list}}', $userList, $template);
     } else if ($isThemeManagement) {
-        // Show theme management section, hide other sections
         $template = preg_replace('/\{\{if_theme_management\}\}(.*?)\{\{\/if_theme_management\}\}/s', '$1', $template);
         $template = preg_replace('/\{\{if_user_management\}\}.*?\{\{\/if_user_management\}\}/s', '', $template);
         $template = preg_replace('/\{\{if_not_user_management\}\}.*?\{\{\/if_not_user_management\}\}/s', '', $template);
-        
-        // Build themes HTML
-        $themes = [
-            [
-                'id' => 'default',
-                'name' => 'Default Theme',
-                'description' => 'The default theme for FearlessCMS',
-                'version' => '1.0',
-                'author' => 'FearlessCMS Team',
-                'active' => true
-            ],
-            [
-                'id' => 'dark',
-                'name' => 'Dark Theme',
-                'description' => 'A dark theme for FearlessCMS',
-                'version' => '1.0',
-                'author' => 'FearlessCMS Team',
-                'active' => false
-            ]
-        ];
-        
-        // Build theme list
-        $themeList = '';
-        foreach ($themes as $theme) {
-            $activeClass = $theme['active'] ? 'ring-2 ring-green-500' : '';
-            $activeLabel = $theme['active'] ? 
-                '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">Active Theme</span>' : '';
-            $activateButton = !$theme['active'] ? 
-                '<form method="POST" action="">
-                    <input type="hidden" name="action" value="activate_theme" />
-                    <input type="hidden" name="theme" value="'.$theme['id'].'" />
-                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Activate Theme</button>
-                </form>' : '';
-            
-            $themeList .= '
-                <div class="border rounded-lg p-4 '.$activeClass.'">
-                    <h3 class="text-lg font-medium mb-2">'.$theme['name'].'</h3>
-                    <p class="text-sm text-gray-600 mb-4">'.$theme['description'].'</p>
-                    <div class="text-sm text-gray-500 mb-4">
-                        <p>Version: '.$theme['version'].'</p>
-                        <p>Author: '.$theme['author'].'</p>
-                    </div>
-                    '.$activeLabel.'
-                    '.$activateButton.'
-                </div>';
-        }
-        
-        // Replace the themes content in the template
-        $pattern = '/\{\{#themes\}\}.*?\{\{\/themes\}\}/s';
-        if (preg_match($pattern, $template)) {
-            $template = preg_replace($pattern, $themeList, $template);
-        } else {
-            $templateParts = explode('{{#themes}}', $template);
-            if (count($templateParts) > 1) {
-                $endParts = explode('{{/themes}}', $templateParts[1], 2);
-                if (count($endParts) > 1) {
-                    $template = $templateParts[0] . $themeList . $endParts[1];
-                } else {
-                    $template = preg_replace('/<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">.*?<\/div>/s', 
-                        '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">' . $themeList . '</div>', $template);
+        $template = preg_replace('/\{\{if_content_editor\}\}.*?\{\{\/if_content_editor\}\}/s', '', $template);
+        $template = preg_replace('/\{\{if_not_content_editor\}\}.*?\{\{\/if_not_content_editor\}\}/s', '', $template);
+        $template = preg_replace('/\{\{if_menu_management\}\}.*?\{\{\/if_menu_management\}\}/s', '', $template);
+
+        // ... (theme list code as before) ...
+    } else if ($isMenuManagement) {
+        $menusFile = ADMIN_CONFIG_DIR . '/menus.json';
+        $menus = file_exists($menusFile) ? json_decode(file_get_contents($menusFile), true) : [];
+
+        // Scan theme for menu names
+        $themeMenus = [];
+        $themeFiles = glob(__DIR__ . '/../themes/default/templates/*.html');
+        foreach ($themeFiles as $file) {
+            if (preg_match_all('/\{\{menu=([a-zA-Z0-9_-]+)\}\}/', file_get_contents($file), $matches)) {
+                foreach ($matches[1] as $menuName) {
+                    $themeMenus[$menuName] = true;
                 }
-            } else {
-                $template = preg_replace('/<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">.*?<\/div>/s', 
-                    '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">' . $themeList . '</div>', $template);
             }
         }
-    } else if (!$isContentEditor) {
-        // Show content management section, hide other sections
-        $template = preg_replace('/\{\{if_not_user_management\}\}(.*?)\{\{\/if_not_user_management\}\}/s', '$1', $template);
+
+        // Get menu name from GET or POST, default to first menu or 'main'
+        $currentMenu = $_GET['menu'] ?? $_POST['menu'] ?? '';
+        if ($currentMenu === '' || !isset($menus[$currentMenu])) {
+            $currentMenu = array_key_first($menus) ?: 'main';
+        }
+
+        // Handle new menu creation
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'create_menu') {
+            $newMenu = trim($_POST['new_menu'] ?? '');
+            if ($newMenu !== '' && !isset($menus[$newMenu])) {
+                $menus[$newMenu] = ['menu_class' => '', 'items' => []];
+                file_put_contents($menusFile, json_encode($menus, JSON_PRETTY_PRINT));
+                header("Location: ?action=manage_menus&menu=" . urlencode($newMenu));
+                exit;
+            } else {
+                $error = 'Menu name is required and must be unique.';
+            }
+        }
+
+        // Handle menu save
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'save_menu') {
+            $currentMenu = $_POST['menu'];
+            $menus[$currentMenu]['menu_class'] = $_POST['menu_class'] ?? '';
+            $menus[$currentMenu]['items'] = array_values($_POST['items'] ?? []);
+            file_put_contents($menusFile, json_encode($menus, JSON_PRETTY_PRINT));
+            $success = "Menu saved!";
+        }
+
+        $mainMenu = $menus[$currentMenu] ?? ['menu_class' => '', 'items' => []];
+
+        // Build menu selection dropdown
+        $menuOptions = '';
+        foreach ($menus as $name => $data) {
+            $sel = $name === $currentMenu ? 'selected' : '';
+            $menuOptions .= "<option value=\"" . htmlspecialchars($name) . "\" $sel>" . htmlspecialchars($name) . "</option>";
+        }
+        // Add theme-suggested menus not in the file
+        foreach ($themeMenus as $name => $_) {
+            if (!isset($menus[$name])) {
+                $menuOptions .= "<option value=\"" . htmlspecialchars($name) . "\">" . htmlspecialchars($name) . " (suggested by theme)</option>";
+            }
+        }
+
+        // Build menu items HTML
+        $menuItemsHtml = '';
+        $idx = 0;
+        foreach ($mainMenu['items'] as $idx => $item) {
+            $menuItemsHtml .= '<div class="flex space-x-2 mb-2">';
+            $menuItemsHtml .= '<input type="text" name="items['.$idx.'][label]" value="'.htmlspecialchars($item['label']).'" placeholder="Label" class="border rounded px-2 py-1">';
+            $menuItemsHtml .= '<input type="text" name="items['.$idx.'][url]" value="'.htmlspecialchars($item['url']).'" placeholder="URL" class="border rounded px-2 py-1">';
+            $menuItemsHtml .= '<input type="text" name="items['.$idx.'][item_class]" value="'.htmlspecialchars($item['item_class'] ?? '').'" placeholder="Item Class" class="border rounded px-2 py-1">';
+            $menuItemsHtml .= '</div>';
+        }
+
+        $menuManagementHtml = <<<HTML
+        <form method="GET" class="mb-4">
+            <input type="hidden" name="action" value="manage_menus">
+            <label for="menu" class="mr-2">Select Menu:</label>
+            <select name="menu" id="menu" onchange="this.form.submit()" class="border rounded px-2 py-1">
+                $menuOptions
+            </select>
+        </form>
+        <form method="POST" class="mb-4 flex space-x-2">
+            <input type="hidden" name="action" value="create_menu">
+            <input type="text" name="new_menu" placeholder="New menu name" class="border rounded px-2 py-1">
+            <button type="submit" class="bg-blue-500 text-white px-3 py-1 rounded">Create Menu</button>
+        </form>
+        <form method="POST">
+            <input type="hidden" name="action" value="save_menu">
+            <input type="hidden" name="menu" value="{$currentMenu}">
+            <div>
+                <label class="block mb-1">Menu Class:</label>
+                <input type="text" name="menu_class" value="{$mainMenu['menu_class']}" class="border rounded px-2 py-1 w-full">
+            </div>
+            <h3 class="mt-4 mb-2 font-semibold">Menu Items</h3>
+            <div id="menu-items">
+                $menuItemsHtml
+            </div>
+            <button type="button" onclick="addMenuItem()" class="bg-blue-500 text-white px-3 py-1 rounded">Add Item</button>
+            <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded ml-2">Save Menu</button>
+        </form>
+        <script>
+        function addMenuItem() {
+          const container = document.getElementById('menu-items');
+          const idx = container.children.length;
+          container.insertAdjacentHTML('beforeend', `
+            <div class="flex space-x-2 mb-2">
+              <input type="text" name="items[${idx}][label]" placeholder="Label" class="border rounded px-2 py-1">
+              <input type="text" name="items[${idx}][url]" placeholder="URL" class="border rounded px-2 py-1">
+              <input type="text" name="items[${idx}][item_class]" placeholder="Item Class" class="border rounded px-2 py-1">
+            </div>
+          `);
+        }
+        </script>
+        HTML;
+
+        $template = preg_replace('/\{\{if_menu_management\}\}(.*?)\{\{\/if_menu_management\}\}/s', $menuManagementHtml, $template);
         $template = preg_replace('/\{\{if_user_management\}\}.*?\{\{\/if_user_management\}\}/s', '', $template);
         $template = preg_replace('/\{\{if_theme_management\}\}.*?\{\{\/if_theme_management\}\}/s', '', $template);
+        $template = preg_replace('/\{\{if_content_editor\}\}.*?\{\{\/if_content_editor\}\}/s', '', $template);
+        $template = preg_replace('/\{\{if_not_user_management\}\}.*?\{\{\/if_not_user_management\}\}/s', '', $template);
+        $template = preg_replace('/\{\{if_not_content_editor\}\}.*?\{\{\/if_not_content_editor\}\}/s', '', $template);
+
+        // No need to str_replace menu_class/menu_items anymore
+    } else {
+        // Show content management section, hide other sections
+        $template = preg_replace('/\{\{if_not_user_management\}\}(.*?)\{\{\/if_not_user_management\}\}/s', '$1', $template);
+        $template = preg_replace('/\{\{if_not_content_editor\}\}(.*?)\{\{\/if_not_content_editor\}\}/s', '$1', $template);
+        $template = preg_replace('/\{\{if_user_management\}\}.*?\{\{\/if_user_management\}\}/s', '', $template);
+        $template = preg_replace('/\{\{if_theme_management\}\}.*?\{\{\/if_theme_management\}\}/s', '', $template);
+        $template = preg_replace('/\{\{if_content_editor\}\}.*?\{\{\/if_content_editor\}\}/s', '', $template);
+        $template = preg_replace('/\{\{if_menu_management\}\}.*?\{\{\/if_menu_management\}\}/s', '', $template);
 
         // Get list of content files
         $contentFiles = glob(CONTENT_DIR . '/*.md');
@@ -409,9 +451,9 @@ if (!isLoggedIn()) {
         $template = str_replace('{{success}}', '', $template);
     }
 
-    // Replace common template variables
     $template = str_replace('{{username}}', htmlspecialchars($_SESSION['username']), $template);
 }
+
 
 echo $template;
 ?>

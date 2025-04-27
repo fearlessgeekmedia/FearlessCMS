@@ -1,0 +1,22 @@
+{
+    "main": {
+        "menu_class": "main-nav",
+        "items": [
+            {
+                "label": "Home",
+                "url": "\/",
+                "item_class": "nav-item"
+            },
+            {
+                "label": "About",
+                "url": "\/about",
+                "item_class": "nav-item"
+            },
+            {
+                "label": "Contact",
+                "url": "\/contact",
+                "item_class": "nav-item"
+            }
+        ]
+    }
+}
