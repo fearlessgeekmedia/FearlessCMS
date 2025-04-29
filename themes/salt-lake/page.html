@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}} - Modern Salt Lake City</title>
+    <link rel="stylesheet" href="/themes/salt-lake/assets/css/style.css">
+    <link rel="stylesheet" href="/themes/salt-lake/assets/css/responsive.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+    <link rel="shortcut icon" href="/themes/salt-lake/assets/images/favicon.ico">
+  </head>
+  <body class="slc-theme">
+    <header class="site-header">
+      <div class="container">
+        <div class="header-inner">
+          <div class="site-branding">
+            <a href="/" class="site-logo">Modern Salt Lake</a>
+          </div>
+          <nav class="main-navigation">
+            {{menu=main}}
+          </nav>
+          <button class="mobile-menu-toggle" aria-label="Toggle Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+        </div>
+      </div>
+    </header>
+    <main class="site-content">
+      <div class="container">
+        <article class="page-content">
+          <header class="page-header">
+            <h1 class="page-title">{{title}}</h1>
+          </header>
+          <div class="page-body">
+            {{content}}
+          </div>
+        </article>
+      </div>
+    </main>
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-info">
+            <h3>Modern Salt Lake City</h3>
+            <p>A beautiful theme inspired by the landscapes of Utah</p>
+          </div>
+          <div class="footer-nav">
+            <h4>Quick Links</h4>
+            {{menu=footer}}
+          </div>
+          <div class="footer-contact">
+            <h4>Contact</h4>
+            <p>Email: info@example.com</p>
+            <p>Phone: (801) 555-1234</p>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>&copy; 2025 Modern Salt Lake City Theme. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+    <script src="/themes/salt-lake/assets/js/theme.js"></script>
+  </body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}} - Modern Salt Lake City</title>
+    <link rel="stylesheet" href="/themes/salt-lake/assets/css/style.css">
+    <link rel="stylesheet" href="/themes/salt-lake/assets/css/responsive.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+    <link rel="shortcut icon" href="/themes/salt-lake/assets/images/favicon.ico">
+  </head>
+  <body class="slc-theme home-page">
+    <header class="site-header transparent">
+      <div class="container">
+        <div class="header-inner">
+          <div class="site-branding">
+            <a href="/" class="site-logo">Modern Salt Lake</a>
+          </div>
+          <nav class="main-navigation">
+            {{menu=main}}
+          </nav>
+          <button class="mobile-menu-toggle" aria-label="Toggle Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+        </div>
+      </div>
+    </header>
+    <section class="hero-section">
+      <div class="hero-image" style="background-image: url('/themes/salt-lake/assets/images/mountains-header.jpg');">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+          <h1>{{title}}</h1>
+          <p class="hero-subtitle">Experience the beauty of Salt Lake City</p>
+          <a href="#content" class="hero-button">Explore</a>
+        </div>
+      </div>
+    </section>
+    <main id="content" class="site-content">
+      <div class="container">
+        <div class="home-intro">
+          <h2>Welcome to Modern Salt Lake</h2>
+          <div class="intro-content">
+            {{content}}
+          </div>
+        </div>
+        <div class="feature-boxes">
+          <div class="feature-box">
+            <img src="/themes/salt-lake/assets/images/temple-square.jpg" alt="Temple Square">
+            <h3>Discover</h3>
+            <p>Explore the unique culture and history of Salt Lake City.</p>
+            <a href="/about" class="feature-link">Learn More</a>
+          </div>
+          <div class="feature-box">
+            <img src="/themes/salt-lake/assets/images/salt-lake-skyline.jpg" alt="Salt Lake Skyline">
+            <h3>Experience</h3>
+            <p>Find out what makes this city a special place to visit and live.</p>
+            <a href="/experience" class="feature-link">See Activities</a>
+          </div>
+          <div class="feature-box">
+            <img src="/themes/salt-lake/assets/images/mountains-header.jpg" alt="Mountains">
+            <h3>Connect</h3>
+            <p>Get in touch with locals and plan your perfect trip.</p>
+            <a href="/contact" class="feature-link">Contact Us</a>
+          </div>
+        </div>
+      </div>
+    </main>
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-info">
+            <h3>Modern Salt Lake City</h3>
+            <p>A beautiful theme inspired by the landscapes of Utah</p>
+          </div>
+          <div class="footer-nav">
+            <h4>Quick Links</h4>
+            {{menu=footer}}
+          </div>
+          <div class="footer-contact">
+            <h4>Contact</h4>
+            <p>Email: info@example.com</p>
+            <p>Phone: (801) 555-1234</p>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>&copy; 2025 Modern Salt Lake City Theme. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+    <script src="/themes/salt-lake/assets/js/theme.js"></script>
+  </body>
+</html>

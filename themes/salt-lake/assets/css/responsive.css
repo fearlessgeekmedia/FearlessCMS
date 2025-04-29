@@ -1,0 +1,121 @@
+/* Modern Salt Lake City Theme - Responsive Styles */
+
+/* Tablet Styles */
+@media (max-width: 992px) {
+  h1 {
+    font-size: 2rem;
+  }
+  
+  h2 {
+    font-size: 1.75rem;
+  }
+  
+  .hero-content h1 {
+    font-size: 2.5rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 1.25rem;
+  }
+  
+  .feature-boxes {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .footer-content {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+  }
+  
+  .footer-info {
+    grid-column: span 2;
+    margin-bottom: var(--spacing-md);
+  }
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+  .mobile-menu-toggle {
+    display: block;
+  }
+  
+  .main-navigation {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 80%;
+    max-width: 300px;
+    height: 100vh;
+    background-color: var(--slc-primary);
+    padding: var(--spacing-xl) var(--spacing-lg);
+    transition: right 0.3s ease;
+    z-index: 1000;
+    overflow-y: auto;
+  }
+  
+  .main-navigation.active {
+    right: 0;
+  }
+  
+  .main-navigation ul {
+    flex-direction: column;
+  }
+  
+  .main-navigation li {
+    margin: 0 0 var(--spacing-md) 0;
+  }
+  
+  .hero-section {
+    height: 60vh;
+  }
+  
+  .hero-content h1 {
+    font-size: 2rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 1rem;
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .feature-boxes {
+    grid-template-columns: 1fr;
+  }
+  
+  .footer-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .footer-info {
+    grid-column: span 1;
+  }
+  
+  .page-content {
+    padding: var(--spacing-md);
+  }
+}
+
+/* Small Mobile Styles */
+@media (max-width: 480px) {
+  .container {
+    padding: 0 var(--spacing-sm);
+  }
+  
+  .hero-content h1 {
+    font-size: 1.75rem;
+  }
+  
+  .hero-button {
+    padding: var(--spacing-xs) var(--spacing-md);
+    font-size: 0.875rem;
+  }
+  
+  .site-content {
+    padding: var(--spacing-lg) 0;
+  }
+  
+  .home-intro h2 {
+    font-size: 1.75rem;
+  }
+}
+

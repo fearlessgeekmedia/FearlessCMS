@@ -1,0 +1,9 @@
+{
+  "name": "Modern Salt Lake City",
+  "version": "1.0.0",
+  "author": "FearlessCMS Team",
+  "description": "A modern theme inspired by Salt Lake City's urban landscape and Utah's natural beauty",
+  "supports": ["menus", "responsive", "dark-mode"],
+  "preview_image": "screenshot.jpg"
+}
+

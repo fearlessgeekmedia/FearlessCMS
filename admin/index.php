@@ -9,6 +9,9 @@ define('ADMIN_CONFIG_DIR', __DIR__ . '/config');
 define('ADMIN_TEMPLATE_DIR', __DIR__ . '/templates');
 define('CONTENT_DIR', __DIR__ . '/../content');
 
+// Include ThemeManager class
+require_once dirname(__DIR__) . '/includes/ThemeManager.php';
+
 // Create config directory if it doesn't exist
 if (!file_exists(ADMIN_CONFIG_DIR)) {
     mkdir(ADMIN_CONFIG_DIR, 0755, true);
@@ -379,26 +382,26 @@ if (!isLoggedIn()) {
         $template = preg_replace('/\{\{if_not_content_editor\}\}.*?\{\{\/if_not_content_editor\}\}/s', '', $template);
         $template = preg_replace('/\{\{if_menu_management\}\}.*?\{\{\/if_menu_management\}\}/s', '', $template);
 
-        // Build themes HTML
-        $themes = [
-            [
-                'id' => 'default',
-                'name' => 'Default Theme',
-                'description' => 'The default theme for FearlessCMS',
-                'version' => '1.0',
-                'author' => 'FearlessCMS Team',
-                'active' => true
-            ],
-            [
-                'id' => 'dark',
-                'name' => 'Dark Theme',
-                'description' => 'A dark theme for FearlessCMS',
-                'version' => '1.0',
-                'author' => 'FearlessCMS Team',
-                'active' => false
-            ]
-        ];
+        // Initialize theme manager
+        $themeManager = new ThemeManager();
+        
+        // Handle theme activation
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'activate_theme') {
+            $newTheme = $_POST['theme'] ?? '';
+            if (!empty($newTheme)) {
+                try {
+                    $themeManager->setActiveTheme($newTheme);
+                    $success = "Theme '{$newTheme}' has been activated.";
+                } catch (Exception $e) {
+                    $error = $e->getMessage();
+                }
+            }
+        }
 
+        // Get all themes
+        $themes = $themeManager->getThemes();
+        
+        // Build theme list HTML
         $themeList = '';
         foreach ($themes as $theme) {
             $activeClass = $theme['active'] ? 'ring-2 ring-green-500' : '';
@@ -413,11 +416,11 @@ if (!isLoggedIn()) {
             
             $themeList .= '
                 <div class="border rounded-lg p-4 '.$activeClass.'">
-                    <h3 class="text-lg font-medium mb-2">'.$theme['name'].'</h3>
-                    <p class="text-sm text-gray-600 mb-4">'.$theme['description'].'</p>
+                    <h3 class="text-lg font-medium mb-2">'.htmlspecialchars($theme['name']).'</h3>
+                    <p class="text-sm text-gray-600 mb-4">'.htmlspecialchars($theme['description']).'</p>
                     <div class="text-sm text-gray-500 mb-4">
-                        <p>Version: '.$theme['version'].'</p>
-                        <p>Author: '.$theme['author'].'</p>
+                        <p>Version: '.htmlspecialchars($theme['version']).'</p>
+                        <p>Author: '.htmlspecialchars($theme['author']).'</p>
                     </div>
                     '.$activeLabel.'
                     '.$activateButton.'
