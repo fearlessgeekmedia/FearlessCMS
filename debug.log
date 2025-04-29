@@ -1,0 +1,12 @@
+[2025-04-28 23:22:08] Requested path: home
+[2025-04-28 23:22:08] Looking for file: /Users/fearlessgeek/devel/fearlesscms/content/home.md
+[2025-04-28 23:22:08] Using content file: /Users/fearlessgeek/devel/fearlesscms/content/home.md
+[2025-04-28 23:22:08] Initial title (from filename): home
+[2025-04-28 23:22:08] Content length: 56
+[2025-04-28 23:22:08] Parsed content length: 63
+[2025-04-28 23:22:08] Template length: 637
+[2025-04-28 23:22:08] Looking for menus file: /Users/fearlessgeek/devel/fearlesscms/config/menus.json
+[2025-04-28 23:22:08] Menus found: Array
+(
+)
+

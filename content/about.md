@@ -1,1 +1,5 @@
+<!-- json {
+    "title": "About us"
+} -->
+
 Welcome to FearlessCMS. We're going to do something amaing with this!

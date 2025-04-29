@@ -182,6 +182,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
+// Handle new page creation
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'create_page') {
+    if (!isLoggedIn()) {
+        $error = 'You must be logged in to create pages';
+    } else {
+        $newPageFilename = $_POST['new_page_filename'] ?? '';
+        $newPageContent = $_POST['new_page_content'] ?? '';
+        $pageTitle = $_POST['page_title'] ?? '';
+        
+        if (!preg_match('/^[a-zA-Z0-9_-]+\.md$/', $newPageFilename)) {
+            $error = 'Invalid filename. Use only letters, numbers, dashes, underscores, and end with .md';
+        } else {
+            $filePath = CONTENT_DIR . '/' . $newPageFilename;
+            if (file_exists($filePath)) {
+                $error = 'A page with that filename already exists.';
+            } else {
+                // Add JSON frontmatter with title if provided
+                if (!empty($pageTitle)) {
+                    $metadata = ['title' => $pageTitle];
+                    $frontmatter = '<!-- json ' . json_encode($metadata, JSON_PRETTY_PRINT) . ' -->';
+                    $newPageContent = $frontmatter . "\n\n" . $newPageContent;
+                }
+                
+                if (file_put_contents($filePath, $newPageContent) !== false) {
+                    // Redirect to editor for the new page
+                    header('Location: ?edit=' . urlencode($newPageFilename));
+                    exit;
+                } else {
+                    $error = 'Failed to create new page.';
+                }
+            }
+        }
+    }
+}
+
 // Handle file saving
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_file') {
     if (!isLoggedIn()) {
@@ -189,6 +224,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     } else {
         $fileName = $_POST['file_name'] ?? '';
         $content = $_POST['content'] ?? '';
+        $pageTitle = $_POST['page_title'] ?? '';
         
         // Validate filename
         if (empty($fileName) || !preg_match('/^[a-zA-Z0-9_-]+\.md$/', $fileName)) {
@@ -203,11 +239,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             if ($realFilePath === false || strpos($realFilePath, $realContentDir) !== 0) {
                 $error = 'Invalid file path';
             } else {
+                // Check if content already has JSON frontmatter
+                $hasFrontmatter = preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $content, $matches);
+                
+                if ($hasFrontmatter) {
+                    // Update existing frontmatter
+                    $metadata = json_decode($matches[1], true) ?: [];
+                    $metadata['title'] = $pageTitle;
+                    $newFrontmatter = '<!-- json ' . json_encode($metadata, JSON_PRETTY_PRINT) . ' -->';
+                    $content = preg_replace('/^<!--\s*json\s*(.*?)\s*-->/s', $newFrontmatter, $content);
+                } else if (!empty($pageTitle)) {
+                    // Add new frontmatter
+                    $metadata = ['title' => $pageTitle];
+                    $newFrontmatter = '<!-- json ' . json_encode($metadata, JSON_PRETTY_PRINT) . ' -->';
+                    $content = $newFrontmatter . "\n\n" . $content;
+                }
+                
                 // Save the file
                 if (file_put_contents($filePath, $content) !== false) {
                     $success = 'File saved successfully';
                 } else {
                     $error = 'Failed to save file';
+                }
+            }
+        }
+    }
+}
+
+// Handle page deletion
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_page') {
+    if (!isLoggedIn()) {
+        $error = 'You must be logged in to delete pages';
+    } else {
+        $fileName = $_POST['file_name'] ?? '';
+        
+        // Validate filename
+        if (empty($fileName) || !preg_match('/^[a-zA-Z0-9_-]+\.md$/', $fileName)) {
+            $error = 'Invalid filename';
+        } else {
+            $filePath = CONTENT_DIR . '/' . $fileName;
+            
+            // Ensure we're only deleting files within the content directory
+            $realFilePath = realpath($filePath);
+            $realContentDir = realpath(CONTENT_DIR);
+            
+            if ($realFilePath === false || strpos($realFilePath, $realContentDir) !== 0) {
+                $error = 'Invalid file path';
+            } else if (!file_exists($filePath)) {
+                $error = 'File not found';
+            } else {
+                // Delete the file
+                if (unlink($filePath)) {
+                    $success = 'Page deleted successfully';
+                } else {
+                    $error = 'Failed to delete file';
                 }
             }
         }
@@ -241,6 +326,15 @@ if (!isLoggedIn()) {
                 $isContentEditor = false;
             } else {
                 $fileContent = file_get_contents($filePath);
+                $pageTitle = '';
+                
+                // Extract title from JSON frontmatter if it exists
+                if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $fileContent, $matches)) {
+                    $metadata = json_decode($matches[1], true);
+                    if ($metadata && isset($metadata['title'])) {
+                        $pageTitle = $metadata['title'];
+                    }
+                }
 
                 $template = preg_replace('/\{\{if_content_editor\}\}(.*?)\{\{\/if_content_editor\}\}/s', '$1', $template);
                 $template = preg_replace('/\{\{if_not_content_editor\}\}.*?\{\{\/if_not_content_editor\}\}/s', '', $template);
@@ -250,6 +344,7 @@ if (!isLoggedIn()) {
                 $template = preg_replace('/\{\{if_menu_management\}\}.*?\{\{\/if_menu_management\}\}/s', '', $template);
 
                 $template = str_replace('{{file_name}}', htmlspecialchars($fileName), $template);
+                $template = str_replace('{{page_title}}', htmlspecialchars($pageTitle), $template);
                 $template = str_replace('{{file_content}}', json_encode($fileContent), $template);
             }
         }
@@ -368,8 +463,24 @@ if (!isLoggedIn()) {
         // Handle menu save
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'save_menu') {
             $currentMenu = $_POST['menu'];
+            
+            // Create a clean array of menu items
+            $menuItems = [];
+            if (isset($_POST['items']) && is_array($_POST['items'])) {
+                foreach ($_POST['items'] as $item) {
+                    if (!empty($item['label']) || !empty($item['url'])) {
+                        $menuItems[] = [
+                            'label' => $item['label'] ?? '',
+                            'url' => $item['url'] ?? '',
+                            'item_class' => $item['item_class'] ?? ''
+                        ];
+                    }
+                }
+            }
+            
+            $menus[$currentMenu]['items'] = $menuItems;
             $menus[$currentMenu]['menu_class'] = $_POST['menu_class'] ?? '';
-            $menus[$currentMenu]['items'] = array_values($_POST['items'] ?? []);
+            
             file_put_contents($menusFile, json_encode($menus, JSON_PRETTY_PRINT));
             $success = "Menu saved!";
         }
@@ -389,14 +500,14 @@ if (!isLoggedIn()) {
             }
         }
 
-        // Build menu items HTML
+        // Build menu items HTML and use unique keys
         $menuItemsHtml = '';
-        $idx = 0;
         foreach ($mainMenu['items'] as $idx => $item) {
             $menuItemsHtml .= '<div class="flex space-x-2 mb-2">';
             $menuItemsHtml .= '<input type="text" name="items['.$idx.'][label]" value="'.htmlspecialchars($item['label']).'" placeholder="Label" class="border rounded px-2 py-1">';
             $menuItemsHtml .= '<input type="text" name="items['.$idx.'][url]" value="'.htmlspecialchars($item['url']).'" placeholder="URL" class="border rounded px-2 py-1">';
             $menuItemsHtml .= '<input type="text" name="items['.$idx.'][item_class]" value="'.htmlspecialchars($item['item_class'] ?? '').'" placeholder="Item Class" class="border rounded px-2 py-1">';
+            $menuItemsHtml .= '<button type="button" onclick="this.parentNode.remove()" class="bg-red-500 text-white px-2 py-1 rounded">×</button>';
             $menuItemsHtml .= '</div>';
         }
 
@@ -429,15 +540,17 @@ if (!isLoggedIn()) {
         </form>
         <script>
         function addMenuItem() {
-          const container = document.getElementById('menu-items');
-          const idx = container.children.length;
-          container.insertAdjacentHTML('beforeend', `
-            <div class="flex space-x-2 mb-2">
-              <input type="text" name="items[${idx}][label]" placeholder="Label" class="border rounded px-2 py-1">
-              <input type="text" name="items[${idx}][url]" placeholder="URL" class="border rounded px-2 py-1">
-              <input type="text" name="items[${idx}][item_class]" placeholder="Item Class" class="border rounded px-2 py-1">
-            </div>
-          `);
+            const container = document.getElementById('menu-items');
+            const idx = Date.now();
+            const newItem = document.createElement('div');
+            newItem.className = 'flex space-x-2 mb-2';
+            newItem.innerHTML = `
+                <input type="text" name="items[\${idx}][label]" placeholder="Label" class="border rounded px-2 py-1">
+                <input type="text" name="items[\${idx}][url]" placeholder="URL" class="border rounded px-2 py-1">
+                <input type="text" name="items[\${idx}][item_class]" placeholder="Item Class" class="border rounded px-2 py-1">
+                <button type="button" onclick="this.parentNode.remove()" class="bg-red-500 text-white px-2 py-1 rounded">×</button>
+            `;
+            container.appendChild(newItem);
         }
         </script>
         HTML;
@@ -465,12 +578,28 @@ if (!isLoggedIn()) {
         $contentList = '';
         foreach ($contentFiles as $file) {
             $filename = basename($file);
+            $fileContent = file_get_contents($file);
+            $displayName = $filename;
+            
+            // Try to extract title from JSON frontmatter
+            if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $fileContent, $matches)) {
+                $metadata = json_decode($matches[1], true);
+                if ($metadata && isset($metadata['title'])) {
+                    $displayName = $metadata['title'] . ' <span class="text-gray-400 text-xs">(' . $filename . ')</span>';
+                }
+            }
+            
             $contentList .= "<li class='py-2 px-4 hover:bg-gray-100'>
                 <div class='flex justify-between items-center'>
-                    <span>" . htmlspecialchars($filename) . "</span>
-                    <a href='?edit=" . urlencode($filename) . "' class='bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600'>
-                        Edit
-                    </a>
+                    <span>" . $displayName . "</span>
+                    <div class='flex space-x-2'>
+                        <a href='?edit=" . urlencode($filename) . "' class='bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600'>
+                            Edit
+                        </a>
+                        <button onclick='deletePage(\"" . htmlspecialchars($filename) . "\")' class='bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600'>
+                            Delete
+                        </button>
+                    </div>
                 </div>
             </li>";
         }
