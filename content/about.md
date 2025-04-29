@@ -1,5 +1,5 @@
 <!-- json {
-    "title": "About us"
+    "title": "About Us"
 } -->
 
 Welcome to FearlessCMS. We're going to do something amaing with this!
