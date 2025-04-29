@@ -5,8 +5,12 @@ class ThemeManager {
     private $configPath;
 
     public function __construct() {
-        $this->themesPath = dirname(__DIR__) . '/themes';
-        $this->configPath = dirname(__DIR__) . '/config/config.json';
+        if (!defined('PROJECT_ROOT')) {
+            throw new Exception("PROJECT_ROOT is not defined! Please define('PROJECT_ROOT', ...) in your entry script before including ThemeManager.php.");
+        }
+        $root = PROJECT_ROOT;
+        $this->themesPath = $root . '/themes';
+        $this->configPath = $root . '/config/config.json';
         $this->loadActiveTheme();
     }
 
@@ -90,4 +94,3 @@ class ThemeManager {
         throw new Exception("Template '$templateName' and fallback '$fallbackTemplate' not found");
     }
 }
-

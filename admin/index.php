@@ -3,6 +3,9 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+// Define PROJECT_ROOT constant
+define('PROJECT_ROOT', dirname(__DIR__));
+
 session_start();
 
 define('ADMIN_CONFIG_DIR', __DIR__ . '/config');

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>{{title}} - Minimal Theme</title>
+    <style>
+      body { font-family: sans-serif; margin: 2em; background: #f9f9f9; color: #222; }
+    nav ul { list-style: none; padding: 0; display: flex; gap: 1em; }
+    nav a { text-decoration: none; color: #0074d9; }
+    nav a:hover { text-decoration: underline; }
+    main { background: #fff; padding: 2em; border-radius: 8px; box-shadow: 0 2px 8px #0001; }
+    footer { margin-top: 2em; color: #888; font-size: 0.9em; }
+    </style>
+  </head>
+  <body>
+    <nav>
+      {{menu=main}}
+    </nav>
+    <main>
+      <h1>{{title}}</h1>
+      {{content}}
+    </main>
+    <footer>
+      Minimal Theme &copy; 2025
+    </footer>
+  </body>
+</html>
