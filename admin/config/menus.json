@@ -18,7 +18,7 @@
                 "label": "Contact",
                 "url": "\/contact",
                 "item_class": "nav-item",
-                "target": "_blank"
+                "target": ""
             }
         ]
     }
