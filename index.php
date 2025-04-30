@@ -1,80 +1,131 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
 define('PROJECT_ROOT', __DIR__);
-define('CONTENT_DIR', __DIR__ . '/content');
-define('ADMIN_CONFIG_DIR', __DIR__ . '/admin/config');
 
-require_once __DIR__ . '/includes/ThemeManager.php';
-require_once __DIR__ . '/includes/Parsedown.php';
+// Define content directory
+if (!defined('CONTENT_DIR')) {
+    define('CONTENT_DIR', PROJECT_ROOT . '/content');
+}
 
-// Load menus
-$menusFile = ADMIN_CONFIG_DIR . '/menus.json';
-$menus = file_exists($menusFile) ? json_decode(file_get_contents($menusFile), true) : [];
+require_once PROJECT_ROOT . '/includes/ThemeManager.php';
+require_once PROJECT_ROOT . '/includes/plugins.php';
 
-// Get requested page from URL (e.g. /about -> about.md)
+// Debug: Check if blog plugin is loaded
+if (isset($_GET['debug'])) {
+    echo "<pre>";
+    echo "Active plugins: ";
+    print_r(json_decode(file_exists(PLUGIN_CONFIG) ? file_get_contents(PLUGIN_CONFIG) : '[]', true));
+    echo "\nRegistered hooks: ";
+    print_r(array_keys($GLOBALS['fcms_hooks']));
+    echo "\nRoute hook callbacks: ";
+    print_r(count($GLOBALS['fcms_hooks']['route'] ?? []));
+    echo "</pre>";
+    exit;
+}
+
+require_once PROJECT_ROOT . '/includes/Parsedown.php';
+
+// Get the requested URL path
 $requestUri = $_SERVER['REQUEST_URI'];
-$pageSlug = trim(parse_url($requestUri, PHP_URL_PATH), '/');
-if ($pageSlug === '' || $pageSlug === 'index.php') {
-    $pageSlug = 'home';
-}
-$contentFile = CONTENT_DIR . '/' . $pageSlug . '.md';
+$path = parse_url($requestUri, PHP_URL_PATH);
+$path = trim($path, '/');
+$path = empty($path) ? 'index' : $path;
 
-// Load content or 404
-if (file_exists($contentFile)) {
-    $rawContent = file_get_contents($contentFile);
+// Initialize variables
+$title = '';
+$content = '';
+$handled = false;
 
-    // Extract title from JSON frontmatter if present
-    $title = ucfirst($pageSlug);
-    $content = $rawContent;
-    if (preg_match('/^<!--\s*json\s*(.*?)\s*-->\s*/s', $rawContent, $matches)) {
-        $metadata = json_decode($matches[1], true);
-        if ($metadata && isset($metadata['title'])) {
-            $title = $metadata['title'];
+// Let plugins handle the route first
+fcms_do_hook('route', $handled, $title, $content, $path);
+
+// If no plugin handled the route, process it normally
+if (!$handled) {
+    // Your existing page loading code
+    $filePath = PROJECT_ROOT . '/content/' . $path . '.md';
+    if (!file_exists($filePath)) {
+        $filePath = PROJECT_ROOT . '/content/index.md';
+        if ($path !== 'index') {
+            http_response_code(404);
+            $filePath = PROJECT_ROOT . '/content/404.md';
+            if (!file_exists($filePath)) {
+                $title = '404 - Page Not Found';
+                $content = '<p>The page you requested could not be found.</p>';
+            }
         }
-        // Remove frontmatter from content
-        $content = preg_replace('/^<!--\s*json\s*(.*?)\s*-->\s*/s', '', $rawContent, 1);
     }
 
-    // Parse Markdown to HTML
-    $Parsedown = new Parsedown();
-    $content = $Parsedown->text($content);
-
-    // Load theme template
-    $themeManager = new ThemeManager();
-    $template = $themeManager->getTemplate('page');
-} else {
-    // 404
-    $title = 'Page Not Found';
-    $content = '<p>The page you requested could not be found.</p><p><a href="/">Return to Home</a></p>';
-    $themeManager = new ThemeManager();
-    $template = $themeManager->getTemplate('404', 'page');
-}
-
-// --- Menu rendering function ---
-function render_menu($menu) {
-    if (empty($menu['items'])) return '';
-    $html = '<ul' . (!empty($menu['menu_class']) ? ' class="' . htmlspecialchars($menu['menu_class']) . '"' : '') . '>';
-    foreach ($menu['items'] as $item) {
-        $target = !empty($item['target']) ? ' target="' . htmlspecialchars($item['target']) . '"' : '';
-        $class = !empty($item['item_class']) ? ' class="' . htmlspecialchars($item['item_class']) . '"' : '';
-        $html .= '<li><a href="' . htmlspecialchars($item['url']) . '"' . $class . $target . '>' . htmlspecialchars($item['label']) . '</a></li>';
+    if (file_exists($filePath)) {
+        $fileContent = file_get_contents($filePath);
+        
+        // Extract metadata if present
+        if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $fileContent, $matches)) {
+            $metadata = json_decode($matches[1], true);
+            if ($metadata && isset($metadata['title'])) {
+                $title = $metadata['title'];
+            }
+            // Remove the metadata from the content
+            $fileContent = str_replace($matches[0], '', $fileContent);
+        }
+        
+        if (empty($title)) {
+            $title = ucfirst($path);
+        }
+        
+        // Parse markdown to HTML
+        $Parsedown = new Parsedown();
+        $content = $Parsedown->text($fileContent);
     }
-    $html .= '</ul>';
-    return $html;
 }
 
-// Replace all menu placeholders in the template
-$template = preg_replace_callback('/\{\{menu=([a-zA-Z0-9_-]+)\}\}/', function($matches) use ($menus) {
-    $menuName = $matches[1];
-    return isset($menus[$menuName]) ? render_menu($menus[$menuName]) : '';
-}, $template);
+// Load and render the template
+$themeManager = new ThemeManager();
+$template = $themeManager->getTemplate('page');
 
-// Replace other placeholders
+// Apply hooks before rendering
+fcms_do_hook('before_render', $title, $content, $template);
+
+// Replace placeholders in the template
 $template = str_replace('{{title}}', htmlspecialchars($title), $template);
 $template = str_replace('{{content}}', $content, $template);
 
-// Output the final page
+// Process menu tags
+if (preg_match_all('/\{\{menu=([a-zA-Z0-9_-]+)\}\}/', $template, $matches, PREG_SET_ORDER)) {
+    foreach ($matches as $match) {
+        $menuName = $match[1];
+        $menuHtml = renderMenu($menuName);
+        $template = str_replace($match[0], $menuHtml, $template);
+    }
+}
+
+// Apply hooks after rendering
+fcms_do_hook('after_render', $template);
+
+// Output the final HTML
 echo $template;
+
+// Function to render a menu
+function renderMenu($menuName) {
+    $menusFile = PROJECT_ROOT . '/admin/config/menus.json';
+    if (!file_exists($menusFile)) {
+        return '';
+    }
+    
+    $menus = json_decode(file_get_contents($menusFile), true);
+    if (!isset($menus[$menuName])) {
+        return '';
+    }
+    
+    $menu = $menus[$menuName];
+    $menuClass = !empty($menu['menu_class']) ? ' class="' . htmlspecialchars($menu['menu_class']) . '"' : '';
+    
+    $html = "<ul$menuClass>";
+    foreach ($menu['items'] as $item) {
+        $itemClass = !empty($item['item_class']) ? ' class="' . htmlspecialchars($item['item_class']) . '"' : '';
+        $target = !empty($item['target']) ? ' target="' . htmlspecialchars($item['target']) . '"' : '';
+        $html .= "<li$itemClass><a href=\"" . htmlspecialchars($item['url']) . "\"$target>" . htmlspecialchars($item['label']) . "</a></li>";
+    }
+    $html .= "</ul>";
+    
+    return $html;
+}
+?>

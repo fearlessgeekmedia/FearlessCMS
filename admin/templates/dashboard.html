@@ -24,12 +24,58 @@
                 <a href="?action=manage_themes" class="hover:text-green-200">Themes</a>
                 <a href="?action=manage_menus" class="hover:text-green-200">Menus</a>
                 <a href="?action=manage_plugins" class="hover:text-green-200">Plugins</a>
+                {{plugin_nav_items}}
                 <a href="?action=logout" class="hover:text-green-200">Logout</a>
             </div>
         </div>
     </nav>
     {{error}}
     {{success}}
+
+    {{if_plugin_management}}
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-2xl font-bold mb-6 fira-code">Plugin Management</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {{#plugins}}
+                <div class="border rounded-lg p-4 {{#active}}ring-2 ring-green-500{{/active}}">
+                    <h3 class="text-lg font-medium mb-2">{{name}}</h3>
+                    <p class="text-sm text-gray-600 mb-4">{{description}}</p>
+                    <div class="text-sm text-gray-500 mb-4">
+                        <p>Version: {{version}}</p>
+                        <p>Author: {{author}}</p>
+                    </div>
+                    {{#active}}
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">Active</span>
+                    <form method="POST" action="">
+                        <input type="hidden" name="action" value="toggle_plugin" />
+                        <input type="hidden" name="plugin_name" value="{{id}}" />
+                        <input type="hidden" name="active" value="false" />
+                        <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 mt-2">Deactivate</button>
+                    </form>
+                    {{/active}}
+                    {{^active}}
+                    <form method="POST" action="">
+                        <input type="hidden" name="action" value="toggle_plugin" />
+                        <input type="hidden" name="plugin_name" value="{{id}}" />
+                        <input type="hidden" name="active" value="true" />
+                        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Activate</button>
+                    </form>
+                    {{/active}}
+                </div>
+                {{/plugins}}
+            </div>
+        </div>
+    </div>
+    {{/if_plugin_management}}
+
+    {{if_plugin_section}}
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="bg-white shadow rounded-lg p-6">
+            {{plugin_section_content}}
+        </div>
+    </div>
+    {{/if_plugin_section}}
 
     {{if_user_management}}
     <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">

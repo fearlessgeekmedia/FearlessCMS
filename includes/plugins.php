@@ -1,6 +1,25 @@
 <?php
-define('PLUGIN_DIR', PROJECT_ROOT . '/plugins');
-define('PLUGIN_CONFIG', ADMIN_CONFIG_DIR . '/plugins.json');
+// includes/plugins.php
+
+// Make sure PROJECT_ROOT is defined
+if (!defined('PROJECT_ROOT')) {
+    throw new Exception("PROJECT_ROOT is not defined! Please define('PROJECT_ROOT', ...) in your entry script before including plugins.php.");
+}
+
+// Define all necessary constants
+if (!defined('ADMIN_CONFIG_DIR')) {
+    define('ADMIN_CONFIG_DIR', PROJECT_ROOT . '/admin/config');
+}
+
+// Define PLUGIN_DIR if not already defined
+if (!defined('PLUGIN_DIR')) {
+    define('PLUGIN_DIR', PROJECT_ROOT . '/plugins');
+}
+
+// Define PLUGIN_CONFIG if not already defined
+if (!defined('PLUGIN_CONFIG')) {
+    define('PLUGIN_CONFIG', ADMIN_CONFIG_DIR . '/plugins.json');
+}
 
 // --- Hook system ---
 $GLOBALS['fcms_hooks'] = [
@@ -20,7 +39,7 @@ function fcms_add_hook($hook, $callback) {
 }
 
 // Run all callbacks for a hook
-function fcms_do_hook($hook, ...$args) {
+function fcms_do_hook($hook, &...$args) {
     if (!empty($GLOBALS['fcms_hooks'][$hook])) {
         foreach ($GLOBALS['fcms_hooks'][$hook] as $cb) {
             call_user_func_array($cb, $args);

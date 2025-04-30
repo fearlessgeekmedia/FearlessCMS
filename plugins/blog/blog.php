@@ -13,8 +13,27 @@ function blog_load_posts() {
     $posts = json_decode(file_get_contents(BLOG_POSTS_FILE), true);
     return is_array($posts) ? $posts : [];
 }
+
 function blog_save_posts($posts) {
     file_put_contents(BLOG_POSTS_FILE, json_encode($posts, JSON_PRETTY_PRINT));
+}
+
+// Helper function to create URL-friendly slugs
+function blog_create_slug($text) {
+    // Replace non letter or digits by -
+    $text = preg_replace('~[^\pL\d]+~u', '-', $text);
+    // Transliterate
+    $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
+    // Remove unwanted characters
+    $text = preg_replace('~[^-\w]+~', '', $text);
+    // Trim
+    $text = trim($text, '-');
+    // Remove duplicate -
+    $text = preg_replace('~-+~', '-', $text);
+    // Lowercase
+    $text = strtolower($text);
+    
+    return $text;
 }
 
 fcms_register_admin_section('blog', [
@@ -28,9 +47,19 @@ fcms_register_admin_section('blog', [
                 $id = $_POST['id'] ?? null;
                 $title = trim($_POST['title'] ?? '');
                 $slug = trim($_POST['slug'] ?? '');
+                
+                // Auto-generate slug if empty
+                if (empty($slug) && !empty($title)) {
+                    $slug = blog_create_slug($title);
+                } else {
+                    // Ensure slug is URL-friendly
+                    $slug = blog_create_slug($slug);
+                }
+                
                 $date = trim($_POST['date'] ?? date('Y-m-d'));
                 $content = $_POST['content'] ?? '';
                 $status = $_POST['status'] ?? 'draft';
+                
                 if ($title && $slug) {
                     if ($id) {
                         foreach ($posts as &$post) {
@@ -64,23 +93,30 @@ fcms_register_admin_section('blog', [
         if (isset($_GET['edit'])) {
             $edit = null;
             foreach ($posts as $p) if ($p['id'] == $_GET['edit']) $edit = $p;
-            echo '<form method="POST" class="space-y-4">';
-            echo '<input type="hidden" name="action" value="save_post">';
-            echo '<input type="hidden" name="id" value="' . htmlspecialchars($edit['id']) . '">';
-            echo '<div><label>Title:</label><input name="title" value="' . htmlspecialchars($edit['title']) . '" class="border rounded px-2 py-1 w-full"></div>';
-            echo '<div><label>Slug:</label><input name="slug" value="' . htmlspecialchars($edit['slug']) . '" class="border rounded px-2 py-1 w-full"></div>';
-            echo '<div><label>Date:</label><input name="date" value="' . htmlspecialchars($edit['date']) . '" class="border rounded px-2 py-1 w-full"></div>';
-            echo '<div><label>Status:</label><select name="status" class="border rounded px-2 py-1 w-full"><option value="published"' . ($edit['status'] === 'published' ? ' selected' : '') . '>Published</option><option value="draft"' . ($edit['status'] === 'draft' ? ' selected' : '') . '>Draft</option></select></div>';
-            echo '<div><label>Content:</label><textarea name="content" rows="10" class="border rounded px-2 py-1 w-full">' . htmlspecialchars($edit['content']) . '</textarea></div>';
-            echo '<button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Save</button>';
-            echo '</form>';
-            echo '<form method="POST" class="mt-4"><input type="hidden" name="action" value="delete_post"><input type="hidden" name="id" value="' . htmlspecialchars($edit['id']) . '"><button type="submit" onclick="return confirm(\'Delete this post?\')" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Delete</button></form>';
-            echo '<a href="?action=blog" class="inline-block mt-4 text-blue-600 hover:underline">Back to list</a>';
+            if (!$edit) {
+                echo '<div class="bg-red-100 text-red-700 p-4 rounded mb-4">Post not found</div>';
+                echo '<a href="?action=blog" class="inline-block mt-4 text-blue-600 hover:underline">Back to list</a>';
+            } else {
+                echo '<form method="POST" class="space-y-4">';
+                echo '<input type="hidden" name="action" value="save_post">';
+                echo '<input type="hidden" name="id" value="' . htmlspecialchars($edit['id']) . '">';
+                echo '<div><label>Title:</label><input name="title" value="' . htmlspecialchars($edit['title']) . '" class="border rounded px-2 py-1 w-full"></div>';
+                echo '<div><label>Slug:</label><input name="slug" value="' . htmlspecialchars($edit['slug']) . '" class="border rounded px-2 py-1 w-full"></div>';
+                echo '<div class="text-sm text-gray-500">The slug should be URL-friendly (lowercase, no spaces). Example: my-blog-post</div>';
+                echo '<div><label>Date:</label><input name="date" value="' . htmlspecialchars($edit['date']) . '" class="border rounded px-2 py-1 w-full"></div>';
+                echo '<div><label>Status:</label><select name="status" class="border rounded px-2 py-1 w-full"><option value="published"' . ($edit['status'] === 'published' ? ' selected' : '') . '>Published</option><option value="draft"' . ($edit['status'] === 'draft' ? ' selected' : '') . '>Draft</option></select></div>';
+                echo '<div><label>Content:</label><textarea name="content" rows="10" class="border rounded px-2 py-1 w-full">' . htmlspecialchars($edit['content']) . '</textarea></div>';
+                echo '<button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Save</button>';
+                echo '</form>';
+                echo '<form method="POST" class="mt-4"><input type="hidden" name="action" value="delete_post"><input type="hidden" name="id" value="' . htmlspecialchars($edit['id']) . '"><button type="submit" onclick="return confirm(\'Delete this post?\')" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Delete</button></form>';
+                echo '<a href="?action=blog" class="inline-block mt-4 text-blue-600 hover:underline">Back to list</a>';
+            }
         } elseif (isset($_GET['new'])) {
             echo '<form method="POST" class="space-y-4">';
             echo '<input type="hidden" name="action" value="save_post">';
             echo '<div><label>Title:</label><input name="title" class="border rounded px-2 py-1 w-full"></div>';
-            echo '<div><label>Slug:</label><input name="slug" class="border rounded px-2 py-1 w-full"></div>';
+            echo '<div><label>Slug:</label><input name="slug" class="border rounded px-2 py-1 w-full" placeholder="auto-generated-if-empty"></div>';
+            echo '<div class="text-sm text-gray-500">The slug should be URL-friendly (lowercase, no spaces). Example: my-blog-post</div>';
             echo '<div><label>Date:</label><input name="date" value="' . date('Y-m-d') . '" class="border rounded px-2 py-1 w-full"></div>';
             echo '<div><label>Status:</label><select name="status" class="border rounded px-2 py-1 w-full"><option value="published">Published</option><option value="draft">Draft</option></select></div>';
             echo '<div><label>Content:</label><textarea name="content" rows="10" class="border rounded px-2 py-1 w-full"></textarea></div>';
@@ -95,7 +131,10 @@ fcms_register_admin_section('blog', [
                 echo '<td class="py-2 border-b">' . htmlspecialchars($p['slug']) . '</td>';
                 echo '<td class="py-2 border-b">' . htmlspecialchars($p['date']) . '</td>';
                 echo '<td class="py-2 border-b">' . htmlspecialchars($p['status']) . '</td>';
-                echo '<td class="py-2 border-b"><a href="?action=blog&edit=' . $p['id'] . '" class="text-blue-600 hover:underline">Edit</a></td>';
+                echo '<td class="py-2 border-b">
+                    <a href="?action=blog&edit=' . $p['id'] . '" class="text-blue-600 hover:underline mr-2">Edit</a>
+                    <a href="/blog/' . urlencode($p['slug']) . '" target="_blank" class="text-green-600 hover:underline">View</a>
+                </td>';
                 echo '</tr>';
             }
             echo '</table>';
@@ -105,12 +144,19 @@ fcms_register_admin_section('blog', [
 ]);
 
 // Public route: /blog and /blog/{slug}
-fcms_add_hook('route', function (&$handled, &$title, &$content, $pageSlug) {
-    if (preg_match('#^blog(?:/([a-zA-Z0-9_-]+))?$#', $pageSlug, $m)) {
+fcms_add_hook('route', function (&$handled, &$title, &$content, $path) {
+    // Debug
+    // error_log("Blog route hook called for path: $path");
+    
+    if (preg_match('#^blog(?:/([^/]+))?$#', $path, $m)) {
         $posts = blog_load_posts();
+        
         if (!empty($m[1])) {
+            $slug = urldecode($m[1]);
+            // error_log("Looking for post with slug: $slug");
+            
             foreach ($posts as $post) {
-                if ($post['slug'] === $m[1] && $post['status'] === 'published') {
+                if ($post['slug'] === $slug && $post['status'] === 'published') {
                     $title = $post['title'];
                     if (!class_exists('Parsedown')) require_once PROJECT_ROOT . '/includes/Parsedown.php';
                     $Parsedown = new Parsedown();
@@ -119,6 +165,8 @@ fcms_add_hook('route', function (&$handled, &$title, &$content, $pageSlug) {
                     return;
                 }
             }
+            
+            // error_log("Post not found with slug: $slug");
             $title = 'Post Not Found';
             $content = '<p>Sorry, that blog post does not exist.</p>';
             $handled = true;
@@ -128,7 +176,7 @@ fcms_add_hook('route', function (&$handled, &$title, &$content, $pageSlug) {
             $title = 'Blog';
             $content = "<h2>Blog Posts</h2><ul>";
             foreach ($published as $post) {
-                $content .= '<li><a href="/blog/' . htmlspecialchars($post['slug']) . '">' . htmlspecialchars($post['title']) . '</a> <span style="color:#888;font-size:smaller;">' . htmlspecialchars($post['date']) . '</span></li>';
+                $content .= '<li><a href="/blog/' . urlencode($post['slug']) . '">' . htmlspecialchars($post['title']) . '</a> <span style="color:#888;font-size:smaller;">' . htmlspecialchars($post['date']) . '</span></li>';
             }
             $content .= "</ul>";
             $handled = true;
