@@ -67,6 +67,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
+require("version.php");
+
 output_template:
 
 unset($_GET['page']);
@@ -188,9 +190,9 @@ if (!isLoggedIn()) {
         $themeList = '';
         foreach ($themes as $theme) {
             $activeClass = $theme['active'] ? 'ring-2 ring-green-500' : '';
-            $activeLabel = $theme['active'] ? 
+            $activeLabel = $theme['active'] ?
                 '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">Active Theme</span>' : '';
-            $activateButton = !$theme['active'] ? 
+            $activateButton = !$theme['active'] ?
                 '<form method="POST" action="">
                     <input type="hidden" name="action" value="activate_theme" />
                     <input type="hidden" name="theme" value="'.$theme['id'].'" />
@@ -526,7 +528,7 @@ if (!isLoggedIn()) {
     }
 
     $template = str_replace('{{username}}', htmlspecialchars($_SESSION['username']), $template);
+    $template = str_replace('{{app_version}}', htmlspecialchars(APP_VERSION), $template);
 }
 
 echo $template;
-?>
