@@ -2,4 +2,4 @@
     "title": "FearlessCMS"
 } -->
 
-This is a flat-file CMS without PHP code in templates!
+Welcome to FearlessCMS! You want to do something amazing? Let's do something amazing!

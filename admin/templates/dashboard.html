@@ -17,6 +17,7 @@
     <nav class="bg-green-600 text-white p-4">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-4">
+                <span>FearlessCMS 0.0.1</span>
                 <h1 class="text-xl font-bold fira-code"><a href="admin">Mission Control</a></h1>
                 <span class="text-sm">Welcome, {{username}}</span>
                 <a href="/" target="_blank">Your site</a>
@@ -26,6 +27,7 @@
                 <a href="?action=manage_themes" class="hover:text-green-200">Themes</a>
                 <a href="?action=manage_menus" class="hover:text-green-200">Menus</a>
                 <a href="?action=manage_plugins" class="hover:text-green-200">Plugins</a>
+                <a href="?action=manage_sidebars" class="hover:text-green-200">Sidebars</a>
                 <a href="?action=logout" class="hover:text-green-200">Logout</a>
             </div>
         </div>
@@ -65,6 +67,7 @@
             </table>
         </div>
     </div>
+    <span style="display:block;text-align:center">Support development of FearlessCMS on <a href="https://ko-fi.com/fearlessgeekmedia" target="_blank">Ko-Fi!</a></span>
     {{/if_user_management}}
 
     {{if_theme_management}}
@@ -95,6 +98,7 @@
             </div>
         </div>
     </div>
+    <span style="display:block;text-align:center">Support development of FearlessCMS on <a href="https://ko-fi.com/fearlessgeekmedia" target="_blank">Ko-Fi!</a></span>
     {{/if_theme_management}}
 
     {{if_menu_management}}
@@ -147,6 +151,7 @@
             }
         });
     </script>
+    <span style="display:block;text-align:center">Support development of FearlessCMS on <a href="https://ko-fi.com/fearlessgeekmedia" target="_blank">Ko-Fi!</a></span>
     {{/if_content_editor}}
 
     {{if_not_user_management}}
@@ -225,6 +230,7 @@
         }
     });
     </script>
+    <span style="display:block;text-align:center">Support development of FearlessCMS on <a href="https://ko-fi.com/fearlessgeekmedia" target="_blank">Ko-Fi!</a></span>
     {{/if_not_content_editor}}
     {{/if_not_user_management}}
 

@@ -1,3 +1,5 @@
-## Reach out today!
+<!-- json {
+    "title": "Contact Us"
+} -->
 
-You really ought to call or e-mail us! [service@fearlessgeekmedia.com](mailto:service@fearlessgeekmedia.com)
+Need help? Feel free to e-mail us! [service@fearlessgeekmedia.com](mailto:service@fearlessgeekmedia.com)
