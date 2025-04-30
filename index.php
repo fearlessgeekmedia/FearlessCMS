@@ -1,85 +1,80 @@
 <?php
-define('PROJECT_ROOT', __DIR__);
-
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-define('CONTENT_DIR', PROJECT_ROOT . '/content');
-define('INCLUDES_DIR', PROJECT_ROOT . '/includes');
+define('PROJECT_ROOT', __DIR__);
+define('CONTENT_DIR', __DIR__ . '/content');
+define('ADMIN_CONFIG_DIR', __DIR__ . '/admin/config');
 
-require_once INCLUDES_DIR . '/ThemeManager.php';
-require_once INCLUDES_DIR . '/Parsedown.php';
+require_once __DIR__ . '/includes/ThemeManager.php';
+require_once __DIR__ . '/includes/Parsedown.php';
 
-$themeManager = new ThemeManager();
+// Load menus
+$menusFile = ADMIN_CONFIG_DIR . '/menus.json';
+$menus = file_exists($menusFile) ? json_decode(file_get_contents($menusFile), true) : [];
 
+// Get requested page from URL (e.g. /about -> about.md)
 $requestUri = $_SERVER['REQUEST_URI'];
-$path = parse_url($requestUri, PHP_URL_PATH);
-$path = trim($path, '/');
-
-// Default to 'home' if no path
-if ($path === '') {
-    $path = 'home';
+$pageSlug = trim(parse_url($requestUri, PHP_URL_PATH), '/');
+if ($pageSlug === '' || $pageSlug === 'index.php') {
+    $pageSlug = 'home';
 }
+$contentFile = CONTENT_DIR . '/' . $pageSlug . '.md';
 
-$contentFile = CONTENT_DIR . '/' . $path . '.md';
+// Load content or 404
+if (file_exists($contentFile)) {
+    $rawContent = file_get_contents($contentFile);
 
-if (!file_exists($contentFile)) {
-    header('HTTP/1.0 404 Not Found');
-    $contentFile = CONTENT_DIR . '/404.md';
-    $is404 = true;
-} else {
-    $is404 = false;
-}
-
-$contentRaw = file_exists($contentFile) ? file_get_contents($contentFile) : '';
-$title = ucfirst($path);
-
-if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $contentRaw, $matches)) {
-    $metadata = json_decode($matches[1], true);
-    if ($metadata && isset($metadata['title'])) {
-        $title = $metadata['title'];
-    }
-    $contentRaw = preg_replace('/^<!--\s*json\s*(.*?)\s*-->/s', '', $contentRaw);
-}
-
-$parsedown = new Parsedown();
-$contentHtml = $parsedown->text($contentRaw);
-
-if ($is404) {
-    $templateName = '404';
-} elseif ($path === 'home') {
-    $templateName = 'home';
-} else {
-    $templateName = 'page';
-}
-
-try {
-    $templateHtml = $themeManager->getTemplate($templateName, 'page');
-} catch (Exception $e) {
-    $templateHtml = "<!DOCTYPE html><html><head><title>{{title}}</title></head><body>{{content}}</body></html>";
-}
-
-// Process menus in template
-if (preg_match_all('/\{\{menu=([a-zA-Z0-9_-]+)\}\}/', $templateHtml, $menuMatches)) {
-    $menusFile = PROJECT_ROOT . '/admin/config/menus.json';
-    $menus = file_exists($menusFile) ? json_decode(file_get_contents($menusFile), true) : [];
-    foreach ($menuMatches[1] as $i => $menuName) {
-        $menuHtml = '';
-        if (isset($menus[$menuName])) {
-            $menuClass = $menus[$menuName]['menu_class'] ?? '';
-            $menuHtml = "<ul class=\"$menuClass\">";
-            foreach ($menus[$menuName]['items'] as $item) {
-                $itemClass = $item['item_class'] ?? '';
-                $menuHtml .= "<li class=\"$itemClass\"><a href=\"{$item['url']}\">{$item['label']}</a></li>";
-            }
-            $menuHtml .= "</ul>";
+    // Extract title from JSON frontmatter if present
+    $title = ucfirst($pageSlug);
+    $content = $rawContent;
+    if (preg_match('/^<!--\s*json\s*(.*?)\s*-->\s*/s', $rawContent, $matches)) {
+        $metadata = json_decode($matches[1], true);
+        if ($metadata && isset($metadata['title'])) {
+            $title = $metadata['title'];
         }
-        $templateHtml = str_replace($menuMatches[0][$i], $menuHtml, $templateHtml);
+        // Remove frontmatter from content
+        $content = preg_replace('/^<!--\s*json\s*(.*?)\s*-->\s*/s', '', $rawContent, 1);
     }
+
+    // Parse Markdown to HTML
+    $Parsedown = new Parsedown();
+    $content = $Parsedown->text($content);
+
+    // Load theme template
+    $themeManager = new ThemeManager();
+    $template = $themeManager->getTemplate('page');
+} else {
+    // 404
+    $title = 'Page Not Found';
+    $content = '<p>The page you requested could not be found.</p><p><a href="/">Return to Home</a></p>';
+    $themeManager = new ThemeManager();
+    $template = $themeManager->getTemplate('404', 'page');
 }
 
-$templateHtml = str_replace('{{title}}', htmlspecialchars($title), $templateHtml);
-$templateHtml = str_replace('{{content}}', $contentHtml, $templateHtml);
+// --- Menu rendering function ---
+function render_menu($menu) {
+    if (empty($menu['items'])) return '';
+    $html = '<ul' . (!empty($menu['menu_class']) ? ' class="' . htmlspecialchars($menu['menu_class']) . '"' : '') . '>';
+    foreach ($menu['items'] as $item) {
+        $target = !empty($item['target']) ? ' target="' . htmlspecialchars($item['target']) . '"' : '';
+        $class = !empty($item['item_class']) ? ' class="' . htmlspecialchars($item['item_class']) . '"' : '';
+        $html .= '<li><a href="' . htmlspecialchars($item['url']) . '"' . $class . $target . '>' . htmlspecialchars($item['label']) . '</a></li>';
+    }
+    $html .= '</ul>';
+    return $html;
+}
 
-echo $templateHtml;
+// Replace all menu placeholders in the template
+$template = preg_replace_callback('/\{\{menu=([a-zA-Z0-9_-]+)\}\}/', function($matches) use ($menus) {
+    $menuName = $matches[1];
+    return isset($menus[$menuName]) ? render_menu($menus[$menuName]) : '';
+}, $template);
+
+// Replace other placeholders
+$template = str_replace('{{title}}', htmlspecialchars($title), $template);
+$template = str_replace('{{content}}', $content, $template);
+
+// Output the final page
+echo $template;

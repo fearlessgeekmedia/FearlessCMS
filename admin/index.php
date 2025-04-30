@@ -3,24 +3,19 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Define PROJECT_ROOT constant
 define('PROJECT_ROOT', dirname(__DIR__));
-
-session_start();
-
 define('ADMIN_CONFIG_DIR', __DIR__ . '/config');
 define('ADMIN_TEMPLATE_DIR', __DIR__ . '/templates');
 define('CONTENT_DIR', __DIR__ . '/../content');
 
-// Include ThemeManager class
+session_start();
+
 require_once dirname(__DIR__) . '/includes/ThemeManager.php';
 
-// Create config directory if it doesn't exist
 if (!file_exists(ADMIN_CONFIG_DIR)) {
     mkdir(ADMIN_CONFIG_DIR, 0755, true);
 }
 
-// Initialize users file if it doesn't exist
 $usersFile = ADMIN_CONFIG_DIR . '/users.json';
 if (!file_exists($usersFile)) {
     $defaultAdmin = [
@@ -30,7 +25,6 @@ if (!file_exists($usersFile)) {
     file_put_contents($usersFile, json_encode([$defaultAdmin]));
 }
 
-// Check if user is logged in
 function isLoggedIn() {
     return isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true;
 }
@@ -72,15 +66,12 @@ if (!isLoggedIn()) {
             } else {
                 $fileContent = file_get_contents($filePath);
                 $pageTitle = '';
-                
-                // Extract title from JSON frontmatter if it exists
                 if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $fileContent, $matches)) {
                     $metadata = json_decode($matches[1], true);
                     if ($metadata && isset($metadata['title'])) {
                         $pageTitle = $metadata['title'];
                     }
                 }
-
                 $template = preg_replace('/\{\{if_content_editor\}\}(.*?)\{\{\/if_content_editor\}\}/s', '$1', $template);
                 $template = preg_replace('/\{\{if_not_content_editor\}\}.*?\{\{\/if_not_content_editor\}\}/s', '', $template);
                 $template = preg_replace('/\{\{if_user_management\}\}.*?\{\{\/if_user_management\}\}/s', '', $template);
@@ -119,11 +110,11 @@ if (!isLoggedIn()) {
     } else if ($isThemeManagement) {
         $template = preg_replace('/\{\{if_theme_management\}\}(.*?)\{\{\/if_theme_management\}\}/s', '$1', $template);
         $template = preg_replace('/\{\{if_user_management\}\}.*?\{\{\/if_user_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_not_user_management\}\}.*?\{\{\/if_not_user_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_content_editor\}\}.*?\{\{\/if_content_editor\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_not_content_editor\}\}.*?\{\{\/if_not_content_editor\}\}/s', '', $template);
         $template = preg_replace('/\{\{if_menu_management\}\}.*?\{\{\/if_menu_management\}\}/s', '', $template);
-
+        $template = preg_replace('/\{\{if_content_editor\}\}.*?\{\{\/if_content_editor\}\}/s', '', $template);
+        $template = preg_replace('/\{\{if_not_user_management\}\}.*?\{\{\/if_not_user_management\}\}/s', '', $template);
+        $template = preg_replace('/\{\{if_not_content_editor\}\}.*?\{\{\/if_not_content_editor\}\}/s', '', $template);
+        
         // Initialize theme manager
         $themeManager = new ThemeManager();
         
@@ -139,7 +130,7 @@ if (!isLoggedIn()) {
                 }
             }
         }
-
+        
         // Get all themes
         $themes = $themeManager->getThemes();
         
@@ -168,9 +159,10 @@ if (!isLoggedIn()) {
                     '.$activateButton.'
                 </div>';
         }
-
+        
         // Replace the {{#themes}} ... {{/themes}} block with the generated HTML
         $template = preg_replace('/\{\{#themes\}\}.*?\{\{\/themes\}\}/s', $themeList, $template);
+
     } else if ($isMenuManagement) {
         $menusFile = ADMIN_CONFIG_DIR . '/menus.json';
         $menus = file_exists($menusFile) ? json_decode(file_get_contents($menusFile), true) : [];
@@ -208,8 +200,6 @@ if (!isLoggedIn()) {
         // Handle menu save
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'save_menu') {
             $currentMenu = $_POST['menu'];
-            
-            // Create a clean array of menu items
             $menuItems = [];
             if (isset($_POST['items']) && is_array($_POST['items'])) {
                 foreach ($_POST['items'] as $item) {
@@ -217,15 +207,14 @@ if (!isLoggedIn()) {
                         $menuItems[] = [
                             'label' => $item['label'] ?? '',
                             'url' => $item['url'] ?? '',
-                            'item_class' => $item['item_class'] ?? ''
+                            'item_class' => $item['item_class'] ?? '',
+                            'target' => $item['target'] ?? ''
                         ];
                     }
                 }
             }
-            
             $menus[$currentMenu]['items'] = $menuItems;
             $menus[$currentMenu]['menu_class'] = $_POST['menu_class'] ?? '';
-            
             file_put_contents($menusFile, json_encode($menus, JSON_PRETTY_PRINT));
             $success = "Menu saved!";
         }
@@ -238,7 +227,6 @@ if (!isLoggedIn()) {
             $sel = $name === $currentMenu ? 'selected' : '';
             $menuOptions .= "<option value=\"" . htmlspecialchars($name) . "\" $sel>" . htmlspecialchars($name) . "</option>";
         }
-        // Add theme-suggested menus not in the file
         foreach ($themeMenus as $name => $_) {
             if (!isset($menus[$name])) {
                 $menuOptions .= "<option value=\"" . htmlspecialchars($name) . "\">" . htmlspecialchars($name) . " (suggested by theme)</option>";
@@ -248,15 +236,16 @@ if (!isLoggedIn()) {
         // Build menu items HTML and use unique keys
         $menuItemsHtml = '';
         foreach ($mainMenu['items'] as $idx => $item) {
-            $menuItemsHtml .= '<div class="flex space-x-2 mb-2">';
-            $menuItemsHtml .= '<input type="text" name="items['.$idx.'][label]" value="'.htmlspecialchars($item['label']).'" placeholder="Label" class="border rounded px-2 py-1">';
-            $menuItemsHtml .= '<input type="text" name="items['.$idx.'][url]" value="'.htmlspecialchars($item['url']).'" placeholder="URL" class="border rounded px-2 py-1">';
-            $menuItemsHtml .= '<input type="text" name="items['.$idx.'][item_class]" value="'.htmlspecialchars($item['item_class'] ?? '').'" placeholder="Item Class" class="border rounded px-2 py-1">';
-            $menuItemsHtml .= '<button type="button" onclick="this.parentNode.remove()" class="bg-red-500 text-white px-2 py-1 rounded">×</button>';
+            $menuItemsHtml .= '<div class="flex space-x-2 mb-2 items-end">';
+            $menuItemsHtml .= '<div><label class="block text-xs mb-1">Label</label><input type="text" name="items['.$idx.'][label]" value="'.htmlspecialchars($item['label']).'" placeholder="Label" class="border rounded px-2 py-1"></div>';
+            $menuItemsHtml .= '<div><label class="block text-xs mb-1">URL</label><input type="text" name="items['.$idx.'][url]" value="'.htmlspecialchars($item['url']).'" placeholder="URL" class="border rounded px-2 py-1"></div>';
+            $menuItemsHtml .= '<div><label class="block text-xs mb-1">Item Class</label><input type="text" name="items['.$idx.'][item_class]" value="'.htmlspecialchars($item['item_class'] ?? '').'" placeholder="Item Class" class="border rounded px-2 py-1"></div>';
+            $menuItemsHtml .= '<div><label class="block text-xs mb-1">Target</label><input type="text" name="items['.$idx.'][target]" value="'.htmlspecialchars($item['target'] ?? '').'" placeholder="_blank" class="border rounded px-2 py-1" style="width:80px"></div>';
+            $menuItemsHtml .= '<button type="button" onclick="this.parentNode.remove()" class="bg-red-500 text-white px-2 py-1 rounded h-8 mb-1">×</button>';
             $menuItemsHtml .= '</div>';
         }
 
-        $menuManagementHtml = <<<HTML
+                $menuManagementHtml = <<<HTML
         <form method="GET" class="mb-4">
             <input type="hidden" name="action" value="manage_menus">
             <label for="menu" class="mr-2">Select Menu:</label>
@@ -288,22 +277,32 @@ if (!isLoggedIn()) {
             const container = document.getElementById('menu-items');
             const idx = Date.now();
             const newItem = document.createElement('div');
-            newItem.className = 'flex space-x-2 mb-2';
+            newItem.className = 'flex space-x-2 mb-2 items-end';
             newItem.innerHTML = `
-                <input type="text" name="items[\${idx}][label]" placeholder="Label" class="border rounded px-2 py-1">
-                <input type="text" name="items[\${idx}][url]" placeholder="URL" class="border rounded px-2 py-1">
-                <input type="text" name="items[\${idx}][item_class]" placeholder="Item Class" class="border rounded px-2 py-1">
-                <button type="button" onclick="this.parentNode.remove()" class="bg-red-500 text-white px-2 py-1 rounded">×</button>
+                <div>
+                    <label class="block text-xs mb-1">Label</label>
+                    <input type="text" name="items[\${idx}][label]" placeholder="Label" class="border rounded px-2 py-1">
+                </div>
+                <div>
+                    <label class="block text-xs mb-1">URL</label>
+                    <input type="text" name="items[\${idx}][url]" placeholder="URL" class="border rounded px-2 py-1">
+                </div>
+                <div>
+                    <label class="block text-xs mb-1">Item Class</label>
+                    <input type="text" name="items[\${idx}][item_class]" placeholder="Item Class" class="border rounded px-2 py-1">
+                </div>
+                <div>
+                    <label class="block text-xs mb-1">Target</label>
+                    <input type="text" name="items[\${idx}][target]" placeholder="_blank" class="border rounded px-2 py-1" style="width:80px">
+                </div>
+                <button type="button" onclick="this.parentNode.remove()" class="bg-red-500 text-white px-2 py-1 rounded h-8 mb-1">×</button>
             `;
             container.appendChild(newItem);
         }
         </script>
         HTML;
 
-        // Replace the menu management block with the HTML
         $template = preg_replace('/\{\{if_menu_management\}\}(.*?)\{\{\/if_menu_management\}\}/s', $menuManagementHtml, $template);
-
-        // Remove all other blocks
         $template = preg_replace('/\{\{if_user_management\}\}.*?\{\{\/if_user_management\}\}/s', '', $template);
         $template = preg_replace('/\{\{if_theme_management\}\}.*?\{\{\/if_theme_management\}\}/s', '', $template);
         $template = preg_replace('/\{\{if_content_editor\}\}.*?\{\{\/if_content_editor\}\}/s', '', $template);
@@ -325,15 +324,12 @@ if (!isLoggedIn()) {
             $filename = basename($file);
             $fileContent = file_get_contents($file);
             $displayName = $filename;
-            
-            // Try to extract title from JSON frontmatter
             if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $fileContent, $matches)) {
                 $metadata = json_decode($matches[1], true);
                 if ($metadata && isset($metadata['title'])) {
                     $displayName = $metadata['title'] . ' <span class="text-gray-400 text-xs">(' . $filename . ')</span>';
                 }
             }
-            
             $contentList .= "<li class='py-2 px-4 hover:bg-gray-100'>
                 <div class='flex justify-between items-center'>
                     <span>" . $displayName . "</span>
@@ -348,7 +344,6 @@ if (!isLoggedIn()) {
                 </div>
             </li>";
         }
-
         $template = str_replace('{{content_list}}', $contentList, $template);
     }
 
