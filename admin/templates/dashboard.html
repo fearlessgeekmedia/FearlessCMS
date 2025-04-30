@@ -15,7 +15,6 @@
     <nav class="bg-green-600 text-white p-4">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-4">
-                <span>FearlessCMS 0.0.2</span>
                 <h1 class="text-xl font-bold fira-code"><a href="admin">Mission Control</a></h1>
                 <span class="text-sm">Welcome, {{username}}</span>
                 <a href="/" target="_blank">Your site</a>
@@ -109,7 +108,6 @@
             </table>
         </div>
     </div>
-    <span style="display:block;text-align:center">Support development of FearlessCMS on <a href="https://ko-fi.com/fearlessgeekmedia" target="_blank">Ko-Fi!</a></span>
     {{/if_user_management}}
 
     {{if_theme_management}}
@@ -140,7 +138,6 @@
             </div>
         </div>
     </div>
-    <span style="display:block;text-align:center">Support development of FearlessCMS on <a href="https://ko-fi.com/fearlessgeekmedia" target="_blank">Ko-Fi!</a></span>
     {{/if_theme_management}}
 
     {{if_menu_management}}
@@ -193,7 +190,6 @@
             }
         });
     </script>
-    <span style="display:block;text-align:center">Support development of FearlessCMS on <a href="https://ko-fi.com/fearlessgeekmedia" target="_blank">Ko-Fi!</a></span>
     {{/if_content_editor}}
 
     {{if_not_user_management}}
@@ -272,8 +268,26 @@
         }
     });
     </script>
-    <span style="display:block;text-align:center">Support development of FearlessCMS on <a href="https://ko-fi.com/fearlessgeekmedia" target="_blank">Ko-Fi!</a></span>
     {{/if_not_content_editor}}
     {{/if_not_user_management}}
+
+    <footer class="border-t py-4 bottom-0 w-full absolute">
+        <div class="max-w-7xl px-2 mx-auto text-center flex flex-col items-center gap-2 md:flex-row md:justify-between md:mx-2 md:px-4">
+            <div>Support development of 
+                <span class="font-medium">FearlessCMS</span> 
+                on 
+                <a 
+                    href="https://ko-fi.com/fearlessgeekmedia" 
+                    target="_blank" 
+                    class="font-medium underline hover:no-underline underline-offset-2">
+                        Ko-Fi!
+                </a>
+            </div>
+            <div>
+                <span class="font-medium">FearlessCMS</span>
+                <span>{{app_version}}</span>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>
