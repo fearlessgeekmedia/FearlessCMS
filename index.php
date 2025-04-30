@@ -28,7 +28,7 @@ require_once PROJECT_ROOT . '/includes/Parsedown.php';
 $requestUri = $_SERVER['REQUEST_URI'];
 $path = parse_url($requestUri, PHP_URL_PATH);
 $path = trim($path, '/');
-$path = empty($path) ? 'index' : $path;
+$path = empty($path) ? 'home' : $path;
 
 // Initialize variables
 $title = '';
