@@ -23,6 +23,7 @@
                 <a href="?action=manage_users" class="hover:text-green-200">Users</a>
                 <a href="?action=manage_themes" class="hover:text-green-200">Themes</a>
                 <a href="?action=manage_menus" class="hover:text-green-200">Menus</a>
+                <a href="?action=manage_widgets" class="hover:text-green-200">Widgets</a>
                 <a href="?action=manage_plugins" class="hover:text-green-200">Plugins</a>
                 {{plugin_nav_items}}
                 <a href="?action=logout" class="hover:text-green-200">Logout</a>
@@ -31,6 +32,133 @@
     </nav>
     {{error}}
     {{success}}
+
+    {{if_widget_management}}
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-2xl font-bold mb-6 fira-code">Widget Management</h2>
+            
+            <!-- Sidebar Selection -->
+            <div class="mb-8">
+                {{sidebar_selection}}
+                
+                <!-- New Sidebar Form -->
+                <form method="POST" class="mb-4">
+                    <input type="hidden" name="action" value="create_sidebar">
+                    <div class="grid grid-cols-3 gap-4">
+                        <input type="text" name="sidebar_id" required placeholder="Sidebar ID (e.g., left-sidebar)" 
+                               class="border rounded px-2 py-1">
+                        <input type="text" name="sidebar_name" placeholder="Display Name" 
+                               class="border rounded px-2 py-1">
+                        <button type="submit" class="bg-blue-500 text-white px-3 py-1 rounded">Create Sidebar</button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Widget List -->
+            <div id="widgets-container">
+                {{widget_list}}
+            </div>
+            
+            <!-- Add Widget Form -->
+            <form method="POST" class="mt-4">
+                <input type="hidden" name="action" value="add_widget">
+                <input type="hidden" name="sidebar_id" value="{{current_sidebar}}">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block mb-1">Widget Type</label>
+                        <select name="widget_type" class="w-full border rounded px-2 py-1">
+                            <option value="html">HTML</option>
+                            <option value="text">Text</option>
+                            <option value="markdown">Markdown</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block mb-1">Widget Title</label>
+                        <input type="text" name="widget_title" class="w-full border rounded px-2 py-1">
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <label class="block mb-1">Content</label>
+                    <textarea name="widget_content" rows="4" class="w-full border rounded px-2 py-1"></textarea>
+                </div>
+                <button type="submit" class="mt-4 bg-green-500 text-white px-4 py-2 rounded">Add Widget</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+    <script>
+    new Sortable(document.getElementById('widgets-container'), {
+        animation: 150,
+        handle: '.widget-handle',
+        onEnd: function(evt) {
+            const widgets = Array.from(evt.to.children).map(el => el.dataset.widgetId);
+            const form = new FormData();
+            form.append('action', 'reorder_widgets');
+            form.append('sidebar_id', '{{current_sidebar}}');
+            form.append('widget_order', JSON.stringify(widgets));
+            
+            fetch('', {
+                method: 'POST',
+                body: form
+            }).then(response => response.text())
+              .then(() => window.location.reload());
+        }
+    });
+
+    function editWidget(widgetId) {
+        // Implement edit widget functionality
+    }
+
+    function deleteWidget(widgetId) {
+        if (confirm('Are you sure you want to delete this widget?')) {
+            const form = new FormData();
+            form.append('action', 'delete_widget');
+            form.append('sidebar_id', '{{current_sidebar}}');
+            form.append('widget_id', widgetId);
+            
+            fetch('', {
+                method: 'POST',
+                body: form
+            }).then(response => response.text())
+              .then(() => window.location.reload());
+        }
+    }
+
+    function deleteSidebar(sidebarId) {
+    if (confirm('Are you sure you want to delete this sidebar and all its widgets?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.innerHTML = `
+            <input type="hidden" name="action" value="delete_sidebar">
+            <input type="hidden" name="sidebar_id" value="${sidebarId}">
+        `;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+    function deleteWidget(widgetId, sidebarId) {
+        if (confirm('Are you sure you want to delete this widget?')) {
+            fetch('', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: `action=delete_widget&sidebar_id=${encodeURIComponent(sidebarId)}&widget_id=${encodeURIComponent(widgetId)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.querySelector(`[data-widget-id="${widgetId}"]`).remove();
+                }
+            });
+        }
+    }
+    </script>
+    {{/if_widget_management}}
 
     {{if_plugin_management}}
     <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
@@ -267,11 +395,12 @@
             });
         }
     });
+
     </script>
     {{/if_not_content_editor}}
     {{/if_not_user_management}}
 
-    <footer class="border-t py-4 bottom-0 w-full absolute">
+    <footer class="border-t py-4 bottom-0 w-full sticky bg-gray-100">
         <div class="max-w-7xl px-2 mx-auto text-center flex flex-col items-center gap-2 md:flex-row md:justify-between md:mx-2 md:px-4">
             <div>Support development of 
                 <span class="font-medium">FearlessCMS</span> 
