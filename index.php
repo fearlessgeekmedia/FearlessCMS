@@ -13,13 +13,6 @@ require_once __DIR__ . '/includes/ThemeManager.php';
 require_once __DIR__ . '/includes/Parsedown.php';
 require_once __DIR__ . '/includes/plugins.php';
 
-$configFile = CONFIG_DIR . '/config.json';
-$config = [];
-if (file_exists($configFile)) {
-    $config = json_decode(file_get_contents($configFile), true);
-}
-$siteName = $config['site_name'] ?? 'FearlessCMS';
-
 // Helper: Render a menu by ID
 function render_menu($menuId) {
     $menuFile = PROJECT_ROOT . '/admin/config/menus.json';
@@ -35,6 +28,24 @@ function render_menu($menuId) {
     }
     $html .= '</ul>';
     return $html;
+}
+
+// Load site config (for site_name and more)
+$configFile = CONFIG_DIR . '/config.json';
+$config = [];
+if (file_exists($configFile)) {
+    $config = json_decode(file_get_contents($configFile), true);
+}
+$siteName = $config['site_name'] ?? 'FearlessCMS';
+
+// Load custom code (CSS/JS)
+$customCodeFile = CONFIG_DIR . '/custom_code.json';
+$customCss = '';
+$customJs = '';
+if (file_exists($customCodeFile)) {
+    $customCode = json_decode(file_get_contents($customCodeFile), true);
+    $customCss = $customCode['css'] ?? '';
+    $customJs = $customCode['js'] ?? '';
 }
 
 // Routing: get the requested path
@@ -113,13 +124,31 @@ $after = preg_replace_callback('/\{\{menu=([\w-]+)\}\}/', function($m) {
     return render_menu($m[1]);
 }, $after);
 
-// Insert content and title into template
+// Replace site_name and title in template
+$before = str_replace('{{site_name}}', htmlspecialchars($siteName), $before);
+$after = str_replace('{{site_name}}', htmlspecialchars($siteName), $after);
 $before = str_replace('{{title}}', htmlspecialchars($pageTitle ?: ($is404 ? 'Page Not Found' : 'Untitled')), $before);
 $after = str_replace('{{title}}', htmlspecialchars($pageTitle ?: ($is404 ? 'Page Not Found' : 'Untitled')), $after);
 
-// Insert content and site name into template
-$before = str_replace('{{site_name}}', htmlspecialchars($siteName), $before);
-$after = str_replace('{{site_name}}', htmlspecialchars($siteName), $after);
+// Inject custom CSS before </head>
+if ($customCss) {
+    $before = preg_replace(
+        '/<\/head>/i',
+        "<style>\n" . $customCss . "\n</style>\n</head>",
+        $before,
+        1
+    );
+}
+
+// Inject custom JS before </body>
+if ($customJs) {
+    $after = preg_replace(
+        '/<\/body>/i',
+        "<script>\n" . $customJs . "\n</script>\n</body>",
+        $after,
+        1
+    );
+}
 
 // Output the final page
 echo $before . $contentHtml . $after;

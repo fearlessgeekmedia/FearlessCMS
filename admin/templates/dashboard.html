@@ -355,7 +355,23 @@
             </div>
         </div>
     </div>
-
+    
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="bg-white shadow rounded-lg p-6 mb-8">
+            <h2 class="text-xl font-bold mb-4 fira-code">Custom Code</h2>
+            <form method="POST">
+                <input type="hidden" name="action" value="save_custom_code">
+                <div class="mb-4">
+                    <label class="block font-medium mb-1" for="custom_css">Custom CSS (injected into &lt;head&gt;):</label>
+                    <textarea id="custom_css" name="custom_css" rows="6" class="w-full border rounded px-3 py-2">{{custom_css}}</textarea>
+                </div>
+                <div class="mb-4">
+                    <label class="block font-medium mb-1" for="custom_js">Custom JavaScript (injected before &lt;/body&gt;):</label>
+                    <textarea id="custom_js" name="custom_js" rows="6" class="w-full border rounded px-3 py-2">{{custom_js}}</textarea>
+                </div>
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Save Custom Code</button>
+            </form>
+        </div>
     <!-- New Page Modal/Form -->
     <div id="newPageModal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">

@@ -259,6 +259,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
+// Handle custom code save
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_custom_code') {
+    if (!isLoggedIn()) {
+        $error = 'You must be logged in to update custom code';
+    } else {
+        $customCss = $_POST['custom_css'] ?? '';
+        $customJs = $_POST['custom_js'] ?? '';
+        $customCodeFile = CONFIG_DIR . '/custom_code.json';
+        $customCode = [
+            'css' => $customCss,
+            'js' => $customJs
+        ];
+        file_put_contents($customCodeFile, json_encode($customCode, JSON_PRETTY_PRINT));
+        $success = 'Custom code updated successfully';
+    }
+}
+
+$customCodeFile = CONFIG_DIR . '/custom_code.json';
+$customCss = '';
+$customJs = '';
+if (file_exists($customCodeFile)) {
+    $customCode = json_decode(file_get_contents($customCodeFile), true);
+    $customCss = $customCode['css'] ?? '';
+    $customJs = $customCode['js'] ?? '';
+}
+
+
 // Handle theme activation
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'activate_theme') {
     if (!isLoggedIn()) {
@@ -326,7 +353,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
-require("version.php");
+require_once PROJECT_ROOT . '/version.php';
 
 output_template:
 
@@ -1079,6 +1106,8 @@ else if ($isMenuManagement) {
 
 // ...after loading the dashboard template...
 $template = str_replace('{{site_name}}', htmlspecialchars($siteName), $template);
+$template = str_replace('{{custom_css}}', htmlspecialchars($customCss), $template);
+$template = str_replace('{{custom_js}}', htmlspecialchars($customJs), $template);
 
 echo $template;
 ?>
