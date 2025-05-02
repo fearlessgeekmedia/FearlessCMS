@@ -97,7 +97,7 @@ fcms_register_admin_section('blog', [
                 echo '<div class="bg-red-100 text-red-700 p-4 rounded mb-4">Post not found</div>';
                 echo '<a href="?action=blog" class="inline-block mt-4 text-blue-600 hover:underline">Back to list</a>';
             } else {
-                echo '<form method="POST" class="space-y-4">';
+                echo '<form method="POST" class="space-y-4" id="blog-post-form">';
                 echo '<input type="hidden" name="action" value="save_post">';
                 echo '<input type="hidden" name="id" value="' . htmlspecialchars($edit['id']) . '">';
                 echo '<div><label>Title:</label><input name="title" value="' . htmlspecialchars($edit['title']) . '" class="border rounded px-2 py-1 w-full"></div>';
@@ -105,24 +105,65 @@ fcms_register_admin_section('blog', [
                 echo '<div class="text-sm text-gray-500">The slug should be URL-friendly (lowercase, no spaces). Example: my-blog-post</div>';
                 echo '<div><label>Date:</label><input name="date" value="' . htmlspecialchars($edit['date']) . '" class="border rounded px-2 py-1 w-full"></div>';
                 echo '<div><label>Status:</label><select name="status" class="border rounded px-2 py-1 w-full"><option value="published"' . ($edit['status'] === 'published' ? ' selected' : '') . '>Published</option><option value="draft"' . ($edit['status'] === 'draft' ? ' selected' : '') . '>Draft</option></select></div>';
-                echo '<div><label>Content:</label><textarea name="content" rows="10" class="border rounded px-2 py-1 w-full">' . htmlspecialchars($edit['content']) . '</textarea></div>';
+                echo '<div><label>Content:</label></div>';
+                echo '<div id="blog-toast-editor"></div>';
+                echo '<input type="hidden" name="content" id="blog-editor-content">';
                 echo '<button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Save</button>';
                 echo '</form>';
                 echo '<form method="POST" class="mt-4"><input type="hidden" name="action" value="delete_post"><input type="hidden" name="id" value="' . htmlspecialchars($edit['id']) . '"><button type="submit" onclick="return confirm(\'Delete this post?\')" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Delete</button></form>';
                 echo '<a href="?action=blog" class="inline-block mt-4 text-blue-600 hover:underline">Back to list</a>';
+                
+                // Toast UI Editor initialization
+                echo '<script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    var initialContent = ' . json_encode($edit['content']) . ';
+                    var editor = new toastui.Editor({
+                        el: document.querySelector("#blog-toast-editor"),
+                        height: "500px",
+                        initialEditType: "markdown",
+                        previewStyle: "vertical",
+                        initialValue: initialContent,
+                        usageStatistics: false
+                    });
+                    
+                    document.getElementById("blog-post-form").addEventListener("submit", function(e) {
+                        document.getElementById("blog-editor-content").value = editor.getMarkdown();
+                    });
+                });
+                </script>';
             }
         } elseif (isset($_GET['new'])) {
-            echo '<form method="POST" class="space-y-4">';
+            echo '<form method="POST" class="space-y-4" id="blog-post-form">';
             echo '<input type="hidden" name="action" value="save_post">';
             echo '<div><label>Title:</label><input name="title" class="border rounded px-2 py-1 w-full"></div>';
             echo '<div><label>Slug:</label><input name="slug" class="border rounded px-2 py-1 w-full" placeholder="auto-generated-if-empty"></div>';
             echo '<div class="text-sm text-gray-500">The slug should be URL-friendly (lowercase, no spaces). Example: my-blog-post</div>';
             echo '<div><label>Date:</label><input name="date" value="' . date('Y-m-d') . '" class="border rounded px-2 py-1 w-full"></div>';
             echo '<div><label>Status:</label><select name="status" class="border rounded px-2 py-1 w-full"><option value="published">Published</option><option value="draft">Draft</option></select></div>';
-            echo '<div><label>Content:</label><textarea name="content" rows="10" class="border rounded px-2 py-1 w-full"></textarea></div>';
+            echo '<div><label>Content:</label></div>';
+            echo '<div id="blog-toast-editor"></div>';
+            echo '<input type="hidden" name="content" id="blog-editor-content">';
             echo '<button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Save</button>';
             echo '</form>';
             echo '<a href="?action=blog" class="inline-block mt-4 text-blue-600 hover:underline">Back to list</a>';
+            
+            // Toast UI Editor initialization for new post
+            echo '<script>
+            document.addEventListener("DOMContentLoaded", function() {
+                var editor = new toastui.Editor({
+                    el: document.querySelector("#blog-toast-editor"),
+                    height: "500px",
+                    initialEditType: "markdown",
+                    previewStyle: "vertical",
+                    initialValue: "# New Blog Post\n\nStart writing your content here...",
+                    usageStatistics: false
+                });
+                
+                document.getElementById("blog-post-form").addEventListener("submit", function(e) {
+                    document.getElementById("blog-editor-content").value = editor.getMarkdown();
+                });
+            });
+            </script>';
         } else {
             echo '<table class="w-full border-collapse"><tr><th class="border-b py-2">Title</th><th class="border-b py-2">Slug</th><th class="border-b py-2">Date</th><th class="border-b py-2">Status</th><th class="border-b py-2">Actions</th></tr>';
             foreach ($posts as $p) {
@@ -145,15 +186,11 @@ fcms_register_admin_section('blog', [
 
 // Public route: /blog and /blog/{slug}
 fcms_add_hook('route', function (&$handled, &$title, &$content, $path) {
-    // Debug
-    // error_log("Blog route hook called for path: $path");
-    
     if (preg_match('#^blog(?:/([^/]+))?$#', $path, $m)) {
         $posts = blog_load_posts();
         
         if (!empty($m[1])) {
             $slug = urldecode($m[1]);
-            // error_log("Looking for post with slug: $slug");
             
             foreach ($posts as $post) {
                 if ($post['slug'] === $slug && $post['status'] === 'published') {
@@ -166,7 +203,6 @@ fcms_add_hook('route', function (&$handled, &$title, &$content, $path) {
                 }
             }
             
-            // error_log("Post not found with slug: $slug");
             $title = 'Post Not Found';
             $content = '<p>Sorry, that blog post does not exist.</p>';
             $handled = true;
