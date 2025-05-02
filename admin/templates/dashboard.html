@@ -318,6 +318,13 @@
     {{if_not_content_editor}}
     <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div class="bg-white shadow rounded-lg p-6">
+            <!-- Site Name Form -->
+            <form method="POST" class="mb-8 flex items-center gap-4">
+                <input type="hidden" name="action" value="update_site_name">
+                <label for="site_name" class="font-medium">Site Name:</label>
+                <input type="text" id="site_name" name="site_name" value="{{site_name}}" class="border rounded px-3 py-2 flex-1" required>
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Save</button>
+            </form>
             <h2 class="text-2xl font-bold mb-6 fira-code">Content Management</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>

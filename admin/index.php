@@ -7,6 +7,7 @@ define('PROJECT_ROOT', dirname(__DIR__));
 define('ADMIN_CONFIG_DIR', __DIR__ . '/config');
 define('ADMIN_TEMPLATE_DIR', __DIR__ . '/templates');
 define('CONTENT_DIR', __DIR__ . '/../content');
+define('CONFIG_DIR', dirname(__DIR__) . '/config');
 
 session_start();
 
@@ -72,6 +73,36 @@ require("newpage-handler.php");
 require("filesave-handler.php");
 require("filedel-handler.php");
 require("widgets-handler.php");
+
+// Handle site name update
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_site_name') {
+    if (!isLoggedIn()) {
+        $error = 'You must be logged in to update the site name';
+    } else {
+        $newSiteName = trim($_POST['site_name'] ?? '');
+        if ($newSiteName === '') {
+            $error = 'Site name cannot be empty';
+        } else {
+            $configFile = CONFIG_DIR . '/config.json';
+            $config = [];
+            if (file_exists($configFile)) {
+                $config = json_decode(file_get_contents($configFile), true);
+            }
+            $config['site_name'] = $newSiteName;
+            file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT));
+            $success = 'Site name updated successfully';
+        }
+    }
+}
+
+// Load config for site name
+$configFile = CONFIG_DIR . '/config.json';
+$config = [];
+if (file_exists($configFile)) {
+    $config = json_decode(file_get_contents($configFile), true);
+}
+$siteName = $config['site_name'] ?? 'FearlessCMS';
+
 
 // Handle deleting user
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_user') {
@@ -1045,6 +1076,9 @@ else if ($isMenuManagement) {
     $template = str_replace('{{username}}', htmlspecialchars($_SESSION['username']), $template);
     $template = str_replace('{{app_version}}', htmlspecialchars(APP_VERSION), $template);
 }
+
+// ...after loading the dashboard template...
+$template = str_replace('{{site_name}}', htmlspecialchars($siteName), $template);
 
 echo $template;
 ?>

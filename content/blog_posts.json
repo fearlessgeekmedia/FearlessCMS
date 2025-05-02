@@ -1,1 +1,10 @@
-[]
+[
+    {
+        "id": 1746164988,
+        "title": "test",
+        "slug": "test",
+        "date": "2025-05-02",
+        "content": "# New Blog Post\r\n\r\nStart writing your content here...",
+        "status": "published"
+    }
+]
