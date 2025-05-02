@@ -1,131 +1,93 @@
 <?php
+// index.php (front-end entry point for FearlessCMS)
+
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 define('PROJECT_ROOT', __DIR__);
+define('CONTENT_DIR', __DIR__ . '/content');
+define('CONFIG_DIR', __DIR__ . '/config');
 
-// Define content directory
-if (!defined('CONTENT_DIR')) {
-    define('CONTENT_DIR', PROJECT_ROOT . '/content');
-}
+require_once __DIR__ . '/includes/ThemeManager.php';
+require_once __DIR__ . '/includes/Parsedown.php';
 
-require_once PROJECT_ROOT . '/includes/ThemeManager.php';
-require_once PROJECT_ROOT . '/includes/plugins.php';
-
-// Debug: Check if blog plugin is loaded
-if (isset($_GET['debug'])) {
-    echo "<pre>";
-    echo "Active plugins: ";
-    print_r(json_decode(file_exists(PLUGIN_CONFIG) ? file_get_contents(PLUGIN_CONFIG) : '[]', true));
-    echo "\nRegistered hooks: ";
-    print_r(array_keys($GLOBALS['fcms_hooks']));
-    echo "\nRoute hook callbacks: ";
-    print_r(count($GLOBALS['fcms_hooks']['route'] ?? []));
-    echo "</pre>";
-    exit;
-}
-
-require_once PROJECT_ROOT . '/includes/Parsedown.php';
-
-// Get the requested URL path
-$requestUri = $_SERVER['REQUEST_URI'];
-$path = parse_url($requestUri, PHP_URL_PATH);
-$path = trim($path, '/');
-$path = empty($path) ? 'home' : $path;
-
-// Initialize variables
-$title = '';
-$content = '';
-$handled = false;
-
-// Let plugins handle the route first
-fcms_do_hook('route', $handled, $title, $content, $path);
-
-// If no plugin handled the route, process it normally
-if (!$handled) {
-    // Your existing page loading code
-    $filePath = PROJECT_ROOT . '/content/' . $path . '.md';
-    if (!file_exists($filePath)) {
-        $filePath = PROJECT_ROOT . '/content/index.md';
-        if ($path !== 'index') {
-            http_response_code(404);
-            $filePath = PROJECT_ROOT . '/content/404.md';
-            if (!file_exists($filePath)) {
-                $title = '404 - Page Not Found';
-                $content = '<p>The page you requested could not be found.</p>';
-            }
-        }
-    }
-
-    if (file_exists($filePath)) {
-        $fileContent = file_get_contents($filePath);
-        
-        // Extract metadata if present
-        if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $fileContent, $matches)) {
-            $metadata = json_decode($matches[1], true);
-            if ($metadata && isset($metadata['title'])) {
-                $title = $metadata['title'];
-            }
-            // Remove the metadata from the content
-            $fileContent = str_replace($matches[0], '', $fileContent);
-        }
-        
-        if (empty($title)) {
-            $title = ucfirst($path);
-        }
-        
-        // Parse markdown to HTML
-        $Parsedown = new Parsedown();
-        $content = $Parsedown->text($fileContent);
-    }
-}
-
-// Load and render the template
-$themeManager = new ThemeManager();
-$template = $themeManager->getTemplate('page');
-
-// Apply hooks before rendering
-fcms_do_hook('before_render', $title, $content, $template);
-
-// Replace placeholders in the template
-$template = str_replace('{{title}}', htmlspecialchars($title), $template);
-$template = str_replace('{{content}}', $content, $template);
-
-// Process menu tags
-if (preg_match_all('/\{\{menu=([a-zA-Z0-9_-]+)\}\}/', $template, $matches, PREG_SET_ORDER)) {
-    foreach ($matches as $match) {
-        $menuName = $match[1];
-        $menuHtml = renderMenu($menuName);
-        $template = str_replace($match[0], $menuHtml, $template);
-    }
-}
-
-// Apply hooks after rendering
-fcms_do_hook('after_render', $template);
-
-// Output the final HTML
-echo $template;
-
-// Function to render a menu
-function renderMenu($menuName) {
-    $menusFile = PROJECT_ROOT . '/admin/config/menus.json';
-    if (!file_exists($menusFile)) {
-        return '';
-    }
-    
-    $menus = json_decode(file_get_contents($menusFile), true);
-    if (!isset($menus[$menuName])) {
-        return '';
-    }
-    
-    $menu = $menus[$menuName];
-    $menuClass = !empty($menu['menu_class']) ? ' class="' . htmlspecialchars($menu['menu_class']) . '"' : '';
-    
-    $html = "<ul$menuClass>";
+// Helper: Render a menu by ID
+function render_menu($menuId) {
+    $menuFile = PROJECT_ROOT . '/admin/config/menus.json';
+    if (!file_exists($menuFile)) return '';
+    $menus = json_decode(file_get_contents($menuFile), true);
+    if (!isset($menus[$menuId])) return '';
+    $menu = $menus[$menuId];
+    $html = '<ul class="' . htmlspecialchars($menu['menu_class'] ?? '') . '">';
     foreach ($menu['items'] as $item) {
-        $itemClass = !empty($item['item_class']) ? ' class="' . htmlspecialchars($item['item_class']) . '"' : '';
-        $target = !empty($item['target']) ? ' target="' . htmlspecialchars($item['target']) . '"' : '';
-        $html .= "<li$itemClass><a href=\"" . htmlspecialchars($item['url']) . "\"$target>" . htmlspecialchars($item['label']) . "</a></li>";
+        $class = htmlspecialchars($item['item_class'] ?? '');
+        $target = $item['target'] ? ' target="' . htmlspecialchars($item['target']) . '"' : '';
+        $html .= '<li class="' . $class . '"><a href="' . htmlspecialchars($item['url']) . '"' . $target . '>' . htmlspecialchars($item['label']) . '</a></li>';
     }
-    $html .= "</ul>";
-    
+    $html .= '</ul>';
     return $html;
 }
-?>
+
+// Routing: get the requested path
+$path = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
+
+// Default to 'home.md' for home
+if ($path === '' || $path === 'index.php') {
+    $file = CONTENT_DIR . '/home.md';
+} else {
+    $file = CONTENT_DIR . '/' . $path . '.md';
+}
+
+// 404 fallback
+if (!file_exists($file)) {
+    $file = CONTENT_DIR . '/404.md';
+    $is404 = true;
+} else {
+    $is404 = false;
+}
+
+// Load content
+$pageContent = file_get_contents($file);
+
+// Extract title from frontmatter if present
+$pageTitle = '';
+if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $pageContent, $matches)) {
+    $metadata = json_decode($matches[1], true);
+    if ($metadata && isset($metadata['title'])) {
+        $pageTitle = $metadata['title'];
+    }
+}
+
+// Remove frontmatter from content before rendering
+$pageContent = preg_replace('/^<!--\s*json\s*.*?\s*-->\s*/s', '', $pageContent);
+
+// Render Markdown to HTML
+$Parsedown = new Parsedown();
+$contentHtml = $Parsedown->text($pageContent);
+
+// Load theme template
+$themeManager = new ThemeManager();
+$templateName = $is404 ? '404' : 'page';
+$template = $themeManager->getTemplate($templateName);
+
+// --- THE IMPORTANT PART ---
+// Split the template at {{content}}
+$parts = explode('{{content}}', $template, 2);
+$before = $parts[0];
+$after = $parts[1] ?? '';
+
+// Process menus in the template parts only (not in $contentHtml)
+$before = preg_replace_callback('/\{\{menu=([\w-]+)\}\}/', function($m) {
+    return render_menu($m[1]);
+}, $before);
+$after = preg_replace_callback('/\{\{menu=([\w-]+)\}\}/', function($m) {
+    return render_menu($m[1]);
+}, $after);
+
+// Insert content and title into template
+$before = str_replace('{{title}}', htmlspecialchars($pageTitle ?: ($is404 ? 'Page Not Found' : 'Untitled')), $before);
+$after = str_replace('{{title}}', htmlspecialchars($pageTitle ?: ($is404 ? 'Page Not Found' : 'Untitled')), $after);
+
+// Output the final page
+echo $before . $contentHtml . $after;
