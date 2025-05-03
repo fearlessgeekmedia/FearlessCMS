@@ -1,5 +1,7 @@
 <!-- json {
-    "title": "About Us"
+    "title": "About Us",
+    "editor_mode": "advanced"
 } -->
 
-Welcome to FearlessCMS. We're going to do something amazing with this!
+## Amazing!!!
+<div>Welcome to FearlessCMS. We're going to do something amazing with this!</div>

@@ -279,6 +279,43 @@
     <script>
     let toastEditor = null;
     let mode = "{{editor_mode}}";
+
+    document.addEventListener("trix-attachment-add", function(event) {
+        const attachment = event.attachment;
+        if (attachment.file) {
+            uploadTrixImage(attachment);
+        }
+    });
+    
+    function uploadTrixImage(attachment) {
+        // Prepare form data
+        const file = attachment.file;
+        const form = new FormData();
+        form.append("action", "upload_trix_image");
+        form.append("trix_image", file);
+    
+        // Send to your PHP upload handler
+        fetch("/admin/trix-upload-handler.php", {
+            method: "POST",
+            body: form
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.url) {
+                attachment.setAttributes({
+                    url: data.url,
+                    href: data.url
+                });
+            } else {
+                alert("Image upload failed.");
+            }
+        })
+        .catch(() => {
+            alert("Image upload failed.");
+        });
+    }
+
+    
     let initialContent = {{file_content}};
     function showEditor(mode, content) {
         const area = document.getElementById('editor-area');
