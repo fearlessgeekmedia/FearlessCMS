@@ -175,7 +175,6 @@ require_once PROJECT_ROOT . '/version.php';
 output_template:
 
 unset($_GET['page']);
-
 if (!isLoggedIn()) {
     $template = file_get_contents(ADMIN_TEMPLATE_DIR . '/login.html');
     $template = str_replace('{{error}}', $error ?? '', $template);
@@ -213,7 +212,8 @@ if (!isLoggedIn()) {
         $template = preg_replace('/\{\{if_widget_management\}\}.*?\{\{\/if_widget_management\}\}/s', '', $template);
         $template = preg_replace('/\{\{if_not_user_management\}\}.*?\{\{\/if_not_user_management\}\}/s', '', $template);
         $template = preg_replace('/\{\{if_not_content_editor\}\}.*?\{\{\/if_not_content_editor\}\}/s', '', $template);
-    } else if ($isWidgetManagement) {
+    }
+    else if ($isWidgetManagement) {
         $template = preg_replace('/\{\{if_widget_management\}\}(.*?)\{\{\/if_widget_management\}\}/s', '$1', $template);
         $template = preg_replace('/\{\{if_user_management\}\}.*?\{\{\/if_user_management\}\}/s', '', $template);
         $template = preg_replace('/\{\{if_theme_management\}\}.*?\{\{\/if_theme_management\}\}/s', '', $template);
@@ -240,10 +240,10 @@ if (!isLoggedIn()) {
         $currentSidebar = $_GET['sidebar'] ?? array_key_first($widgets) ?? '';
         $sidebarSelectionHtml = '
         <form method="GET" class="mb-4">
-                    <input type="hidden" name="action" value="manage_widgets">
-        <div class="flex items-center">
-            <label for="sidebar" class="mr-2">Select Sidebar:</label>
-            <select name="sidebar" id="sidebar" onchange="this.form.submit()" class="border rounded px-2 py-1 flex-grow">';
+            <input type="hidden" name="action" value="manage_widgets">
+            <div class="flex items-center">
+                <label for="sidebar" class="mr-2">Select Sidebar:</label>
+                <select name="sidebar" id="sidebar" onchange="this.form.submit()" class="border rounded px-2 py-1 flex-grow">';
         if (!empty($widgets)) {
             foreach ($widgets as $id => $sidebar) {
                 $selected = ($id === $currentSidebar) ? ' selected' : '';
@@ -287,7 +287,8 @@ if (!isLoggedIn()) {
         $template = str_replace('{{sidebar_selection}}', $sidebarSelectionHtml, $template);
         $template = str_replace('{{widget_list}}', $widgetList, $template);
         $template = str_replace('{{current_sidebar}}', htmlspecialchars($currentSidebar), $template);
-    } else if ($isContentEditor) {
+    }
+    else if ($isContentEditor) {
         $template = preg_replace('/\{\{if_content_editor\}\}(.*?)\{\{\/if_content_editor\}\}/s', '$1', $template);
         $template = preg_replace('/\{\{if_user_management\}\}.*?\{\{\/if_user_management\}\}/s', '', $template);
         $template = preg_replace('/\{\{if_theme_management\}\}.*?\{\{\/if_theme_management\}\}/s', '', $template);
@@ -308,27 +309,19 @@ if (!isLoggedIn()) {
 
         $fileContent = file_get_contents($filePath);
         $pageTitle = '';
-        $editorMode = 'easy';
-
         if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $fileContent, $matches)) {
             $metadata = json_decode($matches[1], true);
             if ($metadata && isset($metadata['title'])) {
                 $pageTitle = $metadata['title'];
             }
-            if ($metadata && isset($metadata['editor_mode'])) {
-                $editorMode = $metadata['editor_mode'];
-            }
         }
-
         $editContent = preg_replace('/^<!--\s*json\s*.*?\s*-->\s*/s', '', $fileContent);
 
         $template = str_replace('{{file_name}}', htmlspecialchars($fileName), $template);
         $template = str_replace('{{file_content}}', json_encode($editContent), $template);
         $template = str_replace('{{page_title}}', htmlspecialchars($pageTitle), $template);
-        $template = str_replace('{{editor_mode}}', htmlspecialchars($editorMode), $template);
-        $template = str_replace('{{#if_easy_mode}}', $editorMode === 'easy' ? 'selected' : '', $template);
-        $template = str_replace('{{#if_advanced_mode}}', $editorMode === 'advanced' ? 'selected' : '', $template);
-    } else if ($isUserManagement) {
+    }
+    else if ($isUserManagement) {
         $template = preg_replace('/\{\{if_user_management\}\}(.*?)\{\{\/if_user_management\}\}/s', '$1', $template);
         $template = preg_replace('/\{\{if_theme_management\}\}.*?\{\{\/if_theme_management\}\}/s', '', $template);
         $template = preg_replace('/\{\{if_plugin_management\}\}.*?\{\{\/if_plugin_management\}\}/s', '', $template);
@@ -357,7 +350,8 @@ if (!isLoggedIn()) {
             </tr>";
         }
         $template = str_replace('{{user_list}}', $userList, $template);
-    } else if ($isThemeManagement) {
+    }
+    else if ($isThemeManagement) {
         $template = preg_replace('/\{\{if_theme_management\}\}(.*?)\{\{\/if_theme_management\}\}/s', '$1', $template);
         $template = preg_replace('/\{\{if_user_management\}\}.*?\{\{\/if_user_management\}\}/s', '', $template);
         $template = preg_replace('/\{\{if_plugin_management\}\}.*?\{\{\/if_plugin_management\}\}/s', '', $template);
@@ -390,7 +384,8 @@ if (!isLoggedIn()) {
             $themesHtml .= '</div>';
         }
         $template = preg_replace('/\{\{#themes\}\}.*?\{\{\/themes\}\}/s', $themesHtml, $template);
-    } else if ($isPluginManagement) {
+    }
+    else if ($isPluginManagement) {
         $template = preg_replace('/\{\{if_plugin_management\}\}(.*?)\{\{\/if_plugin_management\}\}/s', '$1', $template);
         $template = preg_replace('/\{\{if_user_management\}\}.*?\{\{\/if_user_management\}\}/s', '', $template);
         $template = preg_replace('/\{\{if_theme_management\}\}.*?\{\{\/if_theme_management\}\}/s', '', $template);
@@ -457,149 +452,276 @@ if (!isLoggedIn()) {
             }
         }
         $template = preg_replace('/\{\{#plugins\}\}.*?\{\{\/plugins\}\}/s', $pluginsHtml, $template);
-   } else if ($isMenuManagement) {
-        $template = preg_replace('/\{\{if_menu_management\}\}(.*?)\{\{\/if_menu_management\}\}/s', '$1', $template);
-        $template = preg_replace('/\{\{if_user_management\}\}.*?\{\{\/if_user_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_theme_management\}\}.*?\{\{\/if_theme_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_plugin_management\}\}.*?\{\{\/if_plugin_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_content_editor\}\}.*?\{\{\/if_content_editor\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_widget_management\}\}.*?\{\{\/if_widget_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_not_user_management\}\}.*?\{\{\/if_not_user_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_not_content_editor\}\}.*?\{\{\/if_not_content_editor\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_plugin_section\}\}.*?\{\{\/if_plugin_section\}\}/s', '', $template);
-    
-        // --- Menu Management HTML generation ---
-        $menuFile = ADMIN_CONFIG_DIR . '/menus.json';
-        $menus = file_exists($menuFile) ? json_decode(file_get_contents($menuFile), true) : ['main' => ['menu_class' => 'main-nav', 'items' => []]];
-        $currentMenu = $_GET['menu'] ?? array_key_first($menus) ?? 'main';
-    
-        $menuSelectionHtml = '<form method="GET" class="mb-4">
-            <input type="hidden" name="action" value="manage_menus">
-            <div class="flex items-center">
-                <label for="menu" class="mr-2">Select Menu:</label>
-                <select name="menu" id="menu" onchange="this.form.submit()" class="border rounded px-2 py-1 flex-grow">';
-        foreach ($menus as $id => $menu) {
-            $selected = ($id === $currentMenu) ? ' selected' : '';
-            $menuSelectionHtml .= sprintf(
-                '<option value="%s"%s>%s</option>',
-                htmlspecialchars($id),
-                $selected,
-                htmlspecialchars(ucfirst($id) . ' Menu')
-            );
-        }
-        $menuSelectionHtml .= '</select></div></form>';
-    
-        $menuItemsHtml = '';
-        if (isset($menus[$currentMenu]['items'])) {
-            foreach ($menus[$currentMenu]['items'] as $index => $item) {
-                $menuItemsHtml .= '
-                <div class="menu-item border rounded p-4 mb-4" data-item-index="' . $index . '">
-                    <div class="flex justify-between items-center mb-2">
-                        <h3 class="font-medium menu-handle cursor-move">↕ ' . htmlspecialchars($item['label']) . '</h3>
-                        <div class="space-x-2">
-                            <button type="button" onclick="editMenuItem(' . $index . ')" 
-                                    class="bg-blue-500 text-white px-2 py-1 rounded text-sm">Edit</button>
-                            <button type="button" onclick="deleteMenuItem(' . $index . ')" 
-                                    class="bg-red-500 text-white px-2 py-1 rounded text-sm">Delete</button>
-                        </div>
-                    </div>
-                    <div class="text-sm text-gray-600">URL: ' . htmlspecialchars($item['url']) . '</div>
-                </div>';
-            }
-        }
-    
-        $menuEditorHtml = '
-        <div class="mb-8">
-            <h2 class="text-2xl font-bold mb-6 fira-code">Menu Management</h2>
-            ' . $menuSelectionHtml . '
-            <div class="mb-4">
-                <label class="block mb-1">Menu Class:</label>
-                <input type="text" id="menu-class" value="' . htmlspecialchars($menus[$currentMenu]['menu_class'] ?? 'main-nav') . '" 
-                       class="w-full border rounded px-2 py-1">
-            </div>
-            <div id="menu-items-container" class="mb-4">
-                ' . $menuItemsHtml . '
-            </div>
-            <button type="button" onclick="addMenuItem()" class="bg-blue-500 text-white px-3 py-1 rounded mb-4">Add Menu Item</button>
-            <div class="flex justify-between">
-                <button type="button" onclick="saveMenu()" class="bg-green-500 text-white px-4 py-2 rounded">Save Menu</button>
-                <button type="button" onclick="addNewMenu()" class="bg-purple-500 text-white px-4 py-2 rounded">Create New Menu</button>
-            </div>
-        </div>
-        <!-- (Add your menu item modal and JS here) -->
-        ';
-    
-        $template = str_replace('{{menu_editor}}', $menuEditorHtml, $template);
-    } else {
-        $template = preg_replace('/\{\{if_not_user_management\}\}(.*?)\{\{\/if_not_user_management\}\}/s', '$1', $template);
-        $template = preg_replace('/\{\{if_not_content_editor\}\}(.*?)\{\{\/if_not_content_editor\}\}/s', '$1', $template);
-        $template = preg_replace('/\{\{if_user_management\}\}.*?\{\{\/if_user_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_theme_management\}\}.*?\{\{\/if_theme_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_plugin_management\}\}.*?\{\{\/if_plugin_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_content_editor\}\}.*?\{\{\/if_content_editor\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_menu_management\}\}.*?\{\{\/if_menu_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_plugin_section\}\}.*?\{\{\/if_plugin_section\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_widget_management\}\}.*?\{\{\/if_widget_management\}\}/s', '', $template);
+    }
+else if ($isMenuManagement) {
+    $template = preg_replace('/\{\{if_menu_management\}\}(.*?)\{\{\/if_menu_management\}\}/s', '$1', $template);
+    $template = preg_replace('/\{\{if_user_management\}\}.*?\{\{\/if_user_management\}\}/s', '', $template);
+    $template = preg_replace('/\{\{if_theme_management\}\}.*?\{\{\/if_theme_management\}\}/s', '', $template);
+    $template = preg_replace('/\{\{if_plugin_management\}\}.*?\{\{\/if_plugin_management\}\}/s', '', $template);
+    $template = preg_replace('/\{\{if_content_editor\}\}.*?\{\{\/if_content_editor\}\}/s', '', $template);
+    $template = preg_replace('/\{\{if_widget_management\}\}.*?\{\{\/if_widget_management\}\}/s', '', $template);
+    $template = preg_replace('/\{\{if_not_user_management\}\}.*?\{\{\/if_not_user_management\}\}/s', '', $template);
+    $template = preg_replace('/\{\{if_not_content_editor\}\}.*?\{\{\/if_not_content_editor\}\}/s', '', $template);
+    $template = preg_replace('/\{\{if_plugin_section\}\}.*?\{\{\/if_plugin_section\}\}/s', '', $template);
 
-        $contentFiles = glob(CONTENT_DIR . '/*.md');
-        $contentList = '';
-        foreach ($contentFiles as $file) {
-            $filename = basename($file);
-            $fileContent = file_get_contents($file);
-            $displayName = $filename;
-            if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $fileContent, $matches)) {
-                $metadata = json_decode($matches[1], true);
-                if ($metadata && isset($metadata['title'])) {
-                    $displayName = $metadata['title'] . ' <span class="text-gray-400 text-xs">(' . $filename . ')</span>';
-                }
-            }
-            $contentList .= "<li class='py-2 px-4 hover:bg-gray-100'>
-                <div class='flex justify-between items-center'>
-                    <span>" . $displayName . "</span>
-                    <div class='flex space-x-2'>
-                        <a href='?edit=" . urlencode($filename) . "' class='bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600'>
-                            Edit
-                        </a>
-                        <button onclick='deletePage(\"" . htmlspecialchars($filename) . "\")' class='bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600'>
-                            Delete
-                        </button>
+    $menuFile = ADMIN_CONFIG_DIR . '/menus.json';
+    $menus = file_exists($menuFile) ? json_decode(file_get_contents($menuFile), true) : ['main' => ['menu_class' => 'main-nav', 'items' => []]];
+    $currentMenu = $_GET['menu'] ?? array_key_first($menus) ?? 'main';
+
+    $menuSelectionHtml = '<form method="GET" class="mb-4">
+        <input type="hidden" name="action" value="manage_menus">
+        <div class="flex items-center">
+            <label for="menu" class="mr-2">Select Menu:</label>
+            <select name="menu" id="menu" onchange="this.form.submit()" class="border rounded px-2 py-1 flex-grow">';
+    foreach ($menus as $id => $menu) {
+        $selected = ($id === $currentMenu) ? ' selected' : '';
+        $menuSelectionHtml .= sprintf(
+            '<option value="%s"%s>%s</option>',
+            htmlspecialchars($id),
+            $selected,
+            htmlspecialchars(ucfirst($id) . ' Menu')
+        );
+    }
+    $menuSelectionHtml .= '</select></div></form>';
+
+    $menuItemsHtml = '';
+    if (isset($menus[$currentMenu]['items'])) {
+        foreach ($menus[$currentMenu]['items'] as $index => $item) {
+            $menuItemsHtml .= '
+            <div class="menu-item border rounded p-4 mb-4" data-item-index="' . $index . '">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-medium menu-handle cursor-move">↕ ' . htmlspecialchars($item['label']) . '</h3>
+                    <div class="space-x-2">
+                        <button type="button" onclick="editMenuItem(' . $index . ')" 
+                                class="bg-blue-500 text-white px-2 py-1 rounded text-sm">Edit</button>
+                        <button type="button" onclick="deleteMenuItem(' . $index . ')" 
+                                class="bg-red-500 text-white px-2 py-1 rounded text-sm">Delete</button>
                     </div>
                 </div>
-            </li>";
+                <div class="text-sm text-gray-600">URL: ' . htmlspecialchars($item['url']) . '</div>
+            </div>';
         }
-        $template = str_replace('{{content_list}}', $contentList, $template);
     }
 
-    $pluginSections = fcms_get_admin_sections();
-    $pluginNavItems = '';
-    foreach ($pluginSections as $id => $section) {
-        $pluginNavItems .= '<a href="?action=' . htmlspecialchars($id) . '" class="hover:text-green-200">' . htmlspecialchars($section['label']) . '</a>';
+    $menuEditorHtml = '
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold mb-6 fira-code">Menu Management</h2>
+        ' . $menuSelectionHtml . '
+        <div class="mb-4">
+            <label class="block mb-1">Menu Class:</label>
+            <input type="text" id="menu-class" value="' . htmlspecialchars($menus[$currentMenu]['menu_class'] ?? 'main-nav') . '" 
+                   class="w-full border rounded px-2 py-1">
+        </div>
+        <div id="menu-items-container" class="mb-4">
+            ' . $menuItemsHtml . '
+        </div>
+        <button type="button" onclick="addMenuItem()" class="bg-blue-500 text-white px-3 py-1 rounded mb-4">Add Menu Item</button>
+        <div class="flex justify-between">
+            <button type="button" onclick="saveMenu()" class="bg-green-500 text-white px-4 py-2 rounded">Save Menu</button>
+            <button type="button" onclick="addNewMenu()" class="bg-purple-500 text-white px-4 py-2 rounded">Create New Menu</button>
+        </div>
+    </div>
+    <div id="menuItemModal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h3 class="text-xl font-bold mb-4">Edit Menu Item</h3>
+            <form id="menu-item-form" class="space-y-4" onsubmit="return false;">
+                <input type="hidden" id="edit-item-index" value="-1">
+                <div>
+                    <label class="block mb-1">Label:</label>
+                    <input type="text" id="item-label" class="w-full px-3 py-2 border border-gray-300 rounded">
+                </div>
+                <div>
+                    <label class="block mb-1">URL:</label>
+                    <input type="text" id="item-url" class="w-full px-3 py-2 border border-gray-300 rounded">
+                </div>
+                <div>
+                    <label class="block mb-1">CSS Class:</label>
+                    <input type="text" id="item-class" class="w-full px-3 py-2 border border-gray-300 rounded">
+                </div>
+                <div>
+                    <label class="block mb-1">Target:</label>
+                    <select id="item-target" class="w-full px-3 py-2 border border-gray-300 rounded">
+                        <option value="">Same Window</option>
+                        <option value="_blank">New Window</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" onclick="closeMenuItemModal()" class="bg-gray-400 text-white px-4 py-2 rounded">Cancel</button>
+                    <button type="button" onclick="saveMenuItem()" class="bg-blue-500 text-white px-4 py-2 rounded">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="newMenuModal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h3 class="text-xl font-bold mb-4">Create New Menu</h3>
+            <form id="new-menu-form" class="space-y-4" onsubmit="return false;">
+                <div>
+                    <label class="block mb-1">Menu ID:</label>
+                    <input type="text" id="new-menu-id" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="e.g., footer">
+                </div>
+                <div>
+                    <label class="block mb-1">Menu Class:</label>
+                    <input type="text" id="new-menu-class" class="w-full px-3 py-2 border border-gray-300 rounded" value="menu-nav">
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" onclick="closeNewMenuModal()" class="bg-gray-400 text-white px-4 py-2 rounded">Cancel</button>
+                    <button type="button" onclick="createNewMenu()" class="bg-blue-500 text-white px-4 py-2 rounded">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+    let menuData = ' . json_encode($menus) . ';
+    let currentMenu = "' . $currentMenu . '";
+    function addMenuItem() {
+        if (!menuData[currentMenu].items) menuData[currentMenu].items = [];
+        menuData[currentMenu].items.push({
+            label: "New Item",
+            url: "/",
+            item_class: "",
+            target: ""
+        });
+        editMenuItem(menuData[currentMenu].items.length - 1);
     }
-    $template = str_replace('{{plugin_nav_items}}', $pluginNavItems, $template);
+    function editMenuItem(index) {
+        const item = menuData[currentMenu].items[index];
+        document.getElementById("edit-item-index").value = index;
+        document.getElementById("item-label").value = item.label;
+        document.getElementById("item-url").value = item.url;
+        document.getElementById("item-class").value = item.item_class || "";
+        document.getElementById("item-target").value = item.target || "";
+        document.getElementById("menuItemModal").classList.remove("hidden");
+    }
+    function closeMenuItemModal() {
+        document.getElementById("menuItemModal").classList.add("hidden");
+    }
+    function saveMenuItem() {
+        const index = parseInt(document.getElementById("edit-item-index").value);
+        menuData[currentMenu].items[index] = {
+            label: document.getElementById("item-label").value,
+            url: document.getElementById("item-url").value,
+            item_class: document.getElementById("item-class").value,
+            target: document.getElementById("item-target").value
+        };
+        location.reload();
+    }
+    function deleteMenuItem(index) {
+        if (confirm("Are you sure you want to delete this menu item?")) {
+            menuData[currentMenu].items.splice(index, 1);
+            location.reload();
+        }
+    }
+    function saveMenu() {
+        menuData[currentMenu].menu_class = document.getElementById("menu-class").value;
+        fetch("", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "action=save_menu&menu_data=" + encodeURIComponent(JSON.stringify(menuData))
+        }).then(() => location.reload());
+    }
+    function addNewMenu() {
+        document.getElementById("newMenuModal").classList.remove("hidden");
+    }
+    function closeNewMenuModal() {
+        document.getElementById("newMenuModal").classList.add("hidden");
+    }
+    function createNewMenu() {
+        const menuId = document.getElementById("new-menu-id").value.trim();
+        const menuClass = document.getElementById("new-menu-class").value.trim();
+        if (!menuId) {
+            alert("Menu ID is required");
+            return;
+        }
+        if (menuData[menuId]) {
+            alert("A menu with this ID already exists");
+            return;
+        }
+        menuData[menuId] = { menu_class: menuClass, items: [] };
+        fetch("", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "action=save_menu&menu_data=" + encodeURIComponent(JSON.stringify(menuData))
+        }).then(() => {
+            window.location.href = "?action=manage_menus&menu=" + encodeURIComponent(menuId);
+        });
+    }
+    </script>
+    ';
 
-    if (isset($error)) {
-        $template = str_replace('{{#error}}', '', $template);
-        $template = str_replace('{{/error}}', '', $template);
-        $template = str_replace('{{error}}', "<div class='max-w-7xl mx-auto mt-4 p-4 bg-red-100 text-red-700 rounded'>{$error}</div>", $template);
-    } else {
-        $template = preg_replace('/\{\{#error\}\}.*?\{\{\/error\}\}/s', '', $template);
-        $template = str_replace('{{error}}', '', $template);
+        $template = str_replace('{{menu_editor}}', $menuEditorHtml, $template);
+}
+else {
+    $template = preg_replace('/\{\{if_not_user_management\}\}(.*?)\{\{\/if_not_user_management\}\}/s', '$1', $template);
+    $template = preg_replace('/\{\{if_not_content_editor\}\}(.*?)\{\{\/if_not_content_editor\}\}/s', '$1', $template);
+    $template = preg_replace('/\{\{if_user_management\}\}.*?\{\{\/if_user_management\}\}/s', '', $template);
+    $template = preg_replace('/\{\{if_theme_management\}\}.*?\{\{\/if_theme_management\}\}/s', '', $template);
+    $template = preg_replace('/\{\{if_plugin_management\}\}.*?\{\{\/if_plugin_management\}\}/s', '', $template);
+    $template = preg_replace('/\{\{if_content_editor\}\}.*?\{\{\/if_content_editor\}\}/s', '', $template);
+    $template = preg_replace('/\{\{if_menu_management\}\}.*?\{\{\/if_menu_management\}\}/s', '', $template);
+    $template = preg_replace('/\{\{if_plugin_section\}\}.*?\{\{\/if_plugin_section\}\}/s', '', $template);
+    $template = preg_replace('/\{\{if_widget_management\}\}.*?\{\{\/if_widget_management\}\}/s', '', $template);
+
+    // Content Management: build content_list
+    $contentFiles = glob(CONTENT_DIR . '/*.md');
+    $contentList = '';
+    foreach ($contentFiles as $file) {
+        $filename = basename($file);
+        $fileContent = file_get_contents($file);
+        $displayName = $filename;
+        if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $fileContent, $matches)) {
+            $metadata = json_decode($matches[1], true);
+            if ($metadata && isset($metadata['title'])) {
+                $displayName = $metadata['title'] . ' <span class="text-gray-400 text-xs">(' . $filename . ')</span>';
+            }
+        }
+        $contentList .= "<li class='py-2 px-4 hover:bg-gray-100'>
+            <div class='flex justify-between items-center'>
+                <span>" . $displayName . "</span>
+                <div class='flex space-x-2'>
+                    <a href='?edit=" . urlencode($filename) . "' class='bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600'>
+                        Edit
+                    </a>
+                    <button onclick='deletePage(\"" . htmlspecialchars($filename) . "\")' class='bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600'>
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </li>";
     }
-    if (isset($success)) {
-        $template = str_replace('{{#success}}', '', $template);
-        $template = str_replace('{{/success}}', '', $template);
-        $template = str_replace('{{success}}', "<div class='max-w-7xl mx-auto mt-4 p-4 bg-green-100 text-green-700 rounded'>{$success}</div>", $template);
-    } else {
-        $template = preg_replace('/\{\{#success\}\}.*?\{\{\/success\}\}/s', '', $template);
-        $template = str_replace('{{success}}', '', $template);
-    }
-    $template = str_replace('{{site_name}}', htmlspecialchars($siteName), $template);
-    $template = str_replace('{{custom_css}}', htmlspecialchars($customCss), $template);
-    $template = str_replace('{{custom_js}}', htmlspecialchars($customJs), $template);
-    $template = str_replace('{{username}}', htmlspecialchars($_SESSION['username']), $template);
-    $template = str_replace('{{app_version}}', htmlspecialchars(APP_VERSION), $template);
+    $template = str_replace('{{content_list}}', $contentList, $template);
 }
 
+// Add plugin admin sections to the navigation
+$pluginSections = fcms_get_admin_sections();
+$pluginNavItems = '';
+foreach ($pluginSections as $id => $section) {
+    $pluginNavItems .= '<a href="?action=' . htmlspecialchars($id) . '" class="hover:text-green-200">' . htmlspecialchars($section['label']) . '</a>';
+}
+$template = str_replace('{{plugin_nav_items}}', $pluginNavItems, $template);
+
+// Handle error and success messages
+if (isset($error)) {
+    $template = str_replace('{{#error}}', '', $template);
+    $template = str_replace('{{/error}}', '', $template);
+    $template = str_replace('{{error}}', "<div class='max-w-7xl mx-auto mt-4 p-4 bg-red-100 text-red-700 rounded'>{$error}</div>", $template);
+} else {
+    $template = preg_replace('/\{\{#error\}\}.*?\{\{\/error\}\}/s', '', $template);
+    $template = str_replace('{{error}}', '', $template);
+}
+if (isset($success)) {
+    $template = str_replace('{{#success}}', '', $template);
+    $template = str_replace('{{/success}}', '', $template);
+    $template = str_replace('{{success}}', "<div class='max-w-7xl mx-auto mt-4 p-4 bg-green-100 text-green-700 rounded'>{$success}</div>", $template);
+} else {
+    $template = preg_replace('/\{\{#success\}\}.*?\{\{\/success\}\}/s', '', $template);
+    $template = str_replace('{{success}}', '', $template);
+}
+$template = str_replace('{{site_name}}', htmlspecialchars($siteName), $template);
+$template = str_replace('{{custom_css}}', htmlspecialchars($customCss), $template);
+$template = str_replace('{{custom_js}}', htmlspecialchars($customJs), $template);
+$template = str_replace('{{username}}', htmlspecialchars($_SESSION['username']), $template);
+$template = str_replace('{{app_version}}', defined('APP_VERSION') ? htmlspecialchars(APP_VERSION) : '', $template);
+}
 echo $template;
 ?>
-

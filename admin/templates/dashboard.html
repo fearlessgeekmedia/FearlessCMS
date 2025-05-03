@@ -5,12 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mission Control - Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/trix@2.0.8/dist/trix.css">
     <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/turndown/dist/turndown.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
     <style>
         .fira-code { font-family: 'Fira Code', monospace; }
     </style>
@@ -256,19 +252,11 @@
             <form method="POST" id="editor-form">
                 <input type="hidden" name="action" value="save_file">
                 <input type="hidden" name="file_name" value="{{file_name}}">
-                <input type="hidden" name="editor_mode" id="editor_mode" value="{{editor_mode}}">
                 <input type="hidden" name="content" id="editor-content">
-                <div class="mb-4 flex items-center gap-4">
-                    <label class="font-medium">Editor Mode:</label>
-                    <select id="editor-mode" name="editor_mode" class="border rounded px-2 py-1">
-                        <option value="easy" {{#if_easy_mode}}>Easy (Trix)</option>
-                        <option value="advanced" {{#if_advanced_mode}}>Advanced (Toast-UI)</option>
-                    </select>
-                </div>
                 <div class="mb-6">
                     <label class="block mb-2 font-medium">Page Title:</label>
                     <input type="text" id="page-title" name="page_title" class="w-full px-3 py-2 border border-gray-300 rounded mb-4" value="{{page_title}}">
-                    <div id="editor-area"></div>
+                    <div id="toastui-editor-container"></div>
                 </div>
                 <div class="flex justify-end">
                     <button type="submit" class="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600">Save Changes</button>
@@ -276,100 +264,20 @@
             </form>
         </div>
     </div>
-    <script src="https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js"></script>
     <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
     <script>
     let toastEditor = null;
-    let mode = "{{editor_mode}}";
     let initialContent = {{file_content}};
-    function showEditor(mode, content, previousMode) {
-        const area = document.getElementById('editor-area');
-        area.innerHTML = '';
-        toastEditor = null;
-        if (mode === 'easy' && previousMode === 'advanced') {
-            content = marked.parse(content || '');
-        } else if (mode === 'advanced' && previousMode === 'easy') {
-            const turndownService = new TurndownService();
-            content = turndownService.turndown(content || '');
-        }
-        if (mode === 'easy') {
-            area.innerHTML = `
-                <input id="trix-content" type="hidden" name="trix-content">
-                <trix-editor input="trix-content"></trix-editor>
-            `;
-            document.getElementById('trix-content').value = content || '';
-            document.querySelector('trix-editor').value = content || '';
-        } else {
-            area.innerHTML = `<div id="toastui-editor-container"><textarea id="toastui-content"></textarea></div>`;
-            toastEditor = new toastui.Editor({
-                el: document.getElementById('toastui-editor-container'),
-                height: '400px',
-                initialEditType: 'markdown',
-                previewStyle: 'vertical',
-                initialValue: content || ''
-            });
-        }
-    }
-    document.addEventListener("trix-attachment-add", function(event) {
-        const attachment = event.attachment;
-        if (attachment.file) {
-            uploadTrixImage(attachment);
-        }
-    });
-    function uploadTrixImage(attachment) {
-        const file = attachment.file;
-        const form = new FormData();
-        form.append("action", "upload_trix_image");
-        form.append("trix_image", file);
-        fetch("/admin/trix-upload-handler.php", {
-            method: "POST",
-            body: form
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data && data.url) {
-                attachment.setAttributes({
-                    url: data.url,
-                    href: data.url
-                });
-            } else {
-                alert("Image upload failed.");
-            }
-        })
-        .catch(() => {
-            alert("Image upload failed.");
-        });
-    }
     document.addEventListener('DOMContentLoaded', function() {
-        const modeSelect = document.getElementById('editor-mode');
-        showEditor(mode, initialContent);
-        modeSelect.value = mode;
-        let previousMode = mode;
-        let hasSwitched = false;
-        modeSelect.addEventListener('change', function() {
-            let currentContent = '';
-            if (mode === 'easy') {
-                currentContent = document.getElementById('trix-content').value;
-            } else if (toastEditor) {
-                currentContent = toastEditor.getMarkdown();
-            }
-            if (hasSwitched && mode !== modeSelect.value) {
-                if (!confirm("Switching editors may change or lose some formatting. Are you sure you want to switch?")) {
-                    modeSelect.value = mode;
-                    return;
-                }
-            }
-            hasSwitched = true;
-            previousMode = mode;
-            mode = modeSelect.value;
-            showEditor(mode, currentContent, previousMode);
+        toastEditor = new toastui.Editor({
+            el: document.getElementById('toastui-editor-container'),
+            height: '400px',
+            initialEditType: 'markdown',
+            previewStyle: 'vertical',
+            initialValue: initialContent || ''
         });
         document.getElementById('editor-form').addEventListener('submit', function(e) {
-            if (mode === 'easy') {
-                document.getElementById('editor-content').value = document.getElementById('trix-content').value;
-            } else if (toastEditor) {
-                document.getElementById('editor-content').value = toastEditor.getMarkdown();
-            }
+            document.getElementById('editor-content').value = toastEditor.getMarkdown();
         });
     });
     </script>
