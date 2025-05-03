@@ -268,19 +268,43 @@
     <script>
     let toastEditor = null;
     let initialContent = {{file_content}};
+    
     document.addEventListener('DOMContentLoaded', function() {
         toastEditor = new toastui.Editor({
             el: document.getElementById('toastui-editor-container'),
             height: '400px',
             initialEditType: 'markdown',
             previewStyle: 'vertical',
-            initialValue: initialContent || ''
+            initialValue: initialContent || '',
+            hooks: {
+                addImageBlobHook: function(blob, callback) {
+                    const formData = new FormData();
+                    formData.append('image', blob);
+                    fetch('/admin/toastui-upload-handler.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.url) {
+                            callback(data.url, 'uploaded image');
+                        } else {
+                            alert('Image upload failed: ' + (data.message || 'Unknown error'));
+                        }
+                    })
+                    .catch(() => {
+                        alert('Image upload failed (network error).');
+                    });
+                }
+            }
         });
+    
         document.getElementById('editor-form').addEventListener('submit', function(e) {
             document.getElementById('editor-content').value = toastEditor.getMarkdown();
         });
     });
     </script>
+
     {{/if_content_editor}}
 
     {{if_not_user_management}}
