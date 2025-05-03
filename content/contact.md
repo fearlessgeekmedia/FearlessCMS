@@ -1,5 +1,6 @@
 <!-- json {
-    "title": "Contact Us"
+    "title": "Contact Us",
+    "editor_mode": "advanced"
 } -->
 
-Need help? Feel free to e-mail us! [service@fearlessgeekmedia.com](mailto:service@fearlessgeekmedia.com)
+<div>Need help? Feel free to e-mail us! [service@fearlessgeekmedia.com](mailto:service@fearlessgeekmedia.com)</div>

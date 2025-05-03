@@ -9,6 +9,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/trix@2.0.8/dist/trix.css">
     <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/turndown/dist/turndown.min.js"></script>
     <style>
         .fira-code { font-family: 'Fira Code', monospace; }
     </style>
@@ -279,22 +281,46 @@
     <script>
     let toastEditor = null;
     let mode = "{{editor_mode}}";
-
+    let initialContent = {{file_content}};
+    function showEditor(mode, content, previousMode) {
+        const area = document.getElementById('editor-area');
+        area.innerHTML = '';
+        toastEditor = null;
+        if (mode === 'easy' && previousMode === 'advanced') {
+            content = marked.parse(content || '');
+        } else if (mode === 'advanced' && previousMode === 'easy') {
+            const turndownService = new TurndownService();
+            content = turndownService.turndown(content || '');
+        }
+        if (mode === 'easy') {
+            area.innerHTML = `
+                <input id="trix-content" type="hidden" name="trix-content">
+                <trix-editor input="trix-content"></trix-editor>
+            `;
+            document.getElementById('trix-content').value = content || '';
+            document.querySelector('trix-editor').value = content || '';
+        } else {
+            area.innerHTML = `<div id="toastui-editor-container"><textarea id="toastui-content"></textarea></div>`;
+            toastEditor = new toastui.Editor({
+                el: document.getElementById('toastui-editor-container'),
+                height: '400px',
+                initialEditType: 'markdown',
+                previewStyle: 'vertical',
+                initialValue: content || ''
+            });
+        }
+    }
     document.addEventListener("trix-attachment-add", function(event) {
         const attachment = event.attachment;
         if (attachment.file) {
             uploadTrixImage(attachment);
         }
     });
-    
     function uploadTrixImage(attachment) {
-        // Prepare form data
         const file = attachment.file;
         const form = new FormData();
         form.append("action", "upload_trix_image");
         form.append("trix_image", file);
-    
-        // Send to your PHP upload handler
         fetch("/admin/trix-upload-handler.php", {
             method: "POST",
             body: form
@@ -314,35 +340,12 @@
             alert("Image upload failed.");
         });
     }
-
-    
-    let initialContent = {{file_content}};
-    function showEditor(mode, content) {
-        const area = document.getElementById('editor-area');
-        area.innerHTML = '';
-        toastEditor = null;
-        if (mode === 'easy') {
-            area.innerHTML = `
-                <input id="trix-content" type="hidden" name="trix-content">
-                <trix-editor input="trix-content"></trix-editor>
-            `;
-            document.getElementById('trix-content').value = content || '';
-            document.querySelector('trix-editor').value = content || '';
-        } else {
-            area.innerHTML = `<div id="toastui-editor-container"><textarea id="toastui-content"></textarea></div>`;
-            toastEditor = new toastui.Editor({
-                el: document.getElementById('toastui-editor-container'),
-                height: '400px',
-                initialEditType: 'markdown',
-                previewStyle: 'vertical',
-                initialValue: content || ''
-            });
-        }
-    }
     document.addEventListener('DOMContentLoaded', function() {
         const modeSelect = document.getElementById('editor-mode');
         showEditor(mode, initialContent);
         modeSelect.value = mode;
+        let previousMode = mode;
+        let hasSwitched = false;
         modeSelect.addEventListener('change', function() {
             let currentContent = '';
             if (mode === 'easy') {
@@ -350,8 +353,16 @@
             } else if (toastEditor) {
                 currentContent = toastEditor.getMarkdown();
             }
+            if (hasSwitched && mode !== modeSelect.value) {
+                if (!confirm("Switching editors may change or lose some formatting. Are you sure you want to switch?")) {
+                    modeSelect.value = mode;
+                    return;
+                }
+            }
+            hasSwitched = true;
+            previousMode = mode;
             mode = modeSelect.value;
-            showEditor(mode, currentContent);
+            showEditor(mode, currentContent, previousMode);
         });
         document.getElementById('editor-form').addEventListener('submit', function(e) {
             if (mode === 'easy') {

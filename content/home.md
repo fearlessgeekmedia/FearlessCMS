@@ -1,5 +1,11 @@
 <!-- json {
-    "title": "FearlessCMS"
+    "title": "FearlessCMS",
+    "editor_mode": "advanced"
 } -->
 
-Welcome to FearlessCMS! You want to do something amazing? Let's do something amazing!
+<div>Welcome to FearlessCMS! You want to do something amazing? Let's do something amazing!&nbsp;</div>'
+
+* List
+* list
+* list
+* list
