@@ -21,6 +21,7 @@
             </div>
             <div class="flex items-center space-x-4">
                 <a href="?action=manage_users" class="hover:text-green-200">Users</a>
+                <a href="?action=files" class="hover:text-green-200">Files</a>
                 <a href="?action=manage_themes" class="hover:text-green-200">Themes</a>
                 <a href="?action=manage_menus" class="hover:text-green-200">Menus</a>
                 <a href="?action=manage_widgets" class="hover:text-green-200">Widgets</a>
@@ -202,6 +203,23 @@
             </table>
         </div>
     </div>
+    <script>
+    function deleteUser(username) {
+        if (confirm('Are you sure you want to delete user "' + username + '"?')) {
+            // Create a form and submit it
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.style.display = 'none';
+            form.innerHTML = `
+                <input type="hidden" name="action" value="delete_user">
+                <input type="hidden" name="username" value="` + encodeURIComponent(username) + `">
+            `;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+    </script>
+
     {{/if_user_management}}
 
     {{if_theme_management}}
@@ -401,6 +419,18 @@
             });
         }
     });
+    function deletePage(filename) {
+    if (confirm('Are you sure you want to delete this page?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.innerHTML = `
+            <input type="hidden" name="action" value="delete_page">
+            <input type="hidden" name="file_name" value="${filename}">
+        `;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
     </script>
     {{/if_not_content_editor}}
     {{/if_not_user_management}}

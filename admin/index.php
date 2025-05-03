@@ -113,6 +113,247 @@ require("filesave-handler.php");
 require("filedel-handler.php");
 require("widgets-handler.php");
 
+fcms_register_admin_section('files', [
+    'label' => 'Files',
+    'menu_order' => 50,
+    'render_callback' => 'fcms_render_file_manager'
+]);
+
+    function fcms_render_file_manager() {
+    $uploadsDir = PROJECT_ROOT . '/uploads';
+    $webUploadsDir = '/uploads';
+    $allowedExts = ['jpg','jpeg','png','gif','webp','pdf','zip','svg','txt','md'];
+    $maxFileSize = 10 * 1024 * 1024; // 10MB
+
+    $error = '';
+    $success = '';
+
+    // Handle file upload
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'upload_file') {
+        if (!empty($_FILES['file']['name'])) {
+            $file = $_FILES['file'];
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            if (!in_array($ext, $allowedExts)) {
+                $error = 'File type not allowed.';
+            } elseif ($file['size'] > $maxFileSize) {
+                $error = 'File is too large.';
+            } else {
+                if (!is_dir($uploadsDir)) mkdir($uploadsDir, 0755, true);
+                $target = $uploadsDir . '/' . basename($file['name']);
+                if (move_uploaded_file($file['tmp_name'], $target)) {
+                    $success = 'File uploaded successfully.';
+                } else {
+                    $error = 'Failed to upload file.';
+                }
+            }
+        } else {
+            $error = 'No file selected.';
+        }
+    }
+
+    // Handle file deletion
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_file') {
+        $filename = $_POST['filename'] ?? '';
+        $filepath = realpath($uploadsDir . '/' . $filename);
+        if ($filename && $filepath && strpos($filepath, realpath($uploadsDir)) === 0 && is_file($filepath)) {
+            if (unlink($filepath)) {
+                $success = 'File deleted.';
+            } else {
+                $error = 'Failed to delete file.';
+            }
+        } else {
+            $error = 'Invalid file.';
+        }
+    }
+
+    // Handle file rename
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'rename_file') {
+        $oldName = $_POST['old_name'] ?? '';
+        $newName = $_POST['new_name'] ?? '';
+        $oldPath = realpath($uploadsDir . '/' . $oldName);
+        $newPath = $uploadsDir . '/' . $newName;
+        $newExt = strtolower(pathinfo($newName, PATHINFO_EXTENSION));
+        if (!$oldName || !$newName) {
+            $error = 'Both old and new file names are required.';
+        } elseif (!preg_match('/^[a-zA-Z0-9_\-\.]+$/', $newName)) {
+            $error = 'Invalid new file name.';
+        } elseif (!in_array($newExt, $allowedExts)) {
+            $error = 'File extension not allowed.';
+        } elseif (!is_file($oldPath) || strpos($oldPath, realpath($uploadsDir)) !== 0) {
+            $error = 'Original file not found.';
+        } elseif (file_exists($newPath)) {
+            $error = 'A file with the new name already exists.';
+        } else {
+            if (rename($oldPath, $newPath)) {
+                $success = 'File renamed successfully.';
+            } else {
+                $error = 'Failed to rename file.';
+            }
+        }
+    }
+
+    // List files
+    $files = [];
+    if (is_dir($uploadsDir)) {
+        foreach (scandir($uploadsDir) as $f) {
+            if ($f === '.' || $f === '..') continue;
+            $full = $uploadsDir . '/' . $f;
+            if (is_file($full)) {
+                $files[] = [
+                    'name' => $f,
+                    'size' => filesize($full),
+                    'type' => mime_content_type($full),
+                    'url'  => $webUploadsDir . '/' . rawurlencode($f),
+                    'ext'  => strtolower(pathinfo($f, PATHINFO_EXTENSION))
+                ];
+            }
+        }
+    }
+
+    ob_start();
+    ?>
+    <h2 class="text-2xl font-bold mb-6 fira-code">File Manager</h2>
+    <?php if ($error): ?>
+        <div class="bg-red-100 text-red-700 p-4 rounded mb-4"><?= htmlspecialchars($error) ?></div>
+    <?php endif; ?>
+    <?php if ($success): ?>
+        <div class="bg-green-100 text-green-700 p-4 rounded mb-4"><?= htmlspecialchars($success) ?></div>
+    <?php endif; ?>
+
+    <form method="POST" enctype="multipart/form-data" class="mb-6 flex items-center gap-4">
+        <input type="hidden" name="action" value="upload_file">
+        <input type="file" name="file" required class="border rounded px-2 py-1">
+        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Upload</button>
+        <span class="text-sm text-gray-500">Allowed: <?= implode(', ', $allowedExts) ?>, max <?= round($maxFileSize/1024/1024) ?>MB</span>
+    </form>
+
+    <table class="w-full border-collapse">
+        <thead>
+            <tr>
+                <th class="border-b py-2 text-left">File</th>
+                <th class="border-b py-2 text-left">Type</th>
+                <th class="border-b py-2 text-left">Size</th>
+                <th class="border-b py-2 text-left">Preview</th>
+                <th class="border-b py-2 text-left">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php foreach ($files as $file): ?>
+            <tr>
+                <td class="py-2 border-b">
+                    <a href="<?= htmlspecialchars($file['url']) ?>" target="_blank"><?= htmlspecialchars($file['name']) ?></a>
+                </td>
+                <td class="py-2 border-b"><?= htmlspecialchars($file['type']) ?></td>
+                <td class="py-2 border-b"><?= number_format($file['size']/1024, 2) ?> KB</td>
+                <td class="py-2 border-b">
+                    <?php if (in_array($file['ext'], ['jpg','jpeg','png','gif','webp','svg'])): ?>
+                        <img src="<?= htmlspecialchars($file['url']) ?>" alt="" style="max-width:60px;max-height:60px;cursor:pointer;border:1px solid #ccc;border-radius:4px;" onclick="showPreviewModal('<?= htmlspecialchars($file['url']) ?>','image')">
+                    <?php elseif (in_array($file['ext'], ['txt','md'])): ?>
+                        <button type="button" class="bg-gray-300 text-gray-800 px-2 py-1 rounded" onclick="showPreviewModal('<?= htmlspecialchars($file['url']) ?>','text')">Preview</button>
+                    <?php elseif ($file['ext'] === 'pdf'): ?>
+                        <button type="button" class="bg-gray-300 text-gray-800 px-2 py-1 rounded" onclick="showPreviewModal('<?= htmlspecialchars($file['url']) ?>','pdf')">Preview</button>
+                    <?php else: ?>
+                        <span class="text-gray-400">No preview</span>
+                    <?php endif; ?>
+                </td>
+                <td class="py-2 border-b">
+                    <form method="POST" style="display:inline" onsubmit="return confirm('Delete this file?')">
+                        <input type="hidden" name="action" value="delete_file">
+                        <input type="hidden" name="filename" value="<?= htmlspecialchars($file['name']) ?>">
+                        <button type="submit" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">Delete</button>
+                    </form>
+                    <a href="<?= htmlspecialchars($file['url']) ?>" download class="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600 ml-2">Download</a>
+                    <button type="button" class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 ml-2" onclick="showRenameModal('<?= htmlspecialchars($file['name']) ?>')">Rename</button>
+                </td>
+            </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
+
+    <!-- Rename Modal -->
+    <div id="renameModal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h3 class="text-xl font-bold mb-4">Rename File</h3>
+            <form method="POST" id="rename-form" class="space-y-4">
+                <input type="hidden" name="action" value="rename_file">
+                <input type="hidden" name="old_name" id="rename-old-name">
+                <div>
+                    <label class="block mb-1">New File Name:</label>
+                    <input type="text" name="new_name" id="rename-new-name" class="w-full px-3 py-2 border border-gray-300 rounded" required>
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" onclick="hideRenameModal()" class="bg-gray-400 text-white px-4 py-2 rounded">Cancel</button>
+                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Rename</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Preview Modal -->
+    <div id="previewModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl relative">
+            <button onclick="hidePreviewModal()" class="absolute top-2 right-2 bg-gray-400 text-white px-2 py-1 rounded">&times;</button>
+            <div id="previewContent"></div>
+        </div>
+    </div>
+
+    <script>
+    function showRenameModal(filename) {
+        document.getElementById('rename-old-name').value = filename;
+        document.getElementById('rename-new-name').value = filename;
+        document.getElementById('renameModal').classList.remove('hidden');
+    }
+    function hideRenameModal() {
+        document.getElementById('renameModal').classList.add('hidden');
+    }
+
+    function showPreviewModal(url, type) {
+        var modal = document.getElementById('previewModal');
+        var content = document.getElementById('previewContent');
+        content.innerHTML = '';
+        if (type === 'image') {
+            content.innerHTML = '<img src="' + url + '" style="max-width:100%;max-height:70vh;border-radius:8px;">';
+        } else if (type === 'text') {
+            fetch(url)
+                .then(response => response.text())
+                .then(text => {
+                    content.innerHTML = '<pre style="max-height:60vh;overflow:auto;background:#f3f3f3;padding:1em;border-radius:6px;">' + 
+                        escapeHtml(text.substring(0, 5000)) + 
+                        (text.length > 5000 ? "\n... (truncated)" : "") + 
+                        '</pre>';
+                });
+        } else if (type === 'pdf') {
+            content.innerHTML = '<iframe src="' + url + '" style="width:90vw;height:70vh;border:none;"></iframe>';
+        }
+        modal.classList.remove('hidden');
+    }
+    function hidePreviewModal() {
+        document.getElementById('previewModal').classList.add('hidden');
+    }
+    function escapeHtml(text) {
+        var map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+    }
+    // Close modals on background click
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('renameModal').addEventListener('click', function(e) {
+            if (e.target === this) hideRenameModal();
+        });
+        document.getElementById('previewModal').addEventListener('click', function(e) {
+            if (e.target === this) hidePreviewModal();
+        });
+    });
+    </script>
+    <?php
+    return ob_get_clean();
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'activate_theme') {
     if (!isLoggedIn()) {
         $error = 'You must be logged in to manage themes';
