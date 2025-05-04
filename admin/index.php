@@ -113,6 +113,64 @@ require("filesave-handler.php");
 require("filedel-handler.php");
 require("widgets-handler.php");
 
+// Add this function outside of the if/else blocks
+function generate_parent_options($pages, $currentParent, $currentPage) {
+    $options = '<option value="">None (Top Level)</option>';
+    foreach ($pages as $slug => $page) {
+        // Don't allow a page to be its own parent
+        if ($slug !== $currentPage) {
+            $selected = ($slug === $currentParent) ? ' selected' : '';
+            $options .= '<option value="' . htmlspecialchars($slug) . '"' . $selected . '>' . 
+                        htmlspecialchars($page['title']) . '</option>';
+        }
+    }
+    return $options;
+}
+
+// Add this function near the top of the file
+function get_page_hierarchy() {
+    $pages = [];
+    $hierarchy = [];
+    
+    // First pass: collect all pages
+    foreach (glob(CONTENT_DIR . '/*.md') as $file) {
+        $content = file_get_contents($file);
+        $slug = basename($file, '.md');
+        
+        if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $content, $matches)) {
+            $metadata = json_decode($matches[1], true) ?: [];
+            $pages[$slug] = [
+                'title' => $metadata['title'] ?? $slug,
+                'parent' => $metadata['parent'] ?? null,
+                'file' => $file
+            ];
+        } else {
+            $pages[$slug] = [
+                'title' => $slug,
+                'parent' => null,
+                'file' => $file
+            ];
+        }
+    }
+    
+    // Second pass: build hierarchy
+    foreach ($pages as $slug => $page) {
+        if (empty($page['parent'])) {
+            $hierarchy[$slug] = ['data' => $page, 'children' => []];
+        } else if (isset($pages[$page['parent']])) {
+            if (!isset($hierarchy[$page['parent']])) {
+                $hierarchy[$page['parent']] = ['data' => $pages[$page['parent']], 'children' => []];
+            }
+            $hierarchy[$page['parent']]['children'][$slug] = ['data' => $page, 'children' => []];
+        } else {
+            // Parent doesn't exist, make it top level
+            $hierarchy[$slug] = ['data' => $page, 'children' => []];
+        }
+    }
+    
+    return ['pages' => $pages, 'hierarchy' => $hierarchy];
+}
+
 fcms_register_admin_section('files', [
     'label' => 'Files',
     'menu_order' => 50,
@@ -528,41 +586,57 @@ if (!isLoggedIn()) {
         $template = str_replace('{{sidebar_selection}}', $sidebarSelectionHtml, $template);
         $template = str_replace('{{widget_list}}', $widgetList, $template);
         $template = str_replace('{{current_sidebar}}', htmlspecialchars($currentSidebar), $template);
-    }
-    else if ($isContentEditor) {
-        $template = preg_replace('/\{\{if_content_editor\}\}(.*?)\{\{\/if_content_editor\}\}/s', '$1', $template);
-        $template = preg_replace('/\{\{if_user_management\}\}.*?\{\{\/if_user_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_theme_management\}\}.*?\{\{\/if_theme_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_plugin_management\}\}.*?\{\{\/if_plugin_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_menu_management\}\}.*?\{\{\/if_menu_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_widget_management\}\}.*?\{\{\/if_widget_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_not_user_management\}\}.*?\{\{\/if_not_user_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_not_content_editor\}\}.*?\{\{\/if_not_content_editor\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_plugin_section\}\}.*?\{\{\/if_plugin_section\}\}/s', '', $template);
-
-        $fileName = $_GET['edit'];
-        $filePath = CONTENT_DIR . '/' . $fileName;
-
-        if (!file_exists($filePath)) {
-            header('Location: /admin/');
-            exit;
         }
-
-        $fileContent = file_get_contents($filePath);
-        $pageTitle = '';
-        if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $fileContent, $matches)) {
-            $metadata = json_decode($matches[1], true);
-            if ($metadata && isset($metadata['title'])) {
-                $pageTitle = $metadata['title'];
+        else if ($isContentEditor) {
+            $template = preg_replace('/\{\{if_content_editor\}\}(.*?)\{\{\/if_content_editor\}\}/s', '$1', $template);
+            $template = preg_replace('/\{\{if_user_management\}\}.*?\{\{\/if_user_management\}\}/s', '', $template);
+            $template = preg_replace('/\{\{if_theme_management\}\}.*?\{\{\/if_theme_management\}\}/s', '', $template);
+            $template = preg_replace('/\{\{if_plugin_management\}\}.*?\{\{\/if_plugin_management\}\}/s', '', $template);
+            $template = preg_replace('/\{\{if_menu_management\}\}.*?\{\{\/if_menu_management\}\}/s', '', $template);
+            $template = preg_replace('/\{\{if_widget_management\}\}.*?\{\{\/if_widget_management\}\}/s', '', $template);
+            $template = preg_replace('/\{\{if_not_user_management\}\}.*?\{\{\/if_not_user_management\}\}/s', '', $template);
+            $template = preg_replace('/\{\{if_not_content_editor\}\}.*?\{\{\/if_not_content_editor\}\}/s', '', $template);
+            $template = preg_replace('/\{\{if_plugin_section\}\}.*?\{\{\/if_plugin_section\}\}/s', '', $template);
+            
+            $fileName = $_GET['edit'];
+            $filePath = CONTENT_DIR . '/' . $fileName;
+            
+            if (!file_exists($filePath)) {
+                header('Location: /admin/');
+                exit;
             }
-        }
-        $editContent = preg_replace('/^<!--\s*json\s*.*?\s*-->\s*/s', '', $fileContent);
-
-        $template = str_replace('{{file_name}}', htmlspecialchars($fileName), $template);
-        $template = str_replace('{{file_content}}', json_encode($editContent), $template);
-        $template = str_replace('{{page_title}}', htmlspecialchars($pageTitle), $template);
-    }
-    else if ($isUserManagement) {
+            
+            $fileContent = file_get_contents($filePath);
+            $pageTitle = '';
+            if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $fileContent, $matches)) {
+                $metadata = json_decode($matches[1], true);
+                if ($metadata && isset($metadata['title'])) {
+                    $pageTitle = $metadata['title'];
+                }
+            }
+            $editContent = preg_replace('/^<!--\s*json\s*.*?\s*-->\s*/s', '', $fileContent);
+            
+            // Get all pages for parent selection
+            $pageData = get_page_hierarchy();
+            $allPages = $pageData['pages'];
+            
+            // Get current parent if any
+            $currentParent = '';
+            if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $fileContent, $matches)) {
+                $metadata = json_decode($matches[1], true);
+                if ($metadata && isset($metadata['parent'])) {
+                    $currentParent = $metadata['parent'];
+                }
+            }
+            
+            $template = str_replace('{{file_name}}', htmlspecialchars($fileName), $template);
+            $template = str_replace('{{file_content}}', json_encode($editContent), $template);
+            $template = str_replace('{{page_title}}', htmlspecialchars($pageTitle), $template);
+            
+            // Add this to the template replacement section
+            $template = str_replace('{{parent_page_options}}', generate_parent_options($allPages, $currentParent, basename($fileName, '.md')), $template);
+        } 
+        else if ($isUserManagement) {
         $template = preg_replace('/\{\{if_user_management\}\}(.*?)\{\{\/if_user_management\}\}/s', '$1', $template);
         $template = preg_replace('/\{\{if_theme_management\}\}.*?\{\{\/if_theme_management\}\}/s', '', $template);
         $template = preg_replace('/\{\{if_plugin_management\}\}.*?\{\{\/if_plugin_management\}\}/s', '', $template);
@@ -904,10 +978,17 @@ else {
     $template = preg_replace('/\{\{if_widget_management\}\}.*?\{\{\/if_widget_management\}\}/s', '', $template);
 
     // Content Management: build content_list
-    $contentFiles = glob(CONTENT_DIR . '/*.md');
+    $contentFiles = [];
+    $rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(CONTENT_DIR));
+    foreach ($rii as $file) {
+        if ($file->isDir()) continue;
+        if (strtolower($file->getExtension()) === 'md') {
+            $contentFiles[] = $file->getPathname();
+        }
+    }
     $contentList = '';
     foreach ($contentFiles as $file) {
-        $filename = basename($file);
+        $filename = ltrim(str_replace(CONTENT_DIR, '', $file), '/\\');
         $fileContent = file_get_contents($file);
         $displayName = $filename;
         if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $fileContent, $matches)) {
@@ -916,19 +997,32 @@ else {
                 $displayName = $metadata['title'] . ' <span class="text-gray-400 text-xs">(' . $filename . ')</span>';
             }
         }
-        $contentList .= "<li class='py-2 px-4 hover:bg-gray-100'>
-            <div class='flex justify-between items-center'>
-                <span>" . $displayName . "</span>
-                <div class='flex space-x-2'>
-                    <a href='?edit=" . urlencode($filename) . "' class='bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600'>
-                        Edit
-                    </a>
-                    <button onclick='deletePage(\"" . htmlspecialchars($filename) . "\")' class='bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600'>
-                        Delete
-                    </button>
-                </div>
-            </div>
-        </li>";
+        $contentList = '';
+            foreach ($contentFiles as $file) {
+                $filename = ltrim(str_replace(CONTENT_DIR, '', $file), '/\\');
+                $fileContent = file_get_contents($file);
+                $displayName = $filename;
+                if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $fileContent, $matches)) {
+                    $metadata = json_decode($matches[1], true);
+                    if ($metadata && isset($metadata['title'])) {
+                        $displayName = $metadata['title'] . ' <span class="text-gray-400 text-xs">(' . $filename . ')</span>';
+                    }
+                }
+                $contentList .= "<li class='py-2 px-4 hover:bg-gray-100'>
+                    <div class='flex justify-between items-center'>
+                        <span>" . $displayName . "</span>
+                        <div class='flex space-x-2'>
+                            <a href='?edit=" . urlencode($filename) . "' class='bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600'>
+                                Edit
+                            </a>
+                            <button onclick='deletePage(\"" . htmlspecialchars($filename, ENT_QUOTES) . "\")' class='bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600'>
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </li>";
+            }
+
     }
     $template = str_replace('{{content_list}}', $contentList, $template);
 }
@@ -962,6 +1056,13 @@ $template = str_replace('{{site_name}}', htmlspecialchars($siteName), $template)
 $template = str_replace('{{custom_css}}', htmlspecialchars($customCss), $template);
 $template = str_replace('{{custom_js}}', htmlspecialchars($customJs), $template);
 $template = str_replace('{{username}}', htmlspecialchars($_SESSION['username']), $template);
+// Build parent page options for the New Page modal
+$pageData = get_page_hierarchy();
+$allPages = $pageData['pages'];
+$newPageParentOptions = generate_parent_options($allPages, '', ''); // No current parent, no current page
+
+$template = str_replace('{{newpage_parent_page_options}}', $newPageParentOptions, $template);
+
 $template = str_replace('{{app_version}}', defined('APP_VERSION') ? htmlspecialchars(APP_VERSION) : '', $template);
 }
 echo $template;

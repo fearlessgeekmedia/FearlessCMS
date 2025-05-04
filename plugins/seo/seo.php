@@ -153,6 +153,11 @@ function seo_get_page_metadata($content) {
         'description' => null,
         'social_image' => null
     ];
+
+    // Ensure $content is a string to avoid deprecation warnings in PHP 8.1+
+    if (!is_string($content)) {
+        $content = '';
+    }
     
     // Extract JSON frontmatter if present
     if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $content, $matches)) {
@@ -233,4 +238,3 @@ function seo_inject_meta_tags(&$template) {
     // Insert meta tags before </head>
     $template = str_replace('</head>', $meta_tags . '</head>', $template);
 }
-

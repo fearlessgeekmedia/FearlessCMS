@@ -1,6 +1,4 @@
 <?php
-// index.php - FearlessCMS front-end entry point
-
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -9,146 +7,113 @@ define('PROJECT_ROOT', __DIR__);
 define('CONTENT_DIR', __DIR__ . '/content');
 define('CONFIG_DIR', __DIR__ . '/config');
 
-require_once __DIR__ . '/includes/ThemeManager.php';
-require_once __DIR__ . '/includes/Parsedown.php';
-require_once __DIR__ . '/includes/plugins.php';
+require_once PROJECT_ROOT . '/includes/ThemeManager.php';
+require_once PROJECT_ROOT . '/includes/plugins.php';
 
-// Helper: Render a menu by ID
-function render_menu($menuId) {
-    $menuFile = PROJECT_ROOT . '/admin/config/menus.json';
+$themeManager = new ThemeManager();
+
+// --- Routing: get the requested path ---
+$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$uri = urldecode($uri);
+$path = trim($uri, '/');
+
+// Default to home if root
+if ($path === '') {
+    $path = 'home';
+}
+
+$contentFile = CONTENT_DIR . '/' . $path . '.md';
+
+// 404 fallback
+if (!file_exists($contentFile)) {
+    http_response_code(404);
+    $contentFile = CONTENT_DIR . '/404.md';
+    if (!file_exists($contentFile)) {
+        // If no 404.md, show a default message
+        $pageTitle = 'Page Not Found';
+        $pageContent = '<p>The page you requested could not be found.</p>';
+        $template = $themeManager->getTemplate('404', 'page');
+        $template = str_replace('{{title}}', $pageTitle, $template);
+        $template = str_replace('{{content}}', $pageContent, $template);
+        $template = str_replace('{{site_name}}', 'FearlessCMS', $template);
+        echo $template;
+        exit;
+    }
+}
+
+// --- Load content and metadata ---
+$fileContent = file_get_contents($contentFile);
+$pageTitle = '';
+$pageDescription = '';
+$pageContent = $fileContent;
+
+// Extract JSON frontmatter if present
+if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $fileContent, $matches)) {
+    $metadata = json_decode($matches[1], true);
+    if ($metadata) {
+        if (isset($metadata['title'])) $pageTitle = $metadata['title'];
+        if (isset($metadata['description'])) $pageDescription = $metadata['description'];
+    }
+    // Remove frontmatter from content
+    $pageContent = preg_replace('/^<!--\s*json\s*.*?\s*-->\s*/s', '', $fileContent);
+}
+
+// Fallback to filename as title if not set
+if (!$pageTitle) {
+    $pageTitle = ucwords(str_replace(['-', '_'], ' ', basename($path)));
+}
+
+// --- Markdown rendering ---
+if (!class_exists('Parsedown')) {
+    require_once PROJECT_ROOT . '/includes/Parsedown.php';
+}
+$Parsedown = new Parsedown();
+$pageContentHtml = $Parsedown->text($pageContent);
+
+// --- Theme and template ---
+$template = $themeManager->getTemplate('page', 'page');
+
+// --- Menu rendering (for {{menu=main}} etc.) ---
+function render_menu($menuId = 'main') {
+    $menuFile = CONFIG_DIR . '/menus.json';
     if (!file_exists($menuFile)) return '';
     $menus = json_decode(file_get_contents($menuFile), true);
-    if (!isset($menus[$menuId])) return '';
-    $menu = $menus[$menuId];
-    $html = '<ul class="' . htmlspecialchars($menu['menu_class'] ?? '') . '">';
-    foreach ($menu['items'] as $item) {
+    if (!isset($menus[$menuId]['items'])) return '';
+    $html = '<ul class="' . htmlspecialchars($menus[$menuId]['menu_class'] ?? 'main-nav') . '">';
+    foreach ($menus[$menuId]['items'] as $item) {
+        $label = htmlspecialchars($item['label']);
+        $url = htmlspecialchars($item['url']);
         $class = htmlspecialchars($item['item_class'] ?? '');
         $target = $item['target'] ? ' target="' . htmlspecialchars($item['target']) . '"' : '';
-        $html .= '<li class="' . $class . '"><a href="' . htmlspecialchars($item['url']) . '"' . $target . '>' . htmlspecialchars($item['label']) . '</a></li>';
+        $html .= "<li><a href=\"$url\" class=\"$class\"$target>$label</a></li>";
     }
     $html .= '</ul>';
     return $html;
 }
 
-// Load site config (for site_name and more)
+// --- Replace template placeholders ---
+$template = str_replace('{{title}}', htmlspecialchars($pageTitle), $template);
+$template = str_replace('{{content}}', $pageContentHtml, $template);
+
+// Site name
 $configFile = CONFIG_DIR . '/config.json';
-$config = [];
+$siteName = 'FearlessCMS';
 if (file_exists($configFile)) {
     $config = json_decode(file_get_contents($configFile), true);
+    if (isset($config['site_name'])) $siteName = $config['site_name'];
 }
-$siteName = $config['site_name'] ?? 'FearlessCMS';
+$template = str_replace('{{site_name}}', htmlspecialchars($siteName), $template);
 
-// Load custom code (CSS/JS)
-$customCodeFile = CONFIG_DIR . '/custom_code.json';
-$customCss = '';
-$customJs = '';
-if (file_exists($customCodeFile)) {
-    $customCode = json_decode(file_get_contents($customCodeFile), true);
-    $customCss = $customCode['css'] ?? '';
-    $customJs = $customCode['js'] ?? '';
-}
-
-// Routing: get the requested path
-$path = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
-
-// --- Plugin Routing ---
-$handled = false;
-$title = '';
-$content = '';
-
-// Call all route hooks (plugins)
-fcms_do_hook('route', $handled, $title, $content, $path);
-
-if ($handled) {
-    // Plugin (e.g. blog) provided the content
-    $pageTitle = $title;
-    $contentHtml = $content;
-    $is404 = false;
-} else {
-    // --- File-based Content Fallback ---
-    if ($path === '' || $path === 'index.php') {
-        $file = CONTENT_DIR . '/home.md';
-    } else {
-        $file = CONTENT_DIR . '/' . $path . '.md';
-    }
-
-    if (!file_exists($file)) {
-        $file = CONTENT_DIR . '/404.md';
-        $is404 = true;
-    } else {
-        $is404 = false;
-    }
-
-    if (file_exists($file)) {
-        $pageContent = file_get_contents($file);
-
-        // Extract title from frontmatter if present
-        $pageTitle = '';
-        if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $pageContent, $matches)) {
-            $metadata = json_decode($matches[1], true);
-            if ($metadata && isset($metadata['title'])) {
-                $pageTitle = $metadata['title'];
-            }
-        }
-
-        // Remove frontmatter from content before rendering
-        $pageContent = preg_replace('/^<!--\s*json\s*.*?\s*-->\s*/s', '', $pageContent);
-
-        // Render Markdown to HTML
-        $Parsedown = new Parsedown();
-        $contentHtml = $Parsedown->text($pageContent);
-    } else {
-        // If 404.md is missing, show a default message
-        $pageTitle = 'Page Not Found';
-        $contentHtml = '<h1>404 - Page Not Found</h1><p>The page you requested could not be found.</p>';
-        $is404 = true;
-    }
-}
-
-// --- Theme Template Rendering ---
-$themeManager = new ThemeManager();
-$templateName = $is404 ? '404' : 'page';
-$template = $themeManager->getTemplate($templateName);
-
-// --- Safe Menu Processing ---
-// Split the template at {{content}}
-$parts = explode('{{content}}', $template, 2);
-$before = $parts[0];
-$after = $parts[1] ?? '';
-
-// Process menus in the template parts only (not in $contentHtml)
-$before = preg_replace_callback('/\{\{menu=([\w-]+)\}\}/', function($m) {
+// Menu(s)
+$template = preg_replace_callback('/\{\{menu=([a-zA-Z0-9_-]+)\}\}/', function($m) {
     return render_menu($m[1]);
-}, $before);
-$after = preg_replace_callback('/\{\{menu=([\w-]+)\}\}/', function($m) {
-    return render_menu($m[1]);
-}, $after);
+}, $template);
 
-// Replace site_name and title in template
-$before = str_replace('{{site_name}}', htmlspecialchars($siteName), $before);
-$after = str_replace('{{site_name}}', htmlspecialchars($siteName), $after);
-$before = str_replace('{{title}}', htmlspecialchars($pageTitle ?: ($is404 ? 'Page Not Found' : 'Untitled')), $before);
-$after = str_replace('{{title}}', htmlspecialchars($pageTitle ?: ($is404 ? 'Page Not Found' : 'Untitled')), $after);
+// --- SEO plugin hook (optional) ---
+global $title, $content;
+$title = $pageTitle;
+$content = $fileContent;
+fcms_do_hook('before_render', $template);
 
-// Inject custom CSS before </head>
-if ($customCss) {
-    $before = preg_replace(
-        '/<\/head>/i',
-        "<style>\n" . $customCss . "\n</style>\n</head>",
-        $before,
-        1
-    );
-}
-
-// Inject custom JS before </body>
-if ($customJs) {
-    $after = preg_replace(
-        '/<\/body>/i',
-        "<script>\n" . $customJs . "\n</script>\n</body>",
-        $after,
-        1
-    );
-}
-
-// Output the final page
-echo $before . $contentHtml . $after;
+// --- Output ---
+echo $template;
