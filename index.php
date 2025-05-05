@@ -10,8 +10,6 @@ define('CONFIG_DIR', __DIR__ . '/config');
 require_once PROJECT_ROOT . '/includes/ThemeManager.php';
 require_once PROJECT_ROOT . '/includes/plugins.php';
 
-$themeManager = new ThemeManager();
-
 // --- Routing: get the requested path ---
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $uri = urldecode($uri);
@@ -32,10 +30,20 @@ if (!file_exists($contentFile)) {
         // If no 404.md, show a default message
         $pageTitle = 'Page Not Found';
         $pageContent = '<p>The page you requested could not be found.</p>';
+        $themeManager = new ThemeManager();
         $template = $themeManager->getTemplate('404', 'page');
         $template = str_replace('{{title}}', $pageTitle, $template);
         $template = str_replace('{{content}}', $pageContent, $template);
         $template = str_replace('{{site_name}}', 'FearlessCMS', $template);
+
+        // Logo/Herobanner replacement (even on 404)
+        $themeOptionsFile = CONFIG_DIR . '/theme_options.json';
+        $themeOptions = file_exists($themeOptionsFile) ? json_decode(file_get_contents($themeOptionsFile), true) : [];
+        $logoHtml = !empty($themeOptions['logo']) ? '<img src="' . htmlspecialchars($themeOptions['logo']) . '" class="logo" alt="Logo">' : '';
+        $herobannerHtml = !empty($themeOptions['herobanner']) ? '<img src="' . htmlspecialchars($themeOptions['herobanner']) . '" class="hero-banner" alt="Hero Banner">' : '';
+        $template = str_replace('{{logo}}', $logoHtml, $template);
+        $template = str_replace('{{herobanner}}', $herobannerHtml, $template);
+
         echo $template;
         exit;
     }
@@ -71,6 +79,7 @@ $Parsedown = new Parsedown();
 $pageContentHtml = $Parsedown->text($pageContent);
 
 // --- Theme and template ---
+$themeManager = new ThemeManager();
 $template = $themeManager->getTemplate('page', 'page');
 
 // --- Menu rendering (for {{menu=main}} etc.) ---
@@ -92,10 +101,11 @@ function render_menu($menuId = 'main') {
 }
 
 // --- Replace template placeholders ---
+
+// Title, content, site name
 $template = str_replace('{{title}}', htmlspecialchars($pageTitle), $template);
 $template = str_replace('{{content}}', $pageContentHtml, $template);
 
-// Site name
 $configFile = CONFIG_DIR . '/config.json';
 $siteName = 'FearlessCMS';
 if (file_exists($configFile)) {
@@ -104,10 +114,26 @@ if (file_exists($configFile)) {
 }
 $template = str_replace('{{site_name}}', htmlspecialchars($siteName), $template);
 
-// Menu(s)
+// Menus
 $template = preg_replace_callback('/\{\{menu=([a-zA-Z0-9_-]+)\}\}/', function($m) {
     return render_menu($m[1]);
 }, $template);
+
+// --- Theme options: logo and herobanner ---
+$themeOptionsFile = CONFIG_DIR . '/theme_options.json';
+$themeOptions = file_exists($themeOptionsFile) ? json_decode(file_get_contents($themeOptionsFile), true) : [];
+
+$logoHtml = '';
+if (!empty($themeOptions['logo'])) {
+    $logoHtml = '<img src="' . htmlspecialchars($themeOptions['logo']) . '" class="logo" alt="Logo">';
+}
+$herobannerHtml = '';
+if (!empty($themeOptions['herobanner'])) {
+    $herobannerHtml = '<img src="' . htmlspecialchars($themeOptions['herobanner']) . '" class="hero-banner" alt="Hero Banner">';
+}
+
+$template = str_replace('{{logo}}', $logoHtml, $template);
+$template = str_replace('{{herobanner}}', $herobannerHtml, $template);
 
 // --- SEO plugin hook (optional) ---
 global $title, $content;

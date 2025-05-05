@@ -16,6 +16,112 @@ require_once PROJECT_ROOT . '/includes/plugins.php';
 
 $themeManager = new ThemeManager();
 
+// Add this:
+$themeDir = PROJECT_ROOT . '/themes/' . $themeManager->getActiveTheme();
+
+$pageTemplate = '';
+$homeTemplate = '';
+if (file_exists($themeDir . '/templates/page.html')) {
+    $pageTemplate = file_get_contents($themeDir . '/templates/page.html');
+}
+if (file_exists($themeDir . '/templates/home.html')) {
+    $homeTemplate = file_get_contents($themeDir . '/templates/home.html');
+}
+
+$supportsHerobanner = (strpos($pageTemplate, '{{herobanner}}') !== false) ||
+                      (strpos($homeTemplate, '{{herobanner}}') !== false);
+
+$supportsLogo = (strpos($pageTemplate, '{{logo}}') !== false) ||
+                (strpos($homeTemplate, '{{logo}}') !== false);
+               
+// Load current options
+$themeOptionsFile = CONFIG_DIR . '/theme_options.json';
+$themeOptions = file_exists($themeOptionsFile) ? json_decode(file_get_contents($themeOptionsFile), true) : [];
+
+$herobannerUrl = $themeOptions['herobanner'] ?? '';
+$logoUrl = $themeOptions['logo'] ?? '';
+
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['action']) && $_POST['action'] === 'upload_herobanner' && $supportsHerobanner && isset($_FILES['herobanner'])) {
+        $file = $_FILES['herobanner'];
+        if ($file['error'] === UPLOAD_ERR_OK) {
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            if (in_array($ext, $allowed)) {
+                $uploadsDir = PROJECT_ROOT . '/uploads';
+                if (!is_dir($uploadsDir)) mkdir($uploadsDir, 0755, true);
+                $filename = 'herobanner_' . time() . '.' . $ext;
+                $target = $uploadsDir . '/' . $filename;
+                if (move_uploaded_file($file['tmp_name'], $target)) {
+                    $themeOptions['herobanner'] = '/uploads/' . $filename;
+                    file_put_contents($themeOptionsFile, json_encode($themeOptions, JSON_PRETTY_PRINT));
+                    $success = 'Hero banner uploaded!';
+                    header("Location: " . $_SERVER['REQUEST_URI']);
+                    exit;
+                } else {
+                    $error = 'Failed to move uploaded file.';
+                }
+            } else {
+                $error = 'Invalid file type.';
+            }
+        } else {
+            $error = 'Upload error.';
+        }
+    }
+    if (isset($_POST['action']) && $_POST['action'] === 'upload_logo' && $supportsLogo && isset($_FILES['logo'])) {
+        $file = $_FILES['logo'];
+        if ($file['error'] === UPLOAD_ERR_OK) {
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
+            if (in_array($ext, $allowed)) {
+                $uploadsDir = PROJECT_ROOT . '/uploads';
+                if (!is_dir($uploadsDir)) mkdir($uploadsDir, 0755, true);
+                $filename = 'logo_' . time() . '.' . $ext;
+                $target = $uploadsDir . '/' . $filename;
+                if (move_uploaded_file($file['tmp_name'], $target)) {
+                    $themeOptions['logo'] = '/uploads/' . $filename;
+                    file_put_contents($themeOptionsFile, json_encode($themeOptions, JSON_PRETTY_PRINT));
+                    $success = 'Logo uploaded!';
+                    header("Location: " . $_SERVER['REQUEST_URI']);
+                    exit;
+                } else {
+                    $error = 'Failed to move uploaded file.';
+                }
+            } else {
+                $error = 'Invalid file type.';
+            }
+        } else {
+            $error = 'Upload error.';
+        }
+    }
+}
+
+
+$themeOptionsForms = '';
+
+if ($supportsHerobanner) {
+    $themeOptionsForms .= '<form method="POST" enctype="multipart/form-data" class="mb-4">
+        <label class="block font-medium mb-1">Hero Banner Image:</label>';
+    if ($herobannerUrl) {
+        $themeOptionsForms .= '<img src="' . htmlspecialchars($herobannerUrl) . '" style="max-width:300px;max-height:120px;display:block;margin-bottom:1em;">';
+    }
+    $themeOptionsForms .= '<input type="file" name="herobanner" accept="image/*" class="mb-2">
+        <button type="submit" name="action" value="upload_herobanner" class="bg-blue-500 text-white px-4 py-2 rounded">Upload</button>
+    </form>';
+}
+
+if ($supportsLogo) {
+    $themeOptionsForms .= '<form method="POST" enctype="multipart/form-data" class="mb-4">
+        <label class="block font-medium mb-1">Logo Image:</label>';
+    if ($logoUrl) {
+        $themeOptionsForms .= '<img src="' . htmlspecialchars($logoUrl) . '" style="max-width:120px;max-height:60px;display:block;margin-bottom:1em;">';
+    }
+    $themeOptionsForms .= '<input type="file" name="logo" accept="image/*" class="mb-2">
+        <button type="submit" name="action" value="upload_logo" class="bg-blue-500 text-white px-4 py-2 rounded">Upload</button>
+    </form>';
+}
+
 if (!file_exists(ADMIN_CONFIG_DIR)) {
     mkdir(ADMIN_CONFIG_DIR, 0755, true);
 }
@@ -454,7 +560,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $error = 'You must be logged in to manage menus';
     } else {
         $menuData = $_POST['menu_data'] ?? '';
-        $menuFile = ADMIN_CONFIG_DIR . '/menus.json';
+        $menuFile = CONFIG_DIR . '/menus.json';
         if (!empty($menuData)) {
             $menuData = json_decode($menuData, true);
             if (json_last_error() === JSON_ERROR_NONE) {
@@ -779,7 +885,7 @@ else if ($isMenuManagement) {
     $template = preg_replace('/\{\{if_not_content_editor\}\}.*?\{\{\/if_not_content_editor\}\}/s', '', $template);
     $template = preg_replace('/\{\{if_plugin_section\}\}.*?\{\{\/if_plugin_section\}\}/s', '', $template);
 
-    $menuFile = ADMIN_CONFIG_DIR . '/menus.json';
+    $menuFile = CONFIG_DIR . '/menus.json';
     $menus = file_exists($menuFile) ? json_decode(file_get_contents($menuFile), true) : ['main' => ['menu_class' => 'main-nav', 'items' => []]];
     $currentMenu = $_GET['menu'] ?? array_key_first($menus) ?? 'main';
 
@@ -1064,6 +1170,10 @@ $newPageParentOptions = generate_parent_options($allPages, '', ''); // No curren
 $template = str_replace('{{newpage_parent_page_options}}', $newPageParentOptions, $template);
 
 $template = str_replace('{{app_version}}', defined('APP_VERSION') ? htmlspecialchars(APP_VERSION) : '', $template);
+$template = str_replace('{{theme_options_forms}}', $themeOptionsForms, $template);
+
 }
+
+
 echo $template;
 ?>

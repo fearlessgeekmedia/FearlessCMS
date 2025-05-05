@@ -258,6 +258,42 @@
             {{menu_editor}}
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.Sortable && document.getElementById('menu-items-container')) {
+            new Sortable(document.getElementById('menu-items-container'), {
+                animation: 150,
+                handle: '.menu-handle',
+                onEnd: function(evt) {
+                    // Get new order of menu items by their data-item-index
+                    const items = Array.from(evt.to.children).map(el => parseInt(el.dataset.itemIndex));
+                    // Reorder menuData[currentMenu].items accordingly
+                    const reordered = [];
+                    items.forEach(idx => {
+                        reordered.push(menuData[currentMenu].items[idx]);
+                    });
+                    menuData[currentMenu].items = reordered;
+                    // Save the new order
+                    saveMenu();
+                }
+            });
+        }
+    });
+    function saveMenuItem() {
+    const index = parseInt(document.getElementById("edit-item-index").value);
+    menuData[currentMenu].items[index] = {
+        label: document.getElementById("item-label").value,
+        url: document.getElementById("item-url").value,
+        item_class: document.getElementById("item-class").value,
+        target: document.getElementById("item-target").value
+    };
+    closeMenuItemModal();
+    saveMenu();
+}
+
+    </script>
     {{/if_menu_management}}
 
     {{if_content_editor}}
@@ -335,6 +371,7 @@
 
     {{if_not_user_management}}
     {{if_not_content_editor}}
+   
     <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div class="bg-white shadow rounded-lg p-6">
             <form method="POST" class="mb-8 flex items-center gap-4">
@@ -343,6 +380,7 @@
                 <input type="text" id="site_name" name="site_name" value="{{site_name}}" class="border rounded px-3 py-2 flex-1" required>
                 <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Save</button>
             </form>
+            {{theme_options_forms}}
             <h2 class="text-2xl font-bold mb-6 fira-code">Content Management</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -447,6 +485,9 @@
         form.submit();
     }
 }
+
+
+
     </script>
     {{/if_not_content_editor}}
     {{/if_not_user_management}}
