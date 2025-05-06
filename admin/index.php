@@ -6,6 +6,7 @@ error_reporting(E_ALL);
 define('PROJECT_ROOT', dirname(__DIR__));
 define('ADMIN_CONFIG_DIR', __DIR__ . '/config');
 define('ADMIN_TEMPLATE_DIR', __DIR__ . '/templates');
+define('ADMIN_INCLUDES_DIR', __DIR__ . '/includes');
 define('CONTENT_DIR', __DIR__ . '/../content');
 define('CONFIG_DIR', dirname(__DIR__) . '/config');
 
@@ -560,11 +561,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $error = 'You must be logged in to manage menus';
     } else {
         $menuData = $_POST['menu_data'] ?? '';
-        $menuFile = CONFIG_DIR . '/menus.json';
+        $adminMenuFile = ADMIN_CONFIG_DIR . '/menus.json';
+        $publicMenuFile = CONFIG_DIR . '/menus.json';
+        
         if (!empty($menuData)) {
             $menuData = json_decode($menuData, true);
             if (json_last_error() === JSON_ERROR_NONE) {
-                file_put_contents($menuFile, json_encode($menuData, JSON_PRETTY_PRINT));
+                // Save to admin config
+                file_put_contents($adminMenuFile, json_encode($menuData, JSON_PRETTY_PRINT));
+                // Save to public config
+                file_put_contents($publicMenuFile, json_encode($menuData, JSON_PRETTY_PRINT));
                 $success = 'Menu saved successfully';
             } else {
                 $error = 'Invalid menu data format';
@@ -584,596 +590,470 @@ if (!isLoggedIn()) {
     $template = file_get_contents(ADMIN_TEMPLATE_DIR . '/login.html');
     $template = str_replace('{{error}}', $error ?? '', $template);
 } else {
-    $template = file_get_contents(ADMIN_TEMPLATE_DIR . '/dashboard.html');
-
-    $isUserManagement = isset($_GET['action']) && $_GET['action'] === 'manage_users';
-    $isThemeManagement = isset($_GET['action']) && $_GET['action'] === 'manage_themes';
-    $isPluginManagement = isset($_GET['action']) && $_GET['action'] === 'manage_plugins';
-    $isContentEditor = isset($_GET['edit']) && !empty($_GET['edit']) && !isset($_GET['action']);
-    $isMenuManagement = isset($_GET['action']) && $_GET['action'] === 'manage_menus';
-    $isWidgetManagement = isset($_GET['action']) && $_GET['action'] === 'manage_widgets';
-
-    $isPluginSection = false;
-    $pluginSectionContent = '';
-    if (isset($_GET['action'])) {
-        $sections = fcms_get_admin_sections();
-        foreach ($sections as $id => $section) {
-            if ($_GET['action'] === $id) {
-                $isPluginSection = true;
-                $pluginSectionContent = call_user_func($section['render_callback']);
-                break;
-            }
-        }
-    }
-
-    if ($isPluginSection) {
-        $template = preg_replace('/\{\{if_plugin_section\}\}(.*?)\{\{\/if_plugin_section\}\}/s', '$1', $template);
-        $template = str_replace('{{plugin_section_content}}', $pluginSectionContent, $template);
-        $template = preg_replace('/\{\{if_user_management\}\}.*?\{\{\/if_user_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_theme_management\}\}.*?\{\{\/if_theme_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_plugin_management\}\}.*?\{\{\/if_plugin_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_content_editor\}\}.*?\{\{\/if_content_editor\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_menu_management\}\}.*?\{\{\/if_menu_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_widget_management\}\}.*?\{\{\/if_widget_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_not_user_management\}\}.*?\{\{\/if_not_user_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_not_content_editor\}\}.*?\{\{\/if_not_content_editor\}\}/s', '', $template);
-    }
-    else if ($isWidgetManagement) {
-        $template = preg_replace('/\{\{if_widget_management\}\}(.*?)\{\{\/if_widget_management\}\}/s', '$1', $template);
-        $template = preg_replace('/\{\{if_user_management\}\}.*?\{\{\/if_user_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_theme_management\}\}.*?\{\{\/if_theme_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_plugin_management\}\}.*?\{\{\/if_plugin_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_menu_management\}\}.*?\{\{\/if_menu_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_content_editor\}\}.*?\{\{\/if_content_editor\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_not_user_management\}\}.*?\{\{\/if_not_user_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_not_content_editor\}\}.*?\{\{\/if_not_content_editor\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_plugin_section\}\}.*?\{\{\/if_plugin_section\}\}/s', '', $template);
-
-        $widgetsFile = ADMIN_CONFIG_DIR . '/widgets.json';
-        $themeSidebars = get_theme_sidebars();
-        $widgets = file_exists($widgetsFile) ? json_decode(file_get_contents($widgetsFile), true) : [];
-        foreach ($themeSidebars as $id => $sidebar) {
-            if (!isset($widgets[$id])) {
-                $widgets[$id] = $sidebar;
-            } else {
-                $existingWidgets = $widgets[$id]['widgets'] ?? [];
-                $widgets[$id] = $sidebar;
-                $widgets[$id]['widgets'] = $existingWidgets;
-            }
-        }
-        file_put_contents($widgetsFile, json_encode($widgets, JSON_PRETTY_PRINT));
-        $currentSidebar = $_GET['sidebar'] ?? array_key_first($widgets) ?? '';
-        $sidebarSelectionHtml = '
-        <form method="GET" class="mb-4">
-            <input type="hidden" name="action" value="manage_widgets">
-            <div class="flex items-center">
-                <label for="sidebar" class="mr-2">Select Sidebar:</label>
-                <select name="sidebar" id="sidebar" onchange="this.form.submit()" class="border rounded px-2 py-1 flex-grow">';
-        if (!empty($widgets)) {
-            foreach ($widgets as $id => $sidebar) {
-                $selected = ($id === $currentSidebar) ? ' selected' : '';
-                $sidebarSelectionHtml .= sprintf(
-                    '<option value="%s"%s>%s</option>',
-                    htmlspecialchars($id),
-                    $selected,
-                    htmlspecialchars($sidebar['name'])
-                );
-            }
-        } else {
-            $sidebarSelectionHtml .= '<option value="">No sidebars detected in theme</option>';
-        }
-        $sidebarSelectionHtml .= '</select>';
-        if ($currentSidebar) {
-            $sidebarSelectionHtml .= sprintf(
-                '<button type="button" onclick="deleteSidebar(\'%s\')" class="bg-red-500 text-white px-2 py-1 rounded text-sm ml-2">Delete Sidebar</button>',
-                htmlspecialchars($currentSidebar)
-            );
-        }
-        $sidebarSelectionHtml .= '</div></form>';
-
-        $widgetList = '';
-        if ($currentSidebar && isset($widgets[$currentSidebar])) {
-            foreach ($widgets[$currentSidebar]['widgets'] as $widget) {
-                $widgetList .= '<div class="widget-item border rounded p-4 mb-4" data-widget-id="' . htmlspecialchars($widget['id']) . '">
-                    <div class="flex justify-between items-center mb-2">
-                        <h3 class="font-medium widget-handle cursor-move">↕ ' . htmlspecialchars($widget['title']) . '</h3>
-                        <div class="space-x-2">
-                            <button type="button" onclick="editWidget(\'' . htmlspecialchars($widget['id']) . '\')" 
-                                    class="bg-blue-500 text-white px-2 py-1 rounded text-sm">Edit</button>
-                            <button type="button" onclick="deleteWidget(\'' . htmlspecialchars($widget['id']) . '\', \'' . htmlspecialchars($currentSidebar) . '\')" 
-                                    class="bg-red-500 text-white px-2 py-1 rounded text-sm">Delete</button>
-                        </div>
-                    </div>
-                    <div class="text-sm text-gray-600">Type: ' . htmlspecialchars($widget['type']) . '</div>
-                </div>';
-            }
-        }
-
-        $template = str_replace('{{sidebar_selection}}', $sidebarSelectionHtml, $template);
-        $template = str_replace('{{widget_list}}', $widgetList, $template);
-        $template = str_replace('{{current_sidebar}}', htmlspecialchars($currentSidebar), $template);
-        }
-        else if ($isContentEditor) {
-            $template = preg_replace('/\{\{if_content_editor\}\}(.*?)\{\{\/if_content_editor\}\}/s', '$1', $template);
-            $template = preg_replace('/\{\{if_user_management\}\}.*?\{\{\/if_user_management\}\}/s', '', $template);
-            $template = preg_replace('/\{\{if_theme_management\}\}.*?\{\{\/if_theme_management\}\}/s', '', $template);
-            $template = preg_replace('/\{\{if_plugin_management\}\}.*?\{\{\/if_plugin_management\}\}/s', '', $template);
-            $template = preg_replace('/\{\{if_menu_management\}\}.*?\{\{\/if_menu_management\}\}/s', '', $template);
-            $template = preg_replace('/\{\{if_widget_management\}\}.*?\{\{\/if_widget_management\}\}/s', '', $template);
-            $template = preg_replace('/\{\{if_not_user_management\}\}.*?\{\{\/if_not_user_management\}\}/s', '', $template);
-            $template = preg_replace('/\{\{if_not_content_editor\}\}.*?\{\{\/if_not_content_editor\}\}/s', '', $template);
-            $template = preg_replace('/\{\{if_plugin_section\}\}.*?\{\{\/if_plugin_section\}\}/s', '', $template);
-            
-            $fileName = $_GET['edit'];
-            $filePath = CONTENT_DIR . '/' . $fileName;
-            
-            if (!file_exists($filePath)) {
-                header('Location: /admin/');
-                exit;
-            }
-            
-            $fileContent = file_get_contents($filePath);
-            $pageTitle = '';
-            if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $fileContent, $matches)) {
-                $metadata = json_decode($matches[1], true);
-                if ($metadata && isset($metadata['title'])) {
-                    $pageTitle = $metadata['title'];
-                }
-            }
-            $editContent = preg_replace('/^<!--\s*json\s*.*?\s*-->\s*/s', '', $fileContent);
-            
-            // Get all pages for parent selection
-            $pageData = get_page_hierarchy();
-            $allPages = $pageData['pages'];
-            
-            // Get current parent if any
-            $currentParent = '';
-            if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $fileContent, $matches)) {
-                $metadata = json_decode($matches[1], true);
-                if ($metadata && isset($metadata['parent'])) {
-                    $currentParent = $metadata['parent'];
-                }
-            }
-            
-            $template = str_replace('{{file_name}}', htmlspecialchars($fileName), $template);
-            $template = str_replace('{{file_content}}', json_encode($editContent), $template);
-            $template = str_replace('{{page_title}}', htmlspecialchars($pageTitle), $template);
-            
-            // Add this to the template replacement section
-            $template = str_replace('{{parent_page_options}}', generate_parent_options($allPages, $currentParent, basename($fileName, '.md')), $template);
-        } 
-        else if ($isUserManagement) {
-        $template = preg_replace('/\{\{if_user_management\}\}(.*?)\{\{\/if_user_management\}\}/s', '$1', $template);
-        $template = preg_replace('/\{\{if_theme_management\}\}.*?\{\{\/if_theme_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_plugin_management\}\}.*?\{\{\/if_plugin_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_content_editor\}\}.*?\{\{\/if_content_editor\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_menu_management\}\}.*?\{\{\/if_menu_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_widget_management\}\}.*?\{\{\/if_widget_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_not_user_management\}\}.*?\{\{\/if_not_user_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_not_content_editor\}\}.*?\{\{\/if_not_content_editor\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_plugin_section\}\}.*?\{\{\/if_plugin_section\}\}/s', '', $template);
-
-        $users = json_decode(file_get_contents($usersFile), true);
-        $userList = '';
-        foreach ($users as $user) {
-            $userList .= "<tr>
-                <td class='py-2 px-4'>" . htmlspecialchars($user['username']) . "</td>
-                <td class='py-2 px-4'>
-                    <button onclick='editUser(\"" . htmlspecialchars($user['username']) . "\")' 
-                            class='bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 mr-2'>
-                        Edit
-                    </button>
-                    <button onclick='deleteUser(\"" . htmlspecialchars($user['username']) . "\")' 
-                            class='bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600'>
-                        Delete
-                    </button>
-                </td>
-            </tr>";
-        }
-        $template = str_replace('{{user_list}}', $userList, $template);
-    }
-    else if ($isThemeManagement) {
-        $template = preg_replace('/\{\{if_theme_management\}\}(.*?)\{\{\/if_theme_management\}\}/s', '$1', $template);
-        $template = preg_replace('/\{\{if_user_management\}\}.*?\{\{\/if_user_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_plugin_management\}\}.*?\{\{\/if_plugin_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_content_editor\}\}.*?\{\{\/if_content_editor\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_menu_management\}\}.*?\{\{\/if_menu_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_widget_management\}\}.*?\{\{\/if_widget_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_not_user_management\}\}.*?\{\{\/if_not_user_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_not_content_editor\}\}.*?\{\{\/if_not_content_editor\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_plugin_section\}\}.*?\{\{\/if_plugin_section\}\}/s', '', $template);
-
-        $themes = $themeManager->getThemes();
-        $themesHtml = '';
-        foreach ($themes as $theme) {
-            $themesHtml .= '<div class="border rounded-lg p-4 ' . ($theme['active'] ? 'ring-2 ring-green-500' : '') . '">
-                <h3 class="text-lg font-medium mb-2">' . htmlspecialchars($theme['name']) . '</h3>
-                <p class="text-sm text-gray-600 mb-4">' . htmlspecialchars($theme['description']) . '</p>
-                <div class="text-sm text-gray-500 mb-4">
-                    <p>Version: ' . htmlspecialchars($theme['version']) . '</p>
-                    <p>Author: ' . htmlspecialchars($theme['author']) . '</p>
-                </div>';
-            if ($theme['active']) {
-                $themesHtml .= '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">Active Theme</span>';
-            } else {
-                $themesHtml .= '<form method="POST" action="">
-                    <input type="hidden" name="action" value="activate_theme" />
-                    <input type="hidden" name="theme" value="' . htmlspecialchars($theme['id']) . '" />
-                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Activate Theme</button>
-                </form>';
-            }
-            $themesHtml .= '</div>';
-        }
-        $template = preg_replace('/\{\{#themes\}\}.*?\{\{\/themes\}\}/s', $themesHtml, $template);
-    }
-    else if ($isPluginManagement) {
-        $template = preg_replace('/\{\{if_plugin_management\}\}(.*?)\{\{\/if_plugin_management\}\}/s', '$1', $template);
-        $template = preg_replace('/\{\{if_user_management\}\}.*?\{\{\/if_user_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_theme_management\}\}.*?\{\{\/if_theme_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_content_editor\}\}.*?\{\{\/if_content_editor\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_menu_management\}\}.*?\{\{\/if_menu_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_widget_management\}\}.*?\{\{\/if_widget_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_not_user_management\}\}.*?\{\{\/if_not_user_management\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_not_content_editor\}\}.*?\{\{\/if_not_content_editor\}\}/s', '', $template);
-        $template = preg_replace('/\{\{if_plugin_section\}\}.*?\{\{\/if_plugin_section\}\}/s', '', $template);
-
-        $pluginsDir = PROJECT_ROOT . '/plugins';
-        $activePlugins = file_exists(PLUGIN_CONFIG) ? json_decode(file_get_contents(PLUGIN_CONFIG), true) : [];
-        if (!is_array($activePlugins)) $activePlugins = [];
-        $pluginsHtml = '';
-        foreach (glob($pluginsDir . '/*', GLOB_ONLYDIR) as $pluginDir) {
-            $pluginId = basename($pluginDir);
-            $pluginFile = $pluginDir . '/' . $pluginId . '.php';
-            if (file_exists($pluginFile)) {
-                $pluginData = [
-                    'id' => $pluginId,
-                    'name' => ucfirst($pluginId),
-                    'description' => 'A plugin for FearlessCMS',
-                    'version' => '1.0',
-                    'author' => 'Unknown',
-                    'active' => in_array($pluginId, $activePlugins)
-                ];
-                $pluginContent = file_get_contents($pluginFile);
-                if (preg_match('/Plugin Name: (.*?)$/m', $pluginContent, $matches)) {
-                    $pluginData['name'] = trim($matches[1]);
-                }
-                if (preg_match('/Description: (.*?)$/m', $pluginContent, $matches)) {
-                    $pluginData['description'] = trim($matches[1]);
-                }
-                if (preg_match('/Version: (.*?)$/m', $pluginContent, $matches)) {
-                    $pluginData['version'] = trim($matches[1]);
-                }
-                if (preg_match('/Author: (.*?)$/m', $pluginContent, $matches)) {
-                    $pluginData['author'] = trim($matches[1]);
-                }
-                $pluginsHtml .= '<div class="border rounded-lg p-4 ' . ($pluginData['active'] ? 'ring-2 ring-green-500' : '') . '">
-                    <h3 class="text-lg font-medium mb-2">' . htmlspecialchars($pluginData['name']) . '</h3>
-                    <p class="text-sm text-gray-600 mb-4">' . htmlspecialchars($pluginData['description']) . '</p>
-                    <div class="text-sm text-gray-500 mb-4">
-                        <p>Version: ' . htmlspecialchars($pluginData['version']) . '</p>
-                        <p>Author: ' . htmlspecialchars($pluginData['author']) . '</p>
-                    </div>';
-                if ($pluginData['active']) {
-                    $pluginsHtml .= '<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">Active</span>
-                    <form method="POST" action="">
-                        <input type="hidden" name="action" value="toggle_plugin" />
-                        <input type="hidden" name="plugin_name" value="' . htmlspecialchars($pluginData['id']) . '" />
-                        <input type="hidden" name="active" value="false" />
-                        <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 mt-2">Deactivate</button>
-                    </form>';
-                } else {
-                    $pluginsHtml .= '<form method="POST" action="">
-                        <input type="hidden" name="action" value="toggle_plugin" />
-                        <input type="hidden" name="plugin_name" value="' . htmlspecialchars($pluginData['id']) . '" />
-                        <input type="hidden" name="active" value="true" />
-                        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Activate</button>
-                    </form>';
-                }
-                $pluginsHtml .= '</div>';
-            }
-        }
-        $template = preg_replace('/\{\{#plugins\}\}.*?\{\{\/plugins\}\}/s', $pluginsHtml, $template);
-    }
-else if ($isMenuManagement) {
-    $template = preg_replace('/\{\{if_menu_management\}\}(.*?)\{\{\/if_menu_management\}\}/s', '$1', $template);
-    $template = preg_replace('/\{\{if_user_management\}\}.*?\{\{\/if_user_management\}\}/s', '', $template);
-    $template = preg_replace('/\{\{if_theme_management\}\}.*?\{\{\/if_theme_management\}\}/s', '', $template);
-    $template = preg_replace('/\{\{if_plugin_management\}\}.*?\{\{\/if_plugin_management\}\}/s', '', $template);
-    $template = preg_replace('/\{\{if_content_editor\}\}.*?\{\{\/if_content_editor\}\}/s', '', $template);
-    $template = preg_replace('/\{\{if_widget_management\}\}.*?\{\{\/if_widget_management\}\}/s', '', $template);
-    $template = preg_replace('/\{\{if_not_user_management\}\}.*?\{\{\/if_not_user_management\}\}/s', '', $template);
-    $template = preg_replace('/\{\{if_not_content_editor\}\}.*?\{\{\/if_not_content_editor\}\}/s', '', $template);
-    $template = preg_replace('/\{\{if_plugin_section\}\}.*?\{\{\/if_plugin_section\}\}/s', '', $template);
-
-    $menuFile = CONFIG_DIR . '/menus.json';
-    $menus = file_exists($menuFile) ? json_decode(file_get_contents($menuFile), true) : ['main' => ['menu_class' => 'main-nav', 'items' => []]];
-    $currentMenu = $_GET['menu'] ?? array_key_first($menus) ?? 'main';
-
-    $menuSelectionHtml = '<form method="GET" class="mb-4">
-        <input type="hidden" name="action" value="manage_menus">
-        <div class="flex items-center">
-            <label for="menu" class="mr-2">Select Menu:</label>
-            <select name="menu" id="menu" onchange="this.form.submit()" class="border rounded px-2 py-1 flex-grow">';
-    foreach ($menus as $id => $menu) {
-        $selected = ($id === $currentMenu) ? ' selected' : '';
-        $menuSelectionHtml .= sprintf(
-            '<option value="%s"%s>%s</option>',
-            htmlspecialchars($id),
-            $selected,
-            htmlspecialchars(ucfirst($id) . ' Menu')
-        );
-    }
-    $menuSelectionHtml .= '</select></div></form>';
-
-    $menuItemsHtml = '';
-    if (isset($menus[$currentMenu]['items'])) {
-        foreach ($menus[$currentMenu]['items'] as $index => $item) {
-            $menuItemsHtml .= '
-            <div class="menu-item border rounded p-4 mb-4" data-item-index="' . $index . '">
-                <div class="flex justify-between items-center mb-2">
-                    <h3 class="font-medium menu-handle cursor-move">↕ ' . htmlspecialchars($item['label']) . '</h3>
-                    <div class="space-x-2">
-                        <button type="button" onclick="editMenuItem(' . $index . ')" 
-                                class="bg-blue-500 text-white px-2 py-1 rounded text-sm">Edit</button>
-                        <button type="button" onclick="deleteMenuItem(' . $index . ')" 
-                                class="bg-red-500 text-white px-2 py-1 rounded text-sm">Delete</button>
-                    </div>
-                </div>
-                <div class="text-sm text-gray-600">URL: ' . htmlspecialchars($item['url']) . '</div>
-            </div>';
-        }
-    }
-
-    $menuEditorHtml = '
-    <div class="mb-8">
-        <h2 class="text-2xl font-bold mb-6 fira-code">Menu Management</h2>
-        ' . $menuSelectionHtml . '
-        <div class="mb-4">
-            <label class="block mb-1">Menu Class:</label>
-            <input type="text" id="menu-class" value="' . htmlspecialchars($menus[$currentMenu]['menu_class'] ?? 'main-nav') . '" 
-                   class="w-full border rounded px-2 py-1">
-        </div>
-        <div id="menu-items-container" class="mb-4">
-            ' . $menuItemsHtml . '
-        </div>
-        <button type="button" onclick="addMenuItem()" class="bg-blue-500 text-white px-3 py-1 rounded mb-4">Add Menu Item</button>
-        <div class="flex justify-between">
-            <button type="button" onclick="saveMenu()" class="bg-green-500 text-white px-4 py-2 rounded">Save Menu</button>
-            <button type="button" onclick="addNewMenu()" class="bg-purple-500 text-white px-4 py-2 rounded">Create New Menu</button>
-        </div>
-    </div>
-    <div id="menuItemModal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-            <h3 class="text-xl font-bold mb-4">Edit Menu Item</h3>
-            <form id="menu-item-form" class="space-y-4" onsubmit="return false;">
-                <input type="hidden" id="edit-item-index" value="-1">
-                <div>
-                    <label class="block mb-1">Label:</label>
-                    <input type="text" id="item-label" class="w-full px-3 py-2 border border-gray-300 rounded">
-                </div>
-                <div>
-                    <label class="block mb-1">URL:</label>
-                    <input type="text" id="item-url" class="w-full px-3 py-2 border border-gray-300 rounded">
-                </div>
-                <div>
-                    <label class="block mb-1">CSS Class:</label>
-                    <input type="text" id="item-class" class="w-full px-3 py-2 border border-gray-300 rounded">
-                </div>
-                <div>
-                    <label class="block mb-1">Target:</label>
-                    <select id="item-target" class="w-full px-3 py-2 border border-gray-300 rounded">
-                        <option value="">Same Window</option>
-                        <option value="_blank">New Window</option>
-                    </select>
-                </div>
-                <div class="flex justify-end space-x-2">
-                    <button type="button" onclick="closeMenuItemModal()" class="bg-gray-400 text-white px-4 py-2 rounded">Cancel</button>
-                    <button type="button" onclick="saveMenuItem()" class="bg-blue-500 text-white px-4 py-2 rounded">Save</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    <div id="newMenuModal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-            <h3 class="text-xl font-bold mb-4">Create New Menu</h3>
-            <form id="new-menu-form" class="space-y-4" onsubmit="return false;">
-                <div>
-                    <label class="block mb-1">Menu ID:</label>
-                    <input type="text" id="new-menu-id" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="e.g., footer">
-                </div>
-                <div>
-                    <label class="block mb-1">Menu Class:</label>
-                    <input type="text" id="new-menu-class" class="w-full px-3 py-2 border border-gray-300 rounded" value="menu-nav">
-                </div>
-                <div class="flex justify-end space-x-2">
-                    <button type="button" onclick="closeNewMenuModal()" class="bg-gray-400 text-white px-4 py-2 rounded">Cancel</button>
-                    <button type="button" onclick="createNewMenu()" class="bg-blue-500 text-white px-4 py-2 rounded">Create</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    <script>
-    let menuData = ' . json_encode($menus) . ';
-    let currentMenu = "' . $currentMenu . '";
-    function addMenuItem() {
-        if (!menuData[currentMenu].items) menuData[currentMenu].items = [];
-        menuData[currentMenu].items.push({
-            label: "New Item",
-            url: "/",
-            item_class: "",
-            target: ""
-        });
-        editMenuItem(menuData[currentMenu].items.length - 1);
-    }
-    function editMenuItem(index) {
-        const item = menuData[currentMenu].items[index];
-        document.getElementById("edit-item-index").value = index;
-        document.getElementById("item-label").value = item.label;
-        document.getElementById("item-url").value = item.url;
-        document.getElementById("item-class").value = item.item_class || "";
-        document.getElementById("item-target").value = item.target || "";
-        document.getElementById("menuItemModal").classList.remove("hidden");
-    }
-    function closeMenuItemModal() {
-        document.getElementById("menuItemModal").classList.add("hidden");
-    }
-    function saveMenuItem() {
-        const index = parseInt(document.getElementById("edit-item-index").value);
-        menuData[currentMenu].items[index] = {
-            label: document.getElementById("item-label").value,
-            url: document.getElementById("item-url").value,
-            item_class: document.getElementById("item-class").value,
-            target: document.getElementById("item-target").value
-        };
-        location.reload();
-    }
-    function deleteMenuItem(index) {
-        if (confirm("Are you sure you want to delete this menu item?")) {
-            menuData[currentMenu].items.splice(index, 1);
-            location.reload();
-        }
-    }
-    function saveMenu() {
-        menuData[currentMenu].menu_class = document.getElementById("menu-class").value;
-        fetch("", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: "action=save_menu&menu_data=" + encodeURIComponent(JSON.stringify(menuData))
-        }).then(() => location.reload());
-    }
-    function addNewMenu() {
-        document.getElementById("newMenuModal").classList.remove("hidden");
-    }
-    function closeNewMenuModal() {
-        document.getElementById("newMenuModal").classList.add("hidden");
-    }
-    function createNewMenu() {
-        const menuId = document.getElementById("new-menu-id").value.trim();
-        const menuClass = document.getElementById("new-menu-class").value.trim();
-        if (!menuId) {
-            alert("Menu ID is required");
-            return;
-        }
-        if (menuData[menuId]) {
-            alert("A menu with this ID already exists");
-            return;
-        }
-        menuData[menuId] = { menu_class: menuClass, items: [] };
-        fetch("", {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: "action=save_menu&menu_data=" + encodeURIComponent(JSON.stringify(menuData))
-        }).then(() => {
-            window.location.href = "?action=manage_menus&menu=" + encodeURIComponent(menuId);
-        });
-    }
-    </script>
-    ';
-
-        $template = str_replace('{{menu_editor}}', $menuEditorHtml, $template);
-}
-else {
-    $template = preg_replace('/\{\{if_not_user_management\}\}(.*?)\{\{\/if_not_user_management\}\}/s', '$1', $template);
-    $template = preg_replace('/\{\{if_not_content_editor\}\}(.*?)\{\{\/if_not_content_editor\}\}/s', '$1', $template);
-    $template = preg_replace('/\{\{if_user_management\}\}.*?\{\{\/if_user_management\}\}/s', '', $template);
-    $template = preg_replace('/\{\{if_theme_management\}\}.*?\{\{\/if_theme_management\}\}/s', '', $template);
-    $template = preg_replace('/\{\{if_plugin_management\}\}.*?\{\{\/if_plugin_management\}\}/s', '', $template);
-    $template = preg_replace('/\{\{if_content_editor\}\}.*?\{\{\/if_content_editor\}\}/s', '', $template);
-    $template = preg_replace('/\{\{if_menu_management\}\}.*?\{\{\/if_menu_management\}\}/s', '', $template);
-    $template = preg_replace('/\{\{if_plugin_section\}\}.*?\{\{\/if_plugin_section\}\}/s', '', $template);
-    $template = preg_replace('/\{\{if_widget_management\}\}.*?\{\{\/if_widget_management\}\}/s', '', $template);
-
-    // Content Management: build content_list
-    $contentFiles = [];
+    // Load the base template
+    $template = file_get_contents(ADMIN_TEMPLATE_DIR . '/base.html');
+    
+    // Set the page title based on the action
+    $action = $_GET['action'] ?? '';
+    $pageTitle = 'Dashboard';
+    $content = '';
+    
+    // Calculate statistics
+    $totalPages = 0;
     $rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(CONTENT_DIR));
     foreach ($rii as $file) {
         if ($file->isDir()) continue;
         if (strtolower($file->getExtension()) === 'md') {
-            $contentFiles[] = $file->getPathname();
+            $totalPages++;
         }
     }
-    $contentList = '';
-    foreach ($contentFiles as $file) {
-        $filename = ltrim(str_replace(CONTENT_DIR, '', $file), '/\\');
-        $fileContent = file_get_contents($file);
-        $displayName = $filename;
-        if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $fileContent, $matches)) {
-            $metadata = json_decode($matches[1], true);
-            if ($metadata && isset($metadata['title'])) {
-                $displayName = $metadata['title'] . ' <span class="text-gray-400 text-xs">(' . $filename . ')</span>';
+    
+    $activePlugins = [];
+    $pluginsFile = ADMIN_CONFIG_DIR . '/plugins.json';
+    if (file_exists($pluginsFile)) {
+        $activePlugins = json_decode(file_get_contents($pluginsFile), true) ?? [];
+        if (!is_array($activePlugins)) {
+            $activePlugins = [];
+        }
+    }
+    
+    // Store the count for the template
+    $activePluginsCount = count($activePlugins);
+    
+    if ($action === 'manage_users') {
+        $pageTitle = 'User Management';
+        $content = file_get_contents(ADMIN_TEMPLATE_DIR . '/users.html');
+        
+        // Generate user list
+        $users = json_decode(file_get_contents($usersFile), true);
+        $userList = '';
+        foreach ($users as $user) {
+            $username = htmlspecialchars($user['username']);
+            $role = htmlspecialchars($user['role'] ?? 'author');
+            
+            // Ensure admin user always has administrator role
+            if ($username === 'admin') {
+                $role = 'administrator';
+            }
+            
+            $userList .= '<tr>
+                <td class="py-2 px-4 border-b">' . $username . ' <span class="text-gray-500">(' . $role . ')</span></td>
+                <td class="py-2 px-4 border-b">
+                    <div class="flex space-x-2">
+                        <button onclick="editUser(\'' . $username . '\', \'' . $role . '\')" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">Edit</button>
+                        <button onclick="deleteUser(\'' . $username . '\')" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">Delete</button>
+                    </div>
+                </td>
+            </tr>';
+        }
+        $content = str_replace('{{user_list}}', $userList, $content);
+    } elseif ($action === 'manage_themes') {
+        $pageTitle = 'Theme Management';
+        $content = file_get_contents(ADMIN_TEMPLATE_DIR . '/themes.html');
+        
+        // Get theme options forms
+        $themeOptionsForms = '';
+        if ($supportsHerobanner) {
+            $themeOptionsForms .= '<form method="POST" enctype="multipart/form-data" class="mb-4">
+                <label class="block font-medium mb-1">Hero Banner Image:</label>';
+            if ($herobannerUrl) {
+                $themeOptionsForms .= '<img src="' . htmlspecialchars($herobannerUrl) . '" style="max-width:300px;max-height:120px;display:block;margin-bottom:1em;">';
+            }
+            $themeOptionsForms .= '<input type="file" name="herobanner" accept="image/*" class="mb-2">
+                <button type="submit" name="action" value="upload_herobanner" class="bg-blue-500 text-white px-4 py-2 rounded">Upload</button>
+            </form>';
+        }
+
+        if ($supportsLogo) {
+            $themeOptionsForms .= '<form method="POST" enctype="multipart/form-data" class="mb-4">
+                <label class="block font-medium mb-1">Logo Image:</label>';
+            if ($logoUrl) {
+                $themeOptionsForms .= '<img src="' . htmlspecialchars($logoUrl) . '" style="max-width:120px;max-height:60px;display:block;margin-bottom:1em;">';
+            }
+            $themeOptionsForms .= '<input type="file" name="logo" accept="image/*" class="mb-2">
+                <button type="submit" name="action" value="upload_logo" class="bg-blue-500 text-white px-4 py-2 rounded">Upload</button>
+            </form>';
+        }
+
+        // Get available themes
+        $themes = [];
+        $themesDir = PROJECT_ROOT . '/themes';
+        $activeTheme = $themeManager->getActiveTheme();
+        
+        if (is_dir($themesDir)) {
+            foreach (glob($themesDir . '/*', GLOB_ONLYDIR) as $themeDir) {
+                $themeName = basename($themeDir);
+                $themeInfo = [
+                    'name' => $themeName,
+                    'description' => 'No description available',
+                    'version' => '1.0.0',
+                    'author' => 'Unknown',
+                    'active' => ($themeName === $activeTheme)
+                ];
+                
+                // Try to load theme.json if it exists
+                $themeJson = $themeDir . '/theme.json';
+                if (file_exists($themeJson)) {
+                    $info = json_decode(file_get_contents($themeJson), true);
+                    if ($info) {
+                        $themeInfo = array_merge($themeInfo, $info);
+                    }
+                }
+                
+                $themes[] = $themeInfo;
+            }
+        }
+
+        // Build theme cards
+        $themeCards = '';
+        $themeCardTemplate = file_get_contents(ADMIN_TEMPLATE_DIR . '/theme-card.html');
+        foreach ($themes as $theme) {
+            $themeCard = $themeCardTemplate;
+            $themeCard = str_replace('{{name}}', htmlspecialchars($theme['name']), $themeCard);
+            $themeCard = str_replace('{{description}}', htmlspecialchars($theme['description']), $themeCard);
+            $themeCard = str_replace('{{version}}', htmlspecialchars($theme['version']), $themeCard);
+            $themeCard = str_replace('{{author}}', htmlspecialchars($theme['author']), $themeCard);
+            
+            // Handle active/inactive state
+            if ($theme['active']) {
+                // Remove the inactive section
+                $themeCard = preg_replace('/\{\{\^active\}\}.*?\{\{\/active\}\}/s', '', $themeCard);
+                // Keep the active section content
+                $themeCard = preg_replace('/\{\{#active\}\}(.*?)\{\{\/active\}\}/s', '$1', $themeCard);
+            } else {
+                // Remove the active section
+                $themeCard = preg_replace('/\{\{#active\}\}.*?\{\{\/active\}\}/s', '', $themeCard);
+                // Keep the inactive section content
+                $themeCard = preg_replace('/\{\{\^active\}\}(.*?)\{\{\/active\}\}/s', '$1', $themeCard);
+            }
+            
+            $themeCards .= $themeCard;
+        }
+
+        // Replace template variables
+        $content = str_replace('{{theme_options_forms}}', $themeOptionsForms, $content);
+        $content = str_replace('{{themes}}', $themeCards, $content);
+    } elseif ($action === 'manage_plugins') {
+        $pageTitle = 'Plugin Management';
+        $content = file_get_contents(ADMIN_TEMPLATE_DIR . '/plugins.html');
+    } elseif ($action === 'manage_menus') {
+        $pageTitle = 'Menu Management';
+        $content = file_get_contents(ADMIN_TEMPLATE_DIR . '/menu-content.html');
+        
+        // Get available menus
+        $menus = [];
+        $menusFile = ADMIN_CONFIG_DIR . '/menus.json';
+        if (file_exists($menusFile)) {
+            $menus = json_decode(file_get_contents($menusFile), true) ?: [];
+        }
+        
+        // If no menus exist, create a default menu
+        if (empty($menus)) {
+            $menus['main'] = [
+                'name' => 'Main Menu',
+                'menu_class' => 'main-nav',
+                'items' => []
+            ];
+            file_put_contents($menusFile, json_encode($menus, JSON_PRETTY_PRINT));
+        }
+        
+        // Build menu options
+        $menuOptions = '';
+        foreach ($menus as $menuId => $menu) {
+            $menuName = $menu['name'] ?? ucfirst($menuId);
+            $menuOptions .= sprintf(
+                '<option value="%s">%s</option>',
+                htmlspecialchars($menuId),
+                htmlspecialchars($menuName)
+            );
+        }
+        
+        // Replace only the menu options in the template
+        $content = str_replace('{{menu_options}}', $menuOptions, $content);
+        
+    } elseif ($action === 'delete_menu') {
+        // Start output buffering and disable error display
+        ob_start();
+        ini_set('display_errors', 0);
+        error_reporting(0);
+        
+        // Enable error logging
+        ini_set('log_errors', 1);
+        ini_set('error_log', PROJECT_ROOT . '/error.log');
+        
+        try {
+            // Clear any previous output
+            ob_clean();
+            header('Content-Type: application/json');
+            
+            // Verify session is active
+            if (session_status() !== PHP_SESSION_ACTIVE) {
+                session_start();
+            }
+            
+            if (!isLoggedIn()) {
+                throw new Exception('You must be logged in to delete menus');
+            }
+            
+            if (!function_exists('fcms_check_permission')) {
+                throw new Exception('Permission system not available');
+            }
+            
+            if (!fcms_check_permission($_SESSION['username'], 'manage_menus')) {
+                throw new Exception('You do not have permission to delete menus');
+            }
+            
+            $input = file_get_contents('php://input');
+            if (empty($input)) {
+                throw new Exception('No input data received');
+            }
+            
+            $data = json_decode($input, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new Exception('Invalid JSON data received: ' . json_last_error_msg());
+            }
+            
+            $menuId = $data['menu_id'] ?? '';
+            if (empty($menuId)) {
+                throw new Exception('Menu ID is required');
+            }
+            
+            $adminMenuFile = ADMIN_CONFIG_DIR . '/menus.json';
+            $publicMenuFile = CONFIG_DIR . '/menus.json';
+            
+            // Check if menu files exist
+            if (!file_exists($adminMenuFile) || !file_exists($publicMenuFile)) {
+                throw new Exception('Menu configuration files not found');
+            }
+            
+            // Read current menus
+            $menus = json_decode(file_get_contents($adminMenuFile), true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new Exception('Invalid menu configuration: ' . json_last_error_msg());
+            }
+            
+            // Check if menu exists
+            if (!isset($menus[$menuId])) {
+                throw new Exception('Menu not found');
+            }
+            
+            // Delete the menu
+            unset($menus[$menuId]);
+            
+            // Save to both locations
+            if (!file_put_contents($adminMenuFile, json_encode($menus, JSON_PRETTY_PRINT))) {
+                throw new Exception('Failed to save admin menu configuration');
+            }
+            if (!file_put_contents($publicMenuFile, json_encode($menus, JSON_PRETTY_PRINT))) {
+                throw new Exception('Failed to save public menu configuration');
+            }
+            
+            echo json_encode(['success' => true]);
+            exit;
+            
+        } catch (Exception $e) {
+            error_log('Menu deletion error: ' . $e->getMessage());
+            echo json_encode(['error' => $e->getMessage()]);
+            exit;
+        }
+        
+    } elseif ($action === 'load_menu') {
+        // Handle AJAX request to load menu data
+        header('Content-Type: application/json');
+        
+        $menuId = $_GET['menu_id'] ?? '';
+        $menusFile = ADMIN_CONFIG_DIR . '/menus.json';
+        $menus = [];
+        
+        if (file_exists($menusFile)) {
+            $menus = json_decode(file_get_contents($menusFile), true) ?: [];
+        }
+        
+        if (isset($menus[$menuId])) {
+            $menuData = $menus[$menuId];
+            if (!isset($menuData['items'])) {
+                $menuData['items'] = [];
+            }
+            if (!isset($menuData['menu_class'])) {
+                $menuData['menu_class'] = '';
+            }
+            // Convert old structure to new structure
+            $menuData['class'] = $menuData['menu_class'] ?? '';
+            foreach ($menuData['items'] as &$item) {
+                if (isset($item['item_class'])) {
+                    $item['class'] = $item['item_class'];
+                    unset($item['item_class']);
+                }
+            }
+            echo json_encode($menuData);
+        } else {
+            echo json_encode(['error' => 'Menu not found']);
+        }
+        exit;
+        
+    } elseif ($action === 'save_menu') {
+        // Handle AJAX request to save menu data
+        header('Content-Type: application/json');
+        
+        $data = json_decode(file_get_contents('php://input'), true);
+        $menuId = $data['menu_id'] ?? '';
+        $items = $data['items'] ?? [];
+        $menuClass = $data['class'] ?? '';
+        
+        $adminMenuFile = ADMIN_CONFIG_DIR . '/menus.json';
+        $publicMenuFile = CONFIG_DIR . '/menus.json';
+        $menus = [];
+        
+        if (file_exists($adminMenuFile)) {
+            $menus = json_decode(file_get_contents($adminMenuFile), true) ?: [];
+        }
+        
+        if (isset($menus[$menuId])) {
+            // Update menu data
+            $menus[$menuId]['menu_class'] = $menuClass;
+            $menus[$menuId]['items'] = $items;
+            
+            // Save to both locations
+            file_put_contents($adminMenuFile, json_encode($menus, JSON_PRETTY_PRINT));
+            file_put_contents($publicMenuFile, json_encode($menus, JSON_PRETTY_PRINT));
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['error' => 'Menu not found']);
+        }
+        exit;
+        
+    } elseif ($action === 'create_menu') {
+        // Handle AJAX request to create new menu
+        header('Content-Type: application/json');
+        
+        $data = json_decode(file_get_contents('php://input'), true);
+        $name = $data['name'] ?? '';
+        $menuClass = $data['class'] ?? '';
+        
+        if (empty($name)) {
+            echo json_encode(['error' => 'Menu name is required']);
+            exit;
+        }
+        
+        $adminMenuFile = ADMIN_CONFIG_DIR . '/menus.json';
+        $publicMenuFile = CONFIG_DIR . '/menus.json';
+        $menus = [];
+        
+        if (file_exists($adminMenuFile)) {
+            $menus = json_decode(file_get_contents($adminMenuFile), true) ?: [];
+        }
+        
+        $menuId = 'menu_' . time();
+        $menus[$menuId] = [
+            'name' => $name,
+            'menu_class' => $menuClass,
+            'items' => []
+        ];
+        
+        // Save to both locations
+        file_put_contents($adminMenuFile, json_encode($menus, JSON_PRETTY_PRINT));
+        file_put_contents($publicMenuFile, json_encode($menus, JSON_PRETTY_PRINT));
+        echo json_encode(['success' => true]);
+        exit;
+
+    } elseif ($action === 'manage_widgets') {
+        $pageTitle = 'Widget Management';
+        require_once(ADMIN_INCLUDES_DIR . '/widgetmanager.php');
+        $widgetData = fcms_render_widget_manager();
+        $content = file_get_contents(ADMIN_TEMPLATE_DIR . '/widgets.html');
+        // Replace template variables with widget data
+        $content = str_replace('{{sidebar_selection}}', $widgetData['sidebar_selection'], $content);
+        $content = str_replace('{{widget_list}}', $widgetData['widget_list'], $content);
+        $content = str_replace('{{current_sidebar}}', $widgetData['current_sidebar'], $content);
+    } elseif ($action === 'files') {
+        $pageTitle = 'File Manager';
+        $content = fcms_render_file_manager();
+    } elseif (isset($_GET['edit']) && !empty($_GET['edit'])) {
+        $pageTitle = 'Content Editor';
+        $content = file_get_contents(ADMIN_TEMPLATE_DIR . '/editor.html');
+    } else {
+        // Dashboard view - combine site settings and content management
+        $content = file_get_contents(ADMIN_TEMPLATE_DIR . '/site-settings.html');
+        
+        // Build content list
+        $contentFiles = [];
+        $rii = new RecursiveIteratorIterator(new RecursiveDirectoryIterator(CONTENT_DIR));
+        foreach ($rii as $file) {
+            if ($file->isDir()) continue;
+            if (strtolower($file->getExtension()) === 'md') {
+                $contentFiles[] = $file->getPathname();
             }
         }
         $contentList = '';
-            foreach ($contentFiles as $file) {
-                $filename = ltrim(str_replace(CONTENT_DIR, '', $file), '/\\');
-                $fileContent = file_get_contents($file);
-                $displayName = $filename;
-                if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $fileContent, $matches)) {
-                    $metadata = json_decode($matches[1], true);
-                    if ($metadata && isset($metadata['title'])) {
-                        $displayName = $metadata['title'] . ' <span class="text-gray-400 text-xs">(' . $filename . ')</span>';
-                    }
+        foreach ($contentFiles as $file) {
+            $filename = ltrim(str_replace(CONTENT_DIR, '', $file), '/\\');
+            $fileContent = file_get_contents($file);
+            $displayName = $filename;
+            if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $fileContent, $matches)) {
+                $metadata = json_decode($matches[1], true);
+                if ($metadata && isset($metadata['title'])) {
+                    $displayName = $metadata['title'] . ' <span class="text-gray-400 text-xs">(' . $filename . ')</span>';
                 }
-                $contentList .= "<li class='py-2 px-4 hover:bg-gray-100'>
-                    <div class='flex justify-between items-center'>
-                        <span>" . $displayName . "</span>
-                        <div class='flex space-x-2'>
-                            <a href='?edit=" . urlencode($filename) . "' class='bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600'>
-                                Edit
-                            </a>
-                            <button onclick='deletePage(\"" . htmlspecialchars($filename, ENT_QUOTES) . "\")' class='bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600'>
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                </li>";
             }
-
+            $contentList .= '<li class="py-2 px-4 hover:bg-gray-100">
+                <div class="flex justify-between items-center">
+                    <span>' . htmlspecialchars($displayName) . '</span>
+                    <div class="flex space-x-2">
+                        <a href="?edit=' . urlencode($filename) . '" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">
+                            Edit
+                        </a>
+                        <button onclick="deletePage(\'' . htmlspecialchars($filename, ENT_QUOTES) . '\')" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            </li>';
+        }
+        
+        // Load content management template and replace content list
+        $contentManagement = file_get_contents(ADMIN_TEMPLATE_DIR . '/content-management.html');
+        $contentManagement = str_replace('{{content_list}}', $contentList, $contentManagement);
+        
+        // Combine site settings and content management
+        $content .= $contentManagement;
     }
-    $template = str_replace('{{content_list}}', $contentList, $template);
+
+    // Replace template variables
+    $template = str_replace('{{page_title}}', htmlspecialchars($pageTitle), $template);
+    $template = str_replace('{{username}}', htmlspecialchars($_SESSION['username']), $template);
+    $template = str_replace('{{content}}', $content, $template);
+    $template = str_replace('{{site_name}}', htmlspecialchars($siteName), $template);
+    $template = str_replace('{{custom_css}}', htmlspecialchars($customCss), $template);
+    $template = str_replace('{{custom_js}}', htmlspecialchars($customJs), $template);
+    $template = str_replace('{{total_pages}}', $totalPages, $template);
+    $template = str_replace('{{active_plugins}}', $activePluginsCount, $template);
+
+    // Handle error and success messages
+    if (isset($error)) {
+        $template = str_replace('{{error}}', '<div class="max-w-7xl mx-auto mt-4"><div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">' . htmlspecialchars($error) . '</div></div>', $template);
+    } else {
+        $template = str_replace('{{error}}', '', $template);
+    }
+
+    if (isset($success)) {
+        $template = str_replace('{{success}}', '<div class="max-w-7xl mx-auto mt-4"><div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">' . htmlspecialchars($success) . '</div></div>', $template);
+    } else {
+        $template = str_replace('{{success}}', '', $template);
+    }
+
+    // Handle plugin sections
+    $pluginNavItems = '';
+    foreach ($activePlugins as $plugin) {
+        if (isset($plugin['admin_sections'])) {
+            foreach ($plugin['admin_sections'] as $section) {
+                if (fcms_check_permission($_SESSION['username'], $section['capability'])) {
+                    $pluginNavItems .= '<a href="?action=' . $section['id'] . '" class="hover:text-green-200">' . $section['title'] . '</a>';
+                }
+            }
+        }
+    }
+    $template = str_replace('{{plugin_nav_items}}', $pluginNavItems, $template);
 }
-
-// Add plugin admin sections to the navigation
-$pluginSections = fcms_get_admin_sections();
-$pluginNavItems = '';
-foreach ($pluginSections as $id => $section) {
-    $pluginNavItems .= '<a href="?action=' . htmlspecialchars($id) . '" class="hover:text-green-200">' . htmlspecialchars($section['label']) . '</a>';
-}
-$template = str_replace('{{plugin_nav_items}}', $pluginNavItems, $template);
-
-// Handle error and success messages
-if (isset($error)) {
-    $template = str_replace('{{#error}}', '', $template);
-    $template = str_replace('{{/error}}', '', $template);
-    $template = str_replace('{{error}}', "<div class='max-w-7xl mx-auto mt-4 p-4 bg-red-100 text-red-700 rounded'>{$error}</div>", $template);
-} else {
-    $template = preg_replace('/\{\{#error\}\}.*?\{\{\/error\}\}/s', '', $template);
-    $template = str_replace('{{error}}', '', $template);
-}
-if (isset($success)) {
-    $template = str_replace('{{#success}}', '', $template);
-    $template = str_replace('{{/success}}', '', $template);
-    $template = str_replace('{{success}}', "<div class='max-w-7xl mx-auto mt-4 p-4 bg-green-100 text-green-700 rounded'>{$success}</div>", $template);
-} else {
-    $template = preg_replace('/\{\{#success\}\}.*?\{\{\/success\}\}/s', '', $template);
-    $template = str_replace('{{success}}', '', $template);
-}
-$template = str_replace('{{site_name}}', htmlspecialchars($siteName), $template);
-$template = str_replace('{{custom_css}}', htmlspecialchars($customCss), $template);
-$template = str_replace('{{custom_js}}', htmlspecialchars($customJs), $template);
-$template = str_replace('{{username}}', htmlspecialchars($_SESSION['username']), $template);
-// Build parent page options for the New Page modal
-$pageData = get_page_hierarchy();
-$allPages = $pageData['pages'];
-$newPageParentOptions = generate_parent_options($allPages, '', ''); // No current parent, no current page
-
-$template = str_replace('{{newpage_parent_page_options}}', $newPageParentOptions, $template);
-
-$template = str_replace('{{app_version}}', defined('APP_VERSION') ? htmlspecialchars(APP_VERSION) : '', $template);
-$template = str_replace('{{theme_options_forms}}', $themeOptionsForms, $template);
-
-}
-
 
 echo $template;
 ?>

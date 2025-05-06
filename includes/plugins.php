@@ -29,6 +29,8 @@ $GLOBALS['fcms_hooks'] = [
     'before_render' => [],
     'after_render' => [],
     'route' => [],
+    'check_permission' => [],
+    'filter_admin_sections' => [],
     // ...add more as needed
 ];
 
@@ -55,6 +57,28 @@ function fcms_apply_filter($hook, $value, ...$args) {
         }
     }
     return $value;
+}
+
+// Add permission check function
+function fcms_check_permission($username, $capability) {
+    $result = false;
+    if (!empty($GLOBALS['fcms_hooks']['check_permission'])) {
+        foreach ($GLOBALS['fcms_hooks']['check_permission'] as $callback) {
+            $result = call_user_func($callback, $username, $capability, []);
+            if ($result === true) {
+                break;
+            }
+        }
+    }
+    return $result;
+}
+
+// Add permission hook registration function
+function fcms_register_permission_hook($hook, $callback) {
+    if (!isset($GLOBALS['fcms_hooks'][$hook])) {
+        $GLOBALS['fcms_hooks'][$hook] = [];
+    }
+    $GLOBALS['fcms_hooks'][$hook][] = $callback;
 }
 
 // --- Admin section registration ---

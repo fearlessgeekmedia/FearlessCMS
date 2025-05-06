@@ -1,0 +1,8 @@
+{
+    "name": "User Roles",
+    "description": "Adds role-based access control to FearlessCMS",
+    "version": "1.0",
+    "author": "FearlessCMS",
+    "enabled": true,
+    "dependencies": []
+} 

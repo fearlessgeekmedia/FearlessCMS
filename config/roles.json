@@ -1,0 +1,44 @@
+{
+    "administrator": {
+        "name": "Administrator",
+        "capabilities": {
+            "manage_users": true,
+            "manage_roles": true,
+            "manage_themes": true,
+            "manage_plugins": true,
+            "manage_menus": true,
+            "manage_widgets": true,
+            "manage_content": true,
+            "manage_files": true,
+            "manage_settings": true
+        }
+    },
+    "editor": {
+        "name": "Editor",
+        "capabilities": {
+            "manage_users": false,
+            "manage_roles": false,
+            "manage_themes": false,
+            "manage_plugins": false,
+            "manage_menus": false,
+            "manage_widgets": false,
+            "manage_content": true,
+            "manage_files": true,
+            "manage_settings": false
+        }
+    },
+    "author": {
+        "name": "Author",
+        "capabilities": {
+            "manage_users": false,
+            "manage_roles": false,
+            "manage_themes": false,
+            "manage_plugins": false,
+            "manage_menus": false,
+            "manage_widgets": false,
+            "manage_content": true,
+            "manage_files": false,
+            "manage_settings": false
+        }
+    }
+}

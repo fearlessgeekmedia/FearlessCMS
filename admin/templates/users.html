@@ -1,0 +1,113 @@
+<!-- User Management Content -->
+<div class="mb-8">
+    <h3 class="text-lg font-medium mb-4">Add New User</h3>
+    <form method="POST" class="space-y-4">
+        <input type="hidden" name="action" value="add_user">
+        <div>
+            <input type="text" name="new_username" required class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-green-500 focus:border-green-500" placeholder="Username">
+        </div>
+        <div>
+            <input type="password" name="new_user_password" required class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-green-500 focus:border-green-500" placeholder="Password">
+        </div>
+        <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Add User</button>
+    </form>
+</div>
+<h3 class="text-lg font-medium mb-4">Existing Users</h3>
+<table class="w-full">
+    <thead>
+        <tr>
+            <th class="text-left py-2 px-4 border-b">Username</th>
+            <th class="text-left py-2 px-4 border-b">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{user_list}}
+    </tbody>
+</table>
+
+<!-- Edit User Modal -->
+<div id="editUserModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+        <h3 class="text-xl font-bold mb-4">Edit User</h3>
+        <form method="POST" class="space-y-4">
+            <input type="hidden" name="action" value="edit_user">
+            <input type="hidden" name="username" id="edit-username">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">New Username</label>
+                <input type="text" name="new_username" id="edit-new-username" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-green-500 focus:border-green-500" placeholder="Leave blank to keep current">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                <input type="password" name="new_password" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-green-500 focus:border-green-500" placeholder="Leave blank to keep current">
+            </div>
+            <div id="role-select-container">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                <select name="user_role" id="user-role-select" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-green-500 focus:border-green-500">
+                    <option value="administrator">Administrator</option>
+                    <option value="editor">Editor</option>
+                    <option value="author">Author</option>
+                </select>
+            </div>
+            <div class="flex justify-end space-x-2">
+                <button type="button" onclick="hideEditUserModal()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
+                <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function deleteUser(username) {
+    if (username === 'admin') {
+        alert('The admin user cannot be deleted.');
+        return;
+    }
+    if (confirm('Are you sure you want to delete user "' + username + '"?')) {
+        // Create a form and submit it
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.style.display = 'none';
+        form.innerHTML = `
+            <input type="hidden" name="action" value="delete_user">
+            <input type="hidden" name="username" value="` + encodeURIComponent(username) + `">
+        `;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function editUser(username, currentRole) {
+    // Set the username in the hidden field
+    document.getElementById('edit-username').value = username;
+    document.getElementById('edit-new-username').value = '';
+    
+    // Handle role selection visibility and restrictions
+    const roleContainer = document.getElementById('role-select-container');
+    const roleSelect = document.getElementById('user-role-select');
+    
+    if (username === 'admin') {
+        // Hide role selection for admin user
+        roleContainer.style.display = 'none';
+    } else {
+        roleContainer.style.display = 'block';
+        // Set current role
+        roleSelect.value = currentRole;
+    }
+    
+    // Show the modal
+    document.getElementById('editUserModal').classList.remove('hidden');
+}
+
+function hideEditUserModal() {
+    document.getElementById('editUserModal').classList.add('hidden');
+}
+
+// Close modal when clicking outside
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('editUserModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            hideEditUserModal();
+        }
+    });
+});
+</script> 

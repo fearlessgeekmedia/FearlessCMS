@@ -5,39 +5,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $error = 'You must be logged in to edit users';
     } else {
         $username = $_POST['username'] ?? '';
+        $newUsername = trim($_POST['new_username'] ?? '');
         $newPassword = $_POST['new_password'] ?? '';
-
-        $users = json_decode(file_get_contents($usersFile), true);
-        $userIndex = array_search($username, array_column($users, 'username'));
-
-        if ($userIndex === false) {
-            $error = 'User not found';
+        $newRole = $_POST['user_role'] ?? '';
+        
+        if (empty($username)) {
+            $error = 'Username is required';
         } else {
-            // Don't allow editing the last admin user
-            $adminCount = count(array_filter($users, fn($u) => $u['username'] === 'admin'));
-            if ($users[$userIndex]['username'] === 'admin' && $adminCount <= 1 && $_POST['new_username'] !== 'admin') {
-                $error = 'Cannot modify the last admin user';
-            } else {
-                // Update username if provided and different
-                if (isset($_POST['new_username']) && !empty($_POST['new_username']) && $_POST['new_username'] !== $username) {
-                    // Check if new username already exists
-                    if (array_search($_POST['new_username'], array_column($users, 'username')) !== false) {
-                        $error = 'Username already exists';
-                    }
-                    $users[$userIndex]['username'] = $_POST['new_username'];
+            $users = json_decode(file_get_contents($usersFile), true);
+            $userIndex = -1;
+            
+            // Find the user
+            foreach ($users as $index => $user) {
+                if ($user['username'] === $username) {
+                    $userIndex = $index;
+                    break;
                 }
-
+            }
+            
+            if ($userIndex === -1) {
+                $error = 'User not found';
+            } else {
+                // Don't allow changing admin user's role
+                if ($username === 'admin') {
+                    $newRole = 'administrator';
+                }
+                
+                // Only allow administrators to change roles
+                if (!empty($newRole) && $username !== 'admin') {
+                    $users[$userIndex]['role'] = $newRole;
+                }
+                
+                // Update username if provided
+                if (!empty($newUsername) && $newUsername !== $username) {
+                    // Check if new username already exists
+                    foreach ($users as $user) {
+                        if ($user['username'] === $newUsername) {
+                            $error = 'Username already exists';
+                            break;
+                        }
+                    }
+                    if (!isset($error)) {
+                        $users[$userIndex]['username'] = $newUsername;
+                    }
+                }
+                
                 // Update password if provided
                 if (!empty($newPassword)) {
                     $users[$userIndex]['password'] = password_hash($newPassword, PASSWORD_DEFAULT);
                 }
-
-                file_put_contents($usersFile, json_encode($users));
-                $success = 'User updated successfully';
-
-                // Update session if current user updated their own username
-                if ($_SESSION['username'] === $username && isset($_POST['new_username'])) {
-                    $_SESSION['username'] = $_POST['new_username'];
+                
+                if (!isset($error)) {
+                    file_put_contents($usersFile, json_encode($users, JSON_PRETTY_PRINT));
+                    $success = 'User updated successfully';
                 }
             }
         }
