@@ -1,12 +1,28 @@
 <!-- Widget Management Content -->
 <div class="mb-8">
     <h3 class="text-lg font-medium mb-4">Create Sidebar</h3>
-    <form method="POST" class="mb-4">
-        <input type="hidden" name="action" value="create_sidebar">
-        <div class="grid grid-cols-3 gap-4">
-            <input type="text" name="sidebar_id" required placeholder="Sidebar ID (e.g., left-sidebar)" class="border rounded px-2 py-1">
-            <input type="text" name="sidebar_name" placeholder="Display Name" class="border rounded px-2 py-1">
-            <button type="submit" class="bg-blue-500 text-white px-3 py-1 rounded">Create Sidebar</button>
+    <form id="sidebarForm" onsubmit="return handleSidebarSubmit(event)">
+        <input type="hidden" id="sidebarId" name="id">
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">ID (e.g., left-sidebar)</label>
+            <input type="text" id="sidebarIdInput" name="id" required pattern="[a-z0-9\-]+"
+                   class="w-full border rounded px-3 py-2" placeholder="Enter sidebar ID">
+            <p class="text-sm text-gray-500 mt-1">Use lowercase letters, numbers, and hyphens only</p>
+        </div>
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1">CSS Classes</label>
+            <input type="text" id="sidebarClasses" name="classes"
+                   class="w-full border rounded px-3 py-2">
+        </div>
+        <div class="flex justify-end gap-2">
+            <button type="button" onclick="hideSidebarModal()"
+                    class="px-4 py-2 border rounded hover:bg-gray-100">
+                Cancel
+            </button>
+            <button type="submit"
+                    class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                Save Sidebar
+            </button>
         </div>
     </form>
     {{sidebar_selection}}
@@ -91,5 +107,42 @@ function deleteSidebar(sidebarId) {
         document.body.appendChild(form);
         form.submit();
     }
+}
+
+function handleSidebarSubmit(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const data = {
+        action: 'add_sidebar',
+        id: formData.get('id'),
+        classes: formData.get('classes')
+    };
+
+    fetch('widget-handler.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(result => {
+        if (result.success) {
+            window.location.reload();
+        } else {
+            alert(result.error || 'Failed to save sidebar');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while saving the sidebar');
+    });
+
+    return false;
 }
 </script> 
