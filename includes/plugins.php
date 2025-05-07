@@ -60,7 +60,7 @@ function fcms_apply_filter($hook, $value, ...$args) {
 }
 
 // Add permission check function
-function fcms_check_permission($username, $capability) {
+function fcms_check_plugin_permission($username, $capability) {
     $result = false;
     if (!empty($GLOBALS['fcms_hooks']['check_permission'])) {
         foreach ($GLOBALS['fcms_hooks']['check_permission'] as $callback) {

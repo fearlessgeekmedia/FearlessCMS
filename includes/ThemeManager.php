@@ -74,19 +74,19 @@ class ThemeManager {
 
     public function getTemplate($templateName, $fallbackTemplate = 'page') {
         // First try the requested template in active theme
-        $templatePath = $this->themesPath . "/{$this->activeTheme}/templates/$templateName.html";
+        $templatePath = $this->themesPath . "/{$this->activeTheme}/templates/$templateName.php";
         if (file_exists($templatePath)) {
             return file_get_contents($templatePath);
         }
 
         // If not found, try the fallback template in active theme
-        $fallbackPath = $this->themesPath . "/{$this->activeTheme}/templates/$fallbackTemplate.html";
+        $fallbackPath = $this->themesPath . "/{$this->activeTheme}/templates/$fallbackTemplate.php";
         if (file_exists($fallbackPath)) {
             return file_get_contents($fallbackPath);
         }
 
         // Finally, try the default theme's fallback template
-        $defaultPath = $this->themesPath . "/default/templates/$fallbackTemplate.html";
+        $defaultPath = $this->themesPath . "/default/templates/$fallbackTemplate.php";
         if (file_exists($defaultPath)) {
             return file_get_contents($defaultPath);
         }

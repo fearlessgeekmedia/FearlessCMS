@@ -8,36 +8,24 @@ function fcms_render_widget_manager() {
     // Load widgets from admin config file
     $widgets = file_exists($adminWidgetsFile) ? json_decode(file_get_contents($adminWidgetsFile), true) ?? [] : [];
     
-    // If no widgets exist, create default structure
-    if (empty($widgets)) {
-        error_log('No widgets found, creating default structure');
-        $widgets = [
-            'left-sidebar' => [
-                'name' => 'Left Sidebar',
-                'widgets' => []
-            ]
-        ];
-        file_put_contents($adminWidgetsFile, json_encode($widgets, JSON_PRETTY_PRINT));
-    }
-    
     // Ensure widgets have the correct structure
     foreach ($widgets as $id => &$sidebar) {
-        if (!isset($sidebar['name'])) {
-            $sidebar['name'] = ucwords(str_replace(['-', '_'], ' ', $id));
+        if (!isset($sidebar['id'])) {
+            $sidebar['id'] = $id;
         }
         if (!isset($sidebar['widgets'])) {
             $sidebar['widgets'] = [];
         }
-        if (!isset($sidebar['id'])) {
-            $sidebar['id'] = $id;
+        if (!isset($sidebar['classes'])) {
+            $sidebar['classes'] = 'sidebar-' . $id;
         }
     }
 
     $currentSidebar = $_GET['sidebar'] ?? array_key_first($widgets);
     error_log('Current sidebar: ' . $currentSidebar);
     if (!isset($widgets[$currentSidebar])) {
-        $currentSidebar = array_key_first($widgets);
-        error_log('Current sidebar not found, defaulting to: ' . $currentSidebar);
+        $currentSidebar = null;
+        error_log('Current sidebar not found, defaulting to null');
     }
 
     // Generate sidebar selection HTML
@@ -47,23 +35,23 @@ function fcms_render_widget_manager() {
         <label class="block text-sm font-medium text-gray-700 mb-2">Select Sidebar</label>
         <div class="flex gap-2">
             <select id="sidebar-select" class="flex-1 border rounded px-2 py-1" onchange="window.location.href='?action=manage_widgets&sidebar=' + this.value">
-                <?php 
-                // Sort sidebars by name and ID for consistent display
-                uasort($widgets, function($a, $b) {
-                    $nameCompare = strcasecmp($a['name'], $b['name']);
-                    if ($nameCompare === 0) {
-                        return strcasecmp($a['id'] ?? '', $b['id'] ?? '');
-                    }
-                    return $nameCompare;
-                });
-                foreach ($widgets as $id => $sidebar): 
-                ?>
-                <option value="<?= htmlspecialchars($id) ?>" <?= $id === $currentSidebar ? 'selected' : '' ?>>
-                    <?= htmlspecialchars($sidebar['name']) ?>
-                </option>
-                <?php endforeach; ?>
+                <?php if (empty($widgets)): ?>
+                    <option value="">No sidebars available</option>
+                <?php else: ?>
+                    <?php 
+                    // Sort sidebars by ID for consistent display
+                    ksort($widgets);
+                    foreach ($widgets as $id => $sidebar): 
+                    ?>
+                    <option value="<?= htmlspecialchars($id) ?>" <?= $id === $currentSidebar ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($id) ?>
+                    </option>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </select>
-            <button onclick="deleteSidebar('<?= htmlspecialchars($currentSidebar) ?>')" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">Delete Sidebar</button>
+            <?php if ($currentSidebar): ?>
+                <button onclick="deleteSidebar('<?= htmlspecialchars($currentSidebar) ?>')" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">Delete Sidebar</button>
+            <?php endif; ?>
         </div>
     </div>
     <?php
@@ -95,6 +83,8 @@ function fcms_render_widget_manager() {
         } else {
             echo '<div class="text-gray-500 italic">No widgets in this sidebar yet.</div>';
         }
+    } else {
+        echo '<div class="text-gray-500 italic">Please create a sidebar first.</div>';
     }
     $widgetList = ob_get_clean();
 
@@ -102,6 +92,6 @@ function fcms_render_widget_manager() {
     return [
         'sidebar_selection' => $sidebarSelection,
         'widget_list' => $widgetList,
-        'current_sidebar' => $currentSidebar
+        'current_sidebar' => $currentSidebar ?? ''
     ];
 } 

@@ -1,17 +1,1 @@
-{
-    "right-sidebar": {
-        "name": "Right Sidebar",
-        "description": "",
-        "widgets": []
-    },
-    "left-sidebar": {
-        "name": "Left Sidebar",
-        "description": "",
-        "widgets": []
-    },
-    "stupid-sidebar": {
-        "name": "Stupid Sidebar",
-        "description": "",
-        "widgets": []
-    }
-}
+{}

@@ -8,7 +8,8 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once dirname(__DIR__) . '/includes/config.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
 
-// Set JSON header
+// Clear any previous output and set JSON header
+ob_clean();
 header('Content-Type: application/json');
 
 // Ensure user is logged in

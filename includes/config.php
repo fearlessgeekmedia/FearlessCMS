@@ -9,13 +9,19 @@ define('CONTENT_DIR', PROJECT_ROOT . '/content');
 define('CONFIG_DIR', PROJECT_ROOT . '/config');
 define('THEMES_DIR', PROJECT_ROOT . '/themes');
 define('PLUGINS_DIR', PROJECT_ROOT . '/plugins');
+define('ADMIN_CONFIG_DIR', PROJECT_ROOT . '/admin/config');
+define('ADMIN_TEMPLATE_DIR', PROJECT_ROOT . '/admin/templates');
+define('ADMIN_INCLUDES_DIR', PROJECT_ROOT . '/admin/includes');
 
 // Create required directories if they don't exist
 $requiredDirs = [
     CONTENT_DIR,
     CONFIG_DIR,
     THEMES_DIR,
-    PLUGINS_DIR
+    PLUGINS_DIR,
+    ADMIN_CONFIG_DIR,
+    ADMIN_TEMPLATE_DIR,
+    ADMIN_INCLUDES_DIR
 ];
 
 foreach ($requiredDirs as $dir) {
