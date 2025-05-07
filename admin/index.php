@@ -162,17 +162,81 @@ if (!isLoggedIn()) {
             switch ($_POST['action']) {
                 case 'activate_theme':
                     if (!fcms_check_permission($_SESSION['username'], 'manage_themes')) {
-                        $error = 'You do not have permission to manage themes';
-                    } else if (empty($_POST['theme'])) {
-                        $error = 'Theme name is required';
+                        header('Location: ?action=themes&error=permission_denied');
+                        exit;
+                    }
+                    
+                    $theme = $_POST['theme'] ?? '';
+                    if ($themeManager->activateTheme($theme)) {
+                        header('Location: ?action=themes&success=theme_activated');
                     } else {
-                        try {
-                            $themeManager->setActiveTheme($_POST['theme']);
-                            $success = 'Theme activated successfully';
-                        } catch (Exception $e) {
-                            $error = $e->getMessage();
+                        header('Location: ?action=themes&error=activation_failed');
+                    }
+                    exit;
+                    break;
+
+                case 'save_theme_options':
+                    if (!fcms_check_permission($_SESSION['username'], 'manage_themes')) {
+                        header('Content-Type: application/json');
+                        echo json_encode(['success' => false, 'error' => 'Permission denied']);
+                        exit;
+                    }
+
+                    $themeOptionsFile = CONFIG_DIR . '/theme_options.json';
+                    $themeOptions = file_exists($themeOptionsFile) ? json_decode(file_get_contents($themeOptionsFile), true) : [];
+
+                    // Handle logo upload
+                    if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
+                        $logoFile = $_FILES['logo'];
+                        $logoExt = strtolower(pathinfo($logoFile['name'], PATHINFO_EXTENSION));
+                        $allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'svg'];
+                        
+                        if (!in_array($logoExt, $allowedExts)) {
+                            header('Content-Type: application/json');
+                            echo json_encode(['success' => false, 'error' => 'Invalid logo file type']);
+                            exit;
+                        }
+
+                        $logoPath = 'uploads/theme/logo.' . $logoExt;
+                        if (!is_dir(dirname($logoPath))) {
+                            mkdir(dirname($logoPath), 0755, true);
+                        }
+                        
+                        if (move_uploaded_file($logoFile['tmp_name'], $logoPath)) {
+                            $themeOptions['logo'] = $logoPath;
                         }
                     }
+
+                    // Handle hero banner upload
+                    if (isset($_FILES['herobanner']) && $_FILES['herobanner']['error'] === UPLOAD_ERR_OK) {
+                        $bannerFile = $_FILES['herobanner'];
+                        $bannerExt = strtolower(pathinfo($bannerFile['name'], PATHINFO_EXTENSION));
+                        $allowedExts = ['jpg', 'jpeg', 'png', 'gif'];
+                        
+                        if (!in_array($bannerExt, $allowedExts)) {
+                            header('Content-Type: application/json');
+                            echo json_encode(['success' => false, 'error' => 'Invalid hero banner file type']);
+                            exit;
+                        }
+
+                        $bannerPath = 'uploads/theme/herobanner.' . $bannerExt;
+                        if (!is_dir(dirname($bannerPath))) {
+                            mkdir(dirname($bannerPath), 0755, true);
+                        }
+                        
+                        if (move_uploaded_file($bannerFile['tmp_name'], $bannerPath)) {
+                            $themeOptions['herobanner'] = $bannerPath;
+                        }
+                    }
+
+                    if (file_put_contents($themeOptionsFile, json_encode($themeOptions, JSON_PRETTY_PRINT))) {
+                        header('Content-Type: application/json');
+                        echo json_encode(['success' => true]);
+                    } else {
+                        header('Content-Type: application/json');
+                        echo json_encode(['success' => false, 'error' => 'Failed to save theme options']);
+                    }
+                    exit;
                     break;
 
                 case 'update_site_name':
