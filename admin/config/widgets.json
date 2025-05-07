@@ -1,1 +1,29 @@
-{}
+{
+    "right-sidebar": {
+        "id": "right-sidebar",
+        "classes": "right-sidebar",
+        "widgets": {
+            "widget-681ad1e83c112": {
+                "id": "widget-681ad1e83c112",
+                "title": "Text 1",
+                "type": "html",
+                "content": "This is text",
+                "classes": ""
+            },
+            "widget-681ad2698552d": {
+                "id": "widget-681ad2698552d",
+                "title": "Text 3",
+                "type": "text",
+                "content": "This is even more text",
+                "classes": ""
+            },
+            "widget-681ad1f880573": {
+                "id": "widget-681ad1f880573",
+                "title": "Text 2",
+                "type": "text",
+                "content": "This is also text",
+                "classes": ""
+            }
+        }
+    }
+}

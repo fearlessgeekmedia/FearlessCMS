@@ -1,33 +1,34 @@
 {
     "main": {
+        "label": "main",
         "menu_class": "main-nav",
         "items": [
             {
                 "label": "Home",
                 "url": "\/",
                 "target": "",
-                "class": "nav-item"
+                "class": "nav-item",
+                "id": "item_0"
             },
             {
                 "label": "About",
                 "url": "\/about",
                 "target": "",
-                "class": "nav-item"
+                "class": "nav-item",
+                "id": "item_1"
             },
             {
                 "label": "Contact",
                 "url": "\/contact",
                 "target": "",
-                "class": "nav-item"
-            },
-            {
-                "id": 1746563924503,
-                "label": "Test",
-                "url": "\/test",
-                "target": "_blank",
-                "children": [],
-                "class": "nav-item"
+                "class": "nav-item",
+                "id": "item_2"
             }
         ]
+    },
+    "test-menu": {
+        "label": "test menu",
+        "menu_class": "test-menu",
+        "items": []
     }
 }

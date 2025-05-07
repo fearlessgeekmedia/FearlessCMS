@@ -20,7 +20,42 @@ if ($path === '') {
     $path = 'home';
 }
 
+// Try direct path first
 $contentFile = CONTENT_DIR . '/' . $path . '.md';
+
+// If not found, try parent/child relationship
+if (!file_exists($contentFile)) {
+    $parts = explode('/', $path);
+    if (count($parts) > 1) {
+        $childPath = array_pop($parts);
+        $parentPath = implode('/', $parts);
+        
+        // Check if parent exists
+        $parentFile = CONTENT_DIR . '/' . $parentPath . '.md';
+        if (file_exists($parentFile)) {
+            $parentContent = file_get_contents($parentFile);
+            $parentMetadata = [];
+            if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $parentContent, $matches)) {
+                $parentMetadata = json_decode($matches[1], true);
+            }
+            
+            // Check if this is a child page
+            $childFile = CONTENT_DIR . '/' . $childPath . '.md';
+            if (file_exists($childFile)) {
+                $childContent = file_get_contents($childFile);
+                $childMetadata = [];
+                if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $childContent, $matches)) {
+                    $childMetadata = json_decode($matches[1], true);
+                }
+                
+                // If child has this parent, use it
+                if (isset($childMetadata['parent']) && $childMetadata['parent'] === $parentPath) {
+                    $contentFile = $childFile;
+                }
+            }
+        }
+    }
+}
 
 // 404 fallback
 if (!file_exists($contentFile)) {

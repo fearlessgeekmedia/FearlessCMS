@@ -52,6 +52,102 @@
         </div>
     </div>
 
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle AJAX form submissions
+        document.querySelectorAll('form[data-ajax="true"]').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                
+                fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.text())
+                .then(html => {
+                    // Update the content area
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newContent = doc.querySelector('.bg-white.shadow.rounded-lg');
+                    if (newContent) {
+                        document.querySelector('.bg-white.shadow.rounded-lg').innerHTML = newContent.innerHTML;
+                    }
+                    
+                    // Update URL without reload
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('action', formData.get('action'));
+                    window.history.pushState({}, '', url);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+        });
+
+        // Handle AJAX links
+        document.querySelectorAll('a[data-ajax="true"]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const url = new URL(this.href);
+                
+                fetch(this.href)
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newContent = doc.querySelector('.bg-white.shadow.rounded-lg');
+                    if (newContent) {
+                        document.querySelector('.bg-white.shadow.rounded-lg').innerHTML = newContent.innerHTML;
+                    }
+                    
+                    // Update URL without reload
+                    window.history.pushState({}, '', this.href);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+        });
+
+        // Handle dynamic content loading
+        function loadContent(action) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('action', action);
+            
+            fetch(url.toString())
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newContent = doc.querySelector('.bg-white.shadow.rounded-lg');
+                if (newContent) {
+                    document.querySelector('.bg-white.shadow.rounded-lg').innerHTML = newContent.innerHTML;
+                }
+                
+                // Update URL without reload
+                window.history.pushState({}, '', url.toString());
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        // Add data-ajax attributes to all forms and links
+        document.querySelectorAll('form').forEach(form => {
+            if (!form.hasAttribute('data-ajax')) {
+                form.setAttribute('data-ajax', 'true');
+            }
+        });
+
+        document.querySelectorAll('a').forEach(link => {
+            if (link.getAttribute('href')?.startsWith('?action=')) {
+                link.setAttribute('data-ajax', 'true');
+            }
+        });
+    });
+    </script>
+
     <?php if (!empty($custom_js)) echo $custom_js; ?>
 </body>
 </html>

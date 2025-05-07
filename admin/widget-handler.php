@@ -8,20 +8,99 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once dirname(__DIR__) . '/includes/config.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
 
-// Clear any previous output and set JSON header
-ob_clean();
-header('Content-Type: application/json');
+// Enable error logging
+error_log("Widget Handler: Script started");
 
-// Ensure user is logged in
-if (!isLoggedIn()) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'error' => 'Unauthorized access']);
-    exit;
+function fcms_render_widget_manager() {
+    $widgetsFile = ADMIN_CONFIG_DIR . '/widgets.json';
+    $widgets = [];
+    
+    // Load widgets from file if it exists
+    if (file_exists($widgetsFile)) {
+        $jsonContent = file_get_contents($widgetsFile);
+        if ($jsonContent !== false) {
+            $widgets = json_decode($jsonContent, true) ?? [];
+            error_log("Widget Handler: Loaded widgets: " . print_r($widgets, true));
+        }
+    }
+    
+    // Generate sidebar selection
+    $sidebar_selection = '<select name="sidebar" id="sidebar-select" class="form-select">';
+    $sidebar_selection .= '<option value="">Select a sidebar...</option>';
+    
+    if (!empty($widgets)) {
+        foreach ($widgets as $id => $sidebar) {
+            $selected = (!empty($_GET['sidebar']) && $_GET['sidebar'] === $id) ? 'selected' : '';
+            $sidebar_selection .= sprintf(
+                '<option value="%s" %s>%s</option>',
+                htmlspecialchars($id),
+                $selected,
+                htmlspecialchars($sidebar['id'])
+            );
+        }
+    }
+    $sidebar_selection .= '</select>';
+    
+    // Generate widget list
+    $widget_list = '';
+    $current_sidebar = '';
+    if (!empty($_GET['sidebar']) && isset($widgets[$_GET['sidebar']])) {
+        $current_sidebar = $_GET['sidebar'];
+        foreach ($widgets[$current_sidebar]['widgets'] as $widget) {
+            $widget_list .= sprintf(
+                '<div class="widget-item" data-id="%s" data-content="%s" data-classes="%s">
+                    <div class="widget-header">
+                        <h3 class="widget-title">%s</h3>
+                        <div class="widget-drag-handle">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="widget-content">
+                        <p class="text-sm text-gray-500">Type: %s</p>
+                    </div>
+                    <div class="widget-actions">
+                        <button class="edit-widget" data-id="%s">Edit</button>
+                        <button class="delete-widget" data-id="%s">Delete</button>
+                    </div>
+                </div>',
+                htmlspecialchars($widget['id']),
+                htmlspecialchars($widget['content'] ?? ''),
+                htmlspecialchars($widget['classes'] ?? ''),
+                htmlspecialchars($widget['title']),
+                htmlspecialchars($widget['type']),
+                htmlspecialchars($widget['id']),
+                htmlspecialchars($widget['id'])
+            );
+        }
+    }
+    
+    return [
+        'sidebar_selection' => $sidebar_selection,
+        'widget_list' => $widget_list,
+        'current_sidebar' => $current_sidebar
+    ];
 }
 
-// Get input data (either from POST or JSON)
-$data = [];
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+// Only handle AJAX requests
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+    error_log("Widget Handler: Processing AJAX request");
+    error_log("Widget Handler: POST data: " . print_r($_POST, true));
+    
+    // Clear any previous output and set JSON header
+    ob_clean();
+    header('Content-Type: application/json');
+
+    // Ensure user is logged in
+    if (!isLoggedIn()) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'error' => 'Unauthorized access']);
+        exit;
+    }
+
+    // Get input data (either from POST or JSON)
+    $data = [];
     if (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
         // Handle JSON input
         $json = file_get_contents('php://input');
@@ -35,107 +114,148 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Handle form data
         $data = $_POST;
     }
-}
 
-// Load existing widgets
-$widgetsFile = ADMIN_CONFIG_DIR . '/widgets.json';
-$widgets = [];
-if (file_exists($widgetsFile)) {
-    $widgets = json_decode(file_get_contents($widgetsFile), true) ?? [];
-}
-
-try {
-    if (!isset($data['action'])) {
-        throw new Exception('No action specified');
+    // Load existing widgets
+    $widgetsFile = ADMIN_CONFIG_DIR . '/widgets.json';
+    $widgets = [];
+    if (file_exists($widgetsFile)) {
+        $jsonContent = file_get_contents($widgetsFile);
+        if ($jsonContent !== false) {
+            $widgets = json_decode($jsonContent, true) ?? [];
+        }
     }
 
-    switch ($data['action']) {
-        case 'add_sidebar':
-            if (empty($data['id'])) {
-                throw new Exception('Sidebar ID is required');
-            }
+    try {
+        if (!isset($data['action'])) {
+            throw new Exception('No action specified');
+        }
 
-            // Format the ID (lowercase, replace spaces with hyphens)
-            $id = strtolower(preg_replace('/[^a-z0-9-]/', '-', $data['id']));
-            
-            // Ensure the ID is unique
-            $baseId = $id;
-            $counter = 1;
-            while (isset($widgets[$id])) {
-                $id = $baseId . '-' . $counter;
-                $counter++;
-            }
+        error_log("Widget Handler: Processing action: " . $data['action']);
 
-            $widgets[$id] = [
-                'id' => $id,
-                'classes' => $data['classes'] ?? 'sidebar-' . $id,
-                'widgets' => []
-            ];
-            break;
+        switch ($data['action']) {
+            case 'add_sidebar':
+                if (empty($data['id'])) {
+                    throw new Exception('Sidebar ID is required');
+                }
 
-        case 'delete_sidebar':
-            if (empty($data['id'])) {
-                throw new Exception('Sidebar ID is required');
-            }
-            if (!isset($widgets[$data['id']])) {
-                throw new Exception('Sidebar not found');
-            }
-            unset($widgets[$data['id']]);
-            break;
+                // Format the ID (lowercase, replace spaces with hyphens)
+                $id = strtolower(preg_replace('/[^a-z0-9-]/', '-', $data['id']));
+                error_log("Widget Handler: Creating sidebar with ID: " . $id);
+                
+                // Ensure the ID is unique
+                $baseId = $id;
+                $counter = 1;
+                while (isset($widgets[$id])) {
+                    $id = $baseId . '-' . $counter;
+                    $counter++;
+                }
 
-        case 'save_widget':
-            if (empty($data['sidebar'])) {
-                throw new Exception('Sidebar ID is required');
-            }
-            if (!isset($widgets[$data['sidebar']])) {
-                throw new Exception('Sidebar not found');
-            }
+                $widgets[$id] = [
+                    'id' => $id,
+                    'classes' => $data['classes'] ?? 'sidebar-' . $id,
+                    'widgets' => []
+                ];
+                error_log("Widget Handler: Created sidebar: " . print_r($widgets[$id], true));
+                break;
 
-            // Generate widget ID if not provided
-            $widgetId = $data['id'] ?? 'widget-' . uniqid();
-            
-            $widgets[$data['sidebar']]['widgets'][$widgetId] = [
-                'id' => $widgetId,
-                'title' => $data['title'],
-                'type' => $data['type'],
-                'content' => $data['content'],
-                'classes' => $data['classes'] ?? ''
-            ];
-            break;
+            case 'delete_sidebar':
+                if (empty($data['id'])) {
+                    throw new Exception('Sidebar ID is required');
+                }
+                if (!isset($widgets[$data['id']])) {
+                    throw new Exception('Sidebar not found');
+                }
+                unset($widgets[$data['id']]);
+                break;
 
-        case 'delete_widget':
-            if (empty($data['sidebar']) || empty($data['id'])) {
-                throw new Exception('Sidebar ID and Widget ID are required');
-            }
-            if (!isset($widgets[$data['sidebar']])) {
-                throw new Exception('Sidebar not found');
-            }
-            if (!isset($widgets[$data['sidebar']]['widgets'][$data['id']])) {
-                throw new Exception('Widget not found');
-            }
-            unset($widgets[$data['sidebar']]['widgets'][$data['id']]);
-            break;
+            case 'save_widget':
+                if (empty($data['sidebar'])) {
+                    throw new Exception('Sidebar ID is required');
+                }
+                if (!isset($widgets[$data['sidebar']])) {
+                    throw new Exception('Sidebar not found');
+                }
 
-        default:
-            throw new Exception('Invalid action');
+                // Generate widget ID if not provided
+                $widgetId = $data['id'] ?? 'widget-' . uniqid();
+                
+                $widgets[$data['sidebar']]['widgets'][$widgetId] = [
+                    'id' => $widgetId,
+                    'title' => $data['title'],
+                    'type' => $data['type'],
+                    'content' => $data['content'],
+                    'classes' => $data['classes'] ?? ''
+                ];
+                break;
+
+            case 'delete_widget':
+                if (empty($data['sidebar']) || empty($data['id'])) {
+                    throw new Exception('Sidebar ID and Widget ID are required');
+                }
+                if (!isset($widgets[$data['sidebar']])) {
+                    throw new Exception('Sidebar not found');
+                }
+                if (!isset($widgets[$data['sidebar']]['widgets'][$data['id']])) {
+                    throw new Exception('Widget not found');
+                }
+                unset($widgets[$data['sidebar']]['widgets'][$data['id']]);
+                break;
+
+            case 'update_widget_order':
+                if (empty($data['sidebar'])) {
+                    throw new Exception('Sidebar ID is required');
+                }
+                if (!isset($widgets[$data['sidebar']])) {
+                    throw new Exception('Sidebar not found');
+                }
+                if (empty($data['widgets'])) {
+                    throw new Exception('Widget order data is required');
+                }
+
+                // Get the new order of widget IDs
+                $widgetOrder = is_array($data['widgets']) ? $data['widgets'] : json_decode($data['widgets'], true);
+                if (!is_array($widgetOrder)) {
+                    throw new Exception('Invalid widget order data');
+                }
+
+                // Create a new array with widgets in the correct order
+                $orderedWidgets = [];
+                foreach ($widgetOrder as $widgetId) {
+                    if (isset($widgets[$data['sidebar']]['widgets'][$widgetId])) {
+                        // Keep all existing widget data
+                        $orderedWidgets[$widgetId] = $widgets[$data['sidebar']]['widgets'][$widgetId];
+                    }
+                }
+
+                // Replace the widgets array with the ordered one
+                $widgets[$data['sidebar']]['widgets'] = $orderedWidgets;
+                break;
+
+            default:
+                throw new Exception('Invalid action');
+        }
+
+        // Save changes
+        if (!is_dir(dirname($widgetsFile))) {
+            mkdir(dirname($widgetsFile), 0755, true);
+        }
+        
+        $jsonData = json_encode($widgets, JSON_PRETTY_PRINT);
+        error_log("Widget Handler: Saving widgets: " . $jsonData);
+        
+        if (file_put_contents($widgetsFile, $jsonData) === false) {
+            throw new Exception('Failed to save widgets file');
+        }
+
+        echo json_encode(['success' => true]);
+
+    } catch (Exception $e) {
+        error_log('Widget Handler Error: ' . $e->getMessage());
+        http_response_code(500);
+        echo json_encode([
+            'success' => false,
+            'error' => $e->getMessage()
+        ]);
     }
-
-    // Save changes
-    if (!is_dir(dirname($widgetsFile))) {
-        mkdir(dirname($widgetsFile), 0755, true);
-    }
-    
-    if (file_put_contents($widgetsFile, json_encode($widgets, JSON_PRETTY_PRINT)) === false) {
-        throw new Exception('Failed to save widgets file');
-    }
-
-    echo json_encode(['success' => true]);
-
-} catch (Exception $e) {
-    error_log('Widget Handler Error: ' . $e->getMessage());
-    http_response_code(500);
-    echo json_encode([
-        'success' => false,
-        'error' => $e->getMessage()
-    ]);
+    exit;
 } 
