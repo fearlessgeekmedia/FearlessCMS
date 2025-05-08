@@ -1,0 +1,180 @@
+@import 'https://cdn.tailwindcss.com';
+
+/* Custom styles */
+.min-h-screen {
+    min-height: 100vh;
+}
+
+.bg-gray-50 {
+    background-color: #f9fafb;
+}
+
+.bg-white {
+    background-color: #ffffff;
+}
+
+.shadow {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.max-w-7xl {
+    max-width: 80rem;
+}
+
+.mx-auto {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.px-4 {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.py-8 {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+.flex {
+    display: flex;
+}
+
+.flex-1 {
+    flex: 1 1 0%;
+}
+
+.gap-8 {
+    gap: 2rem;
+}
+
+.w-80 {
+    width: 20rem;
+}
+
+.rounded-lg {
+    border-radius: 0.5rem;
+}
+
+.p-6 {
+    padding: 1.5rem;
+}
+
+.text-lg {
+    font-size: 1.125rem;
+}
+
+.font-medium {
+    font-weight: 500;
+}
+
+.mb-4 {
+    margin-bottom: 1rem;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-gray-500 {
+    color: #6b7280;
+}
+
+.mt-8 {
+    margin-top: 2rem;
+}
+
+.py-6 {
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+}
+
+/* Header styles */
+.h-16 {
+    height: 4rem;
+}
+
+.flex-shrink-0 {
+    flex-shrink: 0;
+}
+
+.items-center {
+    align-items: center;
+}
+
+.ml-6 {
+    margin-left: 1.5rem;
+}
+
+.space-x-8 > * + * {
+    margin-left: 2rem;
+}
+
+/* Hero banner styles */
+.relative {
+    position: relative;
+}
+
+.w-full {
+    width: 100%;
+}
+
+.h-64 {
+    height: 16rem;
+}
+
+.object-cover {
+    object-fit: cover;
+}
+
+.absolute {
+    position: absolute;
+}
+
+.inset-0 {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+
+.bg-black {
+    background-color: #000000;
+}
+
+.bg-opacity-50 {
+    --tw-bg-opacity: 0.5;
+}
+
+.text-4xl {
+    font-size: 2.25rem;
+}
+
+.font-bold {
+    font-weight: 700;
+}
+
+.text-white {
+    color: #ffffff;
+}
+
+/* Navigation styles */
+.main-nav {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.main-nav li {
+    margin-right: 1rem;
+}
+
+.main-nav a {
+    color: #374151;
+    text-decoration: none;
+    padding: 0.5rem;
+}
+
+.main-nav a:hover {
+ 

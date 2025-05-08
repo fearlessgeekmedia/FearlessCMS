@@ -11,13 +11,112 @@ require_once PROJECT_ROOT . '/includes/ThemeManager.php';
 require_once PROJECT_ROOT . '/includes/plugins.php';
 
 // --- Routing: get the requested path ---
-$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-$uri = urldecode($uri);
-$path = trim($uri, '/');
+$requestPath = trim($_SERVER['REQUEST_URI'], '/');
+
+// Handle preview URLs
+if (strpos($requestPath, '_preview/') === 0) {
+    $previewPath = substr($requestPath, 9); // Remove '_preview/' prefix
+    $previewFile = CONTENT_DIR . '/_preview/' . $previewPath . '.md';
+    
+    error_log("Looking for preview file: " . $previewFile);
+    
+    if (file_exists($previewFile)) {
+        error_log("Preview file found");
+        $contentData = file_get_contents($previewFile);
+        error_log("Preview content loaded: " . substr($contentData, 0, 100) . "...");
+        
+        $metadata = [];
+        if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $contentData, $matches)) {
+            $metadata = json_decode($matches[1], true);
+            $content = substr($contentData, strlen($matches[0]));
+            error_log("Preview metadata: " . json_encode($metadata));
+        } else {
+            error_log("No metadata found in preview file");
+            $content = $contentData;
+        }
+        
+        // Set page title
+        $pageTitle = $metadata['title'] ?? 'Preview';
+        
+        // Convert markdown to HTML
+        require_once PROJECT_ROOT . '/includes/Parsedown.php';
+        $parsedown = new Parsedown();
+        $pageContentHtml = $parsedown->text($content);
+        
+        // Get site name from config
+        $configFile = CONFIG_DIR . '/config.json';
+        $siteName = 'FearlessCMS'; // Default
+        if (file_exists($configFile)) {
+            $config = json_decode(file_get_contents($configFile), true);
+            if (isset($config['site_name'])) {
+                $siteName = $config['site_name'];
+            }
+        }
+        
+        // Load theme options
+        $themeOptionsFile = CONFIG_DIR . '/theme_options.json';
+        $themeOptions = file_exists($themeOptionsFile) ? json_decode(file_get_contents($themeOptionsFile), true) : [];
+        
+        // Initialize managers
+        require_once PROJECT_ROOT . '/includes/ThemeManager.php';
+        require_once PROJECT_ROOT . '/includes/MenuManager.php';
+        require_once PROJECT_ROOT . '/includes/WidgetManager.php';
+        require_once PROJECT_ROOT . '/includes/TemplateRenderer.php';
+        
+        $themeManager = new ThemeManager();
+        $menuManager = new MenuManager();
+        $widgetManager = new WidgetManager();
+        
+        // Initialize template renderer
+        $templateRenderer = new TemplateRenderer(
+            $themeManager->getActiveTheme(),
+            $themeOptions,
+            $menuManager,
+            $widgetManager
+        );
+        
+        // Prepare template data
+        $templateData = [
+            'title' => $pageTitle,
+            'content' => $pageContentHtml,
+            'siteName' => $siteName,
+            'currentYear' => date('Y'),
+            'logo' => $themeOptions['logo'] ?? null,
+            'heroBanner' => $themeOptions['herobanner'] ?? null,
+            'mainMenu' => $menuManager->renderMenu('main')
+        ];
+        
+        error_log("Template data prepared: " . json_encode($templateData));
+        
+        // Render template
+        $template = $templateRenderer->render($metadata['template'] ?? 'page', $templateData);
+        
+        // Output the preview
+        echo $template;
+        exit;
+    } else {
+        error_log("Preview file not found: " . $previewFile);
+        // If preview file doesn't exist, show 404
+        http_response_code(404);
+        $pageTitle = 'Preview Not Found';
+        $pageContent = '<p>The preview you requested could not be found.</p>';
+        
+        require_once PROJECT_ROOT . '/includes/ThemeManager.php';
+        $themeManager = new ThemeManager();
+        $template = $themeManager->getTemplate('404', 'page');
+        $template = str_replace('{{title}}', $pageTitle, $template);
+        $template = str_replace('{{content}}', $pageContent, $template);
+        $template = str_replace('{{site_name}}', 'FearlessCMS', $template);
+        echo $template;
+        exit;
+    }
+}
 
 // Default to home if root
-if ($path === '') {
+if ($requestPath === '') {
     $path = 'home';
+} else {
+    $path = $requestPath;
 }
 
 // Try direct path first
@@ -115,60 +214,47 @@ $pageContentHtml = $Parsedown->text($pageContent);
 
 // --- Theme and template ---
 $themeManager = new ThemeManager();
-$template = $themeManager->getTemplate('page', 'page');
 
-// --- Menu rendering (for {{menu=main}} etc.) ---
-function render_menu($menuId = 'main') {
-    $menuFile = CONFIG_DIR . '/menus.json';
-    if (!file_exists($menuFile)) return '';
-    $menus = json_decode(file_get_contents($menuFile), true);
-    if (!isset($menus[$menuId]['items'])) return '';
-    $html = '<ul class="' . htmlspecialchars($menus[$menuId]['menu_class'] ?? 'main-nav') . '">';
-    foreach ($menus[$menuId]['items'] as $item) {
-        $label = htmlspecialchars($item['label']);
-        $url = htmlspecialchars($item['url']);
-        $class = htmlspecialchars($item['item_class'] ?? '');
-        $target = $item['target'] ? ' target="' . htmlspecialchars($item['target']) . '"' : '';
-        $html .= "<li><a href=\"$url\" class=\"$class\"$target>$label</a></li>";
-    }
-    $html .= '</ul>';
-    return $html;
-}
-
-// --- Replace template placeholders ---
-
-// Title, content, site name
-$template = str_replace('{{title}}', htmlspecialchars($pageTitle), $template);
-$template = str_replace('{{content}}', $pageContentHtml, $template);
-
+// --- Get site name ---
 $configFile = CONFIG_DIR . '/config.json';
 $siteName = 'FearlessCMS';
 if (file_exists($configFile)) {
     $config = json_decode(file_get_contents($configFile), true);
-    if (isset($config['site_name'])) $siteName = $config['site_name'];
+    if (isset($config['site_name'])) {
+        $siteName = $config['site_name'];
+    }
 }
-$template = str_replace('{{site_name}}', htmlspecialchars($siteName), $template);
 
-// Menus
-$template = preg_replace_callback('/\{\{menu=([a-zA-Z0-9_-]+)\}\}/', function($m) {
-    return render_menu($m[1]);
-}, $template);
-
-// --- Theme options: logo and herobanner ---
+// --- Get theme options ---
 $themeOptionsFile = CONFIG_DIR . '/theme_options.json';
 $themeOptions = file_exists($themeOptionsFile) ? json_decode(file_get_contents($themeOptionsFile), true) : [];
 
-$logoHtml = '';
-if (!empty($themeOptions['logo'])) {
-    $logoHtml = '<img src="' . htmlspecialchars($themeOptions['logo']) . '" class="logo" alt="Logo">';
-}
-$herobannerHtml = '';
-if (!empty($themeOptions['herobanner'])) {
-    $herobannerHtml = '<img src="' . htmlspecialchars($themeOptions['herobanner']) . '" class="hero-banner" alt="Hero Banner">';
-}
+require_once PROJECT_ROOT . '/includes/MenuManager.php';
+require_once PROJECT_ROOT . '/includes/WidgetManager.php';
+require_once PROJECT_ROOT . '/includes/TemplateRenderer.php';
 
-$template = str_replace('{{logo}}', $logoHtml, $template);
-$template = str_replace('{{herobanner}}', $herobannerHtml, $template);
+$menuManager = new MenuManager();
+$widgetManager = new WidgetManager();
+$templateRenderer = new TemplateRenderer(
+    $themeManager->getActiveTheme(),
+    $themeOptions,
+    $menuManager,
+    $widgetManager
+);
+
+// --- Prepare template data ---
+$templateData = [
+    'title' => $pageTitle,
+    'content' => $pageContentHtml,
+    'siteName' => $siteName,
+    'currentYear' => date('Y'),
+    'logo' => $themeOptions['logo'] ?? null,
+    'heroBanner' => $themeOptions['herobanner'] ?? null,
+    'mainMenu' => $menuManager->renderMenu('main')
+];
+
+// --- Render template ---
+$template = $templateRenderer->render($metadata['template'] ?? 'page', $templateData);
 
 // --- SEO plugin hook (optional) ---
 global $title, $content;

@@ -30,6 +30,9 @@ foreach ($contentFiles as $file) {
     <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold fira-code">Edit: <?php echo htmlspecialchars($title); ?></h2>
         <div class="flex gap-4">
+            <button type="button" onclick="previewContent()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                Preview
+            </button>
             <a href="?action=dashboard" class="text-gray-500 hover:text-gray-600">Back to Dashboard</a>
         </div>
     </div>
@@ -59,6 +62,17 @@ foreach ($contentFiles as $file) {
         </div>
 
         <div>
+            <label class="block mb-2">Template</label>
+            <select name="template" class="w-full px-3 py-2 border border-gray-300 rounded">
+                <?php foreach ($templates as $template): ?>
+                    <option value="<?php echo htmlspecialchars($template); ?>" <?php echo (isset($metadata['template']) && $metadata['template'] === $template) ? 'selected' : ''; ?>>
+                        <?php echo ucfirst(htmlspecialchars($template)); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+
+        <div>
             <label class="block mb-2">Content</label>
             <div id="editor" style="height: 600px;"></div>
             <input type="hidden" name="content" id="content">
@@ -76,8 +90,11 @@ foreach ($contentFiles as $file) {
 <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
 
 <script>
+// Make editor globally accessible
+let editor;
+
 document.addEventListener('DOMContentLoaded', function() {
-    const editor = new toastui.Editor({
+    editor = new toastui.Editor({
         el: document.querySelector('#editor'),
         height: '600px',
         initialEditType: 'wysiwyg',
@@ -123,4 +140,37 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('content').value = editor.getMarkdown();
     });
 });
+
+function previewContent() {
+    if (!editor) {
+        alert('Editor not initialized');
+        return;
+    }
+
+    const form = document.getElementById('editForm');
+    const formData = new FormData(form);
+    formData.append('action', 'preview_content');
+    
+    // Get the current editor content
+    const editorContent = editor.getMarkdown();
+    formData.set('content', editorContent);
+    
+    // Send to admin endpoint instead of root index.php
+    fetch('?action=preview_content', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.open(data.previewUrl, '_blank');
+        } else {
+            alert('Failed to create preview: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to create preview. Please try again.');
+    });
+}
 </script> 

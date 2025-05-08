@@ -265,12 +265,14 @@ if (!isLoggedIn()) {
                         $path = $_POST['path'];
                         $title = $_POST['title'] ?? '';
                         $content = $_POST['content'];
+                        $template = $_POST['template'] ?? 'page';
                         $parent = $_POST['parent'] ?? '';
                         $contentFile = CONTENT_DIR . '/' . $path . '.md';
                         
                         // Create metadata
                         $metadata = [
                             'title' => $title,
+                            'template' => $template,
                             'last_modified' => date('Y-m-d H:i:s'),
                             'author' => $_SESSION['username']
                         ];
@@ -367,6 +369,76 @@ if (!isLoggedIn()) {
                     } else {
                         header('Content-Type: application/json');
                         echo json_encode(['success' => false, 'error' => 'Failed to save file']);
+                    }
+                    exit;
+                    break;
+
+                case 'preview_content':
+                    // Ensure we're sending JSON response
+                    header('Content-Type: application/json');
+                    
+                    try {
+                        // Get content and metadata from form
+                        if (!isset($_POST['content'])) {
+                            throw new Exception('Content is required');
+                        }
+                        
+                        $content = trim($_POST['content']);
+                        error_log("Received content for preview: " . substr($content, 0, 100) . "...");
+                        
+                        $metadata = [
+                            'title' => $_POST['title'] ?? 'Preview',
+                            'slug' => $_POST['slug'] ?? '',
+                            'parent' => $_POST['parent'] ?? '',
+                            'template' => $_POST['template'] ?? 'page',
+                            'last_modified' => date('Y-m-d H:i:s'),
+                            'author' => 'Admin'
+                        ];
+                        
+                        error_log("Preview metadata: " . json_encode($metadata));
+                        
+                        // Create a temporary preview file in the content directory
+                        $previewDir = CONTENT_DIR . '/_preview';
+                        if (!is_dir($previewDir)) {
+                            if (!mkdir($previewDir, 0755, true)) {
+                                throw new Exception('Failed to create preview directory');
+                            }
+                        }
+                        
+                        // Clean up old preview files (older than 1 hour)
+                        $oldFiles = glob($previewDir . '/*.md');
+                        foreach ($oldFiles as $file) {
+                            if (filemtime($file) < time() - 3600) {
+                                unlink($file);
+                            }
+                        }
+                        
+                        // Create new preview file
+                        $previewId = uniqid('preview_');
+                        $previewFile = $previewDir . '/' . $previewId . '.md';
+                        
+                        // Format the content with metadata
+                        $fullContent = "<!-- json " . json_encode($metadata, JSON_PRETTY_PRINT) . " -->\n\n" . $content;
+                        
+                        // Debug information
+                        error_log("Creating preview file: " . $previewFile);
+                        error_log("Full preview content: " . $fullContent);
+                        
+                        if (file_put_contents($previewFile, $fullContent)) {
+                            error_log("Preview file created successfully");
+                            echo json_encode([
+                                'success' => true,
+                                'previewUrl' => '/_preview/' . $previewId
+                            ]);
+                        } else {
+                            throw new Exception('Failed to create preview file');
+                        }
+                    } catch (Exception $e) {
+                        error_log("Preview error: " . $e->getMessage());
+                        echo json_encode([
+                            'success' => false,
+                            'error' => $e->getMessage()
+                        ]);
                     }
                     exit;
                     break;
@@ -497,6 +569,18 @@ if (!isLoggedIn()) {
                     include ADMIN_TEMPLATE_DIR . '/dashboard.php';
                     $content = ob_get_clean();
                 } else {
+                    // Get available templates
+                    $templates = [];
+                    $templateDir = PROJECT_ROOT . '/themes/' . $themeManager->getActiveTheme() . '/templates';
+                    if (is_dir($templateDir)) {
+                        foreach (glob($templateDir . '/*.html') as $template) {
+                            $templateName = basename($template, '.html');
+                            if ($templateName !== '404') { // Exclude 404 template
+                                $templates[] = $templateName;
+                            }
+                        }
+                    }
+
                     ob_start();
                     include ADMIN_TEMPLATE_DIR . '/new_content.php';
                     $content = ob_get_clean();
@@ -531,6 +615,18 @@ if (!isLoggedIn()) {
                         }
                         if (!$title) {
                             $title = ucwords(str_replace(['-', '_'], ' ', $path));
+                        }
+
+                        // Get available templates
+                        $templates = [];
+                        $templateDir = PROJECT_ROOT . '/themes/' . $themeManager->getActiveTheme() . '/templates';
+                        if (is_dir($templateDir)) {
+                            foreach (glob($templateDir . '/*.html') as $template) {
+                                $templateName = basename($template, '.html');
+                                if ($templateName !== '404') { // Exclude 404 template
+                                    $templates[] = $templateName;
+                                }
+                            }
                         }
                         
                         ob_start();

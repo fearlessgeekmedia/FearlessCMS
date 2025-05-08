@@ -41,16 +41,28 @@ foreach ($contentFiles as $file) {
             </div>
         </div>
 
-        <div>
-            <label class="block mb-2">Parent Page</label>
-            <select name="parent" class="w-full px-3 py-2 border border-gray-300 rounded">
-                <option value="">None (Top Level)</option>
-                <?php foreach ($pages as $pagePath => $pageTitle): ?>
-                    <option value="<?php echo htmlspecialchars($pagePath); ?>">
-                        <?php echo htmlspecialchars($pageTitle); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
+        <div class="grid grid-cols-2 gap-6">
+            <div>
+                <label class="block mb-2">Parent Page</label>
+                <select name="parent" class="w-full px-3 py-2 border border-gray-300 rounded">
+                    <option value="">None (Top Level)</option>
+                    <?php foreach ($pages as $pagePath => $pageTitle): ?>
+                        <option value="<?php echo htmlspecialchars($pagePath); ?>">
+                            <?php echo htmlspecialchars($pageTitle); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div>
+                <label class="block mb-2">Template</label>
+                <select name="template" class="w-full px-3 py-2 border border-gray-300 rounded">
+                    <?php foreach ($templates as $template): ?>
+                        <option value="<?php echo htmlspecialchars($template); ?>">
+                            <?php echo ucfirst(htmlspecialchars($template)); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
         </div>
 
         <div>
