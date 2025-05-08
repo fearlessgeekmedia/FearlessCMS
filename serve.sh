@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # clear previous logs if any
 rm -f serve-log.tmp
 
