@@ -834,6 +834,51 @@ if (!isLoggedIn()) {
                 $pageTitle = 'Widgets';
                 break;
 
+            case 'manage_content':
+                if (!fcms_check_permission($_SESSION['username'], 'manage_content')) {
+                    $error = 'You do not have permission to manage content';
+                    ob_start();
+                    include ADMIN_TEMPLATE_DIR . '/dashboard.php';
+                    $content = ob_get_clean();
+                } else {
+                    // Get all content files
+                    $contentFiles = glob(CONTENT_DIR . '/*.md');
+                    $contentList = [];
+                    
+                    foreach ($contentFiles as $file) {
+                        $fileContent = file_get_contents($file);
+                        $title = '';
+                        $lastModified = filemtime($file);
+                        
+                        if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $fileContent, $matches)) {
+                            $metadata = json_decode($matches[1], true);
+                            if ($metadata && isset($metadata['title'])) {
+                                $title = $metadata['title'];
+                            }
+                        }
+                        if (!$title) {
+                            $title = ucwords(str_replace(['-', '_'], ' ', basename($file, '.md')));
+                        }
+                        
+                        $contentList[] = [
+                            'title' => $title,
+                            'path' => basename($file, '.md'),
+                            'modified' => date('Y-m-d H:i:s', $lastModified)
+                        ];
+                    }
+                    
+                    // Sort by last modified date, newest first
+                    usort($contentList, function($a, $b) {
+                        return strtotime($b['modified']) - strtotime($a['modified']);
+                    });
+                    
+                    ob_start();
+                    include ADMIN_TEMPLATE_DIR . '/content-management.html';
+                    $content = ob_get_clean();
+                    $pageTitle = 'Content Management';
+                }
+                break;
+
             case 'new_content':
                 if (!fcms_check_permission($_SESSION['username'], 'manage_content')) {
                     $error = 'You do not have permission to create content';
