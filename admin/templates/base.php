@@ -9,6 +9,9 @@ error_log("Base template - Current session: " . print_r($_SESSION, true));
     <title>Mission Control - <?php echo htmlspecialchars($pageTitle ?? ''); ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
+    <!-- Toast UI Editor -->
+    <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />
+    <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
     <style>
         .fira-code { font-family: 'Fira Code', monospace; }
         <?php if (!empty($custom_css)) echo $custom_css; ?>
@@ -18,22 +21,22 @@ error_log("Base template - Current session: " . print_r($_SESSION, true));
     <nav class="bg-green-600 text-white p-4">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-4">
-                <h1 class="text-xl font-bold fira-code"><a href="admin">Mission Control</a></h1>
+                <h1 class="text-xl font-bold fira-code"><a href="<?php echo BASE_URL; ?>">Mission Control</a></h1>
                 <span class="text-sm">Welcome, <?php echo htmlspecialchars($username ?? ''); ?></span>
                 <a href="/" target="_blank">Your site</a>
             </div>
             <div class="flex items-center space-x-4">
-                <a href="?action=manage_users" class="hover:text-green-200">Users</a>
-                <a href="?action=files" class="hover:text-green-200">Files</a>
-                <a href="?action=manage_themes" class="hover:text-green-200">Themes</a>
-                <a href="?action=manage_menus" class="hover:text-green-200">Menus</a>
-                <a href="?action=manage_widgets" class="hover:text-green-200">Widgets</a>
-                <a href="?action=manage_plugins" class="hover:text-green-200">Plugins</a>
+                <a href="<?php echo BASE_URL; ?>?action=manage_users" class="hover:text-green-200">Users</a>
+                <a href="<?php echo BASE_URL; ?>?action=files" class="hover:text-green-200">Files</a>
+                <a href="<?php echo BASE_URL; ?>?action=manage_themes" class="hover:text-green-200">Themes</a>
+                <a href="<?php echo BASE_URL; ?>?action=manage_menus" class="hover:text-green-200">Menus</a>
+                <a href="<?php echo BASE_URL; ?>?action=manage_widgets" class="hover:text-green-200">Widgets</a>
+                <a href="<?php echo BASE_URL; ?>?action=manage_plugins" class="hover:text-green-200">Plugins</a>
                 <?php 
                 // Add admin sections to navigation
                 $admin_sections = fcms_get_admin_sections();
                 foreach ($admin_sections as $id => $section) {
-                    echo '<a href="?action=' . htmlspecialchars($id) . '" class="hover:text-green-200">' . htmlspecialchars($section['label']) . '</a>';
+                    echo '<a href="' . BASE_URL . '?action=' . htmlspecialchars($id) . '" class="hover:text-green-200">' . htmlspecialchars($section['label']) . '</a>';
                 }
                 if (!empty($plugin_nav_items)) echo $plugin_nav_items; 
                 ?>

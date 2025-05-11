@@ -3,9 +3,13 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+// Get action from GET or POST, default to dashboard
+$action = $_GET['action'] ?? $_POST['action'] ?? 'dashboard';
+$pageTitle = ucfirst($action);
+
 // Start session if not already started
 if (session_status() === PHP_SESSION_NONE) {
-session_start();
+    session_start();
 }
 
 // Debug session
@@ -76,7 +80,6 @@ if (is_dir($contentDir)) {
 }
 
 $username = $_SESSION['username'] ?? '';
-$pageTitle = 'Dashboard';
 $content = '';
 $error = '';
 $success = '';
@@ -704,10 +707,6 @@ if (!isLoggedIn()) {
             }
         }
     }
-
-    // Get action from GET or POST, default to dashboard
-    $action = $_GET['action'] ?? $_POST['action'] ?? 'dashboard';
-    $pageTitle = ucfirst($action);
 
     // Check if user is logged in
     if (!isLoggedIn() && $action !== 'login') {
