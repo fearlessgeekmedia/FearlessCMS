@@ -29,19 +29,25 @@ class TemplateRenderer {
         error_log("Theme options: " . print_r($this->themeOptions, true));
         error_log("Normalized options: " . print_r($normalizedOptions, true));
 
-        // Prepare template data
-        $templateData = array_merge([
+        // Prepare template data with both camelCase and snake_case versions
+        $templateData = [
             'theme' => $this->theme,
             'siteName' => $data['siteName'] ?? 'FearlessCMS',
+            'site_name' => $data['siteName'] ?? 'FearlessCMS',
             'title' => $data['title'] ?? '',
             'content' => $data['content'] ?? '',
             'logo' => $normalizedOptions['logo'] ?? null,
             'heroBanner' => $normalizedOptions['herobanner'] ?? $data['heroBanner'] ?? null,
+            'hero_banner' => $normalizedOptions['herobanner'] ?? $data['heroBanner'] ?? null,
             'currentYear' => date('Y'),
+            'current_year' => date('Y'),
             'mainMenu' => $this->menuManager->renderMenu('main'),
             'custom_css' => $data['custom_css'] ?? '',
             'custom_js' => $data['custom_js'] ?? ''
-        ], $data);
+        ];
+
+        // Merge with any additional data
+        $templateData = array_merge($templateData, $data);
 
         error_log("Template data: " . print_r($templateData, true));
 
@@ -63,19 +69,21 @@ class TemplateRenderer {
             error_log("Found if condition: " . $condition);
             error_log("If content: " . $ifContent);
             error_log("Else content: " . $elseContent);
-            error_log("Data for condition: " . print_r($data, true));
             
             // Check both camelCase and snake_case versions
             $snakeCase = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $condition));
-            error_log("Checking condition: " . $condition . " and snake_case: " . $snakeCase);
-            error_log("Data[$condition] = " . (isset($data[$condition]) ? $data[$condition] : 'not set'));
-            error_log("Data[$snakeCase] = " . (isset($data[$snakeCase]) ? $data[$snakeCase] : 'not set'));
             
-            if ((isset($data[$condition]) && $data[$condition]) || (isset($data[$snakeCase]) && $data[$snakeCase])) {
-                error_log("Condition satisfied for: " . $condition);
+            // Check if the condition exists and is truthy
+            $conditionMet = false;
+            if (isset($data[$condition])) {
+                $conditionMet = !empty($data[$condition]);
+            } elseif (isset($data[$snakeCase])) {
+                $conditionMet = !empty($data[$snakeCase]);
+            }
+            
+            if ($conditionMet) {
                 return $this->replaceVariables($ifContent, $data);
             } else {
-                error_log("Condition not satisfied for: " . $condition);
                 return $this->replaceVariables($elseContent, $data);
             }
         }, $content);
@@ -88,24 +96,21 @@ class TemplateRenderer {
             return $this->widgetManager->renderSidebar($sidebarName);
         }, $content);
 
-        // Handle menu syntax
+        // Handle menu syntax (both {{menu=main}} and {{mainMenu}})
         $content = preg_replace_callback('/{{menu=([^}]+)}}/', function($matches) {
             $menuId = trim($matches[1]);
             return $this->menuManager->renderMenu($menuId);
         }, $content);
 
-        // Replace simple variables last
+        // Replace simple variables
         foreach ($data as $key => $value) {
             if (is_string($value) || is_numeric($value)) {
                 // Unescape forward slashes in paths
-                if (in_array($key, ['logo', 'heroBanner']) && is_string($value)) {
+                if (in_array($key, ['logo', 'heroBanner', 'hero_banner']) && is_string($value)) {
                     $value = str_replace('\\/', '/', $value);
                 }
                 // Handle both camelCase and snake_case versions
                 $content = str_replace('{{' . $key . '}}', $value, $content);
-                // Convert camelCase to snake_case for alternative format
-                $snakeCase = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $key));
-                $content = str_replace('{{' . $snakeCase . '}}', $value, $content);
             }
         }
 
