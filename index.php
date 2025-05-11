@@ -17,6 +17,12 @@ require_once PROJECT_ROOT . '/includes/plugins.php';
 $requestPath = trim($_SERVER['REQUEST_URI'], '/');
 error_log("Request path: " . $requestPath);
 
+// Remove query parameters from the path
+if (($queryPos = strpos($requestPath, '?')) !== false) {
+    $requestPath = substr($requestPath, 0, $queryPos);
+    error_log("Path after removing query parameters: " . $requestPath);
+}
+
 // Remove any subdomain prefix if present
 if (strpos($requestPath, 'fearlesscms.hstn.me/') === 0) {
     $requestPath = substr($requestPath, strlen('fearlesscms.hstn.me/'));
