@@ -3,8 +3,15 @@
  * Core configuration file
  */
 
+// Get the document root and script filename
+$script_filename = $_SERVER['SCRIPT_FILENAME'];
+$document_root = $_SERVER['DOCUMENT_ROOT'];
+
+// Calculate the project root
+$project_root = dirname(__DIR__);
+
 // Define root paths
-define('PROJECT_ROOT', dirname(__DIR__));
+define('PROJECT_ROOT', $project_root);
 define('CONTENT_DIR', PROJECT_ROOT . '/content');
 define('CONFIG_DIR', PROJECT_ROOT . '/config');
 define('THEMES_DIR', PROJECT_ROOT . '/themes');
@@ -12,6 +19,17 @@ define('PLUGINS_DIR', PROJECT_ROOT . '/plugins');
 define('ADMIN_CONFIG_DIR', PROJECT_ROOT . '/admin/config');
 define('ADMIN_TEMPLATE_DIR', PROJECT_ROOT . '/admin/templates');
 define('ADMIN_INCLUDES_DIR', PROJECT_ROOT . '/admin/includes');
+
+// Define base URL
+$base_url = '';
+if (isset($_SERVER['HTTP_HOST'])) {
+    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
+    $base_url = $protocol . $_SERVER['HTTP_HOST'];
+    if (strpos($script_filename, '/admin/') !== false) {
+        $base_url .= '/admin';
+    }
+}
+define('BASE_URL', $base_url);
 
 // Create required directories if they don't exist
 $requiredDirs = [
