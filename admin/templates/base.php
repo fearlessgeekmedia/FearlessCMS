@@ -22,7 +22,7 @@ require_once dirname(dirname(__DIR__)) . '/version.php';
     <nav class="bg-green-600 text-white p-4">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-4">
-                <h1 class="text-xl font-bold fira-code"><a href="<?php echo BASE_URL; ?>">Mission Control</a></h1>
+                <h1 class="text-xl font-bold fira-code"><a href="<?php echo BASE_URL; ?>?action=dashboard">Mission Control</a></h1>
                 <span class="text-sm">Welcome, <?php echo htmlspecialchars($username ?? ''); ?></span>
                 <a href="/" target="_blank">Your site</a>
             </div>
