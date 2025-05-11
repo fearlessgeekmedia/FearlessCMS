@@ -1,4 +1,6 @@
 {
     "active_theme": "heroic",
-    "site_name": "FearlessCMS"
+    "site_name": "FearlessCMS",
+    "custom_css": "",
+    "custom_js": ""
 }

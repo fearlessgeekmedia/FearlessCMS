@@ -72,11 +72,11 @@
                     <input type="hidden" name="action" value="save_custom_code">
                     <div>
                         <label class="block mb-1">Custom CSS</label>
-                        <textarea name="custom_css" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded font-mono"><?php echo htmlspecialchars($customCss ?? ''); ?></textarea>
+                        <textarea name="custom_css" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded font-mono"><?php echo htmlspecialchars($custom_css ?? ''); ?></textarea>
                     </div>
                     <div>
                         <label class="block mb-1">Custom JavaScript</label>
-                        <textarea name="custom_js" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded font-mono"><?php echo htmlspecialchars($customJs ?? ''); ?></textarea>
+                        <textarea name="custom_js" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded font-mono"><?php echo htmlspecialchars($custom_js ?? ''); ?></textarea>
                     </div>
                     <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Save Custom Code</button>
                 </form>

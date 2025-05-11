@@ -38,7 +38,9 @@ class TemplateRenderer {
             'logo' => $normalizedOptions['logo'] ?? null,
             'heroBanner' => $normalizedOptions['herobanner'] ?? $data['heroBanner'] ?? null,
             'currentYear' => date('Y'),
-            'mainMenu' => $this->menuManager->renderMenu('main')
+            'mainMenu' => $this->menuManager->renderMenu('main'),
+            'custom_css' => $data['custom_css'] ?? '',
+            'custom_js' => $data['custom_js'] ?? ''
         ], $data);
 
         error_log("Template data: " . print_r($templateData, true));
