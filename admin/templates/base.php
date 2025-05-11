@@ -1,5 +1,6 @@
 <?php
 error_log("Base template - Current session: " . print_r($_SESSION, true));
+require_once dirname(dirname(__DIR__)) . '/version.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -169,5 +170,10 @@ error_log("Base template - Current session: " . print_r($_SESSION, true));
     </script>
 
     <?php if (!empty($custom_js)) echo $custom_js; ?>
+    
+    <!-- Version Bar -->
+    <div class="fixed bottom-0 left-0 right-0 bg-gray-800 text-white text-sm py-1 px-4 text-center">
+        FearlessCMS v<?php echo APP_VERSION; ?>
+    </div>
 </body>
 </html>
