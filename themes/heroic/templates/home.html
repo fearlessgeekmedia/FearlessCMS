@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{title}} - {{siteName}}</title>
     <link rel="stylesheet" href="/themes/{{theme}}/style.css">
+    <style>
+      {{custom_css}}
+    </style>
   </head>
   <body>
     <div class="min-h-screen bg-gray-50">
@@ -41,16 +44,19 @@
       <!-- Main Content -->
       <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="bg-white shadow rounded-lg p-6">
-      {{content}}
+          {{content}}
         </div>
-    </main>
+      </main>
 
       <!-- Footer -->
       <footer class="bg-white shadow mt-8">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <p class="text-center text-gray-500">&copy; {{currentYear}} {{siteName}}. All rights reserved.</p>
         </div>
-    </footer>
+      </footer>
     </div>
+    <script>
+      {{custom_js}}
+    </script>
   </body>
 </html>

@@ -40,6 +40,9 @@ if (file_exists($configFile)) {
     if (isset($config['site_name'])) {
         $siteName = $config['site_name'];
     }
+    // Load custom code
+    $custom_css = $config['custom_css'] ?? '';
+    $custom_js = $config['custom_js'] ?? '';
 }
 
 // Calculate total pages
@@ -83,8 +86,6 @@ $username = $_SESSION['username'] ?? '';
 $content = '';
 $error = '';
 $success = '';
-$custom_css = '';
-$custom_js = '';
 $plugin_nav_items = '';
 
 if (!isLoggedIn()) {
@@ -492,6 +493,27 @@ if (!isLoggedIn()) {
                             exit;
                         } else {
                             $error = 'Failed to save content';
+                        }
+                    }
+                    break;
+
+                case 'save_custom_code':
+                    if (!fcms_check_permission($_SESSION['username'], 'manage_settings')) {
+                        $error = 'You do not have permission to manage settings';
+                    } else {
+                        $customCss = $_POST['custom_css'] ?? '';
+                        $customJs = $_POST['custom_js'] ?? '';
+                        
+                        $config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
+                        $config['custom_css'] = $customCss;
+                        $config['custom_js'] = $customJs;
+                        
+                        if (file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT))) {
+                            $success = 'Custom code saved successfully';
+                            $custom_css = $customCss;
+                            $custom_js = $customJs;
+                        } else {
+                            $error = 'Failed to save custom code';
                         }
                     }
                     break;

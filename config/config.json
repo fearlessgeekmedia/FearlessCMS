@@ -1,4 +1,6 @@
 {
     "active_theme": "heroic",
-    "site_name": "FearlessCMS"
+    "site_name": "FearlessCMS",
+    "custom_css": "li {\r\nmargin: 20px;\r\n}",
+    "custom_js": "alert(\"test\");"
 }

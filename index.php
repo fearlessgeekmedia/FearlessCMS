@@ -45,11 +45,19 @@ if (strpos($requestPath, '_preview/') === 0) {
         
         // Get site name from config
         $configFile = CONFIG_DIR . '/config.json';
-        $siteName = 'FearlessCMS'; // Default
+        $siteName = 'FearlessCMS';
+        $custom_css = '';
+        $custom_js = '';
         if (file_exists($configFile)) {
             $config = json_decode(file_get_contents($configFile), true);
             if (isset($config['site_name'])) {
                 $siteName = $config['site_name'];
+            }
+            if (isset($config['custom_css'])) {
+                $custom_css = $config['custom_css'];
+            }
+            if (isset($config['custom_js'])) {
+                $custom_js = $config['custom_js'];
             }
         }
         
@@ -83,7 +91,9 @@ if (strpos($requestPath, '_preview/') === 0) {
             'currentYear' => date('Y'),
             'logo' => $themeOptions['logo'] ?? null,
             'heroBanner' => $themeOptions['herobanner'] ?? null,
-            'mainMenu' => $menuManager->renderMenu('main')
+            'mainMenu' => $menuManager->renderMenu('main'),
+            'custom_css' => $custom_css,
+            'custom_js' => $custom_js
         ];
         
         error_log("Template data prepared: " . json_encode($templateData));
@@ -131,11 +141,19 @@ fcms_do_hook('route', $handled, $title, $content, $path);
 if ($handled) {
     // Get site name from config
     $configFile = CONFIG_DIR . '/config.json';
-    $siteName = 'FearlessCMS'; // Default
+    $siteName = 'FearlessCMS';
+    $custom_css = '';
+    $custom_js = '';
     if (file_exists($configFile)) {
         $config = json_decode(file_get_contents($configFile), true);
         if (isset($config['site_name'])) {
             $siteName = $config['site_name'];
+        }
+        if (isset($config['custom_css'])) {
+            $custom_css = $config['custom_css'];
+        }
+        if (isset($config['custom_js'])) {
+            $custom_js = $config['custom_js'];
         }
     }
     
@@ -173,7 +191,9 @@ if ($handled) {
         'currentYear' => date('Y'),
         'logo' => $themeOptions['logo'] ?? null,
         'heroBanner' => $themeOptions['herobanner'] ?? null,
-        'mainMenu' => $menuManager->renderMenu('main')
+        'mainMenu' => $menuManager->renderMenu('main'),
+        'custom_css' => $custom_css,
+        'custom_js' => $custom_js
     ];
     
     // Render template
@@ -280,10 +300,18 @@ $themeManager = new ThemeManager();
 // --- Get site name ---
 $configFile = CONFIG_DIR . '/config.json';
 $siteName = 'FearlessCMS';
+$custom_css = '';
+$custom_js = '';
 if (file_exists($configFile)) {
     $config = json_decode(file_get_contents($configFile), true);
     if (isset($config['site_name'])) {
         $siteName = $config['site_name'];
+    }
+    if (isset($config['custom_css'])) {
+        $custom_css = $config['custom_css'];
+    }
+    if (isset($config['custom_js'])) {
+        $custom_js = $config['custom_js'];
     }
 }
 
@@ -312,7 +340,9 @@ $templateData = [
     'currentYear' => date('Y'),
     'logo' => $themeOptions['logo'] ?? null,
     'heroBanner' => $themeOptions['herobanner'] ?? null,
-    'mainMenu' => $menuManager->renderMenu('main')
+    'mainMenu' => $menuManager->renderMenu('main'),
+    'custom_css' => $custom_css,
+    'custom_js' => $custom_js
 ];
 
 // --- Render template ---
