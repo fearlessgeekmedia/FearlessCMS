@@ -68,11 +68,23 @@ function logout() {
 }
 
 function fcms_check_permission($username, $permission) {
-    $usersFile = ADMIN_CONFIG_DIR . '/users.json';
-    if (!file_exists($usersFile)) {
+    if (empty($username)) {
+        error_log("Permission check failed: username is empty");
         return false;
     }
+    
+    $usersFile = ADMIN_CONFIG_DIR . '/users.json';
+    if (!file_exists($usersFile)) {
+        error_log("Permission check failed: users file not found at " . $usersFile);
+        return false;
+    }
+    
     $users = json_decode(file_get_contents($usersFile), true);
+    if (!$users) {
+        error_log("Permission check failed: could not decode users file");
+        return false;
+    }
+    
     foreach ($users as $user) {
         if ($user['username'] === $username) {
             // Check if user has a role defined
@@ -89,6 +101,8 @@ function fcms_check_permission($username, $permission) {
             return isset($user['permissions']) && in_array($permission, $user['permissions']);
         }
     }
+    
+    error_log("Permission check failed: user not found");
     return false;
 }
 

@@ -8,7 +8,7 @@ $script_filename = $_SERVER['SCRIPT_FILENAME'];
 $document_root = $_SERVER['DOCUMENT_ROOT'];
 
 // Calculate the project root
-$project_root = dirname(__DIR__);
+$project_root = dirname(dirname(__FILE__));
 
 // Define root paths
 define('PROJECT_ROOT', $project_root);
