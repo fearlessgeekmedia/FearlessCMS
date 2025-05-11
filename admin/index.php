@@ -12,13 +12,18 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Initialize session variables if they don't exist
+if (!isset($_SESSION['username'])) {
+    $_SESSION['username'] = '';
+}
+
 // Debug session
 error_log("Current session at start: " . print_r($_SESSION, true));
 
 require_once dirname(__DIR__) . '/includes/config.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
-require_once PROJECT_ROOT . '/includes/ThemeManager.php';
-require_once PROJECT_ROOT . '/includes/plugins.php';
+require_once dirname(__DIR__) . '/includes/ThemeManager.php';
+require_once dirname(__DIR__) . '/includes/plugins.php';
 require_once __DIR__ . '/widget-handler.php';
 require_once __DIR__ . '/theme-handler.php';
 
@@ -895,7 +900,7 @@ if (!isLoggedIn()) {
                     });
                     
                     ob_start();
-                    include ADMIN_TEMPLATE_DIR . '/content-management.html';
+                    include ADMIN_TEMPLATE_DIR . '/content-management.php';
                     $content = ob_get_clean();
                     $pageTitle = 'Content Management';
                 }
