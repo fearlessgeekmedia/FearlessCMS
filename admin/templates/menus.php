@@ -74,6 +74,18 @@
     </div>
 </div>
 
+<!-- Delete Menu Modal -->
+<div id="delete-menu-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+        <h3 class="text-xl font-bold mb-4">Delete Menu</h3>
+        <p class="mb-4">Are you sure you want to delete this menu? This action cannot be undone.</p>
+        <div class="flex justify-end space-x-2">
+            <button type="button" onclick="hideDeleteMenuModal()" class="bg-gray-400 text-white px-4 py-2 rounded">Cancel</button>
+            <button type="button" onclick="confirmDeleteMenu()" class="bg-red-500 text-white px-4 py-2 rounded">Delete</button>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
 let currentMenu = null;
@@ -329,4 +341,53 @@ document.getElementById('new-menu-form').addEventListener('submit', function(e) 
         alert('Failed to create menu. Please try again.');
     });
 });
+
+function showDeleteMenuModal() {
+    document.getElementById('delete-menu-modal').classList.remove('hidden');
+}
+
+function hideDeleteMenuModal() {
+    document.getElementById('delete-menu-modal').classList.add('hidden');
+}
+
+function deleteSelectedMenu() {
+    if (!currentMenu) return;
+    showDeleteMenuModal();
+}
+
+function confirmDeleteMenu() {
+    if (!currentMenu) return;
+    
+    fetch('?action=manage_menus', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            action: 'delete_menu',
+            menu_id: currentMenu
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            hideDeleteMenuModal();
+            // Reset UI
+            currentMenu = null;
+            menuData = {};
+            document.getElementById('menu-select').value = '';
+            document.getElementById('menu-editor').style.display = 'none';
+            document.getElementById('menu-preview').style.display = 'none';
+            document.getElementById('delete-menu-btn').style.display = 'none';
+            // Reload the page to update the menu list
+            window.location.reload();
+        } else {
+            alert('Error deleting menu: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting menu:', error);
+        alert('Failed to delete menu. Please try again.');
+    });
+}
 </script>

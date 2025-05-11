@@ -3,7 +3,13 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+// Start session if not already started
+if (session_status() === PHP_SESSION_NONE) {
 session_start();
+}
+
+// Debug session
+error_log("Current session at start: " . print_r($_SESSION, true));
 
 require_once dirname(__DIR__) . '/includes/config.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
@@ -11,6 +17,9 @@ require_once PROJECT_ROOT . '/includes/ThemeManager.php';
 require_once PROJECT_ROOT . '/includes/plugins.php';
 require_once __DIR__ . '/widget-handler.php';
 require_once __DIR__ . '/theme-handler.php';
+
+// Debug session after includes
+error_log("Session after includes: " . print_r($_SESSION, true));
 
 $themeManager = new ThemeManager();
 $usersFile = ADMIN_CONFIG_DIR . '/users.json';
@@ -76,6 +85,27 @@ $custom_js = '';
 $plugin_nav_items = '';
 
 if (!isLoggedIn()) {
+    // Process login attempt
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'login') {
+        $username = $_POST['username'] ?? '';
+        $password = $_POST['password'] ?? '';
+        
+        error_log("Login attempt for user: " . $username);
+        
+        if (empty($username) || empty($password)) {
+            $error = 'Username and password are required';
+        } else {
+            if (login($username, $password)) {
+                error_log("Login successful for user: " . $username);
+                header('Location: ?action=dashboard');
+                exit;
+            } else {
+                error_log("Login failed for user: " . $username);
+                $error = 'Invalid username or password';
+            }
+        }
+    }
+    
     // Show login page
     ob_start();
     include ADMIN_TEMPLATE_DIR . '/login.php';
@@ -84,8 +114,14 @@ if (!isLoggedIn()) {
 } else {
     // Process POST actions first
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        // Handle logout
+        if (isset($_POST['action']) && $_POST['action'] === 'logout') {
+            logout();
+            header('Location: ?action=login');
+            exit;
+        }
         // Handle JSON POST requests
-        if (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
+        else if (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
             $input = json_decode(file_get_contents('php://input'), true);
             $action = $input['action'] ?? '';
             
@@ -155,11 +191,172 @@ if (!isLoggedIn()) {
                     }
                     exit;
                     break;
+
+                case 'delete_menu':
+                    if (!fcms_check_permission($_SESSION['username'], 'manage_menus')) {
+                        header('Content-Type: application/json');
+                        echo json_encode(['success' => false, 'error' => 'Permission denied']);
+                        exit;
+                    }
+
+                    if (empty($input['menu_id'])) {
+                        header('Content-Type: application/json');
+                        echo json_encode(['success' => false, 'error' => 'Menu ID is required']);
+                        exit;
+                    }
+
+                    $menuId = $input['menu_id'];
+                    $menus = file_exists($menusFile) ? json_decode(file_get_contents($menusFile), true) : [];
+
+                    if (isset($menus[$menuId])) {
+                        unset($menus[$menuId]);
+                        if (file_put_contents($menusFile, json_encode($menus, JSON_PRETTY_PRINT))) {
+                            header('Content-Type: application/json');
+                            echo json_encode(['success' => true]);
+                        } else {
+                            header('Content-Type: application/json');
+                            echo json_encode(['success' => false, 'error' => 'Failed to delete menu']);
+                        }
+                    } else {
+                        header('Content-Type: application/json');
+                        echo json_encode(['success' => false, 'error' => 'Menu not found']);
+                    }
+                    exit;
+                    break;
             }
         }
         // Handle regular POST requests
         else if (isset($_POST['action'])) {
             switch ($_POST['action']) {
+                case 'add_user':
+                    if (!fcms_check_permission($_SESSION['username'], 'manage_settings')) {
+                        header('Location: ?action=users&error=permission_denied');
+                        exit;
+                    }
+                    
+                    $newUsername = $_POST['new_username'] ?? '';
+                    $newPassword = $_POST['new_user_password'] ?? '';
+                    $permissions = $_POST['permissions'] ?? ['manage_content'];
+                    $role = $_POST['role'] ?? 'author'; // Default to 'author' if not set
+                    
+                    if (empty($newUsername) || empty($newPassword)) {
+                        header('Location: ?action=users&error=missing_fields');
+                        exit;
+                    }
+                    
+                    $users = file_exists($usersFile) ? json_decode(file_get_contents($usersFile), true) : [];
+                    
+                    // Check if username already exists
+                    foreach ($users as $user) {
+                        if ($user['username'] === $newUsername) {
+                            header('Location: ?action=users&error=username_exists');
+                            exit;
+                        }
+                    }
+                    
+                    // Add new user
+                    $users[] = [
+                        'username' => $newUsername,
+                        'password' => password_hash($newPassword, PASSWORD_DEFAULT),
+                        'permissions' => $permissions,
+                        'role' => $role
+                    ];
+                    
+                    if (file_put_contents($usersFile, json_encode($users, JSON_PRETTY_PRINT))) {
+                        header('Location: ?action=users&success=user_added');
+                    } else {
+                        header('Location: ?action=users&error=save_failed');
+                    }
+                    exit;
+                    break;
+                    
+                case 'edit_user':
+                    if (!fcms_check_permission($_SESSION['username'], 'manage_settings')) {
+                        header('Location: ?action=users&error=permission_denied');
+                        exit;
+                    }
+                    
+                    $username = $_POST['username'] ?? '';
+                    $newPassword = $_POST['new_password'] ?? '';
+                    $permissions = isset($_POST['permissions']) ? (array)$_POST['permissions'] : [];
+                    $role = $_POST['role'] ?? 'author'; // Default to 'author' if not set
+                    
+                    error_log("Edit user action - Username: " . $username);
+                    error_log("Edit user action - Permissions received: " . print_r($permissions, true));
+                    
+                    if (empty($username)) {
+                        header('Location: ?action=users&error=missing_fields');
+                        exit;
+                    }
+                    
+                    $users = file_exists($usersFile) ? json_decode(file_get_contents($usersFile), true) : [];
+                    if (!is_array($users)) {
+                        $users = [];
+                    }
+                    error_log("Edit user action - Current users data: " . print_r($users, true));
+                    
+                    $userFound = false;
+                    
+                    foreach ($users as &$user) {
+                        if ($user['username'] === $username) {
+                            $userFound = true;
+                            if (!empty($newPassword)) {
+                                $user['password'] = password_hash($newPassword, PASSWORD_DEFAULT);
+                            }
+                            $user['permissions'] = $permissions;
+                            $user['role'] = $role;
+                            error_log("Edit user action - Updated user data: " . print_r($user, true));
+                            break;
+                        }
+                    }
+                    
+                    if (!$userFound) {
+                        header('Location: ?action=users&error=user_not_found');
+                        exit;
+                    }
+                    
+                    error_log("Edit user action - Final users data to save: " . print_r($users, true));
+                    
+                    if (file_put_contents($usersFile, json_encode($users, JSON_PRETTY_PRINT))) {
+                        header('Location: ?action=users&success=user_updated');
+                    } else {
+                        header('Location: ?action=users&error=save_failed');
+                    }
+                    exit;
+                    break;
+                    
+                case 'delete_user':
+                    if (!fcms_check_permission($_SESSION['username'], 'manage_settings')) {
+                        header('Location: ?action=users&error=permission_denied');
+                        exit;
+                    }
+                    
+                    $username = $_POST['username'] ?? '';
+                    
+                    if (empty($username)) {
+                        header('Location: ?action=users&error=missing_fields');
+                        exit;
+                    }
+                    
+                    // Don't allow deleting the current user
+                    if ($username === $_SESSION['username']) {
+                        header('Location: ?action=users&error=cannot_delete_self');
+                        exit;
+                    }
+                    
+                    $users = file_exists($usersFile) ? json_decode(file_get_contents($usersFile), true) : [];
+                    $newUsers = array_filter($users, function($user) use ($username) {
+                        return $user['username'] !== $username;
+                    });
+                    
+                    if (file_put_contents($usersFile, json_encode(array_values($newUsers), JSON_PRETTY_PRINT))) {
+                        header('Location: ?action=users&success=user_deleted');
+                    } else {
+                        header('Location: ?action=users&error=save_failed');
+                    }
+                    exit;
+                    break;
+
                 case 'activate_theme':
                     if (!fcms_check_permission($_SESSION['username'], 'manage_themes')) {
                         header('Location: ?action=themes&error=permission_denied');
@@ -442,6 +639,68 @@ if (!isLoggedIn()) {
                     }
                     exit;
                     break;
+
+                case 'toggle_plugin':
+                    error_log("Toggle plugin action started");
+                    error_log("Current session: " . print_r($_SESSION, true));
+                    
+                    // Prevent any output before JSON response
+                    ob_clean();
+                    
+                    // Check if user is logged in first
+                    if (!isLoggedIn()) {
+                        error_log("User not logged in");
+                        header('Content-Type: application/json');
+                        echo json_encode(['success' => false, 'error' => 'Not logged in']);
+                        exit;
+                    }
+
+                    // Check for manage_plugins permission
+                    error_log("Checking manage_plugins permission for user: " . $_SESSION['username']);
+                    if (!fcms_check_permission($_SESSION['username'], 'manage_plugins')) {
+                        error_log("Permission denied for user: " . $_SESSION['username']);
+                        header('Content-Type: application/json');
+                        echo json_encode(['success' => false, 'error' => 'Permission denied']);
+                        exit;
+                    }
+
+                    $pluginId = $_POST['plugin_id'] ?? '';
+                    if (empty($pluginId)) {
+                        error_log("No plugin ID provided");
+                        header('Content-Type: application/json');
+                        echo json_encode(['success' => false, 'error' => 'Plugin ID is required']);
+                        exit;
+                    }
+
+                    error_log("Toggling plugin: " . $pluginId);
+                    
+                    // Load current active plugins
+                    $activePlugins = file_exists($pluginsFile) ? json_decode(file_get_contents($pluginsFile), true) : [];
+                    if (!is_array($activePlugins)) {
+                        $activePlugins = [];
+                    }
+                    
+                    // Toggle plugin status
+                    if (in_array($pluginId, $activePlugins)) {
+                        error_log("Deactivating plugin: " . $pluginId);
+                        $activePlugins = array_diff($activePlugins, [$pluginId]);
+                    } else {
+                        error_log("Activating plugin: " . $pluginId);
+                        $activePlugins[] = $pluginId;
+                    }
+
+                    // Save updated plugin list
+                    if (file_put_contents($pluginsFile, json_encode($activePlugins, JSON_PRETTY_PRINT))) {
+                        error_log("Plugin list updated successfully");
+                        header('Content-Type: application/json');
+                        echo json_encode(['success' => true]);
+                    } else {
+                        error_log("Failed to update plugin list");
+                        header('Content-Type: application/json');
+                        echo json_encode(['success' => false, 'error' => 'Failed to update plugin status']);
+                    }
+                    exit;
+                    break;
             }
         }
     }
@@ -450,6 +709,14 @@ if (!isLoggedIn()) {
     $action = $_GET['action'] ?? $_POST['action'] ?? 'dashboard';
     $pageTitle = ucfirst($action);
 
+    // Check if user is logged in
+    if (!isLoggedIn() && $action !== 'login') {
+        // Show login page
+        ob_start();
+        include ADMIN_TEMPLATE_DIR . '/login.php';
+        $content = ob_get_clean();
+        $pageTitle = 'Login';
+    } else {
     switch ($action) {
         case 'dashboard':
             ob_start();
@@ -457,8 +724,14 @@ if (!isLoggedIn()) {
             $content = ob_get_clean();
             break;
 
+            case 'users':
         case 'manage_users':
+                // Load users data
             $users = file_exists($usersFile) ? json_decode(file_get_contents($usersFile), true) : [];
+                if (!is_array($users)) {
+                    $users = [];
+                }
+                
             ob_start();
             include ADMIN_TEMPLATE_DIR . '/users.php';
             $content = ob_get_clean();
@@ -569,17 +842,17 @@ if (!isLoggedIn()) {
                     include ADMIN_TEMPLATE_DIR . '/dashboard.php';
                     $content = ob_get_clean();
                 } else {
-                    // Get available templates
-                    $templates = [];
-                    $templateDir = PROJECT_ROOT . '/themes/' . $themeManager->getActiveTheme() . '/templates';
-                    if (is_dir($templateDir)) {
-                        foreach (glob($templateDir . '/*.html') as $template) {
-                            $templateName = basename($template, '.html');
-                            if ($templateName !== '404') { // Exclude 404 template
-                                $templates[] = $templateName;
+                        // Get available templates
+                        $templates = [];
+                        $templateDir = PROJECT_ROOT . '/themes/' . $themeManager->getActiveTheme() . '/templates';
+                        if (is_dir($templateDir)) {
+                            foreach (glob($templateDir . '/*.html') as $template) {
+                                $templateName = basename($template, '.html');
+                                if ($templateName !== '404') { // Exclude 404 template
+                                    $templates[] = $templateName;
+                                }
                             }
                         }
-                    }
 
                     ob_start();
                     include ADMIN_TEMPLATE_DIR . '/new_content.php';
@@ -617,17 +890,17 @@ if (!isLoggedIn()) {
                             $title = ucwords(str_replace(['-', '_'], ' ', $path));
                         }
 
-                        // Get available templates
-                        $templates = [];
-                        $templateDir = PROJECT_ROOT . '/themes/' . $themeManager->getActiveTheme() . '/templates';
-                        if (is_dir($templateDir)) {
-                            foreach (glob($templateDir . '/*.html') as $template) {
-                                $templateName = basename($template, '.html');
-                                if ($templateName !== '404') { // Exclude 404 template
-                                    $templates[] = $templateName;
+                            // Get available templates
+                            $templates = [];
+                            $templateDir = PROJECT_ROOT . '/themes/' . $themeManager->getActiveTheme() . '/templates';
+                            if (is_dir($templateDir)) {
+                                foreach (glob($templateDir . '/*.html') as $template) {
+                                    $templateName = basename($template, '.html');
+                                    if ($templateName !== '404') { // Exclude 404 template
+                                        $templates[] = $templateName;
+                                    }
                                 }
                             }
-                        }
                         
                         ob_start();
                         if ($editor === 'toast') {
@@ -715,10 +988,28 @@ if (!isLoggedIn()) {
                 $pageTitle = 'Files';
                 break;
 
-            default:
+                case 'login':
             ob_start();
-            include ADMIN_TEMPLATE_DIR . '/dashboard.php';
+                    include ADMIN_TEMPLATE_DIR . '/login.php';
             $content = ob_get_clean();
+                    $pageTitle = 'Login';
+                    break;
+                
+                case 'logout':
+                    logout();
+                    header('Location: ?action=login');
+                    exit;
+                    break;
+
+                default:
+                    $admin_sections = fcms_get_admin_sections();
+                    if (isset($admin_sections[$action])) {
+                        $section = $admin_sections[$action];
+                        $pageTitle = $section['label'];
+                        $content = $section['render_callback']();
+                    }
+                    break;
+        }
     }
 }
 

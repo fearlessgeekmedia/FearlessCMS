@@ -25,10 +25,5 @@
                 "id": "item_2"
             }
         ]
-    },
-    "test-menu": {
-        "label": "test menu",
-        "menu_class": "test-menu",
-        "items": []
     }
 }

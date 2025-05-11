@@ -210,12 +210,34 @@ fcms_add_hook('route', function (&$handled, &$title, &$content, $path) {
             $published = array_filter($posts, fn($p) => $p['status'] === 'published');
             usort($published, fn($a, $b) => strcmp($b['date'], $a['date']));
             $title = 'Blog';
-            $content = "<h2>Blog Posts</h2><ul>";
+            $content = '<div class="max-w-4xl mx-auto px-4 py-8">';
+            $content .= '<h1 class="text-3xl font-bold mb-8">Blog Posts</h1>';
+            $content .= '<div class="space-y-8">';
             foreach ($published as $post) {
-                $content .= '<li><a href="/blog/' . urlencode($post['slug']) . '">' . htmlspecialchars($post['title']) . '</a> <span style="color:#888;font-size:smaller;">' . htmlspecialchars($post['date']) . '</span></li>';
+                $content .= '<article class="border-b pb-8">';
+                $content .= '<h2 class="text-2xl font-bold mb-2"><a href="/blog/' . urlencode($post['slug']) . '" class="text-blue-600 hover:underline">' . htmlspecialchars($post['title']) . '</a></h2>';
+                $content .= '<div class="text-gray-600 mb-4">' . htmlspecialchars($post['date']) . '</div>';
+                if (!class_exists('Parsedown')) require_once PROJECT_ROOT . '/includes/Parsedown.php';
+                $Parsedown = new Parsedown();
+                $content .= '<div class="prose">' . $Parsedown->text(substr($post['content'], 0, 300) . '...') . '</div>';
+                $content .= '<a href="/blog/' . urlencode($post['slug']) . '" class="text-blue-600 hover:underline mt-4 inline-block">Read more →</a>';
+                $content .= '</article>';
             }
-            $content .= "</ul>";
+            $content .= '</div></div>';
             $handled = true;
         }
+    }
+});
+
+// Add template selection for blog posts
+fcms_add_hook('before_render', function(&$template, $path = null) {
+    // If path is not provided, check if we're in a blog route
+    if ($path === null) {
+        $currentPath = trim($_SERVER['REQUEST_URI'], '/');
+        if (preg_match('#^blog(?:/([^/]+))?$#', $currentPath)) {
+            $template = 'blog';
+        }
+    } else if (preg_match('#^blog(?:/([^/]+))?$#', $path)) {
+        $template = 'blog';
     }
 });

@@ -20,17 +20,28 @@ class TemplateRenderer {
         }
         $content = file_get_contents($templateFile);
 
+        // Normalize theme options keys
+        $normalizedOptions = [];
+        foreach ($this->themeOptions as $key => $value) {
+            $normalizedOptions[strtolower($key)] = $value;
+        }
+
+        error_log("Theme options: " . print_r($this->themeOptions, true));
+        error_log("Normalized options: " . print_r($normalizedOptions, true));
+
         // Prepare template data
         $templateData = array_merge([
             'theme' => $this->theme,
             'siteName' => $data['siteName'] ?? 'FearlessCMS',
             'title' => $data['title'] ?? '',
             'content' => $data['content'] ?? '',
-            'logo' => $this->themeOptions['logo'] ?? null,
-            'heroBanner' => $this->themeOptions['herobanner'] ?? null,
+            'logo' => $normalizedOptions['logo'] ?? null,
+            'heroBanner' => $normalizedOptions['herobanner'] ?? $data['heroBanner'] ?? null,
             'currentYear' => date('Y'),
             'mainMenu' => $this->menuManager->renderMenu('main')
         ], $data);
+
+        error_log("Template data: " . print_r($templateData, true));
 
         // Replace template variables
         $content = $this->replaceVariables($content, $templateData);
@@ -39,20 +50,35 @@ class TemplateRenderer {
     }
 
     private function replaceVariables($content, $data) {
+        error_log("Template content before processing: " . $content);
+        
         // Handle if conditions with else blocks
         $content = preg_replace_callback('/{{#if\s+([^}]+)}}(.*?)(?:{{else}}(.*?))?{{\/if}}/s', function($matches) use ($data) {
             $condition = trim($matches[1]);
             $ifContent = $matches[2];
             $elseContent = $matches[3] ?? '';
             
+            error_log("Found if condition: " . $condition);
+            error_log("If content: " . $ifContent);
+            error_log("Else content: " . $elseContent);
+            error_log("Data for condition: " . print_r($data, true));
+            
             // Check both camelCase and snake_case versions
             $snakeCase = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $condition));
+            error_log("Checking condition: " . $condition . " and snake_case: " . $snakeCase);
+            error_log("Data[$condition] = " . (isset($data[$condition]) ? $data[$condition] : 'not set'));
+            error_log("Data[$snakeCase] = " . (isset($data[$snakeCase]) ? $data[$snakeCase] : 'not set'));
+            
             if ((isset($data[$condition]) && $data[$condition]) || (isset($data[$snakeCase]) && $data[$snakeCase])) {
+                error_log("Condition satisfied for: " . $condition);
                 return $this->replaceVariables($ifContent, $data);
             } else {
+                error_log("Condition not satisfied for: " . $condition);
                 return $this->replaceVariables($elseContent, $data);
             }
         }, $content);
+        
+        error_log("Template content after processing: " . $content);
 
         // Handle sidebar syntax
         $content = preg_replace_callback('/{{sidebar=([^}]+)}}/', function($matches) {
@@ -69,6 +95,10 @@ class TemplateRenderer {
         // Replace simple variables last
         foreach ($data as $key => $value) {
             if (is_string($value) || is_numeric($value)) {
+                // Unescape forward slashes in paths
+                if (in_array($key, ['logo', 'heroBanner']) && is_string($value)) {
+                    $value = str_replace('\\/', '/', $value);
+                }
                 // Handle both camelCase and snake_case versions
                 $content = str_replace('{{' . $key . '}}', $value, $content);
                 // Convert camelCase to snake_case for alternative format

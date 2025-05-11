@@ -1,3 +1,6 @@
+<?php
+error_log("Base template - Current session: " . print_r($_SESSION, true));
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -26,8 +29,22 @@
                 <a href="?action=manage_menus" class="hover:text-green-200">Menus</a>
                 <a href="?action=manage_widgets" class="hover:text-green-200">Widgets</a>
                 <a href="?action=manage_plugins" class="hover:text-green-200">Plugins</a>
-                <?php if (!empty($plugin_nav_items)) echo $plugin_nav_items; ?>
-                <a href="?action=logout" class="hover:text-green-200">Logout</a>
+                <?php 
+                // Add admin sections to navigation
+                $admin_sections = fcms_get_admin_sections();
+                foreach ($admin_sections as $id => $section) {
+                    echo '<a href="?action=' . htmlspecialchars($id) . '" class="hover:text-green-200">' . htmlspecialchars($section['label']) . '</a>';
+                }
+                if (!empty($plugin_nav_items)) echo $plugin_nav_items; 
+                ?>
+                <div class="flex items-center">
+                    <form method="POST" class="inline">
+                        <input type="hidden" name="action" value="logout">
+                        <button type="submit" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
+                            Logout
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </nav>

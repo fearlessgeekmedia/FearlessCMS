@@ -119,6 +119,68 @@ if ($requestPath === '') {
     $path = $requestPath;
 }
 
+// Initialize variables for plugin handling
+$handled = false;
+$title = '';
+$content = '';
+
+// Let plugins handle the route first
+fcms_do_hook('route', $handled, $title, $content, $path);
+
+// If a plugin handled the route, render its content
+if ($handled) {
+    // Get site name from config
+    $configFile = CONFIG_DIR . '/config.json';
+    $siteName = 'FearlessCMS'; // Default
+    if (file_exists($configFile)) {
+        $config = json_decode(file_get_contents($configFile), true);
+        if (isset($config['site_name'])) {
+            $siteName = $config['site_name'];
+        }
+    }
+    
+    // Load theme options
+    $themeOptionsFile = CONFIG_DIR . '/theme_options.json';
+    $themeOptions = file_exists($themeOptionsFile) ? json_decode(file_get_contents($themeOptionsFile), true) : [];
+    
+    // Initialize managers
+    require_once PROJECT_ROOT . '/includes/ThemeManager.php';
+    require_once PROJECT_ROOT . '/includes/MenuManager.php';
+    require_once PROJECT_ROOT . '/includes/WidgetManager.php';
+    require_once PROJECT_ROOT . '/includes/TemplateRenderer.php';
+    
+    $themeManager = new ThemeManager();
+    $menuManager = new MenuManager();
+    $widgetManager = new WidgetManager();
+    
+    // Initialize template renderer
+    $templateRenderer = new TemplateRenderer(
+        $themeManager->getActiveTheme(),
+        $themeOptions,
+        $menuManager,
+        $widgetManager
+    );
+    
+    // Let plugins determine the template
+    $template = 'page';
+    fcms_do_hook('before_render', $template, $path);
+    
+    // Prepare template data
+    $templateData = [
+        'title' => $title,
+        'content' => $content,
+        'siteName' => $siteName,
+        'currentYear' => date('Y'),
+        'logo' => $themeOptions['logo'] ?? null,
+        'heroBanner' => $themeOptions['herobanner'] ?? null,
+        'mainMenu' => $menuManager->renderMenu('main')
+    ];
+    
+    // Render template
+    echo $templateRenderer->render($template, $templateData);
+    exit;
+}
+
 // Try direct path first
 $contentFile = CONTENT_DIR . '/' . $path . '.md';
 

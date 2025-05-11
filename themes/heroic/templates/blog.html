@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{title}} - {{siteName}}</title>
     <link rel="stylesheet" href="/themes/{{theme}}/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body>
     <div class="min-h-screen bg-gray-50">
@@ -29,19 +30,21 @@
       </header>
 
       <!-- Main Content -->
-      <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div class="bg-white shadow rounded-lg p-6 text-center">
-          <h1 class="text-4xl font-bold text-gray-900 mb-4">{{title}}</h1>
-          {{content}}
-      </div>
-    </main>
+      <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <article class="bg-white shadow rounded-lg p-8">
+          <h1 class="text-4xl font-bold mb-4">{{title}}</h1>
+          <div class="prose max-w-none">
+            {{content}}
+          </div>
+        </article>
+      </main>
 
       <!-- Footer -->
       <footer class="bg-white shadow mt-8">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <p class="text-center text-gray-500">&copy; {{currentYear}} {{siteName}}. All rights reserved.</p>
         </div>
-    </footer>
+      </footer>
     </div>
   </body>
-</html>
+</html> 

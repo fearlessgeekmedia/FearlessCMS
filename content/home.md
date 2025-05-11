@@ -1,11 +1,5 @@
-<!-- json {
-    "title": "FearlessCMS",
-    "editor_mode": "advanced"
-} -->
+<!-- json {"title":"FearlessCMS","template":"home","last_modified":"2025-05-11 01:39:56","author":"admin"} -->
 
-<div>Welcome to FearlessCMS! You want to do something amazing? Let's do something amazing!&nbsp;</div>'
+Welcome to FearlessCMS! You want to do something amazing? Let's do something amazing!
 
-* List
-* list
-* list
-* list
+Hero banner by Josh Sorenson

@@ -28,7 +28,6 @@ foreach ($contentFiles as $file) {
 
 <div class="bg-white shadow rounded-lg p-6">
     <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold fira-code">Edit: <?php echo htmlspecialchars($title); ?></h2>
         <div class="flex gap-4">
             <button type="button" onclick="previewContent()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
                 Preview

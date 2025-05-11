@@ -1,6 +1,3 @@
-<!-- json {
-    "title": "Contact Us",
-    "editor_mode": "advanced"
-} -->
+<!-- json {"title":"Contact Us","template":"page","last_modified":"2025-05-11 01:43:37","author":"admin"} -->
 
-<div>Need help? Feel free to e-mail us! [service@fearlessgeekmedia.com](mailto:service@fearlessgeekmedia.com)</div>
+Need help? Feel free to e-mail us! [service@fearlessgeekmedia.com](mailto:service@fearlessgeekmedia.com)

@@ -115,12 +115,13 @@ function deleteSelectedMenu() {
 function confirmDeleteMenu() {
     if (!currentMenu) return;
     
-    fetch('?action=delete_menu', {
+    fetch('?action=manage_menus', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
+            action: 'delete_menu',
             menu_id: currentMenu
         })
     })
@@ -138,8 +139,12 @@ function confirmDeleteMenu() {
             // Reload the page to update the menu list
             window.location.reload();
         } else {
-            alert('Error deleting menu: ' + data.error);
+            alert('Error deleting menu: ' + (data.error || 'Unknown error'));
         }
+    })
+    .catch(error => {
+        console.error('Error deleting menu:', error);
+        alert('Failed to delete menu. Please try again.');
     });
 }
 
@@ -344,4 +349,5 @@ document.getElementById('new-menu-form').addEventListener('submit', function(e) 
         }
     });
 });
-</script> 
+</script>
+</body> 

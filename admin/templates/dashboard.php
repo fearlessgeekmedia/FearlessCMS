@@ -1,5 +1,4 @@
 <div>
-    <h2 class="text-2xl font-bold mb-6 fira-code">Dashboard</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
             <div class="bg-white shadow rounded-lg p-6 mb-8">
