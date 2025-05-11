@@ -1,0 +1,1 @@
+[{"username":"admin","password":"$2y$12$083/IFMFi4ovNhGo9PzUGO6kuvW1Hy1QLdd3zGJ4ilz/UpBIRmjAC","permissions":["manage_content","manage_plugins","manage_themes","manage_menus","manage_settings"]},{"username":"bob","password":"$2y$12$z1hbOAPHKIWk0xfF9WmEXuF/eNtGPYVNZw5Z.oL1EscszuNoC1Iou","role":"author","permissions":["manage_content"]}]

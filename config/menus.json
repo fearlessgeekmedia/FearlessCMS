@@ -1,0 +1,29 @@
+{
+    "main": {
+        "label": "main",
+        "menu_class": "main-nav",
+        "items": [
+            {
+                "label": "Home",
+                "url": "\/",
+                "target": "",
+                "class": "nav-item",
+                "id": "item_0"
+            },
+            {
+                "label": "About",
+                "url": "\/about",
+                "target": "",
+                "class": "nav-item",
+                "id": "item_1"
+            },
+            {
+                "label": "Contact",
+                "url": "\/contact",
+                "target": "",
+                "class": "nav-item",
+                "id": "item_2"
+            }
+        ]
+    }
+}

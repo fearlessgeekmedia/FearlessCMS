@@ -1,14 +1,12 @@
 <?php
-
-// Handle page deletion
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_page') {
     if (!isLoggedIn()) {
         $error = 'You must be logged in to delete pages';
     } else {
         $fileName = $_POST['file_name'] ?? '';
         
-        // Validate filename
-        if (empty($fileName) || !preg_match('/^[a-zA-Z0-9_-]+\.md$/', $fileName)) {
+        // Validate filename: allow slashes for subfolders
+        if (empty($fileName) || !preg_match('/^[a-zA-Z0-9_\/-]+\.md$/', $fileName)) {
             $error = 'Invalid filename';
         } else {
             $filePath = CONTENT_DIR . '/' . $fileName;

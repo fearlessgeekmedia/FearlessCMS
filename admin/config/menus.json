@@ -5,17 +5,28 @@
             {
                 "label": "Home",
                 "url": "\/",
-                "item_class": "nav-item"
+                "target": "",
+                "class": "nav-item"
             },
             {
                 "label": "About",
                 "url": "\/about",
-                "item_class": "nav-item"
+                "target": "",
+                "class": "nav-item"
             },
             {
                 "label": "Contact",
                 "url": "\/contact",
-                "item_class": "nav-item"
+                "target": "",
+                "class": "nav-item"
+            },
+            {
+                "id": 1746563924503,
+                "label": "Test",
+                "url": "\/test",
+                "target": "_blank",
+                "children": [],
+                "class": "nav-item"
             }
         ]
     }

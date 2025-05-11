@@ -1,0 +1,20 @@
+{
+    "admin": {
+        "id": "admin",
+        "username": "admin",
+        "password": "$2y$12$\/aPzbfsm72qy15s0EC2UB.MIPVb8Xb80JOlwoglb2TPT3nzMtTaYy",
+        "role": "administrator"
+    },
+    "bob": {
+        "id": "bob",
+        "username": "bob",
+        "password": "$2y$12$PpKjWstfd4XzsJXcn\/FQ0OYdKmVAlUVgFPtZ7ows8NGOWuMq7u0eu",
+        "role": "author"
+    },
+    "susan": {
+        "id": "susan",
+        "username": "susan",
+        "password": "$2y$12$6LpCraIpZyuykwYyLwzIP.HBa7Cybwh\/ZQB91l0PYlhxttTlOeiz.",
+        "role": "editor"
+    }
+}

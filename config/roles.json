@@ -1,0 +1,14 @@
+{
+    "admin": {
+        "label": "Administrator",
+        "permissions": ["manage_content", "manage_plugins", "manage_themes", "manage_menus", "manage_settings"]
+    },
+    "editor": {
+        "label": "Editor",
+        "permissions": ["manage_content"]
+    },
+    "author": {
+        "label": "Author",
+        "permissions": ["manage_content"]
+    }
+}

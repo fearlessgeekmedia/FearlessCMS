@@ -1,0 +1,58 @@
+<!-- Content Management -->
+<div class="bg-white shadow rounded-lg p-6 mt-8">
+    <div class="flex justify-between items-center mb-6">
+        <h3 class="text-lg font-medium">Content Management</h3>
+        <a href="?edit=new" class="inline-flex items-center bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Create New Page
+        </a>
+    </div>
+
+    <div class="mb-4">
+        <input type="text" id="contentSearch" placeholder="Search pages..." class="w-full px-4 py-2 border border-gray-300 rounded">
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead>
+                <tr class="bg-gray-50">
+                    <th class="px-4 py-2 text-left">Title</th>
+                    <th class="px-4 py-2 text-left">Last Modified</th>
+                    <th class="px-4 py-2 text-left">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                {{content_list}}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function deletePage(filename) {
+    if (confirm('Are you sure you want to delete "' + filename + '"?')) {
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.style.display = 'none';
+        form.innerHTML = `
+            <input type="hidden" name="action" value="delete_page">
+            <input type="hidden" name="filename" value="` + encodeURIComponent(filename) + `">
+        `;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Add search functionality
+document.getElementById('contentSearch').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll('tbody tr');
+    
+    rows.forEach(row => {
+        const title = row.querySelector('td:first-child').textContent.toLowerCase();
+        row.style.display = title.includes(searchTerm) ? '' : 'none';
+    });
+});
+</script> 

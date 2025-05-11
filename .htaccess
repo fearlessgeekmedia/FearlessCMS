@@ -1,0 +1,22 @@
+RewriteEngine On
+
+# Handle admin section
+RewriteCond %{REQUEST_URI} ^/admin/?$
+RewriteRule ^admin/?$ admin/index.php [L]
+
+# Handle admin login
+RewriteCond %{REQUEST_URI} ^/admin/login/?$
+RewriteRule ^admin/login/?$ admin/login.php [L]
+
+# Handle admin logout
+RewriteCond %{REQUEST_URI} ^/admin/logout/?$
+RewriteRule ^admin/logout/?$ admin/logout.php [L]
+
+# Handle admin actions
+RewriteCond %{REQUEST_URI} ^/admin/([^/]+)/?$
+RewriteRule ^admin/([^/]+)/?$ admin/index.php?action=$1 [L,QSA]
+
+# Handle content pages
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [L,QSA] 
