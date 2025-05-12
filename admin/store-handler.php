@@ -60,6 +60,273 @@ function get_markdown_parser() {
 }
 
 /**
+ * Search plugins
+ */
+function search_plugins($query) {
+    $storeContent = fetch_github_content('store.json');
+    $store = json_decode($storeContent, true);
+    
+    if (!$store || !isset($store['plugins'])) {
+        return [];
+    }
+    
+    $results = [];
+    foreach ($store['plugins'] as $plugin) {
+        if (stripos($plugin['name'], $query) !== false || 
+            stripos($plugin['description'], $query) !== false) {
+            $results[] = $plugin;
+        }
+    }
+    
+    return $results;
+}
+
+/**
+ * Search themes
+ */
+function search_themes($query) {
+    $storeContent = fetch_github_content('store.json');
+    $store = json_decode($storeContent, true);
+    
+    if (!$store || !isset($store['themes'])) {
+        return [];
+    }
+    
+    $results = [];
+    foreach ($store['themes'] as $theme) {
+        if (stripos($theme['name'], $query) !== false || 
+            stripos($theme['description'], $query) !== false) {
+            $results[] = $theme;
+        }
+    }
+    
+    return $results;
+}
+
+/**
+ * Handle AJAX search requests
+ */
+if (isset($_POST['action']) && $_POST['action'] === 'search_plugins') {
+    $query = $_POST['query'] ?? '';
+    $results = search_plugins($query);
+    header('Content-Type: application/json');
+    echo json_encode($results);
+    exit;
+}
+
+if (isset($_POST['action']) && $_POST['action'] === 'search_themes') {
+    $query = $_POST['query'] ?? '';
+    $results = search_themes($query);
+    header('Content-Type: application/json');
+    echo json_encode($results);
+    exit;
+}
+
+/**
+ * Get list of installed plugins
+ */
+function get_installed_plugins() {
+    $plugins_dir = dirname(__DIR__) . '/plugins';
+    $installed_plugins = [];
+    
+    if (is_dir($plugins_dir)) {
+        $dirs = scandir($plugins_dir);
+        foreach ($dirs as $dir) {
+            if ($dir === '.' || $dir === '..') continue;
+            
+            $plugin_file = $plugins_dir . '/' . $dir . '/plugin.json';
+            if (file_exists($plugin_file)) {
+                $plugin_data = json_decode(file_get_contents($plugin_file), true);
+                if ($plugin_data && isset($plugin_data['slug'])) {
+                    $installed_plugins[$plugin_data['slug']] = $plugin_data;
+                }
+            }
+        }
+    }
+    
+    return $installed_plugins;
+}
+
+/**
+ * Install a plugin
+ */
+function install_plugin($plugin_data) {
+    error_log("Starting plugin installation for: " . json_encode($plugin_data));
+    
+    // Validate required plugin data
+    if (!isset($plugin_data['slug']) || !isset($plugin_data['download_url'])) {
+        error_log("Missing required plugin data: " . json_encode($plugin_data));
+        return false;
+    }
+
+    $plugins_dir = dirname(__DIR__) . '/plugins';
+    $plugin_slug = $plugin_data['slug'];
+    $plugin_dir = $plugins_dir . '/' . $plugin_slug;
+    
+    error_log("Plugin directory: " . $plugin_dir);
+    
+    // Create plugins directory if it doesn't exist
+    if (!is_dir($plugins_dir)) {
+        error_log("Creating plugins directory: " . $plugins_dir);
+        if (!mkdir($plugins_dir, 0755, true)) {
+            error_log("Failed to create plugins directory");
+            return false;
+        }
+    }
+    
+    // Create plugin directory
+    if (!is_dir($plugin_dir)) {
+        error_log("Creating plugin directory: " . $plugin_dir);
+        if (!mkdir($plugin_dir, 0755, true)) {
+            error_log("Failed to create plugin directory");
+            return false;
+        }
+    }
+    
+    // Download plugin files
+    $zip_url = $plugin_data['download_url'];
+    $zip_file = $plugin_dir . '/temp.zip';
+    
+    error_log("Downloading plugin from: " . $zip_url);
+    
+    // Download the zip file
+    $ch = curl_init($zip_url);
+    $fp = fopen($zip_file, 'w');
+    curl_setopt($ch, CURLOPT_FILE, $fp);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Add this line to handle SSL issues
+    $result = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    fclose($fp);
+    
+    error_log("Download result - HTTP code: " . $http_code);
+    
+    if ($http_code !== 200) {
+        error_log("Failed to download plugin. HTTP code: " . $http_code);
+        return false;
+    }
+    
+    // Extract the zip file
+    $zip = new ZipArchive;
+    if ($zip->open($zip_file) === TRUE) {
+        error_log("Extracting zip file");
+        $zip->extractTo($plugin_dir);
+        $zip->close();
+        unlink($zip_file); // Delete the zip file
+        
+        // Find the extracted directory (it should be the only directory in the plugin directory)
+        $dirs = array_filter(scandir($plugin_dir), function($item) use ($plugin_dir) {
+            return $item !== '.' && $item !== '..' && is_dir($plugin_dir . '/' . $item);
+        });
+        
+        if (!empty($dirs)) {
+            $extracted_dir = $plugin_dir . '/' . reset($dirs); // Get the first directory
+            error_log("Found extracted directory: " . $extracted_dir);
+            
+            // Move all files and directories up one level
+            $files = scandir($extracted_dir);
+            foreach ($files as $file) {
+                if ($file === '.' || $file === '..') continue;
+                $source = $extracted_dir . '/' . $file;
+                $target = $plugin_dir . '/' . $file;
+                error_log("Moving from $source to $target");
+                rename($source, $target);
+            }
+            
+            // Remove the empty extracted directory
+            rmdir($extracted_dir);
+        }
+        
+        error_log("Plugin installation completed successfully");
+        return true;
+    } else {
+        error_log("Failed to open zip file");
+        return false;
+    }
+}
+
+/**
+ * Handle plugin installation
+ */
+if (isset($_POST['action']) && $_POST['action'] === 'install_plugin') {
+    $plugin_data = isset($_POST['plugin_data']) ? json_decode($_POST['plugin_data'], true) : null;
+    if (!$plugin_data) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'error' => 'Plugin data is required']);
+        exit;
+    }
+
+    $success = install_plugin($plugin_data);
+    header('Content-Type: application/json');
+    echo json_encode(['success' => $success]);
+    exit;
+}
+
+/**
+ * Delete a plugin
+ */
+function delete_plugin($plugin_slug) {
+    $plugins_dir = dirname(__DIR__) . '/plugins';
+    $plugin_dir = $plugins_dir . '/' . $plugin_slug;
+    
+    if (!is_dir($plugin_dir)) {
+        return false;
+    }
+    
+    // Check if plugin is deactivated
+    $plugin_file = $plugin_dir . '/plugin.json';
+    if (file_exists($plugin_file)) {
+        $plugin_data = json_decode(file_get_contents($plugin_file), true);
+        if ($plugin_data && isset($plugin_data['active']) && $plugin_data['active']) {
+            return false; // Don't delete active plugins
+        }
+    }
+    
+    // Recursively delete the plugin directory
+    function delete_directory($dir) {
+        if (!file_exists($dir)) {
+            return true;
+        }
+        
+        if (!is_dir($dir)) {
+            return unlink($dir);
+        }
+        
+        foreach (scandir($dir) as $item) {
+            if ($item == '.' || $item == '..') {
+                continue;
+            }
+            
+            if (!delete_directory($dir . DIRECTORY_SEPARATOR . $item)) {
+                return false;
+            }
+        }
+        
+        return rmdir($dir);
+    }
+    
+    return delete_directory($plugin_dir);
+}
+
+/**
+ * Handle plugin deletion
+ */
+if (isset($_POST['action']) && $_POST['action'] === 'delete_plugin') {
+    $plugin_slug = $_POST['plugin_slug'] ?? '';
+    if (empty($plugin_slug)) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'error' => 'Plugin slug is required']);
+        exit;
+    }
+    
+    $success = delete_plugin($plugin_slug);
+    header('Content-Type: application/json');
+    echo json_encode(['success' => $success]);
+    exit;
+}
+
+/**
  * Render the store admin page
  */
 function store_admin_page() {
@@ -75,6 +342,9 @@ function store_admin_page() {
     
     // Get markdown parser
     $parser = get_markdown_parser();
+    
+    // Get installed plugins
+    $installed_plugins = get_installed_plugins();
     
     // Start output buffer
     ob_start();
@@ -181,14 +451,193 @@ function store_admin_page() {
     <script>
     function searchPlugins() {
         const searchTerm = document.getElementById('plugin-search').value;
-        // TODO: Implement plugin search
-        console.log('Searching plugins:', searchTerm);
+        const resultsContainer = document.getElementById('plugin-results');
+        
+        // Show loading state
+        resultsContainer.innerHTML = '<div class="col-span-full text-center py-4">Searching...</div>';
+        
+        // Make AJAX request
+        const formData = new FormData();
+        formData.append('action', 'search_plugins');
+        formData.append('query', searchTerm);
+        
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(results => {
+            if (results.length === 0) {
+                resultsContainer.innerHTML = '<div class="col-span-full text-center py-4">No plugins found.</div>';
+                return;
+            }
+            
+            // Display results
+            resultsContainer.innerHTML = results.map(plugin => {
+                const isInstalled = isPluginInstalled(plugin.slug);
+                const isActive = isPluginActive(plugin.slug);
+                
+                let actionButton = '';
+                if (isInstalled) {
+                    if (isActive) {
+                        actionButton = '<button class="px-3 py-1 rounded bg-gray-500 text-white">Active</button>';
+                    } else {
+                        actionButton = '<button onclick="deletePlugin(\'' + plugin.slug + '\')" class="px-3 py-1 rounded bg-red-500 text-white hover:bg-red-600">Delete</button>';
+                    }
+                } else {
+                    actionButton = '<button onclick="installPlugin(\'' + plugin.slug + '\')" class="px-3 py-1 rounded bg-green-500 text-white hover:bg-green-600">Install</button>';
+                }
+                
+                return `
+                    <div class="bg-white border rounded-lg overflow-hidden">
+                        <img src="${plugin.banners.low}" alt="${plugin.name}" class="w-full h-32 object-cover">
+                        <div class="p-4">
+                            <h4 class="font-medium">${plugin.name}</h4>
+                            <p class="text-sm text-gray-600 mt-1">${plugin.description}</p>
+                            <div class="mt-4 flex justify-between items-center">
+                                <span class="text-sm text-gray-500">v${plugin.version}</span>
+                                <div class="flex gap-2">
+                                    <a href="${plugin.repository}" target="_blank" class="text-blue-500 hover:text-blue-600">Learn More</a>
+                                    ${actionButton}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        })
+        .catch(error => {
+            console.error('Error searching plugins:', error);
+            resultsContainer.innerHTML = '<div class="col-span-full text-center py-4 text-red-500">Error searching plugins. Please try again.</div>';
+        });
+    }
+
+    function isPluginInstalled(slug) {
+        return <?php echo json_encode(array_keys($installed_plugins)); ?>.includes(slug);
+    }
+
+    function isPluginActive(slug) {
+        const activePlugins = <?php 
+            $active_plugins = array_filter($installed_plugins, function($plugin) {
+                return isset($plugin['active']) && $plugin['active'];
+            });
+            echo json_encode(array_keys($active_plugins)); 
+        ?>;
+        return activePlugins.includes(slug);
+    }
+
+    function deletePlugin(slug) {
+        if (!confirm('Are you sure you want to delete this plugin? This action cannot be undone.')) {
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('action', 'delete_plugin');
+        formData.append('plugin_slug', slug);
+        
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                alert('Plugin deleted successfully!');
+                window.location.reload();
+            } else {
+                alert('Error deleting plugin: ' + (result.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting plugin:', error);
+            alert('Error deleting plugin. Please try again.');
+        });
+    }
+
+    function installPlugin(slug) {
+        // First, get the plugin data from the store
+        const formData = new FormData();
+        formData.append('action', 'search_plugins');
+        formData.append('query', slug);
+        
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(results => {
+            const plugin = results.find(p => p.slug === slug);
+            if (!plugin) {
+                throw new Error('Plugin not found in store');
+            }
+            
+            // Now install the plugin
+            const installData = new FormData();
+            installData.append('action', 'install_plugin');
+            installData.append('plugin_data', JSON.stringify(plugin));
+            
+            return fetch(window.location.href, {
+                method: 'POST',
+                body: installData
+            });
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                alert('Plugin installed successfully!');
+                window.location.reload();
+            } else {
+                alert('Error installing plugin: ' + (result.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error installing plugin:', error);
+            alert('Error installing plugin. Please try again.');
+        });
     }
 
     function searchThemes() {
         const searchTerm = document.getElementById('theme-search').value;
-        // TODO: Implement theme search
-        console.log('Searching themes:', searchTerm);
+        const resultsContainer = document.getElementById('theme-results');
+        
+        // Show loading state
+        resultsContainer.innerHTML = '<div class="col-span-full text-center py-4">Searching...</div>';
+        
+        // Make AJAX request
+        const formData = new FormData();
+        formData.append('action', 'search_themes');
+        formData.append('query', searchTerm);
+        
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(results => {
+            if (results.length === 0) {
+                resultsContainer.innerHTML = '<div class="col-span-full text-center py-4">No themes found.</div>';
+                return;
+            }
+            
+            // Display results
+            resultsContainer.innerHTML = results.map(theme => `
+                <div class="bg-white border rounded-lg overflow-hidden">
+                    <img src="${theme.banners.low}" alt="${theme.name}" class="w-full h-32 object-cover">
+                    <div class="p-4">
+                        <h4 class="font-medium">${theme.name}</h4>
+                        <p class="text-sm text-gray-600 mt-1">${theme.description}</p>
+                        <div class="mt-4 flex justify-between items-center">
+                            <span class="text-sm text-gray-500">v${theme.version}</span>
+                            <a href="${theme.repository}" target="_blank" class="text-blue-500 hover:text-blue-600">Learn More</a>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        })
+        .catch(error => {
+            console.error('Error searching themes:', error);
+            resultsContainer.innerHTML = '<div class="col-span-full text-center py-4 text-red-500">Error searching themes. Please try again.</div>';
+        });
     }
     </script>
     <?php

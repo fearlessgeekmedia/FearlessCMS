@@ -154,110 +154,93 @@ if (!isLoggedIn()) {
                 }
             }
         }
-        // Handle JSON POST requests
-        else if (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
-            $input = json_decode(file_get_contents('php://input'), true);
-            $action = $input['action'] ?? '';
+        // Handle plugin actions
+        else if (isset($_POST['action']) && in_array($_POST['action'], ['activate_plugin', 'deactivate_plugin', 'delete_plugin'])) {
+            // Prevent any output before JSON response
+            ob_clean();
             
-            switch ($action) {
-                case 'save_menu':
-                    if (!fcms_check_permission($_SESSION['username'], 'manage_menus')) {
-                        header('Content-Type: application/json');
-                        echo json_encode(['success' => false, 'error' => 'Permission denied']);
-                        exit;
+            // Check if user is logged in first
+            if (!isLoggedIn()) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => 'Not logged in']);
+                exit;
+            }
+
+            // Check for manage_plugins permission
+            if (!fcms_check_permission($_SESSION['username'], 'manage_plugins')) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => 'Permission denied']);
+                exit;
+            }
+
+            $plugin_slug = $_POST['plugin_slug'] ?? '';
+            if (empty($plugin_slug)) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => 'Plugin slug is required']);
+                exit;
+            }
+
+            $plugins_file = __DIR__ . '/config/plugins.json';
+            $active_plugins = [];
+            
+            if (file_exists($plugins_file)) {
+                $active_plugins = json_decode(file_get_contents($plugins_file), true);
+                if (!is_array($active_plugins)) {
+                    $active_plugins = [];
+                }
+            }
+
+            switch ($_POST['action']) {
+                case 'activate_plugin':
+                    if (!in_array($plugin_slug, $active_plugins)) {
+                        $active_plugins[] = $plugin_slug;
                     }
-
-                    if (!isset($input['menu_id']) || !isset($input['items'])) {
-                        header('Content-Type: application/json');
-                        echo json_encode(['success' => false, 'error' => 'Menu ID and items are required']);
-                        exit;
-                    }
-
-                    $menuId = $input['menu_id'];
-                    $menuData = [
-                        'label' => $input['label'] ?? ucfirst($menuId),
-                        'menu_class' => $input['class'] ?? '',
-                        'items' => $input['items']
-                    ];
-
-                    $menus = file_exists($menusFile) ? json_decode(file_get_contents($menusFile), true) : [];
-                    $menus[$menuId] = $menuData;
-
-                    if (file_put_contents($menusFile, json_encode($menus, JSON_PRETTY_PRINT))) {
-                        header('Content-Type: application/json');
-                        echo json_encode(['success' => true]);
-                    } else {
-                        header('Content-Type: application/json');
-                        echo json_encode(['success' => false, 'error' => 'Failed to save menu']);
-                    }
-                    exit;
                     break;
 
-                case 'create_menu':
-                    if (!fcms_check_permission($_SESSION['username'], 'manage_menus')) {
-                        header('Content-Type: application/json');
-                        echo json_encode(['success' => false, 'error' => 'Permission denied']);
-                        exit;
-                    }
-
-                    if (empty($input['name'])) {
-                        header('Content-Type: application/json');
-                        echo json_encode(['success' => false, 'error' => 'Menu name is required']);
-                        exit;
-                    }
-
-                    $menuId = strtolower(preg_replace('/[^a-z0-9]+/', '-', $input['name']));
-                    $menuData = [
-                        'label' => $input['name'],
-                        'menu_class' => $input['class'] ?? '',
-                        'items' => []
-                    ];
-
-                    $menus = file_exists($menusFile) ? json_decode(file_get_contents($menusFile), true) : [];
-                    $menus[$menuId] = $menuData;
-
-                    if (file_put_contents($menusFile, json_encode($menus, JSON_PRETTY_PRINT))) {
-                        header('Content-Type: application/json');
-                        echo json_encode(['success' => true]);
-                    } else {
-                        header('Content-Type: application/json');
-                        echo json_encode(['success' => false, 'error' => 'Failed to create menu']);
-                    }
-                    exit;
+                case 'deactivate_plugin':
+                    $active_plugins = array_filter($active_plugins, function($slug) use ($plugin_slug) {
+                        return $slug !== $plugin_slug;
+                    });
                     break;
 
-                case 'delete_menu':
-                    if (!fcms_check_permission($_SESSION['username'], 'manage_menus')) {
-                        header('Content-Type: application/json');
-                        echo json_encode(['success' => false, 'error' => 'Permission denied']);
-                        exit;
-                    }
-
-                    if (empty($input['menu_id'])) {
-                        header('Content-Type: application/json');
-                        echo json_encode(['success' => false, 'error' => 'Menu ID is required']);
-                        exit;
-                    }
-
-                    $menuId = $input['menu_id'];
-                    $menus = file_exists($menusFile) ? json_decode(file_get_contents($menusFile), true) : [];
-
-                    if (isset($menus[$menuId])) {
-                        unset($menus[$menuId]);
-                        if (file_put_contents($menusFile, json_encode($menus, JSON_PRETTY_PRINT))) {
-                            header('Content-Type: application/json');
-                            echo json_encode(['success' => true]);
-                        } else {
-                            header('Content-Type: application/json');
-                            echo json_encode(['success' => false, 'error' => 'Failed to delete menu']);
+                case 'delete_plugin':
+                    $plugin_dir = dirname(__DIR__) . '/plugins/' . $plugin_slug;
+                    if (is_dir($plugin_dir)) {
+                        // Remove from active plugins list
+                        $active_plugins = array_filter($active_plugins, function($slug) use ($plugin_slug) {
+                            return $slug !== $plugin_slug;
+                        });
+                        
+                        // Delete the plugin directory
+                        $files = new RecursiveIteratorIterator(
+                            new RecursiveDirectoryIterator($plugin_dir, RecursiveDirectoryIterator::SKIP_DOTS),
+                            RecursiveIteratorIterator::CHILD_FIRST
+                        );
+                        
+                        foreach ($files as $file) {
+                            if ($file->isDir()) {
+                                rmdir($file->getPathname());
+                            } else {
+                                unlink($file->getPathname());
+                            }
                         }
+                        rmdir($plugin_dir);
                     } else {
                         header('Content-Type: application/json');
-                        echo json_encode(['success' => false, 'error' => 'Menu not found']);
+                        echo json_encode(['success' => false, 'error' => 'Plugin directory not found']);
+                        exit;
                     }
-                    exit;
                     break;
             }
+
+            if (file_put_contents($plugins_file, json_encode(array_values($active_plugins), JSON_PRETTY_PRINT))) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => true]);
+            } else {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => 'Failed to update plugin status']);
+            }
+            exit;
         }
         // Handle regular POST requests
         else if (isset($_POST['action'])) {
@@ -691,68 +674,6 @@ if (!isLoggedIn()) {
                             'success' => false,
                             'error' => $e->getMessage()
                         ]);
-                    }
-                    exit;
-                    break;
-
-                case 'toggle_plugin':
-                    error_log("Toggle plugin action started");
-                    error_log("Current session: " . print_r($_SESSION, true));
-                    
-                    // Prevent any output before JSON response
-                    ob_clean();
-                    
-                    // Check if user is logged in first
-                    if (!isLoggedIn()) {
-                        error_log("User not logged in");
-                        header('Content-Type: application/json');
-                        echo json_encode(['success' => false, 'error' => 'Not logged in']);
-                        exit;
-                    }
-
-                    // Check for manage_plugins permission
-                    error_log("Checking manage_plugins permission for user: " . $_SESSION['username']);
-                    if (!fcms_check_permission($_SESSION['username'], 'manage_plugins')) {
-                        error_log("Permission denied for user: " . $_SESSION['username']);
-                        header('Content-Type: application/json');
-                        echo json_encode(['success' => false, 'error' => 'Permission denied']);
-                        exit;
-                    }
-
-                    $pluginId = $_POST['plugin_id'] ?? '';
-                    if (empty($pluginId)) {
-                        error_log("No plugin ID provided");
-                        header('Content-Type: application/json');
-                        echo json_encode(['success' => false, 'error' => 'Plugin ID is required']);
-                        exit;
-                    }
-
-                    error_log("Toggling plugin: " . $pluginId);
-                    
-                    // Load current active plugins
-                    $activePlugins = file_exists($pluginsFile) ? json_decode(file_get_contents($pluginsFile), true) : [];
-                    if (!is_array($activePlugins)) {
-                        $activePlugins = [];
-                    }
-                    
-                    // Toggle plugin status
-                    if (in_array($pluginId, $activePlugins)) {
-                        error_log("Deactivating plugin: " . $pluginId);
-                        $activePlugins = array_diff($activePlugins, [$pluginId]);
-                    } else {
-                        error_log("Activating plugin: " . $pluginId);
-                        $activePlugins[] = $pluginId;
-                    }
-
-                    // Save updated plugin list
-                    if (file_put_contents($pluginsFile, json_encode($activePlugins, JSON_PRETTY_PRINT))) {
-                        error_log("Plugin list updated successfully");
-                        header('Content-Type: application/json');
-                        echo json_encode(['success' => true]);
-                    } else {
-                        error_log("Failed to update plugin list");
-                        header('Content-Type: application/json');
-                        echo json_encode(['success' => false, 'error' => 'Failed to update plugin status']);
                     }
                     exit;
                     break;
