@@ -1,6 +1,31 @@
+<?php
+// Load store configuration
+require_once dirname(__DIR__, 2) . '/includes/config/store.php';
+
+// Get current store URL
+$storeUrl = defined('STORE_URL') ? STORE_URL : 'https://store.fearlesscms.com';
+?>
+
 <div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
+            <!-- Store Configuration -->
+            <div class="bg-white shadow rounded-lg p-6 mb-8">
+                <h3 class="text-lg font-medium mb-4">Store Configuration</h3>
+                <form method="POST" class="space-y-4">
+                    <input type="hidden" name="action" value="update_store_settings">
+                    <div>
+                        <label class="block mb-1">Store URL</label>
+                        <input type="text" 
+                               name="store_url" 
+                               value="<?php echo htmlspecialchars($storeUrl); ?>" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded">
+                    </div>
+                    <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Update Store URL</button>
+                </form>
+            </div>
+
+            <!-- Site Settings -->
             <div class="bg-white shadow rounded-lg p-6 mb-8">
                 <h3 class="text-lg font-medium mb-4">Site Settings</h3>
                 <form method="POST" class="space-y-4">

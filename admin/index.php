@@ -26,6 +26,7 @@ require_once dirname(__DIR__) . '/includes/ThemeManager.php';
 require_once dirname(__DIR__) . '/includes/plugins.php';
 require_once __DIR__ . '/widget-handler.php';
 require_once __DIR__ . '/theme-handler.php';
+require_once __DIR__ . '/store-handler.php';
 
 // Debug session after includes
 error_log("Session after includes: " . print_r($_SESSION, true));
@@ -128,6 +129,30 @@ if (!isLoggedIn()) {
             logout();
             header('Location: ?action=login');
             exit;
+        }
+        // Handle store settings update
+        else if (isset($_POST['action']) && $_POST['action'] === 'update_store_settings') {
+            if (!fcms_check_permission($_SESSION['username'], 'manage_settings')) {
+                $error = 'You do not have permission to manage settings';
+            } else {
+                $newStoreUrl = filter_input(INPUT_POST, 'store_url', FILTER_VALIDATE_URL);
+                if ($newStoreUrl) {
+                    // Update store URL in config file
+                    $configContent = file_get_contents(__DIR__ . '/../includes/config/store.php');
+                    $configContent = preg_replace(
+                        "/define\('STORE_URL',\s*'[^']*'\);/",
+                        "define('STORE_URL', '$newStoreUrl');",
+                        $configContent
+                    );
+                    if (file_put_contents(__DIR__ . '/../includes/config/store.php', $configContent)) {
+                        $success = 'Store settings updated successfully';
+                    } else {
+                        $error = 'Failed to update store settings';
+                    }
+                } else {
+                    $error = 'Invalid store URL provided';
+                }
+            }
         }
         // Handle JSON POST requests
         else if (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
