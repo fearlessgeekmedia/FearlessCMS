@@ -44,7 +44,8 @@ if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $contentData, $matches)) {
 
         <div class="mb-4">
             <label class="block mb-1">Content</label>
-            <textarea name="content" id="editor" class="w-full border rounded px-3 py-2" rows="20"><?php echo htmlspecialchars($contentData); ?></textarea>
+            <div id="editor" style="height: 600px;"></div>
+            <input type="hidden" name="content" id="content">
         </div>
 
         <div class="flex justify-between">
@@ -55,10 +56,25 @@ if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $contentData, $matches)) {
 </div>
 
 <script>
-// Initialize editor
-ClassicEditor
-    .create(document.querySelector('#editor'))
-    .catch(error => {
-        console.error(error);
+document.addEventListener('DOMContentLoaded', function() {
+    const editor = new toastui.Editor({
+        el: document.querySelector('#editor'),
+        height: '600px',
+        initialEditType: 'wysiwyg',
+        previewStyle: 'vertical',
+        initialValue: <?php echo json_encode($contentData); ?>,
+        toolbarItems: [
+            ['heading', 'bold', 'italic', 'strike'],
+            ['hr', 'quote'],
+            ['ul', 'ol', 'task', 'indent', 'outdent'],
+            ['table', 'link', 'image'],
+            ['code', 'codeblock']
+        ]
     });
+
+    // Update hidden input before form submission
+    document.querySelector('form').addEventListener('submit', function() {
+        document.getElementById('content').value = editor.getMarkdown();
+    });
+});
 </script> 

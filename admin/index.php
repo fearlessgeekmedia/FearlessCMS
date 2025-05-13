@@ -97,15 +97,89 @@ $error = '';
 $success = '';
 $plugin_nav_items = '';
 
-// Process POST actions
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        // Handle logout
-        if (isset($_POST['action']) && $_POST['action'] === 'logout') {
-            logout();
-        header('Location: /admin/login');
-                    exit;
+// Load content data for edit_content action
+if ($action === 'edit_content' && isset($_GET['path'])) {
+    $path = $_GET['path'];
+                        $contentFile = CONTENT_DIR . '/' . $path . '.md';
+                        if (file_exists($contentFile)) {
+                        $contentData = file_get_contents($contentFile);
+                        $title = '';
+                        if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $contentData, $matches)) {
+                            $metadata = json_decode($matches[1], true);
+                            if ($metadata && isset($metadata['title'])) {
+                                $title = $metadata['title'];
+                            }
+                        }
+                        if (!$title) {
+                            $title = ucwords(str_replace(['-', '_'], ' ', $path));
+                        }
+    } else {
+        $error = 'Content file not found';
+        $contentData = '';
+        $title = '';
     }
-    // Handle other POST actions...
+} else {
+    $contentData = '';
+    $title = '';
+}
+
+// Process POST actions
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Handle logout
+    if (isset($_POST['action']) && $_POST['action'] === 'logout') {
+        logout();
+        header('Location: /admin/login');
+        exit;
+    }
+    
+    // Handle save_content action
+    if (isset($_POST['action']) && $_POST['action'] === 'save_content') {
+        $path = $_POST['path'] ?? '';
+        $title = $_POST['title'] ?? '';
+        $template = $_POST['template'] ?? 'page';
+        $content = $_POST['content'] ?? '';
+        
+        if (empty($path) || empty($title)) {
+            $error = 'Path and title are required';
+        } else {
+            $contentFile = CONTENT_DIR . '/' . $path . '.md';
+            
+            // Create metadata
+            $metadata = [
+                'title' => $title,
+                'template' => $template
+            ];
+            
+            // Format content with metadata
+            $contentWithMetadata = '<!-- json ' . json_encode($metadata, JSON_PRETTY_PRINT) . ' -->' . "\n\n" . $content;
+            
+            if (file_put_contents($contentFile, $contentWithMetadata) !== false) {
+                $success = 'Content saved successfully';
+                // Reload the content data
+                $contentData = $contentWithMetadata;
+            } else {
+                $error = 'Failed to save content';
+            }
+        }
+    }
+
+    // Handle delete_content action
+    if (isset($_POST['action']) && $_POST['action'] === 'delete_content') {
+        $path = $_POST['path'] ?? '';
+        if (!empty($path)) {
+            $contentFile = CONTENT_DIR . '/' . $path . '.md';
+            if (file_exists($contentFile) && unlink($contentFile)) {
+                $success = 'Content deleted successfully';
+                // Redirect to manage_content to refresh the list
+                header('Location: ?action=manage_content');
+                exit;
+            } else {
+                $error = 'Failed to delete content';
+            }
+        } else {
+            $error = 'No content specified for deletion';
+        }
+    }
 }
 
 // Load the appropriate template based on action
@@ -113,8 +187,8 @@ $templateFile = ADMIN_TEMPLATE_DIR . '/' . $action . '.php';
 if (file_exists($templateFile)) {
             ob_start();
     include $templateFile;
-                    $content = ob_get_clean();
-                } else {
+            $content = ob_get_clean();
+} else {
     $content = '<div class="alert alert-danger">Invalid action specified.</div>';
 }
 
