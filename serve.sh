@@ -31,6 +31,6 @@ echo "Server started on port $port with PID $pid"
 echo "To stop the server, run: kill $pid"
 echo "To view logs, run: tail -f serve-log.tmp"
 echo "To access the server, open http://localhost:$port in your browser"
-
+echo ""
 # retain session of the process
 wait $pid
