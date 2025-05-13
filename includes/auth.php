@@ -2,7 +2,7 @@
 // Authentication functions
 
 function isLoggedIn() {
-    $logged_in = isset($_SESSION['username']);
+    $logged_in = !empty($_SESSION['username']);
     error_log("Checking login status: " . ($logged_in ? "Logged in as " . $_SESSION['username'] : "Not logged in"));
     return $logged_in;
 }
@@ -10,12 +10,7 @@ function isLoggedIn() {
 function login($username, $password) {
     error_log("Login attempt for user: " . $username);
     
-    // Clear any existing session data
-    session_unset();
-    session_destroy();
-    session_start();
-    
-    $users_file = ADMIN_CONFIG_DIR . '/users.json';
+    $users_file = CONFIG_DIR . '/users.json';
     error_log("Looking for users file at: " . $users_file);
     
     if (!file_exists($users_file)) {
@@ -31,30 +26,31 @@ function login($username, $password) {
         return false;
     }
     
-    foreach ($users as $user) {
-        if ($user['username'] === $username) {
-            error_log("Found user: " . print_r($user, true));
-            if (password_verify($password, $user['password'])) {
-                error_log("Password verified for user: " . $username);
-                
-                // Set session variables
-                $_SESSION['username'] = $username;
-                
-                // Set permissions
-                if (isset($user['permissions']) && is_array($user['permissions'])) {
-                    $_SESSION['permissions'] = $user['permissions'];
-                    error_log("Set permissions for user: " . print_r($user['permissions'], true));
-                } else {
-                    error_log("No permissions found for user, setting default");
-                    $_SESSION['permissions'] = ['manage_content'];
+    if (isset($users[$username])) {
+        error_log("Found user: " . print_r($users[$username], true));
+        if (password_verify($password, $users[$username]['password'])) {
+            error_log("Password verified for user: " . $username);
+            
+            // Set session variables
+            $_SESSION['username'] = $username;
+            
+            // Set permissions based on role
+            if (isset($users[$username]['role'])) {
+                $rolesFile = CONFIG_DIR . '/roles.json';
+                if (file_exists($rolesFile)) {
+                    $roles = json_decode(file_get_contents($rolesFile), true);
+                    if (isset($roles[$users[$username]['role']])) {
+                        $_SESSION['permissions'] = $roles[$users[$username]['role']]['permissions'];
+                        error_log("Set permissions for user: " . print_r($roles[$users[$username]['role']]['permissions'], true));
+                    }
                 }
-                
-                error_log("Final session state: " . print_r($_SESSION, true));
-                return true;
             }
-            error_log("Password verification failed for user: " . $username);
-            return false;
+            
+            error_log("Final session state: " . print_r($_SESSION, true));
+            return true;
         }
+        error_log("Password verification failed for user: " . $username);
+        return false;
     }
     
     error_log("User not found: " . $username);
@@ -73,7 +69,7 @@ function fcms_check_permission($username, $permission) {
         return false;
     }
     
-    $usersFile = ADMIN_CONFIG_DIR . '/users.json';
+    $usersFile = CONFIG_DIR . '/users.json';
     if (!file_exists($usersFile)) {
         error_log("Permission check failed: users file not found at " . $usersFile);
         return false;
@@ -85,21 +81,19 @@ function fcms_check_permission($username, $permission) {
         return false;
     }
     
-    foreach ($users as $user) {
-        if ($user['username'] === $username) {
-            // Check if user has a role defined
-            if (isset($user['role'])) {
-                $rolesFile = PROJECT_ROOT . '/config/roles.json';
-                if (file_exists($rolesFile)) {
-                    $roles = json_decode(file_get_contents($rolesFile), true);
-                    if (isset($roles[$user['role']]) && in_array($permission, $roles[$user['role']]['permissions'])) {
-                        return true;
-                    }
+    if (isset($users[$username])) {
+        // Check if user has a role defined
+        if (isset($users[$username]['role'])) {
+            $rolesFile = CONFIG_DIR . '/roles.json';
+            if (file_exists($rolesFile)) {
+                $roles = json_decode(file_get_contents($rolesFile), true);
+                if (isset($roles[$users[$username]['role']]) && in_array($permission, $roles[$users[$username]['role']]['permissions'])) {
+                    return true;
                 }
             }
-            // Fallback to direct permissions
-            return isset($user['permissions']) && in_array($permission, $user['permissions']);
         }
+        // Fallback to direct permissions
+        return isset($users[$username]['permissions']) && in_array($permission, $users[$username]['permissions']);
     }
     
     error_log("Permission check failed: user not found");
@@ -107,24 +101,26 @@ function fcms_check_permission($username, $permission) {
 }
 
 function createDefaultAdminUser() {
-    $users_file = ADMIN_CONFIG_DIR . '/users.json';
+    $users_file = CONFIG_DIR . '/users.json';
     if (!file_exists($users_file)) {
         error_log("Creating default admin user");
         $default_password = 'changeme123'; // Default password
         $users = [
             'admin' => [
+                'id' => 'admin',
+                'username' => 'admin',
                 'password' => password_hash($default_password, PASSWORD_DEFAULT),
-                'permissions' => ['manage_content', 'manage_plugins', 'manage_themes', 'manage_menus', 'manage_settings']
+                'role' => 'admin'
             ]
         ];
         
-        if (!is_dir(ADMIN_CONFIG_DIR)) {
-            mkdir(ADMIN_CONFIG_DIR, 0755, true);
+        if (!is_dir(CONFIG_DIR)) {
+            mkdir(CONFIG_DIR, 0755, true);
         }
         
         if (file_put_contents($users_file, json_encode($users, JSON_PRETTY_PRINT))) {
             error_log("Default admin user created successfully");
-    return true;
+            return true;
         } else {
             error_log("Failed to create default admin user");
             return false;

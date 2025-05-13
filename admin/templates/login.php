@@ -28,7 +28,14 @@
                 </div>
             <?php endif; ?>
 
-            <form class="mt-8 space-y-6" method="POST">
+            <?php
+            // Debug output
+            echo "<!-- Debug: Current URL: " . $_SERVER['REQUEST_URI'] . " -->\n";
+            echo "<!-- Debug: POST data: " . print_r($_POST, true) . " -->\n";
+            echo "<!-- Debug: Session: " . print_r($_SESSION, true) . " -->\n";
+            ?>
+
+            <form class="mt-8 space-y-6" method="POST" action="/admin/login">
                 <input type="hidden" name="action" value="login">
                 <div class="rounded-md shadow-sm -space-y-px">
                     <div>
