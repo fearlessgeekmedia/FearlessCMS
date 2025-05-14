@@ -13,16 +13,19 @@ if (is_dir($templateDir)) {
 
 // Get current template from metadata
 $currentTemplate = 'page'; // Default template
+$contentWithoutMetadata = $contentData;
 if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $contentData, $matches)) {
     $metadata = json_decode($matches[1], true);
     if ($metadata && isset($metadata['template'])) {
         $currentTemplate = $metadata['template'];
     }
+    // Remove the metadata from the content
+    $contentWithoutMetadata = preg_replace('/^<!--\s*json\s*.*?\s*-->\s*/s', '', $contentData);
 }
 ?>
 
 <div class="bg-white shadow rounded-lg p-6">
-    <form method="POST" action="">
+    <form method="POST" action="" id="content-form">
         <input type="hidden" name="action" value="save_content" />
         <input type="hidden" name="path" value="<?php echo htmlspecialchars($path); ?>" />
         
@@ -45,7 +48,7 @@ if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $contentData, $matches)) {
         <div class="mb-4">
             <label class="block mb-1">Content</label>
             <div id="editor" style="height: 600px;"></div>
-            <input type="hidden" name="content" id="content">
+            <textarea name="content" id="content" style="display: none;"></textarea>
         </div>
 
         <div class="flex justify-between">
@@ -62,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function() {
         height: '600px',
         initialEditType: 'wysiwyg',
         previewStyle: 'vertical',
-        initialValue: <?php echo json_encode($contentData); ?>,
+        initialValue: <?php echo json_encode($contentWithoutMetadata); ?>,
         toolbarItems: [
             ['heading', 'bold', 'italic', 'strike'],
             ['hr', 'quote'],
@@ -73,8 +76,16 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Update hidden input before form submission
-    document.querySelector('form').addEventListener('submit', function() {
-        document.getElementById('content').value = editor.getMarkdown();
+    document.getElementById('content-form').addEventListener('submit', function(e) {
+        e.preventDefault(); // Prevent default form submission
+        const markdownContent = editor.getMarkdown();
+        console.log('Content length:', markdownContent.length);
+        console.log('Content preview:', markdownContent.substring(0, 100));
+        document.getElementById('content').value = markdownContent;
+        // Add a small delay to ensure the value is set before submitting
+        setTimeout(() => {
+            this.submit();
+        }, 100);
     });
 });
 </script> 

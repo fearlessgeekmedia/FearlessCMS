@@ -1,3 +1,75 @@
+<?php
+// Define allowed file extensions
+$allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'zip', 'svg', 'txt', 'md'];
+
+// Define max file size (10MB)
+$maxFileSize = 10 * 1024 * 1024;
+
+// Get uploads directory
+$uploadsDir = dirname(__DIR__) . '/uploads';
+$webUploadsDir = '/uploads';
+
+// Ensure uploads directory exists
+if (!file_exists($uploadsDir)) {
+    mkdir($uploadsDir, 0755, true);
+}
+
+// Handle file upload
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'upload_file') {
+    if (!empty($_FILES['file']['name'])) {
+        $file = $_FILES['file'];
+        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        if (!in_array($ext, $allowedExts)) {
+            $error = 'File type not allowed.';
+        } elseif ($file['size'] > $maxFileSize) {
+            $error = 'File is too large.';
+        } else {
+            $target = $uploadsDir . '/' . basename($file['name']);
+            if (move_uploaded_file($file['tmp_name'], $target)) {
+                $success = 'File uploaded successfully.';
+            } else {
+                $error = 'Failed to upload file.';
+            }
+        }
+    } else {
+        $error = 'No file selected.';
+    }
+}
+
+// Handle file deletion
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_file') {
+    $filename = $_POST['filename'] ?? '';
+    $filepath = realpath($uploadsDir . '/' . $filename);
+    if ($filename && $filepath && strpos($filepath, realpath($uploadsDir)) === 0 && is_file($filepath)) {
+        if (unlink($filepath)) {
+            $success = 'File deleted.';
+        } else {
+            $error = 'Failed to delete file.';
+        }
+    } else {
+        $error = 'Invalid file.';
+    }
+}
+
+// List files
+$files = [];
+if (is_dir($uploadsDir)) {
+    foreach (scandir($uploadsDir) as $file) {
+        if ($file === '.' || $file === '..') continue;
+        $filepath = $uploadsDir . '/' . $file;
+        if (is_file($filepath)) {
+            $files[] = [
+                'name' => $file,
+                'size' => filesize($filepath),
+                'type' => mime_content_type($filepath),
+                'modified' => filemtime($filepath),
+                'url' => $webUploadsDir . '/' . $file
+            ];
+        }
+    }
+}
+?>
+
 # Add CSS for file previews
 <style>
 .file-preview {

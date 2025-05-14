@@ -3,11 +3,11 @@
         "id": "right-sidebar",
         "classes": "right-sidebar",
         "widgets": {
-            "widget-681ad1e83c112": {
-                "id": "widget-681ad1e83c112",
-                "title": "Text 1",
-                "type": "html",
-                "content": "This is text",
+            "widget-681ad2698552d": {
+                "id": "widget-681ad2698552d",
+                "title": "Text 3",
+                "type": "text",
+                "content": "This is even more text",
                 "classes": ""
             },
             "widget-681ad1f880573": {
@@ -17,18 +17,18 @@
                 "content": "This is also text",
                 "classes": ""
             },
-            "widget-681ad2698552d": {
-                "id": "widget-681ad2698552d",
-                "title": "Text 3",
-                "type": "text",
-                "content": "This is even more text",
+            "widget-681ad1e83c112": {
+                "id": "widget-681ad1e83c112",
+                "title": "Text 1",
+                "type": "html",
+                "content": "This is text",
                 "classes": ""
             },
-            "widget-681d598468920": {
-                "id": "widget-681d598468920",
-                "title": "I'm a hacker!",
-                "type": "text",
-                "content": "Bob the hacker! Bob, Bob, the hacker!",
+            "widget-6824e24900023": {
+                "id": "widget-6824e24900023",
+                "title": "Test",
+                "type": "html",
+                "content": "<p>Test<\/p>",
                 "classes": ""
             }
         }

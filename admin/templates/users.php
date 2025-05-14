@@ -1,4 +1,12 @@
-<?php if (!isset($_GET['edit'])): ?>
+<?php
+// Load users from config file
+$usersFile = ADMIN_CONFIG_DIR . '/users.json';
+$users = [];
+if (file_exists($usersFile)) {
+    $users = json_decode(file_get_contents($usersFile), true) ?? [];
+}
+
+if (!isset($_GET['edit'])): ?>
 <div class="mb-8">
     <h3 class="text-lg font-medium mb-4">Add New User</h3>
     <form method="POST" class="space-y-4">
