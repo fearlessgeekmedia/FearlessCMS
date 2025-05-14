@@ -55,3 +55,23 @@ Open-source projects must respect both the users of the software and the develop
 ### Conclusion:
 
 With these policies in place, FearlessCMS seeks to create a platform that is lightweight, secure, and accessible, but most importantly, it is a CMS **for the people**. Whether you are a developer, a designer, or a casual user, FearlessCMS will respect your needs and provide a toolset for creating websites that empower the open web and its diverse community.
+
+## Quick Start
+
+### Admin Access
+- Default admin password: `changeme123`
+- Please change this password immediately after first login
+
+### Static Site Export
+To export your site to static HTML, you'll need to install the following Node.js dependencies:
+
+```bash
+npm install fs-extra handlebars marked
+```
+
+Then run the export script:
+```bash
+node export.js
+```
+
+The exported static site will be available in the `export` directory.
