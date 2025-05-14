@@ -55,18 +55,23 @@ function generateMenu(currentPage = '') {
     } catch (error) {
         console.warn('Warning: Could not read menus.json, using default menu');
         menuJson = {
-            items: [
-                { label: 'Home', url: 'home', class: 'nav-link' },
-                { label: 'About', url: 'about', class: 'nav-link' },
-                { label: 'Contact', url: 'contact', class: 'nav-link' }
-            ]
+            main: {
+                items: [
+                    { label: 'Home', url: 'home', class: 'nav-link' },
+                    { label: 'About', url: 'about', class: 'nav-link' },
+                    { label: 'Contact', url: 'contact', class: 'nav-link' }
+                ]
+            }
         };
     }
 
-    // Ensure menuJson.items exists
-    if (!menuJson.items || !Array.isArray(menuJson.items)) {
+    // Get the main menu items
+    const menuItems = menuJson.main?.items || menuJson.items || [];
+    
+    // Ensure menuItems is an array
+    if (!Array.isArray(menuItems)) {
         console.warn('Warning: Invalid menu structure, using default menu');
-        menuJson.items = [
+        menuItems = [
             { label: 'Home', url: 'home', class: 'nav-link' },
             { label: 'About', url: 'about', class: 'nav-link' },
             { label: 'Contact', url: 'contact', class: 'nav-link' }
@@ -74,11 +79,17 @@ function generateMenu(currentPage = '') {
     }
 
     let menuHtml = '';
-    menuJson.items.forEach(item => {
+    menuItems.forEach(item => {
         // Convert absolute URLs to relative URLs
         let url = item.url;
         if (url.startsWith('/')) {
             url = url.substring(1); // Remove leading slash
+        }
+        
+        // Handle external URLs
+        if (url.startsWith('http')) {
+            menuHtml += `<a href="${url}" class="${item.class}" ${item.target ? `target="${item.target}"` : ''}>${item.label}</a>`;
+            return;
         }
         
         // If we're in a subdirectory (like /home/), we need to go up one level
@@ -88,7 +99,7 @@ function generateMenu(currentPage = '') {
             url = url === 'home' ? '../home/' : '../' + url + '/';
         }
         
-        menuHtml += `<a href="${url}" class="${item.class}">${item.label}</a>`;
+        menuHtml += `<a href="${url}" class="${item.class}" ${item.target ? `target="${item.target}"` : ''}>${item.label}</a>`;
     });
     return menuHtml;
 }
@@ -191,6 +202,131 @@ fs.readdirSync(contentDir).forEach(file => {
     }
 });
 
+// Process blog posts
+const blogPostsFile = path.join(contentDir, 'blog_posts.json');
+if (fs.existsSync(blogPostsFile)) {
+    const posts = JSON.parse(fs.readFileSync(blogPostsFile, 'utf8'));
+    const publishedPosts = posts.filter(post => post.status === 'published');
+    
+    // Sort posts by date (newest first)
+    publishedPosts.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    // Create blog index page
+    const blogTemplatePath = path.join('themes', theme, 'templates', 'blog.html');
+    if (fs.existsSync(blogTemplatePath)) {
+        let templateContent = fs.readFileSync(blogTemplatePath, 'utf8');
+        
+        // Replace custom syntax with Handlebars syntax
+        templateContent = templateContent.replace(/{{sidebar=([^}]+)}}/g, '{{{sidebar}}}');
+        templateContent = templateContent.replace(/{{content}}/g, '{{{content}}}');
+        templateContent = templateContent.replace(/{{mainMenu}}/g, '{{{mainMenu}}}');
+        
+        const compiledTemplate = handlebars.compile(templateContent);
+        
+        // Generate blog index content
+        let blogIndexContent = '<div class="max-w-4xl mx-auto px-4 py-8">';
+        blogIndexContent += '<h1 class="text-3xl font-bold mb-8">Blog Posts</h1>';
+        blogIndexContent += '<div class="space-y-8">';
+        
+        publishedPosts.forEach(post => {
+            blogIndexContent += '<article class="border-b pb-8">';
+            blogIndexContent += `<h2 class="text-2xl font-bold mb-2"><a href="/blog/${post.slug}/" class="text-blue-600 hover:underline">${post.title}</a></h2>`;
+            blogIndexContent += `<div class="text-gray-600 mb-4">${post.date}</div>`;
+            blogIndexContent += `<div class="prose">${marked(post.content.substring(0, 300) + '...')}</div>`;
+            blogIndexContent += `<a href="/blog/${post.slug}/" class="text-blue-600 hover:underline mt-4 inline-block">Read more →</a>`;
+            blogIndexContent += '</article>';
+        });
+        
+        blogIndexContent += '</div></div>';
+        
+        // Generate menu and sidebar
+        const mainMenu = generateMenu('blog');
+        const sidebarContent = generateSidebar('blog') || '';
+        
+        // Get SEO settings
+        const seoSettingsFile = path.join('config', 'seo_settings.json');
+        let seoSettings = {};
+        if (fs.existsSync(seoSettingsFile)) {
+            seoSettings = JSON.parse(fs.readFileSync(seoSettingsFile, 'utf8'));
+        }
+        
+        // Build meta tags for blog index
+        const metaTags = buildMetaTags({
+            title: 'Blog',
+            description: seoSettings.site_description || 'Blog posts',
+            socialImage: seoSettings.social_image || '',
+            siteTitle: seoSettings.site_title || siteName,
+            titleSeparator: seoSettings.title_separator || '-',
+            appendSiteTitle: seoSettings.append_site_title !== false
+        });
+        
+        // Render blog index template
+        const renderedHtml = compiledTemplate({
+            title: 'Blog',
+            siteName,
+            theme,
+            currentYear: new Date().getFullYear(),
+            customCss,
+            customJs,
+            mainMenu,
+            sidebar: sidebarContent,
+            content: blogIndexContent,
+            heroBanner: 'uploads/theme/herobanner.jpg',
+            logo: 'uploads/theme/logo.png',
+            metaTags
+        });
+        
+        // Write blog index
+        const blogIndexPath = path.join(exportDir, 'blog', 'index.html');
+        fs.mkdirSync(path.dirname(blogIndexPath), { recursive: true });
+        fs.writeFileSync(blogIndexPath, renderedHtml);
+        console.log('Created blog index page');
+        
+        // Create individual blog post pages
+        publishedPosts.forEach(post => {
+            const postContent = marked(post.content);
+            
+            // Build meta tags for blog post
+            const postMetaTags = buildMetaTags({
+                title: post.title,
+                description: post.content.substring(0, 160).replace(/[^\w\s]/g, ''), // Clean description
+                socialImage: seoSettings.social_image || '',
+                siteTitle: seoSettings.site_title || siteName,
+                titleSeparator: seoSettings.title_separator || '-',
+                appendSiteTitle: seoSettings.append_site_title !== false
+            });
+            
+            // Render blog post template
+            const postHtml = compiledTemplate({
+                title: post.title,
+                siteName,
+                theme,
+                currentYear: new Date().getFullYear(),
+                customCss,
+                customJs,
+                mainMenu,
+                sidebar: sidebarContent,
+                content: `<article class="max-w-4xl mx-auto px-4 py-8">
+                    <h1 class="text-3xl font-bold mb-4">${post.title}</h1>
+                    <div class="text-gray-600 mb-8">${post.date}</div>
+                    <div class="prose">${postContent}</div>
+                </article>`,
+                heroBanner: 'uploads/theme/herobanner.jpg',
+                logo: 'uploads/theme/logo.png',
+                metaTags: postMetaTags
+            });
+            
+            // Write blog post
+            const postPath = path.join(exportDir, 'blog', post.slug, 'index.html');
+            fs.mkdirSync(path.dirname(postPath), { recursive: true });
+            fs.writeFileSync(postPath, postHtml);
+            console.log(`Created blog post: ${post.slug}`);
+        });
+    } else {
+        console.warn('Warning: blog.html template not found, skipping blog export');
+    }
+}
+
 // Create index.html in root
 if (fs.existsSync(path.join(exportDir, 'index', 'index.html'))) {
     fs.copyFileSync(path.join(exportDir, 'index', 'index.html'), path.join(exportDir, 'index.html'));
@@ -213,3 +349,47 @@ if (fs.existsSync(path.join(exportDir, 'index', 'index.html'))) {
 
 console.log('Export completed successfully!');
 console.log(`Static site is available in the '${exportDir}' directory`);
+
+// Helper function to build meta tags
+function buildMetaTags({ title, description, socialImage, siteTitle, titleSeparator, appendSiteTitle }) {
+    // Build full title
+    let fullTitle = title;
+    if (appendSiteTitle && title && siteTitle) {
+        fullTitle += ` ${titleSeparator} ${siteTitle}`;
+    } else if (!title && siteTitle) {
+        fullTitle = siteTitle;
+    }
+    
+    let metaTags = '';
+    
+    // Basic meta tags
+    if (description) {
+        metaTags += `<meta name="description" content="${description}">\n`;
+    }
+    
+    // Open Graph meta tags
+    metaTags += '<meta property="og:type" content="website">\n';
+    if (fullTitle) {
+        metaTags += `<meta property="og:title" content="${fullTitle}">\n`;
+    }
+    if (description) {
+        metaTags += `<meta property="og:description" content="${description}">\n`;
+    }
+    if (socialImage) {
+        metaTags += `<meta property="og:image" content="${socialImage}">\n`;
+    }
+    
+    // Twitter Card meta tags
+    metaTags += '<meta name="twitter:card" content="summary_large_image">\n';
+    if (fullTitle) {
+        metaTags += `<meta name="twitter:title" content="${fullTitle}">\n`;
+    }
+    if (description) {
+        metaTags += `<meta name="twitter:description" content="${description}">\n`;
+    }
+    if (socialImage) {
+        metaTags += `<meta name="twitter:image" content="${socialImage}">\n`;
+    }
+    
+    return metaTags;
+}
