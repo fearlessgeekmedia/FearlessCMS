@@ -63,6 +63,9 @@ With these policies in place, FearlessCMS seeks to create a platform that is lig
 - Please change this password immediately after first login
 
 ### Static Site Export
+
+Like the rest of the CMS, the export script is experimental, but even more so than the CMS. It may not work properly for every situation.
+
 To export your site to static HTML, you'll need to install the following Node.js dependencies:
 
 ```bash
