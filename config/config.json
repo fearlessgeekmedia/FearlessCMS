@@ -2,5 +2,6 @@
     "active_theme": "heroic",
     "site_name": "FearlessCMS",
     "custom_css": "",
-    "custom_js": ""
+    "custom_js": "",
+    "store_url": "https:\/\/raw.githubusercontent.com\/fearlessgeekmedia\/FearlessCMS-Store\/main\/store.json"
 }
