@@ -13,11 +13,27 @@ const customJs = config.custom_js || '';
 // Export directory
 const exportDir = 'export';
 
+// Content directory
+const contentDir = 'content';
+
 // Ensure export directory exists and is clean
 if (fs.existsSync(exportDir)) {
     fs.removeSync(exportDir);
 }
 fs.mkdirSync(exportDir, { recursive: true });
+
+// Create custom CSS and JS files
+if (customCss) {
+    const customCssPath = path.join(exportDir, 'assets', 'custom.css');
+    fs.mkdirSync(path.dirname(customCssPath), { recursive: true });
+    fs.writeFileSync(customCssPath, customCss);
+}
+
+if (customJs) {
+    const customJsPath = path.join(exportDir, 'assets', 'custom.js');
+    fs.mkdirSync(path.dirname(customJsPath), { recursive: true });
+    fs.writeFileSync(customJsPath, customJs);
+}
 
 // Copy theme assets
 const themeAssetsDir = path.join('themes', theme, 'assets');
@@ -80,23 +96,23 @@ function generateMenu(currentPage = '') {
 
     let menuHtml = '';
     menuItems.forEach(item => {
-        // Convert absolute URLs to relative URLs
+        // Handle external URLs
+        if (item.url.startsWith('http')) {
+            menuHtml += `<a href="${item.url}" class="${item.class}" ${item.target ? `target="${item.target}"` : ''}>${item.label}</a>`;
+            return;
+        }
+        
+        // For internal URLs, use absolute paths from root
         let url = item.url;
         if (url.startsWith('/')) {
             url = url.substring(1); // Remove leading slash
         }
         
-        // Handle external URLs
-        if (url.startsWith('http')) {
-            menuHtml += `<a href="${url}" class="${item.class}" ${item.target ? `target="${item.target}"` : ''}>${item.label}</a>`;
-            return;
-        }
-        
-        // If we're in a subdirectory (like /home/), we need to go up one level
-        if (currentPage === 'home') {
-            url = url === 'home' ? './' : '../' + url;
+        // Special case for home page
+        if (url === 'home' || url === '') {
+            url = '/';
         } else {
-            url = url === 'home' ? '../home/' : '../' + url + '/';
+            url = '/' + url + '/';
         }
         
         menuHtml += `<a href="${url}" class="${item.class}" ${item.target ? `target="${item.target}"` : ''}>${item.label}</a>`;
@@ -130,22 +146,46 @@ function generateSidebar(sidebarName) {
     return sidebarHtml;
 }
 
-// Process markdown files
-const contentDir = 'content';
-fs.readdirSync(contentDir).forEach(file => {
-    if (path.extname(file) === '.md') {
-        const filename = path.basename(file, '.md');
-        const filePath = path.join(contentDir, file);
-        const content = fs.readFileSync(filePath, 'utf8');
-
-        // Extract metadata
-        const metadataMatch = content.match(/^<!--\s*json\s*({.*?})\s*-->/);
-        const metadata = metadataMatch ? JSON.parse(metadataMatch[1]) : {};
-        const title = metadata.title || filename;
+// Process markdown files recursively
+function processContentDirectory(dir, basePath = '') {
+    // First, read all markdown files to build the page hierarchy
+    const pages = {};
+    fs.readdirSync(dir).forEach(file => {
+        if (path.extname(file) === '.md') {
+            const fullPath = path.join(dir, file);
+            const content = fs.readFileSync(fullPath, 'utf8');
+            const metadataMatch = content.match(/^<!--\s*json\s*({[\s\S]*?})\s*-->/);
+            const metadata = metadataMatch ? JSON.parse(metadataMatch[1]) : {};
+            const filename = path.basename(file, '.md');
+            
+            console.log(`DEBUG: Processing file ${file}`);
+            console.log(`DEBUG: Metadata match: ${metadataMatch ? metadataMatch[1] : 'none'}`);
+            console.log(`DEBUG: Parsed metadata:`, metadata);
+            
+            // Extract links from content to determine parent-child relationships
+            const links = content.match(/\[([^\]]+)\]\(([^)]+)\)/g) || [];
+            const childPages = links.map(link => {
+                const match = link.match(/\[([^\]]+)\]\(([^)]+)\)/);
+                return match ? match[2].replace(/^\//, '') : null;
+            }).filter(Boolean);
+            
+            pages[filename] = {
+                metadata,
+                childPages,
+                content,
+                fullPath
+            };
+        }
+    });
+    
+    // Now process each page
+    Object.entries(pages).forEach(([filename, page]) => {
+        const { metadata, content, fullPath } = page;
         const template = metadata.template || 'page';
         const heroBanner = metadata.heroBanner || metadata.hero_banner || '';
         const logo = metadata.logo || '';
         const sidebar = metadata.sidebar || '';
+        const pageTitle = metadata.title || filename;
 
         // Get template
         const templatePath = path.join('themes', theme, 'templates', `${template}.html`);
@@ -165,7 +205,7 @@ fs.readdirSync(contentDir).forEach(file => {
         const compiledTemplate = handlebars.compile(templateContent);
 
         // Generate menu and sidebar
-        const mainMenu = generateMenu(filename);
+        const mainMenu = generateMenu(basePath ? `${basePath}/${filename}` : filename);
         const sidebarContent = sidebarName ? generateSidebar(sidebarName) : '';
 
         // Convert markdown to HTML
@@ -179,28 +219,64 @@ fs.readdirSync(contentDir).forEach(file => {
         // Debug output for logo and heroBanner
         console.log(`DEBUG: For page '${filename}': logo='${logoValue}', heroBanner='${heroBannerValue}'`);
 
+        // Get SEO settings
+        const seoSettingsFile = path.join('config', 'seo_settings.json');
+        let seoSettings = {};
+        if (fs.existsSync(seoSettingsFile)) {
+            seoSettings = JSON.parse(fs.readFileSync(seoSettingsFile, 'utf8'));
+        }
+
+        // Build meta tags
+        const metaTags = buildMetaTags({
+            title: pageTitle,
+            description: metadata.description || seoSettings.site_description || '',
+            socialImage: metadata.social_image || seoSettings.social_image || '',
+            siteTitle: seoSettings.site_title || siteName,
+            titleSeparator: seoSettings.title_separator || '-',
+            appendSiteTitle: seoSettings.append_site_title !== false
+        });
+
         // Render template
         let renderedHtml = compiledTemplate({
-            title,
+            title: pageTitle,
             siteName,
             theme,
             currentYear: new Date().getFullYear(),
-            customCss,
-            customJs,
+            custom_css: customCss,
+            custom_js: customJs,
             mainMenu,
             sidebar: sidebarContent,
             content: htmlContent,
             heroBanner: heroBannerValue,
-            logo: logoValue
+            logo: logoValue,
+            metaTags
         });
 
-        // Write to export directory
-        const exportFilePath = path.join(exportDir, filename, 'index.html');
+        // Determine export path based on parent-child relationships
+        let exportFilePath;
+        if (filename === 'home' && basePath === '') {
+            // For the home page, create it in the root export directory
+            exportFilePath = path.join(exportDir, 'index.html');
+        } else {
+            // Check if this page is a child of another page
+            const parentPage = Object.entries(pages).find(([_, p]) => p.childPages.includes(filename));
+            if (parentPage) {
+                // Create the page under its parent's directory
+                exportFilePath = path.join(exportDir, parentPage[0], filename, 'index.html');
+            } else {
+                // Create the page in its own directory
+                exportFilePath = path.join(exportDir, filename, 'index.html');
+            }
+        }
+        
         fs.mkdirSync(path.dirname(exportFilePath), { recursive: true });
         fs.writeFileSync(exportFilePath, renderedHtml);
         console.log(`Created page: ${filename}`);
-    }
-});
+    });
+}
+
+// Start processing content directory
+processContentDirectory(contentDir);
 
 // Process blog posts
 const blogPostsFile = path.join(contentDir, 'blog_posts.json');
@@ -266,8 +342,8 @@ if (fs.existsSync(blogPostsFile)) {
             siteName,
             theme,
             currentYear: new Date().getFullYear(),
-            customCss,
-            customJs,
+            custom_css: customCss,
+            custom_js: customJs,
             mainMenu,
             sidebar: sidebarContent,
             content: blogIndexContent,
@@ -302,8 +378,8 @@ if (fs.existsSync(blogPostsFile)) {
                 siteName,
                 theme,
                 currentYear: new Date().getFullYear(),
-                customCss,
-                customJs,
+                custom_css: customCss,
+                custom_js: customJs,
                 mainMenu,
                 sidebar: sidebarContent,
                 content: `<article class="max-w-4xl mx-auto px-4 py-8">
@@ -325,26 +401,6 @@ if (fs.existsSync(blogPostsFile)) {
     } else {
         console.warn('Warning: blog.html template not found, skipping blog export');
     }
-}
-
-// Create index.html in root
-if (fs.existsSync(path.join(exportDir, 'index', 'index.html'))) {
-    fs.copyFileSync(path.join(exportDir, 'index', 'index.html'), path.join(exportDir, 'index.html'));
-    console.log('Created root index.html');
-} else {
-    const redirectHtml = `<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0;url=home/index.html">
-    <title>Redirecting...</title>
-</head>
-<body>
-    <p>If you are not redirected automatically, <a href="home/index.html">click here</a>.</p>
-</body>
-</html>`;
-    fs.writeFileSync(path.join(exportDir, 'index.html'), redirectHtml);
-    console.log('Created redirect index.html');
 }
 
 console.log('Export completed successfully!');
