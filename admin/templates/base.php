@@ -173,7 +173,7 @@ require_once dirname(dirname(__DIR__)) . '/version.php';
     
     <!-- Version Bar -->
     <div class="fixed bottom-0 left-0 right-0 bg-gray-800 text-white text-sm py-1 px-4 text-center">
-        FearlessCMS v<?php echo APP_VERSION; ?>
+        FearlessCMS v<?php echo APP_VERSION; ?> | <a href="https://ko-fi.com/fearlessgeekmedia" target="_blank" class="text-green-400 hover:text-green-300">Sponsor FearlessCMS on Ko-Fi</a>
     </div>
 </body>
 </html>

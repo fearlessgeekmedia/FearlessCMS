@@ -35,6 +35,35 @@ if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $contentData, $matches)) {
         </div>
 
         <div class="mb-4">
+            <label class="block mb-1">Parent Page</label>
+            <select name="parent" class="w-full border rounded px-3 py-2">
+                <option value="">None (Top Level)</option>
+                <?php
+                // Get all content files for parent selection
+                $contentFiles = glob(CONTENT_DIR . '/*.md');
+                foreach ($contentFiles as $file) {
+                    $fileContent = file_get_contents($file);
+                    $pageTitle = '';
+                    if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $fileContent, $matches)) {
+                        $pageMetadata = json_decode($matches[1], true);
+                        if ($pageMetadata && isset($pageMetadata['title'])) {
+                            $pageTitle = $pageMetadata['title'];
+                        }
+                    }
+                    if (!$pageTitle) {
+                        $pageTitle = ucwords(str_replace(['-', '_'], ' ', basename($file, '.md')));
+                    }
+                    $pagePath = basename($file, '.md');
+                    if ($pagePath !== $path) { // Don't allow self as parent
+                        $selected = (isset($metadata['parent']) && $metadata['parent'] === $pagePath) ? 'selected' : '';
+                        echo '<option value="' . htmlspecialchars($pagePath) . '" ' . $selected . '>' . htmlspecialchars($pageTitle) . '</option>';
+                    }
+                }
+                ?>
+            </select>
+        </div>
+
+        <div class="mb-4">
             <label class="block mb-1">Template</label>
             <select name="template" class="w-full border rounded px-3 py-2">
                 <?php foreach ($templates as $template): ?>
