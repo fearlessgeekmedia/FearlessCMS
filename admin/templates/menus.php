@@ -11,7 +11,14 @@
         <div class="flex space-x-2">
             <select id="menu-select" onchange="loadMenu(this.value)" class="flex-1 border rounded px-3 py-2">
                 <option value="">Select a menu...</option>
-                <?php echo $menu_options; ?>
+                <?php 
+                // Load menus for display
+                $menuFile = CONFIG_DIR . '/menus.json';
+                $menus = file_exists($menuFile) ? json_decode(file_get_contents($menuFile), true) : [];
+                foreach ($menus as $id => $menu) {
+                    echo '<option value="' . htmlspecialchars($id) . '">' . htmlspecialchars($menu['label']) . '</option>';
+                }
+                ?>
             </select>
             <button onclick="deleteSelectedMenu()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600" id="delete-menu-btn" style="display: none;">
                 Delete Menu
@@ -114,30 +121,44 @@ function loadMenu(menuId) {
 
     // Load menu data from server
     fetch(`?action=load_menu&menu_id=${menuId}`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
+            if (!data || typeof data !== 'object') {
+                throw new Error('Invalid menu data received');
+            }
             menuData = data;
             // Ensure items array exists and has IDs
             if (!menuData.items) {
                 menuData.items = [];
             }
-            // Add IDs to items if they don't have them and ensure they're strings
+            // Add IDs to items if they don't have them
             menuData.items = menuData.items.map((item, index) => ({
                 ...item,
                 id: item.id ? String(item.id) : `item_${index}`
             }));
-            document.getElementById('menu-class').value = menuData.menu_class || '';
+            document.getElementById('menu-class').value = menuData.class || '';
             renderMenuItems();
             updatePreview();
             initSortable();
         })
         .catch(error => {
             console.error('Error loading menu:', error);
-            alert('Failed to load menu');
+            alert('Failed to load menu. Please try again.');
+            // Reset UI state
+            document.getElementById('menu-editor').style.display = 'none';
+            document.getElementById('menu-preview').style.display = 'none';
+            document.getElementById('delete-menu-btn').style.display = 'none';
+            currentMenu = null;
+            menuData = {};
         });
 }
 
-function addMenuItem() {
+function addMenuItem(parentId = null) {
     if (!currentMenu) return;
     
     const item = {
@@ -145,41 +166,62 @@ function addMenuItem() {
         label: 'New Item',
         url: '#',
         class: '',
-        target: ''
+        target: '',
+        children: []
     };
     
-    menuData.items = menuData.items || [];
-    menuData.items.push(item);
+    if (parentId) {
+        // Find parent item and add this as a child
+        const parentItem = findMenuItem(menuData.items, parentId);
+        if (parentItem) {
+            parentItem.children = parentItem.children || [];
+            parentItem.children.push(item);
+        }
+    } else {
+        menuData.items = menuData.items || [];
+        menuData.items.push(item);
+    }
+    
     renderMenuItems();
     updatePreview();
     initSortable();
 }
 
-function removeMenuItem(itemId) {
-    console.log('Removing item:', itemId);
-    console.log('Current menuData:', menuData);
-    
-    if (!currentMenu || !menuData.items) {
-        console.log('No current menu or items array');
-        return;
+function findMenuItem(items, id) {
+    for (const item of items) {
+        if (item.id === id) return item;
+        if (item.children) {
+            const found = findMenuItem(item.children, id);
+            if (found) return found;
+        }
     }
+    return null;
+}
+
+function removeMenuItem(itemId) {
+    if (!currentMenu || !menuData.items) return;
     
-    console.log('Before filter - items:', menuData.items);
-    menuData.items = menuData.items.filter(item => {
-        console.log('Checking item:', item);
-        // Convert both IDs to strings for comparison
-        return String(item.id) !== String(itemId);
-    });
-    console.log('After filter - items:', menuData.items);
+    // Helper function to remove item from array
+    const removeFromArray = (items) => {
+        const index = items.findIndex(item => String(item.id) === String(itemId));
+        if (index !== -1) {
+            items.splice(index, 1);
+            return true;
+        }
+        for (const item of items) {
+            if (item.children && removeFromArray(item.children)) {
+                return true;
+            }
+        }
+        return false;
+    };
     
+    removeFromArray(menuData.items);
     renderMenuItems();
     updatePreview();
 }
 
 function renderMenuItems() {
-    console.log('Rendering menu items');
-    console.log('Current menuData:', menuData);
-    
     const container = document.getElementById('menu-items');
     container.innerHTML = '';
     
@@ -188,11 +230,12 @@ function renderMenuItems() {
         return;
     }
     
-    menuData.items.forEach(item => {
-        console.log('Rendering item:', item);
+    const renderItem = (item, level = 0) => {
         const div = document.createElement('div');
         div.className = 'flex flex-col space-y-2 p-2 border rounded bg-white cursor-move';
         div.setAttribute('data-id', item.id);
+        div.style.marginLeft = `${level * 20}px`;
+        
         div.innerHTML = `
             <div class="flex items-center space-x-2">
                 <div class="cursor-move text-gray-400 px-2">
@@ -202,6 +245,12 @@ function renderMenuItems() {
                 </div>
                 <input type="text" value="${item.label || ''}" onchange="updateMenuItem('${item.id}', 'label', this.value)" class="flex-1 px-2 py-1 border rounded" placeholder="Label">
                 <input type="text" value="${item.url || ''}" onchange="updateMenuItem('${item.id}', 'url', this.value)" class="flex-1 px-2 py-1 border rounded" placeholder="URL">
+                <button type="button" onclick="addMenuItem('${item.id}')" class="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600 flex items-center space-x-1" title="Add Submenu Item">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    <span>Add Submenu</span>
+                </button>
                 <button type="button" onclick="removeMenuItem('${item.id}')" class="text-red-500 hover:text-red-600">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -216,8 +265,16 @@ function renderMenuItems() {
                 </select>
             </div>
         `;
+        
         container.appendChild(div);
-    });
+        
+        // Render children if any
+        if (item.children && item.children.length > 0) {
+            item.children.forEach(child => renderItem(child, level + 1));
+        }
+    };
+    
+    menuData.items.forEach(item => renderItem(item));
 }
 
 function initSortable() {
@@ -228,7 +285,7 @@ function initSortable() {
         onEnd: function(evt) {
             const items = Array.from(container.children).map(div => {
                 const id = div.getAttribute('data-id');
-                return menuData.items.find(item => item.id === id);
+                return findMenuItem(menuData.items, id);
             }).filter(Boolean);
             menuData.items = items;
             updatePreview();
@@ -237,7 +294,7 @@ function initSortable() {
 }
 
 function updateMenuItem(itemId, field, value) {
-    const item = menuData.items.find(i => i.id === itemId);
+    const item = findMenuItem(menuData.items, itemId);
     if (item) {
         item[field] = value;
         updatePreview();
@@ -253,53 +310,84 @@ function updatePreview() {
     
     const menuClass = document.getElementById('menu-class').value;
     let html = `<ul class="${menuClass} space-y-2">`;
-    menuData.items.forEach(item => {
-        if (!item) return;
+    
+    const renderItem = (item) => {
         const itemClass = item.class ? ` class="${item.class}"` : '';
         const target = item.target ? ` target="${item.target}"` : '';
-        html += `
+        let itemHtml = `
             <li>
                 <a href="${item.url || '#'}"${itemClass}${target} class="text-blue-500 hover:text-blue-600">${item.label || 'Unnamed Item'}</a>
-            </li>
         `;
+        
+        if (item.children && item.children.length > 0) {
+            itemHtml += '<ul class="ml-4 mt-2 space-y-2">';
+            item.children.forEach(child => {
+                itemHtml += renderItem(child);
+            });
+            itemHtml += '</ul>';
+        }
+        
+        itemHtml += '</li>';
+        return itemHtml;
+    };
+    
+    menuData.items.forEach(item => {
+        html += renderItem(item);
     });
+    
     html += '</ul>';
     preview.innerHTML = html;
 }
 
 function saveMenu() {
-    if (!currentMenu) return;
-    
-    const menuClass = document.getElementById('menu-class').value;
-    
-    fetch('?action=manage_menus', {
+    const menuId = document.getElementById('menu-select').value;
+    if (!menuId) {
+        alert('Please select a menu first');
+        return;
+    }
+
+    const saveData = {
+        action: 'save_menu',
+        menu_id: menuId,
+        menu_data: {
+            label: menuId,
+            menu_class: document.getElementById('menu-class').value,
+            items: menuData.items || []
+        }
+    };
+
+    console.log('Sending data:', saveData);
+
+    fetch('/admin', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json'
         },
-        body: JSON.stringify({
-            action: 'save_menu',
-            menu_id: currentMenu,
-            label: currentMenu,
-            class: menuClass,
-            items: menuData.items
-        })
+        body: JSON.stringify(saveData)
     })
     .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json();
+        console.log('Response status:', response.status);
+        return response.text().then(text => {
+            console.log('Response text:', text);
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                console.error('JSON parse error:', e);
+                throw new Error('Invalid JSON response from server');
+            }
+        });
     })
     .then(data => {
         if (data.success) {
-            alert('Menu saved successfully!');
+            alert('Menu saved successfully');
+            updatePreview();
         } else {
-            alert('Error saving menu: ' + (data.error || 'Unknown error'));
+            alert(data.error || 'Failed to save menu. Please try again.');
         }
     })
     .catch(error => {
-        console.error('Error saving menu:', error);
+        console.error('Error:', error);
         alert('Failed to save menu. Please try again.');
     });
 }
@@ -310,10 +398,11 @@ document.getElementById('new-menu-form').addEventListener('submit', function(e) 
     const name = document.getElementById('new-menu-name').value;
     const menuClass = document.getElementById('new-menu-class').value;
     
-    fetch('?action=manage_menus', {
+    fetch('/admin', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json'
         },
         body: JSON.stringify({ 
             action: 'create_menu',
@@ -358,10 +447,11 @@ function deleteSelectedMenu() {
 function confirmDeleteMenu() {
     if (!currentMenu) return;
     
-    fetch('?action=manage_menus', {
+    fetch('/admin', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json'
         },
         body: JSON.stringify({
             action: 'delete_menu',
@@ -391,3 +481,4 @@ function confirmDeleteMenu() {
     });
 }
 </script>
+

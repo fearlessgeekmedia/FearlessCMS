@@ -24,15 +24,36 @@ class MenuManager {
 
         $html = '<ul class="' . htmlspecialchars($menus[$menuId]['menu_class'] ?? 'main-nav') . '">';
         foreach ($menus[$menuId]['items'] as $item) {
-            $label = htmlspecialchars($item['label']);
-            $url = htmlspecialchars($item['url']);
-            $class = htmlspecialchars($item['class'] ?? '');
-            $target = $item['target'] ? ' target="' . htmlspecialchars($item['target']) . '"' : '';
-            $html .= "<li><a href=\"$url\" class=\"$class\"$target>$label</a></li>";
+            $html .= $this->renderMenuItem($item);
         }
         $html .= '</ul>';
 
         error_log("Generated menu HTML: " . $html);
+        return $html;
+    }
+
+    private function renderMenuItem($item) {
+        $label = htmlspecialchars($item['label']);
+        $url = htmlspecialchars($item['url']);
+        $class = htmlspecialchars($item['class'] ?? '');
+        $target = $item['target'] ? ' target="' . htmlspecialchars($item['target']) . '"' : '';
+        
+        // Check if item has children
+        $hasChildren = isset($item['children']) && !empty($item['children']);
+        
+        $html = '<li class="' . ($hasChildren ? 'has-submenu' : '') . '">';
+        $html .= "<a href=\"$url\" class=\"$class\"$target>$label</a>";
+        
+        // Render children if they exist
+        if ($hasChildren) {
+            $html .= '<ul class="submenu">';
+            foreach ($item['children'] as $child) {
+                $html .= $this->renderMenuItem($child);
+            }
+            $html .= '</ul>';
+        }
+        
+        $html .= '</li>';
         return $html;
     }
 } 
