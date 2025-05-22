@@ -1,0 +1,17 @@
+{
+    "main": {
+        "name": "Main Sidebar",
+        "widgets": [
+            {
+                "type": "text",
+                "title": "About Us",
+                "content": "Welcome to our website! We're dedicated to providing the best service to our customers."
+            },
+            {
+                "type": "text",
+                "title": "Contact Info",
+                "content": "Email: info@example.com<br>Phone: (555) 123-4567"
+            }
+        ]
+    }
+} 

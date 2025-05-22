@@ -83,14 +83,27 @@ if (is_dir($contentDir)) {
 // Load recent content for dashboard
 $recentContent = [];
 if (is_dir($contentDir)) {
-    $files = glob($contentDir . '/*.md');
-    usort($files, function($a, $b) {
-        return filemtime($b) - filemtime($a);
-    });
-    $files = array_slice($files, 0, 5); // Get 5 most recent files
+    // Recursively get all .md files
+    $files = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($contentDir, RecursiveDirectoryIterator::SKIP_DOTS)
+    );
+    $files = new RegexIterator($files, '/\.md$/');
     
-    foreach ($files as $file) {
-        $content = file_get_contents($file);
+    // Convert to array and sort by modification time
+    $fileArray = iterator_to_array($files);
+    usort($fileArray, function($a, $b) {
+        return $b->getMTime() - $a->getMTime();
+    });
+    
+    // Get 5 most recent files, excluding preview directory
+    $count = 0;
+    foreach ($fileArray as $file) {
+        // Skip files in preview directory or with preview in the path
+        if (strpos($file->getPathname(), '/preview/') !== false || strpos($file->getPathname(), 'preview') !== false) {
+            continue;
+        }
+        
+        $content = file_get_contents($file->getPathname());
         $title = '';
         if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $content, $matches)) {
             $metadata = json_decode($matches[1], true);
@@ -99,12 +112,59 @@ if (is_dir($contentDir)) {
             }
         }
         if (!$title) {
-            $title = ucwords(str_replace(['-', '_'], ' ', basename($file, '.md')));
+            $title = ucwords(str_replace(['-', '_'], ' ', $file->getBasename('.md')));
         }
+        
+        // Get relative path from content directory
+        $relativePath = str_replace($contentDir . '/', '', $file->getPathname());
+        $path = substr($relativePath, 0, -3); // Remove .md extension
+        
         $recentContent[] = [
             'title' => $title,
-            'path' => basename($file, '.md'),
-            'modified' => filemtime($file)
+            'path' => $path,
+            'modified' => $file->getMTime()
+        ];
+        
+        $count++;
+        if ($count >= 5) break;
+    }
+}
+
+// Load content list for content management
+$contentList = [];
+if (is_dir($contentDir)) {
+    // Recursively get all .md files
+    $files = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($contentDir, RecursiveDirectoryIterator::SKIP_DOTS)
+    );
+    $files = new RegexIterator($files, '/\.md$/');
+    
+    foreach ($files as $file) {
+        // Skip files in preview directory or with preview in the path
+        if (strpos($file->getPathname(), '/preview/') !== false || strpos($file->getPathname(), 'preview') !== false) {
+            continue;
+        }
+        
+        $content = file_get_contents($file->getPathname());
+        $title = '';
+        if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $content, $matches)) {
+            $metadata = json_decode($matches[1], true);
+            if ($metadata && isset($metadata['title'])) {
+                $title = $metadata['title'];
+            }
+        }
+        if (!$title) {
+            $title = ucwords(str_replace(['-', '_'], ' ', $file->getBasename('.md')));
+        }
+        
+        // Get relative path from content directory
+        $relativePath = str_replace($contentDir . '/', '', $file->getPathname());
+        $path = substr($relativePath, 0, -3); // Remove .md extension
+        
+        $contentList[] = [
+            'title' => $title,
+            'path' => $path,
+            'modified' => date('Y-m-d H:i:s', $file->getMTime())
         ];
     }
 }

@@ -2,37 +2,68 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <title>{{title}} - Modern Salt Lake City</title>
+    <title>{{title}}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-      body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: #f7fafc; color: #2d3748; }
-    header { background: #2c5282; color: #fff; padding: 1.5em 0 1em 0; text-align: center; }
-    nav ul { list-style: none; padding: 0; margin: 1em 0 0 0; display: flex; justify-content: center; gap: 2em; }
-    nav a { color: #fff; text-decoration: none; font-weight: 500; }
-    nav a:hover { text-decoration: underline; }
-    main { max-width: 800px; margin: 2em auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #0001; padding: 2em; }
-    h1 { color: #2c5282; }
-    footer { background: #2c5282; color: #fff; text-align: center; padding: 1.5em 0 1em 0; margin-top: 3em; }
-    @media (max-width: 600px) {
-      nav ul { flex-direction: column; gap: 1em; }
-      main { padding: 1em; }
-    }
+    <link rel="stylesheet" href="/themes/salt-lake/templates/style.css">
     {{custom_css}}
-    </style>
+    {{#if meta_description}}
+    <meta name="description" content="{{meta_description}}">
+    {{/if}}
+    {{#if meta_social_image}}
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{{title}}">
+    {{#if meta_description}}
+    <meta property="og:description" content="{{meta_description}}">
+    {{/if}}
+    <meta property="og:image" content="{{meta_social_image}}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{title}}">
+    {{#if meta_description}}
+    <meta name="twitter:description" content="{{meta_description}}">
+    {{/if}}
+    <meta name="twitter:image" content="{{meta_social_image}}">
+    {{/if}}
   </head>
   <body>
-    <header>
-      <h1>Modern Salt Lake City</h1>
-      <nav>
-        {{menu=main}}
-      </nav>
+    <header class="site-header">
+      <div class="container">
+        <div class="header-inner">
+          <div class="site-branding">
+            <a href="/" class="site-logo">Modern Salt Lake City</a>
+          </div>
+          <nav class="main-navigation">
+            {{menu=main}}
+          </nav>
+        </div>
+      </div>
     </header>
-    <main>
-      <h1>{{title}}</h1>
-      {{content}}
+    <main class="site-content">
+      <div class="container">
+        <div class="content-wrapper">
+          <div class="page-content">
+            <h1>{{title}}</h1>
+            {{content}}
+          </div>
+          {{#if sidebar}}
+          <div class="sidebar">
+            {{sidebar=main}}
+          </div>
+          {{/if}}
+        </div>
+      </div>
     </main>
-    <footer>
-      Modern Salt Lake City Theme &copy; 2025
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-info">
+            <h3>Modern Salt Lake City</h3>
+            <p>A beautiful theme inspired by the landscapes of Utah.</p>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          Modern Salt Lake City Theme &copy; 2025
+        </div>
+      </div>
     </footer>
     <script>
       {{custom_js}}

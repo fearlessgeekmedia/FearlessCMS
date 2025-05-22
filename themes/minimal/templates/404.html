@@ -3,17 +3,36 @@
   <head>
     <meta charset="UTF-8">
     <title>Not Found - Minimal Theme</title>
-    <style>
-      body { font-family: sans-serif; margin: 2em; background: #f9f9f9; color: #222; }
-    main { background: #fff; padding: 2em; border-radius: 8px; box-shadow: 0 2px 8px #0001; }
-    a { color: #0074d9; }
-    </style>
+    <link rel="stylesheet" href="/themes/minimal/templates/style.css">
+    {{custom_css}}
   </head>
   <body>
-    <main>
-      <h1>404 - Not Found</h1>
-      <p>The page you requested could not be found.</p>
-      <p><a href="/">Go Home</a></p>
+    <header class="site-header">
+      <div class="container">
+        <div class="header-inner">
+          <h1 class="site-title">
+            <a href="/">Minimal Theme</a>
+          </h1>
+          <nav class="main-navigation">
+            {{menu=main}}
+          </nav>
+        </div>
+      </div>
+    </header>
+    <main class="site-content">
+      <div class="container">
+        <h1>404 - Not Found</h1>
+        <p>The page you requested could not be found.</p>
+        <p><a href="/">Go Home</a></p>
+      </div>
     </main>
+    <footer class="site-footer">
+      <div class="container">
+        Minimal Theme &copy; 2025
+      </div>
+    </footer>
+    <script>
+      {{custom_js}}
+    </script>
   </body>
 </html>

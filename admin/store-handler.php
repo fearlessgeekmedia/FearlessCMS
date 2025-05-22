@@ -36,17 +36,12 @@ class SimpleMarkdown {
 function fetch_github_content($path) {
     $storeUrl = defined('STORE_URL') ? STORE_URL : 'https://github.com/fearlessgeekmedia/FearlessCMS-Store.git';
     
-    // If the path is already a full URL, use it directly
-    if (strpos($path, 'http') === 0) {
-        $rawUrl = $path;
-    } else {
-        // Extract repository name from URL
+    // Determine if this is a raw content URL or a GitHub repository URL
+    $rawUrl = $path;
+    if (strpos($path, 'http') !== 0) {
         if (strpos($storeUrl, 'github.com') !== false) {
             // Transform GitHub repository URL to raw content URL
             $rawUrl = str_replace(['github.com', '.git'], ['raw.githubusercontent.com', ''], $storeUrl) . '/main/' . $path;
-        } elseif (strpos($storeUrl, 'raw.githubusercontent.com') !== false) {
-            // If it's a raw content URL, use the directory as base
-            $rawUrl = dirname($storeUrl) . '/' . $path;
         } else {
             // For other URLs, append the path
             $rawUrl = rtrim($storeUrl, '/') . '/' . $path;
@@ -55,42 +50,78 @@ function fetch_github_content($path) {
     
     error_log("Fetching content from: " . $rawUrl);
     
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $rawUrl);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    curl_setopt($ch, CURLOPT_USERAGENT, 'FearlessCMS/1.0');
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'Accept: application/json, text/plain, */*',
-        'Accept-Language: en-US,en;q=0.9'
-    ]);
-    curl_setopt($ch, CURLOPT_VERBOSE, true);
-    
-    // Create a temporary file handle for CURL debug output
-    $verbose = fopen('php://temp', 'w+');
-    curl_setopt($ch, CURLOPT_STDERR, $verbose);
-    
-    $content = curl_exec($ch);
-    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $error = curl_error($ch);
-    
-    // Get the verbose debug information
-    rewind($verbose);
-    $verboseLog = stream_get_contents($verbose);
-    
-    error_log("CURL Verbose Log: " . $verboseLog);
-    error_log("HTTP response code: " . $http_code);
-    if ($error) {
-        error_log("CURL error: " . $error);
+    // Try cURL first if available
+    if (function_exists('curl_init')) {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $rawUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'FearlessCMS/1.0');
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Accept: application/json, text/plain, */*',
+            'Accept-Language: en-US,en;q=0.9'
+        ]);
+        curl_setopt($ch, CURLOPT_VERBOSE, true);
+        
+        // Create a temporary file handle for CURL debug output
+        $verbose = fopen('php://temp', 'w+');
+        curl_setopt($ch, CURLOPT_STDERR, $verbose);
+        
+        $content = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        
+        // Get the verbose debug information
+        rewind($verbose);
+        $verboseLog = stream_get_contents($verbose);
+        
+        error_log("CURL Verbose Log: " . $verboseLog);
+        error_log("HTTP response code: " . $http_code);
+        if ($error) {
+            error_log("CURL error: " . $error);
+        }
+        error_log("Response content: " . substr($content, 0, 1000)); // Log first 1000 chars of response
+        
+        curl_close($ch);
+        fclose($verbose);
+        
+        if ($http_code === 200) {
+            return $content;
+        }
     }
-    error_log("Response content: " . substr($content, 0, 1000)); // Log first 1000 chars of response
     
-    curl_close($ch);
-    fclose($verbose);
+    // Fallback to file_get_contents
+    $context = stream_context_create([
+        'http' => [
+            'method' => 'GET',
+            'header' => [
+                'User-Agent: FearlessCMS/1.0',
+                'Accept: application/json, text/plain, */*',
+                'Accept-Language: en-US,en;q=0.9'
+            ],
+            'ignore_errors' => true
+        ],
+        'ssl' => [
+            'verify_peer' => false,
+            'verify_peer_name' => false
+        ]
+    ]);
     
-    if ($http_code !== 200) {
-        error_log("Failed to fetch content. HTTP code: " . $http_code . " URL: " . $rawUrl);
+    $content = @file_get_contents($rawUrl, false, $context);
+    if ($content === false) {
+        error_log("Failed to fetch content using file_get_contents. URL: " . $rawUrl);
+        return false;
+    }
+    
+    // Check if we got a valid response
+    $response_code = 0;
+    if (preg_match('/HTTP\/\d\.\d\s+(\d+)/', $http_response_header[0], $matches)) {
+        $response_code = intval($matches[1]);
+    }
+    
+    if ($response_code !== 200) {
+        error_log("Failed to fetch content. HTTP code: " . $response_code . " URL: " . $rawUrl);
         return false;
     }
     

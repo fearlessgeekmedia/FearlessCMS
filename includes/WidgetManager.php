@@ -3,7 +3,7 @@ class WidgetManager {
     private $widgetsFile;
 
     public function __construct() {
-        $this->widgetsFile = ADMIN_CONFIG_DIR . '/widgets.json';
+        $this->widgetsFile = CONFIG_DIR . '/widgets.json';
     }
 
     public function renderSidebar($sidebarName) {

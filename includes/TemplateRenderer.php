@@ -14,9 +14,16 @@ class TemplateRenderer {
 
     public function render($template, $data) {
         // Get template content
-        $templateFile = PROJECT_ROOT . '/themes/' . $this->theme . '/templates/' . $template . '.html';
+        $templateFile = PROJECT_ROOT . '/themes/' . $this->theme . '/templates/' . $template;
         if (!file_exists($templateFile)) {
-            throw new Exception("Template not found: $template");
+            $templateFile .= '.html';
+        }
+        if (!file_exists($templateFile)) {
+            // Fallback to page.html
+            $templateFile = PROJECT_ROOT . '/themes/' . $this->theme . '/templates/page.html';
+            if (!file_exists($templateFile)) {
+                throw new Exception("Template not found: $template, and fallback to page.html also failed.");
+            }
         }
         $content = file_get_contents($templateFile);
 
@@ -49,6 +56,11 @@ class TemplateRenderer {
         // Merge with any additional data
         $templateData = array_merge($templateData, $data);
 
+        // Handle sidebar variable
+        if (isset($data['sidebar'])) {
+            $templateData['sidebar'] = (bool)$data['sidebar'];
+        }
+
         error_log("Template data: " . print_r($templateData, true));
 
         // Replace template variables
@@ -60,37 +72,8 @@ class TemplateRenderer {
     private function replaceVariables($content, $data) {
         error_log("Template content before processing: " . $content);
         
-        // Handle if conditions with else blocks
-        $content = preg_replace_callback('/{{#if\s+([^}]+)}}(.*?)(?:{{else}}(.*?))?{{\/if}}/s', function($matches) use ($data) {
-            $condition = trim($matches[1]);
-            $ifContent = $matches[2];
-            $elseContent = $matches[3] ?? '';
-            
-            error_log("Found if condition: " . $condition);
-            error_log("If content: " . $ifContent);
-            error_log("Else content: " . $elseContent);
-            
-            // Check both camelCase and snake_case versions
-            $snakeCase = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $condition));
-            
-            // Check if the condition exists and is truthy
-            $conditionMet = false;
-            if (isset($data[$condition])) {
-                $conditionMet = !empty($data[$condition]);
-            } elseif (isset($data[$snakeCase])) {
-                $conditionMet = !empty($data[$snakeCase]);
-            }
-            
-            if ($conditionMet) {
-                return $this->replaceVariables($ifContent, $data);
-            } else {
-                return $this->replaceVariables($elseContent, $data);
-            }
-        }, $content);
-        
-        error_log("Template content after processing: " . $content);
-
-        // Handle sidebar syntax
+        // Handle special tags first
+        // Handle sidebar syntax (only {{sidebar=name}} form)
         $content = preg_replace_callback('/{{sidebar=([^}]+)}}/', function($matches) {
             $sidebarName = trim($matches[1]);
             return $this->widgetManager->renderSidebar($sidebarName);
@@ -102,15 +85,52 @@ class TemplateRenderer {
             return $this->menuManager->renderMenu($menuId);
         }, $content);
 
-        // Replace simple variables
+        // Handle if conditions with else blocks (run multiple times for nested blocks)
+        for ($i = 0; $i < 5; $i++) {
+            $newContent = preg_replace_callback(
+                '/{{#if\s+([^}]+)}}(.*?)(?:{{else}}(.*?))?{{\/if}}/s',
+                function($matches) use ($data) {
+                    $condition = trim($matches[1]);
+                    $ifContent = $matches[2];
+                    $elseContent = $matches[3] ?? '';
+                    $snakeCase = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $condition));
+                    $conditionMet = false;
+                    if (isset($data[$condition])) {
+                        $conditionMet = !empty($data[$condition]);
+                    } elseif (isset($data[$snakeCase])) {
+                        $conditionMet = !empty($data[$snakeCase]);
+                    }
+                    if ($conditionMet) {
+                        return $this->replaceVariables($ifContent, $data);
+                    } else {
+                        return $this->replaceVariables($elseContent, $data);
+                    }
+                },
+                $content
+            );
+            if ($newContent === $content) break;
+            $content = $newContent;
+        }
+        
+        // Remove any stray {{/if}} tags
+        $content = str_replace('{{/if}}', '', $content);
+        
+        error_log("Template content after processing: " . $content);
+
+        // Then handle simple variables (but not special tags)
         foreach ($data as $key => $value) {
             if (is_string($value) || is_numeric($value)) {
+                // Skip if this is a special tag
+                if (in_array($key, ['sidebar', 'menu'])) {
+                    continue;
+                }
                 // Unescape forward slashes in paths
                 if (in_array($key, ['logo', 'heroBanner', 'hero_banner']) && is_string($value)) {
                     $value = str_replace('\\/', '/', $value);
                 }
                 // Handle both camelCase and snake_case versions
                 $content = str_replace('{{' . $key . '}}', $value, $content);
+                $content = str_replace('{{{' . $key . '}}}', $value, $content);
             }
         }
 

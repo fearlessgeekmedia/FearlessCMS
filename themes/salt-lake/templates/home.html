@@ -4,40 +4,51 @@
     <meta charset="UTF-8">
     <title>{{title}} - Modern Salt Lake City</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-      body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: #f7fafc; color: #2d3748; }
-    header { background: linear-gradient(90deg, #2c5282 60%, #f6ad55 100%); color: #fff; padding: 2em 0 1em 0; text-align: center; }
-    nav ul { list-style: none; padding: 0; margin: 1em 0 0 0; display: flex; justify-content: center; gap: 2em; }
-    nav a { color: #fff; text-decoration: none; font-weight: 500; }
-    nav a:hover { text-decoration: underline; }
-    .hero { background: url('/themes/salt-lake/assets/images/mountains-header.jpg') center/cover no-repeat; padding: 4em 0 2em 0; color: #fff; }
-    .hero h1 { font-size: 2.5em; margin: 0 0 0.5em 0; }
-    .hero p { font-size: 1.2em; }
-    main { max-width: 800px; margin: 2em auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #0001; padding: 2em; }
-    footer { background: #2c5282; color: #fff; text-align: center; padding: 1.5em 0 1em 0; margin-top: 3em; }
-    @media (max-width: 600px) {
-      nav ul { flex-direction: column; gap: 1em; }
-      main { padding: 1em; }
-      .hero { padding: 2em 0 1em 0; }
-    }
+    <link rel="stylesheet" href="/themes/salt-lake/templates/style.css">
     {{custom_css}}
-    </style>
   </head>
   <body>
-    <header>
-      <div class="hero">
-        <h1>{{title}}</h1>
-        <p>Experience the beauty of Salt Lake City</p>
+    <header class="site-header">
+      <div class="container">
+        <div class="header-inner">
+          <div class="site-branding">
+            <a href="/" class="site-logo">Modern Salt Lake City</a>
+          </div>
+          <nav class="main-navigation">
+            {{menu=main}}
+          </nav>
+        </div>
       </div>
-      <nav>
-        {{menu=main}}
-      </nav>
     </header>
-    <main>
-      {{content}}
+    <main class="site-content">
+      <div class="container">
+        <div class="hero-section">
+          <div class="hero-image" style="background-image: url('/themes/salt-lake/assets/images/mountains-header.jpg');">
+            <div class="hero-overlay">
+              <div class="hero-content">
+                <h1>{{title}}</h1>
+                <p class="hero-subtitle">Experience the beauty of Salt Lake City</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="page-content">
+          {{content}}
+        </div>
+      </div>
     </main>
-    <footer>
-      Modern Salt Lake City Theme &copy; 2025
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-info">
+            <h3>Modern Salt Lake City</h3>
+            <p>A beautiful theme inspired by the landscapes of Utah.</p>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          Modern Salt Lake City Theme &copy; 2025
+        </div>
+      </div>
     </footer>
     <script>
       {{custom_js}}
