@@ -54,7 +54,7 @@ $themeOptions = file_exists($themeOptionsFile) ? json_decode(file_get_contents($
                         <span class="font-medium">Active Theme</span>
                     </div>
                 <?php else: ?>
-                    <form method="POST" action="">
+                    <form method="POST" action="/admin?action=manage_themes">
                         <input type="hidden" name="action" value="activate_theme" />
                         <input type="hidden" name="theme" value="<?php echo htmlspecialchars($theme['id']); ?>" />
                         <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full">Activate Theme</button>

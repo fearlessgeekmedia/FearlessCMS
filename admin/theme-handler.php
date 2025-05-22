@@ -19,7 +19,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
                 $config['active_theme'] = $theme;
                 if (file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT))) {
-                    $success = 'Theme activated successfully';
+                    header('Location: /admin?action=manage_themes&success=Theme activated successfully');
+                    exit;
                 } else {
                     $error = 'Failed to activate theme';
                 }
