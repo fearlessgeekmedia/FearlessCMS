@@ -1,0 +1,17 @@
+{
+    "name": "Advanced SEO",
+    "description": "Enhanced SEO features for FearlessCMS including XML sitemap, structured data, and advanced meta tags",
+    "version": "1.0",
+    "author": "Fearless Geek",
+    "dependencies": ["seo"],
+    "features": [
+        "XML Sitemap Generation",
+        "Structured Data (JSON-LD)",
+        "Advanced Meta Tags",
+        "Social Media Optimization",
+        "Analytics Integration",
+        "Robots.txt Management",
+        "Canonical URLs",
+        "Hreflang Tags"
+    ]
+} 
