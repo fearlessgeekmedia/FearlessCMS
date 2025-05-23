@@ -1,0 +1,13 @@
+{
+    "name": "WordPress Import",
+    "description": "Import content from WordPress XML export files into FearlessCMS",
+    "version": "1.0",
+    "author": "Fearless Geek",
+    "features": [
+        "Import WordPress posts and pages",
+        "Convert content to Markdown format",
+        "Preserve categories and tags",
+        "Maintain post metadata",
+        "Handle media attachments"
+    ]
+} 

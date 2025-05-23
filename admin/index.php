@@ -618,6 +618,9 @@ if (file_exists($templateFile)) {
 } else {
     // Check if this is a registered admin section
     $admin_sections = fcms_get_admin_sections();
+    $section_found = false;
+    
+    // First check direct sections
     if (isset($admin_sections[$action])) {
         error_log("Admin index.php - Loading admin section: " . $action);
         ob_start();
@@ -626,7 +629,25 @@ if (file_exists($templateFile)) {
             echo $section_content;
         }
         $content = ob_get_clean();
+        $section_found = true;
     } else {
+        // Then check child sections
+        foreach ($admin_sections as $parent_id => $parent) {
+            if (isset($parent['children']) && isset($parent['children'][$action])) {
+                error_log("Admin index.php - Loading child section: " . $action);
+                ob_start();
+                $section_content = call_user_func($parent['children'][$action]['render_callback']);
+                if (is_string($section_content)) {
+                    echo $section_content;
+                }
+                $content = ob_get_clean();
+                $section_found = true;
+                break;
+            }
+        }
+    }
+    
+    if (!$section_found) {
         error_log("Admin index.php - Invalid action: " . $action . " (Template file not found: " . $templateFile . ")");
         $content = '<div class="alert alert-danger">Invalid action specified.</div>';
     }

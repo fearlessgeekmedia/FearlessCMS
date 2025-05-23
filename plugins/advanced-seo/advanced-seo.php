@@ -14,7 +14,8 @@ define('ROBOTS_FILE', PROJECT_ROOT . '/robots.txt');
 // Register admin section
 fcms_register_admin_section('advanced_seo', [
     'label' => 'Advanced SEO',
-    'menu_order' => 31,
+    'menu_order' => 2,
+    'parent' => 'plugins',
     'render_callback' => 'advanced_seo_admin_page'
 ]);
 

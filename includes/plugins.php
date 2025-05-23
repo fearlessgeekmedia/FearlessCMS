@@ -91,6 +91,7 @@ $GLOBALS['fcms_admin_sections'] = [];
  *   'label' => 'Blog',
  *   'menu_order' => 50, // lower = earlier in menu
  *   'render_callback' => function() { ... },
+ *   'parent' => 'plugins', // optional parent menu id
  * ]
  */
 function fcms_register_admin_section($id, $opts) {
@@ -103,10 +104,31 @@ function fcms_register_admin_section($id, $opts) {
  */
 function fcms_get_admin_sections() {
     $sections = $GLOBALS['fcms_admin_sections'];
+    
+    // First, sort by menu_order
     uasort($sections, function($a, $b) {
         return ($a['menu_order'] ?? 100) <=> ($b['menu_order'] ?? 100);
     });
-    return $sections;
+    
+    // Then, organize into parent/child structure
+    $organized = [];
+    foreach ($sections as $id => $section) {
+        if (isset($section['parent'])) {
+            if (!isset($organized[$section['parent']])) {
+                $organized[$section['parent']] = [
+                    'label' => ucfirst($section['parent']),
+                    'children' => []
+                ];
+            }
+            // Preserve the original section ID
+            $organized[$section['parent']]['children'][$id] = array_merge($section, ['id' => $id]);
+        } else {
+            // Preserve the original section ID
+            $organized[$id] = array_merge($section, ['id' => $id]);
+        }
+    }
+    
+    return $organized;
 }
 
 // --- Plugin loader: only load active plugins ---
