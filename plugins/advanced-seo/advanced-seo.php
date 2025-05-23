@@ -68,32 +68,49 @@ function advanced_seo_generate_sitemap() {
     $settings = advanced_seo_get_settings();
     if (!$settings['sitemap_enabled']) return;
 
+    // Check if required constants are defined
+    if (!defined('CONTENT_DIR')) {
+        error_log('Advanced SEO: CONTENT_DIR constant is not defined');
+        return;
+    }
+
     $pages = [];
     $contentDir = CONTENT_DIR;
     
-    // Get all markdown files recursively
-    $iterator = new RecursiveIteratorIterator(
-        new RecursiveDirectoryIterator($contentDir, RecursiveDirectoryIterator::SKIP_DOTS)
-    );
+    // Check if content directory exists
+    if (!is_dir($contentDir)) {
+        error_log('Advanced SEO: Content directory does not exist: ' . $contentDir);
+        return;
+    }
     
-    foreach ($iterator as $file) {
-        if ($file->getExtension() === 'md') {
-            $relativePath = str_replace($contentDir . '/', '', $file->getPathname());
-            $relativePath = str_replace('.md', '', $relativePath);
-            
-            // Skip preview files
-            if (strpos($relativePath, '_preview/') === 0) continue;
-            
-            $url = '/' . $relativePath;
-            $lastmod = date('Y-m-d', $file->getMTime());
-            
-            $pages[] = [
-                'url' => $url,
-                'lastmod' => $lastmod,
-                'priority' => $settings['sitemap_priority'],
-                'changefreq' => $settings['sitemap_changefreq']
-            ];
+    // Get all markdown files recursively
+    try {
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($contentDir, RecursiveDirectoryIterator::SKIP_DOTS)
+        );
+        
+        foreach ($iterator as $file) {
+            if ($file->getExtension() === 'md') {
+                $relativePath = str_replace($contentDir . '/', '', $file->getPathname());
+                $relativePath = str_replace('.md', '', $relativePath);
+                
+                // Skip preview files
+                if (strpos($relativePath, '_preview/') === 0) continue;
+                
+                $url = '/' . $relativePath;
+                $lastmod = date('Y-m-d', $file->getMTime());
+                
+                $pages[] = [
+                    'url' => $url,
+                    'lastmod' => $lastmod,
+                    'priority' => $settings['sitemap_priority'],
+                    'changefreq' => $settings['sitemap_changefreq']
+                ];
+            }
         }
+    } catch (Exception $e) {
+        error_log('Advanced SEO: Error generating sitemap: ' . $e->getMessage());
+        return;
     }
     
     // Generate sitemap XML using string concatenation
@@ -112,10 +129,18 @@ function advanced_seo_generate_sitemap() {
     $xml .= '</urlset>';
     
     // Save sitemap
-    file_put_contents(SITEMAP_FILE, $xml);
+    if (defined('SITEMAP_FILE')) {
+        file_put_contents(SITEMAP_FILE, $xml);
+    } else {
+        error_log('Advanced SEO: SITEMAP_FILE constant is not defined');
+    }
     
     // Generate robots.txt
-    file_put_contents(ROBOTS_FILE, $settings['robots_txt']);
+    if (defined('ROBOTS_FILE')) {
+        file_put_contents(ROBOTS_FILE, $settings['robots_txt']);
+    } else {
+        error_log('Advanced SEO: ROBOTS_FILE constant is not defined');
+    }
 }
 
 /**

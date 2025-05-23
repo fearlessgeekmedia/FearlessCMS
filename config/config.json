@@ -3,5 +3,5 @@
     "site_name": "FearlessCMS",
     "custom_css": "",
     "custom_js": "",
-    "store_url": "https:\/\/raw.githubusercontent.com\/fearlessgeekmedia\/FearlessCMS-Store\/main\/store.json"
+    "store_url": "https://github.com/fearlessgeekmedia/FearlessCMS-Store.git"
 }
