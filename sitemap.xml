@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://localhost:8080/anothernewpage</loc>
-    <lastmod>2025-05-22</lastmod>
+    <lastmod>2025-05-27</lastmod>
     <priority>0.5</priority>
     <changefreq>weekly</changefreq>
   </url>
@@ -32,7 +32,7 @@
   </url>
   <url>
     <loc>https://localhost:8080/about</loc>
-    <lastmod>2025-05-18</lastmod>
+    <lastmod>2025-05-27</lastmod>
     <priority>0.5</priority>
     <changefreq>weekly</changefreq>
   </url>

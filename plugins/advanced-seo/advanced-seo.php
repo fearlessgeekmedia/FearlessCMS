@@ -153,7 +153,7 @@ function advanced_seo_generate_structured_data($pageData) {
         '@context' => 'https://schema.org',
         '@type' => $settings['schema_type'],
         'name' => $settings['schema_name'] ?: $pageData['title'],
-        'description' => $settings['schema_description'] ?: $pageData['meta_description'],
+        'description' => $settings['schema_description'] ?: $pageData['description'],
         'url' => 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']
     ];
     
