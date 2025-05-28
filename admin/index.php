@@ -343,92 +343,118 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     
-    // Handle save_content action
-    if ($action === 'save_content') {
-        $path = $_POST['path'] ?? '';
-        $title = $_POST['title'] ?? '';
-        $template = $_POST['template'] ?? 'page';
-        $content = $_POST['content'] ?? '';
-        $parent = $_POST['parent'] ?? '';
-        
-        error_log("Save content - Path: " . $path);
-        error_log("Save content - Title: " . $title);
-        error_log("Save content - Template: " . $template);
-        error_log("Save content - Parent: " . $parent);
-        error_log("Save content - Content length: " . strlen($content));
-        error_log("Save content - Content preview: " . substr($content, 0, 100));
-        
-        if (empty($path) || empty($title)) {
-            $error = 'Path and title are required';
-        } else {
-            // Determine the target directory and file path
-            $targetDir = CONTENT_DIR;
-            $targetPath = $path;
+    // Handle other actions
+    switch ($action) {
+        case 'save_content':
+            $path = $_POST['path'] ?? '';
+            $title = $_POST['title'] ?? '';
+            $template = $_POST['template'] ?? 'page';
+            $content = $_POST['content'] ?? '';
+            $parent = $_POST['parent'] ?? '';
             
-            // If parent is specified, move content to parent's directory
-            if (!empty($parent)) {
-                $targetDir = CONTENT_DIR . '/' . $parent;
-                $targetPath = $parent . '/' . $path;
+            error_log("Save content - Path: " . $path);
+            error_log("Save content - Title: " . $title);
+            error_log("Save content - Template: " . $template);
+            error_log("Save content - Parent: " . $parent);
+            error_log("Save content - Content length: " . strlen($content));
+            error_log("Save content - Content preview: " . substr($content, 0, 100));
+            
+            if (empty($path) || empty($title)) {
+                $error = 'Path and title are required';
+            } else {
+                // Determine the target directory and file path
+                $targetDir = CONTENT_DIR;
+                $targetPath = $path;
                 
-                // Create parent directory if it doesn't exist
-                if (!is_dir($targetDir)) {
-                    mkdir($targetDir, 0755, true);
+                // If parent is specified, move content to parent's directory
+                if (!empty($parent)) {
+                    $targetDir = CONTENT_DIR . '/' . $parent;
+                    $targetPath = $parent . '/' . $path;
+                    
+                    // Create parent directory if it doesn't exist
+                    if (!is_dir($targetDir)) {
+                        mkdir($targetDir, 0755, true);
+                    }
+                }
+                
+                $contentFile = $targetDir . '/' . basename($path) . '.md';
+                
+                // Create metadata
+                $metadata = [
+                    'title' => $title,
+                    'template' => $template
+                ];
+                
+                // Add parent if specified
+                if (!empty($parent)) {
+                    $metadata['parent'] = $parent;
+                }
+                
+                // Format content with metadata
+                $contentWithMetadata = '<!-- json ' . json_encode($metadata, JSON_PRETTY_PRINT) . ' -->' . "\n\n" . $content;
+                
+                error_log("Save content - Final content length: " . strlen($contentWithMetadata));
+                error_log("Save content - Final content preview: " . substr($contentWithMetadata, 0, 100));
+                error_log("Save content - Target file: " . $contentFile);
+                
+                // If the file is being moved to a new location, delete the old one
+                $oldFile = CONTENT_DIR . '/' . $path . '.md';
+                if ($oldFile !== $contentFile && file_exists($oldFile)) {
+                    unlink($oldFile);
+                }
+                
+                if (file_put_contents($contentFile, $contentWithMetadata) !== false) {
+                    $success = 'Content saved successfully';
+                    // Reload the content data
+                    $contentData = $contentWithMetadata;
+                } else {
+                    $error = 'Failed to save content';
+                    error_log("Save content - Failed to write to file: " . $contentFile);
                 }
             }
+            break;
             
-            $contentFile = $targetDir . '/' . basename($path) . '.md';
-            
-            // Create metadata
-            $metadata = [
-                'title' => $title,
-                'template' => $template
-            ];
-            
-            // Add parent if specified
-            if (!empty($parent)) {
-                $metadata['parent'] = $parent;
-            }
-            
-            // Format content with metadata
-            $contentWithMetadata = '<!-- json ' . json_encode($metadata, JSON_PRETTY_PRINT) . ' -->' . "\n\n" . $content;
-            
-            error_log("Save content - Final content length: " . strlen($contentWithMetadata));
-            error_log("Save content - Final content preview: " . substr($contentWithMetadata, 0, 100));
-            error_log("Save content - Target file: " . $contentFile);
-            
-            // If the file is being moved to a new location, delete the old one
-            $oldFile = CONTENT_DIR . '/' . $path . '.md';
-            if ($oldFile !== $contentFile && file_exists($oldFile)) {
-                unlink($oldFile);
-            }
-            
-            if (file_put_contents($contentFile, $contentWithMetadata) !== false) {
-                $success = 'Content saved successfully';
-                // Reload the content data
-                $contentData = $contentWithMetadata;
+        case 'delete_content':
+            $path = $_POST['path'] ?? '';
+            if (!empty($path)) {
+                $contentFile = CONTENT_DIR . '/' . $path . '.md';
+                if (file_exists($contentFile) && unlink($contentFile)) {
+                    $success = 'Content deleted successfully';
+                    // Redirect to manage_content to refresh the list
+                    header('Location: ?action=manage_content');
+                    exit;
+                } else {
+                    $error = 'Failed to delete content';
+                }
             } else {
-                $error = 'Failed to save content';
-                error_log("Save content - Failed to write to file: " . $contentFile);
+                $error = 'No content specified for deletion';
             }
-        }
-    }
-
-    // Handle delete_content action
-    if (isset($_POST['action']) && $_POST['action'] === 'delete_content') {
-        $path = $_POST['path'] ?? '';
-        if (!empty($path)) {
-            $contentFile = CONTENT_DIR . '/' . $path . '.md';
-            if (file_exists($contentFile) && unlink($contentFile)) {
-                $success = 'Content deleted successfully';
-                // Redirect to manage_content to refresh the list
-                header('Location: ?action=manage_content');
-                exit;
+            break;
+            
+        case 'update_site_name':
+            if (!isLoggedIn()) {
+                $error = 'You must be logged in to perform this action';
+                break;
+            }
+            if (!fcms_check_permission($_SESSION['username'], 'manage_settings')) {
+                $error = 'You do not have permission to manage settings';
+                break;
+            }
+            $newSiteName = trim($_POST['site_name'] ?? '');
+            if (empty($newSiteName)) {
+                $error = 'Site name cannot be empty';
+                break;
+            }
+            $configFile = CONFIG_DIR . '/config.json';
+            $config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
+            $config['site_name'] = $newSiteName;
+            if (file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT))) {
+                $success = 'Site name updated successfully';
+                $siteName = $newSiteName;
             } else {
-                $error = 'Failed to delete content';
+                $error = 'Failed to update site name';
             }
-        } else {
-            $error = 'No content specified for deletion';
-        }
+            break;
     }
 }
 

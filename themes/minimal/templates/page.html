@@ -1,37 +1,40 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <title>{{title}} - Minimal Theme</title>
-    <link rel="stylesheet" href="/themes/minimal/templates/style.css">
-    {{custom_css}}
-  </head>
-  <body>
-    <header class="site-header">
-      <div class="container">
-        <div class="header-inner">
-          <h1 class="site-title">
-            <a href="/">Minimal Theme</a>
-          </h1>
-          <nav class="main-navigation">
-            {{menu=main}}
-          </nav>
-        </div>
+
+<head>
+  <meta charset="UTF-8">
+  <title>{{title}} - Minimal Theme</title>
+  <link rel="stylesheet" href="/themes/minimal/templates/style.css">
+  {{custom_css}}
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="container">
+      <div class="header-inner">
+        <h1 class="site-title">
+          <a href="/">Minimal Theme</a>
+        </h1>
+        <nav class="main-navigation">
+          {{menu=main}}
+        </nav>
       </div>
-    </header>
-    <main class="site-content">
-      <div class="container">
-        <h1>{{title}}</h1>
-        {{content}}
-      </div>
-    </main>
-    <footer class="site-footer">
-      <div class="container">
-        Minimal Theme &copy; 2025
-      </div>
-    </footer>
-    <script>
-      {{custom_js}}
-    </script>
-  </body>
+    </div>
+  </header>
+  <main class="site-content">
+    <div class="container">
+      <h1>{{title}}</h1>
+      {{content}}
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="container">
+      <p>Fearless Geek Media &copy; 2025</p>
+    </div>
+  </footer>
+  <script>
+    { { custom_js } }
+  </script>
+</body>
+
 </html>
