@@ -175,7 +175,7 @@ function seo_get_page_metadata($content) {
 /**
  * Inject SEO meta tags into the page
  */
-function seo_inject_meta_tags(&$template) {
+function seo_inject_meta_tags(&$templateName) {
     global $title, $content;
     
     $settings = seo_get_settings();
@@ -198,43 +198,11 @@ function seo_inject_meta_tags(&$template) {
     // Get social image
     $social_image = $metadata['social_image'] ?? $settings['social_image'] ?? '';
     
-    // Build meta tags
-    $meta_tags = '';
-    
-    // Basic meta tags
-    if (!empty($description)) {
-        $meta_tags .= '<meta name="description" content="' . htmlspecialchars($description) . '">' . "\n";
+    // Add meta tags to the template data
+    global $templateData;
+    if (isset($templateData)) {
+        $templateData['title'] = $full_title;
+        $templateData['meta_description'] = $description;
+        $templateData['meta_social_image'] = $social_image;
     }
-    
-    // Open Graph meta tags
-    $meta_tags .= '<meta property="og:type" content="website">' . "\n";
-    if (!empty($full_title)) {
-        $meta_tags .= '<meta property="og:title" content="' . htmlspecialchars($full_title) . '">' . "\n";
-    }
-    if (!empty($description)) {
-        $meta_tags .= '<meta property="og:description" content="' . htmlspecialchars($description) . '">' . "\n";
-    }
-    if (!empty($social_image)) {
-        $meta_tags .= '<meta property="og:image" content="' . htmlspecialchars($social_image) . '">' . "\n";
-    }
-    
-    // Twitter Card meta tags
-    $meta_tags .= '<meta name="twitter:card" content="summary_large_image">' . "\n";
-    if (!empty($full_title)) {
-        $meta_tags .= '<meta name="twitter:title" content="' . htmlspecialchars($full_title) . '">' . "\n";
-    }
-    if (!empty($description)) {
-        $meta_tags .= '<meta name="twitter:description" content="' . htmlspecialchars($description) . '">' . "\n";
-    }
-    if (!empty($social_image)) {
-        $meta_tags .= '<meta name="twitter:image" content="' . htmlspecialchars($social_image) . '">' . "\n";
-    }
-    
-    // Replace title tag
-    if (!empty($full_title)) {
-        $template = preg_replace('/<title>.*?<\/title>/i', '<title>' . htmlspecialchars($full_title) . '</title>', $template);
-    }
-    
-    // Insert meta tags before </head>
-    $template = str_replace('</head>', $meta_tags . '</head>', $template);
 }

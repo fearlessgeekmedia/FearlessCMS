@@ -1,7 +1,7 @@
 {
-    "active_theme": "heroic",
-    "site_name": "FearlessCMS",
+    "active_theme": "whisperwind",
+    "site_name": "Whisperwind",
     "custom_css": "",
     "custom_js": "",
-    "store_url": "https:\/\/raw.githubusercontent.com\/fearlessgeekmedia\/FearlessCMS-Store\/main\/store.json"
+    "store_url": "https:\/\/github.com\/fearlessgeekmedia\/FearlessCMS-Store.git"
 }

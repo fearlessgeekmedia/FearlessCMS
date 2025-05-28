@@ -1,4 +1,14 @@
 <?php
+// Define PROJECT_ROOT if not already defined
+if (!defined('PROJECT_ROOT')) {
+    define('PROJECT_ROOT', dirname(__DIR__));
+}
+
+// Include required files
+require_once dirname(__DIR__) . '/includes/config.php';
+require_once dirname(__DIR__) . '/includes/auth.php';
+require_once dirname(__DIR__) . '/includes/plugins.php';
+
 // Register store admin section
 fcms_register_admin_section('store', [
     'label' => 'Store',
@@ -36,61 +46,96 @@ class SimpleMarkdown {
 function fetch_github_content($path) {
     $storeUrl = defined('STORE_URL') ? STORE_URL : 'https://github.com/fearlessgeekmedia/FearlessCMS-Store.git';
     
-    // If the path is already a full URL, use it directly
-    if (strpos($path, 'http') === 0) {
-        $rawUrl = $path;
-    } else {
-        // Extract repository name from URL
+    // Determine if this is a raw content URL or a GitHub repository URL
+    $rawUrl = $path;
+    if (strpos($path, 'http') !== 0) {
         if (strpos($storeUrl, 'github.com') !== false) {
-            // Transform GitHub repository URL to raw content URL
-            $rawUrl = str_replace(['github.com', '.git'], ['raw.githubusercontent.com', ''], $storeUrl) . '/main/' . $path;
-        } elseif (strpos($storeUrl, 'raw.githubusercontent.com') !== false) {
-            // If it's a raw content URL, use the directory as base
-            $rawUrl = dirname($storeUrl) . '/' . $path;
+            // Transform GitHub repository URL to raw content URL (explicitly correct)
+            $rawUrl = preg_replace('#https?://github\\.com/([^/]+)/([^/]+)\\.git#', 'https://raw.githubusercontent.com/$1/$2', $storeUrl) . '/main/' . $path;
         } else {
-            // For other URLs, append the path
-            $rawUrl = rtrim($storeUrl, '/') . '/' . $path;
+            // For other URLs, ensure we don't double-append store.json
+            $baseUrl = rtrim($storeUrl, '/');
+            if (strpos($baseUrl, 'store.json') !== false) {
+                $baseUrl = dirname($baseUrl);
+            }
+            $rawUrl = $baseUrl . '/' . $path;
         }
     }
     
     error_log("Fetching content from: " . $rawUrl);
     
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $rawUrl);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    curl_setopt($ch, CURLOPT_USERAGENT, 'FearlessCMS/1.0');
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'Accept: application/json, text/plain, */*',
-        'Accept-Language: en-US,en;q=0.9'
-    ]);
-    curl_setopt($ch, CURLOPT_VERBOSE, true);
-    
-    // Create a temporary file handle for CURL debug output
-    $verbose = fopen('php://temp', 'w+');
-    curl_setopt($ch, CURLOPT_STDERR, $verbose);
-    
-    $content = curl_exec($ch);
-    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $error = curl_error($ch);
-    
-    // Get the verbose debug information
-    rewind($verbose);
-    $verboseLog = stream_get_contents($verbose);
-    
-    error_log("CURL Verbose Log: " . $verboseLog);
-    error_log("HTTP response code: " . $http_code);
-    if ($error) {
-        error_log("CURL error: " . $error);
+    // Try cURL first if available
+    if (function_exists('curl_init')) {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $rawUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'FearlessCMS/1.0');
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Accept: application/json, text/plain, */*',
+            'Accept-Language: en-US,en;q=0.9'
+        ]);
+        curl_setopt($ch, CURLOPT_VERBOSE, true);
+        
+        // Create a temporary file handle for CURL debug output
+        $verbose = fopen('php://temp', 'w+');
+        curl_setopt($ch, CURLOPT_STDERR, $verbose);
+        
+        $content = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
+        
+        // Get the verbose debug information
+        rewind($verbose);
+        $verboseLog = stream_get_contents($verbose);
+        
+        error_log("CURL Verbose Log: " . $verboseLog);
+        error_log("HTTP response code: " . $http_code);
+        if ($error) {
+            error_log("CURL error: " . $error);
+        }
+        error_log("Response content: " . substr($content, 0, 1000)); // Log first 1000 chars of response
+        
+        curl_close($ch);
+        fclose($verbose);
+        
+        if ($http_code === 200) {
+            return $content;
+        }
     }
-    error_log("Response content: " . substr($content, 0, 1000)); // Log first 1000 chars of response
     
-    curl_close($ch);
-    fclose($verbose);
+    // Fallback to file_get_contents
+    $context = stream_context_create([
+        'http' => [
+            'method' => 'GET',
+            'header' => [
+                'User-Agent: FearlessCMS/1.0',
+                'Accept: application/json, text/plain, */*',
+                'Accept-Language: en-US,en;q=0.9'
+            ],
+            'ignore_errors' => true
+        ],
+        'ssl' => [
+            'verify_peer' => false,
+            'verify_peer_name' => false
+        ]
+    ]);
     
-    if ($http_code !== 200) {
-        error_log("Failed to fetch content. HTTP code: " . $http_code . " URL: " . $rawUrl);
+    $content = @file_get_contents($rawUrl, false, $context);
+    if ($content === false) {
+        error_log("Failed to fetch content using file_get_contents. URL: " . $rawUrl);
+        return false;
+    }
+    
+    // Check if we got a valid response
+    $response_code = 0;
+    if (preg_match('/HTTP\/\d\.\d\s+(\d+)/', $http_response_header[0], $matches)) {
+        $response_code = intval($matches[1]);
+    }
+    
+    if ($response_code !== 200) {
+        error_log("Failed to fetch content. HTTP code: " . $response_code . " URL: " . $rawUrl);
         return false;
     }
     
@@ -517,6 +562,31 @@ function install_plugin($plugin_data) {
 }
 
 /**
+ * Recursively delete a directory
+ */
+function delete_directory($dir) {
+    if (!file_exists($dir)) {
+        return true;
+    }
+    
+    if (!is_dir($dir)) {
+        return unlink($dir);
+    }
+    
+    foreach (scandir($dir) as $item) {
+        if ($item == '.' || $item == '..') {
+            continue;
+        }
+        
+        if (!delete_directory($dir . DIRECTORY_SEPARATOR . $item)) {
+            return false;
+        }
+    }
+    
+    return rmdir($dir);
+}
+
+/**
  * Delete a plugin
  */
 function delete_plugin($plugin_slug) {
@@ -524,6 +594,7 @@ function delete_plugin($plugin_slug) {
     $plugin_dir = $plugins_dir . '/' . $plugin_slug;
     
     if (!is_dir($plugin_dir)) {
+        error_log("Plugin directory does not exist: " . $plugin_dir);
         return false;
     }
     
@@ -532,50 +603,52 @@ function delete_plugin($plugin_slug) {
     if (file_exists($plugin_file)) {
         $plugin_data = json_decode(file_get_contents($plugin_file), true);
         if ($plugin_data && isset($plugin_data['active']) && $plugin_data['active']) {
+            error_log("Cannot delete active plugin: " . $plugin_slug);
             return false; // Don't delete active plugins
         }
     }
     
-    // Recursively delete the plugin directory
-    function delete_directory($dir) {
-        if (!file_exists($dir)) {
-            return true;
-        }
-        
-        if (!is_dir($dir)) {
-            return unlink($dir);
-        }
-        
-        foreach (scandir($dir) as $item) {
-            if ($item == '.' || $item == '..') {
-                continue;
-            }
-            
-            if (!delete_directory($dir . DIRECTORY_SEPARATOR . $item)) {
-                return false;
-            }
-        }
-        
-        return rmdir($dir);
+    try {
+        return delete_directory($plugin_dir);
+    } catch (Exception $e) {
+        error_log("Error deleting plugin directory: " . $e->getMessage());
+        return false;
     }
-    
-    return delete_directory($plugin_dir);
 }
 
 /**
  * Handle plugin deletion
  */
 if (isset($_POST['action']) && $_POST['action'] === 'delete_plugin') {
-    $plugin_slug = $_POST['plugin_slug'] ?? '';
-    if (empty($plugin_slug)) {
-        header('Content-Type: application/json');
-        echo json_encode(['success' => false, 'error' => 'Plugin slug is required']);
-        exit;
-    }
-    
-    $success = delete_plugin($plugin_slug);
     header('Content-Type: application/json');
-    echo json_encode(['success' => $success]);
+    
+    try {
+        $plugin_slug = $_POST['plugin_slug'] ?? '';
+        if (empty($plugin_slug)) {
+            echo json_encode(['success' => false, 'error' => 'Plugin slug is required']);
+            exit;
+        }
+        
+        // Check if plugin is active before deletion
+        $plugin_file = dirname(__DIR__) . '/plugins/' . $plugin_slug . '/plugin.json';
+        if (file_exists($plugin_file)) {
+            $plugin_data = json_decode(file_get_contents($plugin_file), true);
+            if ($plugin_data && isset($plugin_data['active']) && $plugin_data['active']) {
+                echo json_encode(['success' => false, 'error' => 'Cannot delete an active plugin. Please deactivate it first.']);
+                exit;
+            }
+        }
+        
+        $success = delete_plugin($plugin_slug);
+        if ($success) {
+            echo json_encode(['success' => true, 'message' => 'Plugin deleted successfully']);
+        } else {
+            echo json_encode(['success' => false, 'error' => 'Failed to delete plugin. Please try again.']);
+        }
+    } catch (Exception $e) {
+        error_log("Error in plugin deletion handler: " . $e->getMessage());
+        echo json_encode(['success' => false, 'error' => 'An unexpected error occurred while deleting the plugin.']);
+    }
     exit;
 }
 

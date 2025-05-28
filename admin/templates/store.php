@@ -13,8 +13,8 @@ $featured = '';
 // Determine if this is a raw content URL or a GitHub repository URL
 $base_url = $store_repo;
 if (strpos($store_repo, 'github.com') !== false) {
-    // Transform GitHub repository URL to raw content URL
-    $base_url = str_replace(['github.com', '.git'], ['raw.githubusercontent.com', ''], $store_repo) . '/main';
+    // Transform GitHub repository URL to raw content URL (explicitly correct)
+    $base_url = preg_replace('#https?://github\\.com/([^/]+)/([^/]+)\\.git#', 'https://raw.githubusercontent.com/$1/$2', $store_repo) . '/main';
 } elseif (strpos($store_repo, 'raw.githubusercontent.com') !== false) {
     // If it's a raw content URL, remove the store.json part to get the base URL
     $base_url = dirname($store_repo);
@@ -290,8 +290,8 @@ function installPlugin(slug) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Plugin installed successfully!');
-                window.location.reload();
+                alert('Plugin installed successfully! Redirecting to plugins page...');
+                window.location.href = '?action=plugins'; // Redirect to plugins page
             } else {
                 alert('Failed to install plugin: ' + data.message);
             }

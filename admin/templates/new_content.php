@@ -1,4 +1,18 @@
 <?php
+// Get available templates
+$templates = [];
+$activeTheme = $themeManager->getActiveTheme();
+$templateDir = PROJECT_ROOT . '/themes/' . $activeTheme . '/templates';
+
+// Get all template files
+$templateFiles = glob($templateDir . '/*.html');
+foreach ($templateFiles as $template) {
+    $templateName = basename($template, '.html');
+    if ($templateName !== '404') { // Exclude 404 template
+        $templates[] = $templateName;
+    }
+}
+
 // Get all content files for parent selection
 $contentFiles = glob(CONTENT_DIR . '/*.md');
 $pages = [];
@@ -72,8 +86,11 @@ foreach ($contentFiles as $file) {
         </div>
 
         <div class="flex justify-end gap-4">
+            <div class="space-x-2">
+                <button type="button" id="preview-button" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Preview</button>
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Create Page</button>
+            </div>
             <button type="button" onclick="window.location.href='?action=dashboard'" class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">Cancel</button>
-            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Create Page</button>
         </div>
     </form>
 </div>
@@ -96,6 +113,38 @@ document.addEventListener('DOMContentLoaded', function() {
             ['table', 'link'],
             ['code', 'codeblock']
         ]
+    });
+
+    // Preview button functionality
+    document.getElementById('preview-button').addEventListener('click', function() {
+        const markdownContent = editor.getMarkdown();
+        const title = document.querySelector('input[name="title"]').value;
+        const template = document.querySelector('select[name="template"]').value;
+        
+        // Create a temporary preview file
+        fetch('/admin/preview-handler.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                content: markdownContent,
+                title: title,
+                template: template
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.open('/_preview/' + data.path.replace('.md', ''), '_blank');
+            } else {
+                alert('Failed to create preview: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to create preview');
+        });
     });
 
     // Generate slug from title

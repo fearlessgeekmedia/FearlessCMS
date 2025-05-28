@@ -114,7 +114,9 @@ if (strpos($requestPath, '_preview/') === 0) {
         error_log("Template data prepared: " . json_encode($templateData));
         
         // Render template
-        $template = $templateRenderer->render($metadata['template'] ?? 'page', $templateData);
+        $templateName = $metadata['template'] ?? 'page';
+        fcms_do_hook('before_render', $templateName);
+        $template = $templateRenderer->render($templateName, $templateData);
         
         // Output the preview
         echo $template;
@@ -391,13 +393,9 @@ $templateData = [
 ];
 
 // --- Render template ---
-$template = $templateRenderer->render($metadata['template'] ?? 'page', $templateData);
-
-// --- SEO plugin hook (optional) ---
-global $title, $content;
-$title = $pageTitle;
-$content = $fileContent;
-fcms_do_hook('before_render', $template);
+$templateName = $metadata['template'] ?? 'page';
+fcms_do_hook('before_render', $templateName);
+$template = $templateRenderer->render($templateName, $templateData);
 
 // --- Output ---
 echo $template;

@@ -1,16 +1,4 @@
 <?php
-// Get available templates
-$templates = [];
-$templateDir = PROJECT_ROOT . '/themes/' . $themeManager->getActiveTheme() . '/templates';
-if (is_dir($templateDir)) {
-    foreach (glob($templateDir . '/*.html') as $template) {
-        $templateName = basename($template, '.html');
-        if ($templateName !== '404') { // Exclude 404 template
-            $templates[] = $templateName;
-        }
-    }
-}
-
 // Get current template from metadata
 $currentTemplate = 'page'; // Default template
 $contentWithoutMetadata = $contentData;
@@ -22,6 +10,22 @@ if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $contentData, $matches)) {
     // Remove the metadata from the content
     $contentWithoutMetadata = preg_replace('/^<!--\s*json\s*.*?\s*-->\s*/s', '', $contentData);
 }
+
+// Get available templates
+$templates = [];
+$activeTheme = $themeManager->getActiveTheme();
+$templateDir = PROJECT_ROOT . '/themes/' . $activeTheme . '/templates';
+
+// Get all template files
+$templateFiles = glob($templateDir . '/*.html');
+foreach ($templateFiles as $template) {
+    $templateName = basename($template, '.html');
+    if ($templateName !== '404') { // Exclude 404 template
+        $templates[] = $templateName;
+    }
+}
+
+error_log("Available templates: " . print_r($templates, true));
 ?>
 
 <div class="bg-white shadow rounded-lg p-6">
@@ -81,7 +85,10 @@ if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $contentData, $matches)) {
         </div>
 
         <div class="flex justify-between">
-            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Save</button>
+            <div class="space-x-2">
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Save</button>
+                <button type="button" id="preview-button" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Preview</button>
+            </div>
             <a href="?action=dashboard" class="text-gray-600 hover:text-gray-800">Cancel</a>
         </div>
     </form>
@@ -102,6 +109,39 @@ document.addEventListener('DOMContentLoaded', function() {
             ['table', 'link', 'image'],
             ['code', 'codeblock']
         ]
+    });
+
+    // Preview button functionality
+    document.getElementById('preview-button').addEventListener('click', function() {
+        const markdownContent = editor.getMarkdown();
+        const title = document.querySelector('input[name="title"]').value;
+        const template = document.querySelector('select[name="template"]').value;
+        
+        // Create a temporary preview file
+        fetch('/admin/preview-handler.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                content: markdownContent,
+                title: title,
+                template: template,
+                path: '<?php echo $path; ?>'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.open('/_preview/' + data.path.replace('.md', ''), '_blank');
+            } else {
+                alert('Failed to create preview: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to create preview');
+        });
     });
 
     // Update hidden input before form submission

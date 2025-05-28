@@ -1,29 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <title>Page Not Found - Modern Salt Lake City</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-      body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: #f7fafc; color: #2d3748; }
-    header { background: #e53e3e; color: #fff; padding: 1.5em 0 1em 0; text-align: center; }
-    main { max-width: 600px; margin: 3em auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #0001; padding: 2em; text-align: center; }
-    h1 { color: #e53e3e; }
-    a { color: #2c5282; text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    footer { background: #2c5282; color: #fff; text-align: center; padding: 1.5em 0 1em 0; margin-top: 3em; }
-    </style>
-  </head>
-  <body>
-    <header>
-      <h1>404 - Page Not Found</h1>
-    </header>
-    <main>
-      <p>The page you requested could not be found.</p>
-      <p><a href="/">Return to Home</a></p>
-    </main>
-    <footer>
-      Modern Salt Lake City Theme &copy; 2025
-    </footer>
-  </body>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Page Not Found - Modern Salt Lake City</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/themes/salt-lake/templates/style.css">
+  {{custom_css}}
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="container">
+      <div class="header-inner">
+        <div class="site-branding">
+          <a href="/" class="site-logo">Modern Salt Lake City</a>
+        </div>
+        <nav class="main-navigation">
+          {{menu=main}}
+        </nav>
+      </div>
+    </div>
+  </header>
+  <main class="site-content">
+    <div class="container">
+      <div class="page-content">
+        <h1>404 - Page Not Found</h1>
+        <p>The page you requested could not be found.</p>
+        <p><a href="/">Return to Home</a></p>
+      </div>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-info">
+          <h3>Modern Salt Lake City</h3>
+          <p>A beautiful theme inspired by the landscapes of Utah.</p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        Fearless Geek Media &copy; 2025
+      </div>
+    </div>
+  </footer>
+  <script>
+    { { custom_js } }
+  </script>
+</body>
+
 </html>

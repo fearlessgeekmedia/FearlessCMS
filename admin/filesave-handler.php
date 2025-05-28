@@ -36,11 +36,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 } elseif (isset($metadata['parent'])) {
                     unset($metadata['parent']); // Remove parent if empty
                 }
+                // Keep existing template if set
+                if (!isset($metadata['template'])) {
+                    $metadata['template'] = 'page';
+                }
                 $newFrontmatter = '<!-- json ' . json_encode($metadata, JSON_PRETTY_PRINT) . ' -->';
                 $content = preg_replace('/^<!--\s*json\s*.*?\s*-->/s', $newFrontmatter, $content);
             } else {
                 // Add new frontmatter
-                $metadata = ['title' => $pageTitle, 'editor_mode' => $editorMode];
+                $metadata = [
+                    'title' => $pageTitle,
+                    'editor_mode' => $editorMode,
+                    'template' => 'page' // Default template
+                ];
                 if (!empty($parentPage)) {
                     $metadata['parent'] = $parentPage;
                 }

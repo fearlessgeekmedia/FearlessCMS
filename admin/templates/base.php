@@ -32,12 +32,26 @@ require_once dirname(dirname(__DIR__)) . '/version.php';
                 <a href="<?php echo BASE_URL; ?>?action=manage_themes" class="hover:text-green-200">Themes</a>
                 <a href="<?php echo BASE_URL; ?>?action=manage_menus" class="hover:text-green-200">Menus</a>
                 <a href="<?php echo BASE_URL; ?>?action=manage_widgets" class="hover:text-green-200">Widgets</a>
-                <a href="<?php echo BASE_URL; ?>?action=manage_plugins" class="hover:text-green-200">Plugins</a>
                 <?php 
                 // Add admin sections to navigation
                 $admin_sections = fcms_get_admin_sections();
                 foreach ($admin_sections as $id => $section) {
-                    echo '<a href="' . BASE_URL . '?action=' . htmlspecialchars($id) . '" class="hover:text-green-200">' . htmlspecialchars($section['label']) . '</a>';
+                    if (isset($section['children'])) {
+                        // This is a parent menu with children
+                        echo '<div class="relative group">';
+                        echo '<a href="' . BASE_URL . '?action=manage_plugins" class="hover:text-green-200">' . htmlspecialchars($section['label']) . '</a>';
+                        echo '<div class="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-in-out z-50">';
+                        // Add the main plugins page as the first item
+                        echo '<a href="' . BASE_URL . '?action=manage_plugins" class="block px-4 py-2 text-gray-800 hover:bg-green-100 border-b border-gray-200">Manage Plugins</a>';
+                        foreach ($section['children'] as $child_id => $child) {
+                            echo '<a href="' . BASE_URL . '?action=' . htmlspecialchars($child['id']) . '" class="block px-4 py-2 text-gray-800 hover:bg-green-100">' . htmlspecialchars($child['label']) . '</a>';
+                        }
+                        echo '</div>';
+                        echo '</div>';
+                    } else {
+                        // This is a regular menu item
+                        echo '<a href="' . BASE_URL . '?action=' . htmlspecialchars($section['id']) . '" class="hover:text-green-200">' . htmlspecialchars($section['label']) . '</a>';
+                    }
                 }
                 if (!empty($plugin_nav_items)) echo $plugin_nav_items; 
                 ?>

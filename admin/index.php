@@ -83,14 +83,27 @@ if (is_dir($contentDir)) {
 // Load recent content for dashboard
 $recentContent = [];
 if (is_dir($contentDir)) {
-    $files = glob($contentDir . '/*.md');
-    usort($files, function($a, $b) {
-        return filemtime($b) - filemtime($a);
-    });
-    $files = array_slice($files, 0, 5); // Get 5 most recent files
+    // Recursively get all .md files
+    $files = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($contentDir, RecursiveDirectoryIterator::SKIP_DOTS)
+    );
+    $files = new RegexIterator($files, '/\.md$/');
     
-    foreach ($files as $file) {
-        $content = file_get_contents($file);
+    // Convert to array and sort by modification time
+    $fileArray = iterator_to_array($files);
+    usort($fileArray, function($a, $b) {
+        return $b->getMTime() - $a->getMTime();
+    });
+    
+    // Get 5 most recent files, excluding preview directory
+    $count = 0;
+    foreach ($fileArray as $file) {
+        // Skip files in preview directory or with preview in the path
+        if (strpos($file->getPathname(), '/preview/') !== false || strpos($file->getPathname(), 'preview') !== false) {
+            continue;
+        }
+        
+        $content = file_get_contents($file->getPathname());
         $title = '';
         if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $content, $matches)) {
             $metadata = json_decode($matches[1], true);
@@ -99,12 +112,59 @@ if (is_dir($contentDir)) {
             }
         }
         if (!$title) {
-            $title = ucwords(str_replace(['-', '_'], ' ', basename($file, '.md')));
+            $title = ucwords(str_replace(['-', '_'], ' ', $file->getBasename('.md')));
         }
+        
+        // Get relative path from content directory
+        $relativePath = str_replace($contentDir . '/', '', $file->getPathname());
+        $path = substr($relativePath, 0, -3); // Remove .md extension
+        
         $recentContent[] = [
             'title' => $title,
-            'path' => basename($file, '.md'),
-            'modified' => filemtime($file)
+            'path' => $path,
+            'modified' => $file->getMTime()
+        ];
+        
+        $count++;
+        if ($count >= 5) break;
+    }
+}
+
+// Load content list for content management
+$contentList = [];
+if (is_dir($contentDir)) {
+    // Recursively get all .md files
+    $files = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($contentDir, RecursiveDirectoryIterator::SKIP_DOTS)
+    );
+    $files = new RegexIterator($files, '/\.md$/');
+    
+    foreach ($files as $file) {
+        // Skip files in preview directory or with preview in the path
+        if (strpos($file->getPathname(), '/preview/') !== false || strpos($file->getPathname(), 'preview') !== false) {
+            continue;
+        }
+        
+        $content = file_get_contents($file->getPathname());
+        $title = '';
+        if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $content, $matches)) {
+            $metadata = json_decode($matches[1], true);
+            if ($metadata && isset($metadata['title'])) {
+                $title = $metadata['title'];
+            }
+        }
+        if (!$title) {
+            $title = ucwords(str_replace(['-', '_'], ' ', $file->getBasename('.md')));
+        }
+        
+        // Get relative path from content directory
+        $relativePath = str_replace($contentDir . '/', '', $file->getPathname());
+        $path = substr($relativePath, 0, -3); // Remove .md extension
+        
+        $contentList[] = [
+            'title' => $title,
+            'path' => $path,
+            'modified' => date('Y-m-d H:i:s', $file->getMTime())
         ];
     }
 }
@@ -283,92 +343,118 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     
-    // Handle save_content action
-    if ($action === 'save_content') {
-        $path = $_POST['path'] ?? '';
-        $title = $_POST['title'] ?? '';
-        $template = $_POST['template'] ?? 'page';
-        $content = $_POST['content'] ?? '';
-        $parent = $_POST['parent'] ?? '';
-        
-        error_log("Save content - Path: " . $path);
-        error_log("Save content - Title: " . $title);
-        error_log("Save content - Template: " . $template);
-        error_log("Save content - Parent: " . $parent);
-        error_log("Save content - Content length: " . strlen($content));
-        error_log("Save content - Content preview: " . substr($content, 0, 100));
-        
-        if (empty($path) || empty($title)) {
-            $error = 'Path and title are required';
-        } else {
-            // Determine the target directory and file path
-            $targetDir = CONTENT_DIR;
-            $targetPath = $path;
+    // Handle other actions
+    switch ($action) {
+        case 'save_content':
+            $path = $_POST['path'] ?? '';
+            $title = $_POST['title'] ?? '';
+            $template = $_POST['template'] ?? 'page';
+            $content = $_POST['content'] ?? '';
+            $parent = $_POST['parent'] ?? '';
             
-            // If parent is specified, move content to parent's directory
-            if (!empty($parent)) {
-                $targetDir = CONTENT_DIR . '/' . $parent;
-                $targetPath = $parent . '/' . $path;
+            error_log("Save content - Path: " . $path);
+            error_log("Save content - Title: " . $title);
+            error_log("Save content - Template: " . $template);
+            error_log("Save content - Parent: " . $parent);
+            error_log("Save content - Content length: " . strlen($content));
+            error_log("Save content - Content preview: " . substr($content, 0, 100));
+            
+            if (empty($path) || empty($title)) {
+                $error = 'Path and title are required';
+            } else {
+                // Determine the target directory and file path
+                $targetDir = CONTENT_DIR;
+                $targetPath = $path;
                 
-                // Create parent directory if it doesn't exist
-                if (!is_dir($targetDir)) {
-                    mkdir($targetDir, 0755, true);
+                // If parent is specified, move content to parent's directory
+                if (!empty($parent)) {
+                    $targetDir = CONTENT_DIR . '/' . $parent;
+                    $targetPath = $parent . '/' . $path;
+                    
+                    // Create parent directory if it doesn't exist
+                    if (!is_dir($targetDir)) {
+                        mkdir($targetDir, 0755, true);
+                    }
+                }
+                
+                $contentFile = $targetDir . '/' . basename($path) . '.md';
+                
+                // Create metadata
+                $metadata = [
+                    'title' => $title,
+                    'template' => $template
+                ];
+                
+                // Add parent if specified
+                if (!empty($parent)) {
+                    $metadata['parent'] = $parent;
+                }
+                
+                // Format content with metadata
+                $contentWithMetadata = '<!-- json ' . json_encode($metadata, JSON_PRETTY_PRINT) . ' -->' . "\n\n" . $content;
+                
+                error_log("Save content - Final content length: " . strlen($contentWithMetadata));
+                error_log("Save content - Final content preview: " . substr($contentWithMetadata, 0, 100));
+                error_log("Save content - Target file: " . $contentFile);
+                
+                // If the file is being moved to a new location, delete the old one
+                $oldFile = CONTENT_DIR . '/' . $path . '.md';
+                if ($oldFile !== $contentFile && file_exists($oldFile)) {
+                    unlink($oldFile);
+                }
+                
+                if (file_put_contents($contentFile, $contentWithMetadata) !== false) {
+                    $success = 'Content saved successfully';
+                    // Reload the content data
+                    $contentData = $contentWithMetadata;
+                } else {
+                    $error = 'Failed to save content';
+                    error_log("Save content - Failed to write to file: " . $contentFile);
                 }
             }
+            break;
             
-            $contentFile = $targetDir . '/' . basename($path) . '.md';
-            
-            // Create metadata
-            $metadata = [
-                'title' => $title,
-                'template' => $template
-            ];
-            
-            // Add parent if specified
-            if (!empty($parent)) {
-                $metadata['parent'] = $parent;
-            }
-            
-            // Format content with metadata
-            $contentWithMetadata = '<!-- json ' . json_encode($metadata, JSON_PRETTY_PRINT) . ' -->' . "\n\n" . $content;
-            
-            error_log("Save content - Final content length: " . strlen($contentWithMetadata));
-            error_log("Save content - Final content preview: " . substr($contentWithMetadata, 0, 100));
-            error_log("Save content - Target file: " . $contentFile);
-            
-            // If the file is being moved to a new location, delete the old one
-            $oldFile = CONTENT_DIR . '/' . $path . '.md';
-            if ($oldFile !== $contentFile && file_exists($oldFile)) {
-                unlink($oldFile);
-            }
-            
-            if (file_put_contents($contentFile, $contentWithMetadata) !== false) {
-                $success = 'Content saved successfully';
-                // Reload the content data
-                $contentData = $contentWithMetadata;
+        case 'delete_content':
+            $path = $_POST['path'] ?? '';
+            if (!empty($path)) {
+                $contentFile = CONTENT_DIR . '/' . $path . '.md';
+                if (file_exists($contentFile) && unlink($contentFile)) {
+                    $success = 'Content deleted successfully';
+                    // Redirect to manage_content to refresh the list
+                    header('Location: ?action=manage_content');
+                    exit;
+                } else {
+                    $error = 'Failed to delete content';
+                }
             } else {
-                $error = 'Failed to save content';
-                error_log("Save content - Failed to write to file: " . $contentFile);
+                $error = 'No content specified for deletion';
             }
-        }
-    }
-
-    // Handle delete_content action
-    if (isset($_POST['action']) && $_POST['action'] === 'delete_content') {
-        $path = $_POST['path'] ?? '';
-        if (!empty($path)) {
-            $contentFile = CONTENT_DIR . '/' . $path . '.md';
-            if (file_exists($contentFile) && unlink($contentFile)) {
-                $success = 'Content deleted successfully';
-                // Redirect to manage_content to refresh the list
-                header('Location: ?action=manage_content');
-                exit;
+            break;
+            
+        case 'update_site_name':
+            if (!isLoggedIn()) {
+                $error = 'You must be logged in to perform this action';
+                break;
+            }
+            if (!fcms_check_permission($_SESSION['username'], 'manage_settings')) {
+                $error = 'You do not have permission to manage settings';
+                break;
+            }
+            $newSiteName = trim($_POST['site_name'] ?? '');
+            if (empty($newSiteName)) {
+                $error = 'Site name cannot be empty';
+                break;
+            }
+            $configFile = CONFIG_DIR . '/config.json';
+            $config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
+            $config['site_name'] = $newSiteName;
+            if (file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT))) {
+                $success = 'Site name updated successfully';
+                $siteName = $newSiteName;
             } else {
-                $error = 'Failed to delete content';
+                $error = 'Failed to update site name';
             }
-        } else {
-            $error = 'No content specified for deletion';
-        }
+            break;
     }
 }
 
@@ -558,6 +644,9 @@ if (file_exists($templateFile)) {
 } else {
     // Check if this is a registered admin section
     $admin_sections = fcms_get_admin_sections();
+    $section_found = false;
+    
+    // First check direct sections
     if (isset($admin_sections[$action])) {
         error_log("Admin index.php - Loading admin section: " . $action);
         ob_start();
@@ -566,7 +655,25 @@ if (file_exists($templateFile)) {
             echo $section_content;
         }
         $content = ob_get_clean();
+        $section_found = true;
     } else {
+        // Then check child sections
+        foreach ($admin_sections as $parent_id => $parent) {
+            if (isset($parent['children']) && isset($parent['children'][$action])) {
+                error_log("Admin index.php - Loading child section: " . $action);
+                ob_start();
+                $section_content = call_user_func($parent['children'][$action]['render_callback']);
+                if (is_string($section_content)) {
+                    echo $section_content;
+                }
+                $content = ob_get_clean();
+                $section_found = true;
+                break;
+            }
+        }
+    }
+    
+    if (!$section_found) {
         error_log("Admin index.php - Invalid action: " . $action . " (Template file not found: " . $templateFile . ")");
         $content = '<div class="alert alert-danger">Invalid action specified.</div>';
     }

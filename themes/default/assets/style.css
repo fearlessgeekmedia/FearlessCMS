@@ -19,6 +19,31 @@ nav ul {
   justify-content: center;
   gap: 2em;
 }
+nav ul ul {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #222;
+  min-width: 200px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+}
+nav li {
+  position: relative;
+}
+nav li:hover > ul {
+  display: block;
+}
+nav ul ul li {
+  margin: 0;
+  width: 100%;
+}
+nav ul ul a {
+  padding: 0.5em 1em;
+  display: block;
+  white-space: nowrap;
+}
 nav a {
   color: #fff;
   text-decoration: none;
