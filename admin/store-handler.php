@@ -46,11 +46,15 @@ class SimpleMarkdown {
 function fetch_github_content($path) {
     $storeUrl = defined('STORE_URL') ? STORE_URL : 'https://github.com/fearlessgeekmedia/FearlessCMS-Store.git';
     
+    error_log("[Store Handler] Starting fetch_github_content");
+    error_log("[Store Handler] Store URL: " . $storeUrl);
+    error_log("[Store Handler] Requested path: " . $path);
+    
     // Determine if this is a raw content URL or a GitHub repository URL
     $rawUrl = $path;
     if (strpos($path, 'http') !== 0) {
         if (strpos($storeUrl, 'github.com') !== false) {
-            // Transform GitHub repository URL to raw content URL (explicitly correct)
+            // Transform GitHub repository URL to raw content URL
             $rawUrl = preg_replace('#https?://github\\.com/([^/]+)/([^/]+)\\.git#', 'https://raw.githubusercontent.com/$1/$2', $storeUrl) . '/main/' . $path;
         } else {
             // For other URLs, ensure we don't double-append store.json
@@ -62,50 +66,9 @@ function fetch_github_content($path) {
         }
     }
     
-    error_log("Fetching content from: " . $rawUrl);
+    error_log("[Store Handler] Final URL to fetch: " . $rawUrl);
     
-    // Try cURL first if available
-    if (function_exists('curl_init')) {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $rawUrl);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_USERAGENT, 'FearlessCMS/1.0');
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Accept: application/json, text/plain, */*',
-            'Accept-Language: en-US,en;q=0.9'
-        ]);
-        curl_setopt($ch, CURLOPT_VERBOSE, true);
-        
-        // Create a temporary file handle for CURL debug output
-        $verbose = fopen('php://temp', 'w+');
-        curl_setopt($ch, CURLOPT_STDERR, $verbose);
-        
-        $content = curl_exec($ch);
-        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $error = curl_error($ch);
-        
-        // Get the verbose debug information
-        rewind($verbose);
-        $verboseLog = stream_get_contents($verbose);
-        
-        error_log("CURL Verbose Log: " . $verboseLog);
-        error_log("HTTP response code: " . $http_code);
-        if ($error) {
-            error_log("CURL error: " . $error);
-        }
-        error_log("Response content: " . substr($content, 0, 1000)); // Log first 1000 chars of response
-        
-        curl_close($ch);
-        fclose($verbose);
-        
-        if ($http_code === 200) {
-            return $content;
-        }
-    }
-    
-    // Fallback to file_get_contents
+    // Create stream context
     $context = stream_context_create([
         'http' => [
             'method' => 'GET',
@@ -114,31 +77,62 @@ function fetch_github_content($path) {
                 'Accept: application/json, text/plain, */*',
                 'Accept-Language: en-US,en;q=0.9'
             ],
-            'ignore_errors' => true
+            'ignore_errors' => true,
+            'timeout' => 30,
+            'protocol_version' => '1.1'
         ],
         'ssl' => [
-            'verify_peer' => false,
-            'verify_peer_name' => false
+            'verify_peer' => true,
+            'verify_peer_name' => true,
+            'allow_self_signed' => false,
+            'cafile' => '/etc/ssl/certs/ca-certificates.crt'
+        ],
+        'socket' => [
+            'bindto' => '0.0.0.0:0', // Force IPv4
+            'tcp_nodelay' => true
         ]
     ]);
     
+    error_log("[Store Handler] Attempting to fetch using file_get_contents");
+    
+    // Initialize response headers array
+    $http_response_header = [];
+    
+    // Try to fetch the content
     $content = @file_get_contents($rawUrl, false, $context);
+    
+    // Check for errors
     if ($content === false) {
-        error_log("Failed to fetch content using file_get_contents. URL: " . $rawUrl);
+        $error = error_get_last();
+        error_log("[Store Handler] Failed to fetch content. URL: " . $rawUrl);
+        if ($error) {
+            error_log("[Store Handler] Error details: " . $error['message']);
+        }
+        if (!empty($http_response_header)) {
+            error_log("[Store Handler] HTTP response headers: " . print_r($http_response_header, true));
+        }
         return false;
     }
     
     // Check if we got a valid response
     $response_code = 0;
-    if (preg_match('/HTTP\/\d\.\d\s+(\d+)/', $http_response_header[0], $matches)) {
+    if (!empty($http_response_header) && preg_match('/HTTP\/\d\.\d\s+(\d+)/', $http_response_header[0], $matches)) {
         $response_code = intval($matches[1]);
     }
     
+    error_log("[Store Handler] Response code: " . $response_code);
+    if (!empty($http_response_header)) {
+        error_log("[Store Handler] Response headers: " . print_r($http_response_header, true));
+    }
+    error_log("[Store Handler] Response content length: " . strlen($content));
+    error_log("[Store Handler] Response content preview: " . substr($content, 0, 1000));
+    
     if ($response_code !== 200) {
-        error_log("Failed to fetch content. HTTP code: " . $response_code . " URL: " . $rawUrl);
+        error_log("[Store Handler] Failed to fetch content. HTTP code: " . $response_code);
         return false;
     }
     
+    error_log("[Store Handler] Successfully fetched content");
     return $content;
 }
 

@@ -1,6 +1,7 @@
 {
     "active_theme": "whisperwind",
-    "site_name": "Whisperwind",
+    "site_name": "FearlessCMS",
+    "admin_path": "missioncontrol",
     "custom_css": "",
     "custom_js": "",
     "store_url": "https:\/\/github.com\/fearlessgeekmedia\/FearlessCMS-Store.git"
