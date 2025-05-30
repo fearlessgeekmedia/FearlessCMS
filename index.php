@@ -3,10 +3,7 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-define('PROJECT_ROOT', __DIR__);
-define('CONTENT_DIR', __DIR__ . '/content');
-define('CONFIG_DIR', __DIR__ . '/config');
-
+require_once __DIR__ . '/includes/config.php';
 require_once PROJECT_ROOT . '/includes/ThemeManager.php';
 require_once PROJECT_ROOT . '/includes/MenuManager.php';
 require_once PROJECT_ROOT . '/includes/WidgetManager.php';

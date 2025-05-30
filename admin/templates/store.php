@@ -13,7 +13,7 @@ $featured = '';
 // Determine if this is a raw content URL or a GitHub repository URL
 $base_url = $store_repo;
 if (strpos($store_repo, 'github.com') !== false) {
-    // Transform GitHub repository URL to raw content URL (explicitly correct)
+    // Transform GitHub repository URL to raw content URL
     $base_url = preg_replace('#https?://github\\.com/([^/]+)/([^/]+)\\.git#', 'https://raw.githubusercontent.com/$1/$2', $store_repo) . '/main';
 } elseif (strpos($store_repo, 'raw.githubusercontent.com') !== false) {
     // If it's a raw content URL, remove the store.json part to get the base URL
@@ -24,8 +24,26 @@ if (strpos($store_repo, 'github.com') !== false) {
 $store_json_url = $base_url . '/store.json';
 error_log("Fetching store.json from: " . $store_json_url);
 $store_json = fetch_github_content($store_json_url);
-if ($store_json) {
-    $store_data = json_decode($store_json, true);
+
+if ($store_json === false) {
+    error_log("Failed to fetch store.json from: " . $store_json_url);
+    echo '<div class="alert alert-danger">';
+    echo '<h4>Error Loading Store</h4>';
+    echo '<p>Unable to load store data. Please check your internet connection and try again.</p>';
+    echo '<p>Debug info: Failed to fetch from ' . htmlspecialchars($store_json_url) . '</p>';
+    echo '</div>';
+    return;
+}
+
+$store_data = json_decode($store_json, true);
+if (json_last_error() !== JSON_ERROR_NONE) {
+    error_log("JSON decode error: " . json_last_error_msg());
+    echo '<div class="alert alert-danger">';
+    echo '<h4>Error Loading Store</h4>';
+    echo '<p>Invalid store data format. Please contact support.</p>';
+    echo '<p>Debug info: ' . htmlspecialchars(json_last_error_msg()) . '</p>';
+    echo '</div>';
+    return;
 }
 
 // Fetch news and featured content
@@ -38,11 +56,53 @@ error_log("Fetching featured from: " . $featured_url);
 $news = fetch_github_content($news_url);
 $featured = fetch_github_content($featured_url);
 
+// Debug information
+if (defined('DEBUG_MODE') && DEBUG_MODE) {
+    echo '<div class="debug-info" style="background: #f8f9fa; padding: 10px; margin: 10px 0; border: 1px solid #ddd;">';
+    echo '<h4>Debug Information</h4>';
+    echo '<pre>';
+    echo "Store URL: " . htmlspecialchars($store_repo) . "\n";
+    echo "Base URL: " . htmlspecialchars($base_url) . "\n";
+    echo "Store JSON URL: " . htmlspecialchars($store_json_url) . "\n";
+    echo "Store Data: " . print_r($store_data, true) . "\n";
+    echo "News Content: " . substr($news, 0, 200) . "...\n";
+    echo "Featured Content: " . substr($featured, 0, 200) . "...\n";
+    echo '</pre>';
+    echo '</div>';
+}
+
 // Parse markdown content
 require_once __DIR__ . '/../../includes/Parsedown.php';
 $parsedown = new Parsedown();
 $news_html = $parsedown->text($news);
 $featured_html = $parsedown->text($featured);
+
+// Get search parameters
+$search = $_GET['search'] ?? '';
+$category = $_GET['category'] ?? '';
+$type = $_GET['type'] ?? 'all';
+
+// Filter items based on search and category
+$items = [];
+if ($type === 'all' || $type === 'plugins') {
+    $items = array_merge($items, $store_data['plugins'] ?? []);
+}
+if ($type === 'all' || $type === 'themes') {
+    $items = array_merge($items, $store_data['themes'] ?? []);
+}
+
+if ($search) {
+    $items = array_filter($items, function($item) use ($search) {
+        return stripos($item['name'], $search) !== false || 
+               stripos($item['description'], $search) !== false;
+    });
+}
+
+if ($category) {
+    $items = array_filter($items, function($item) use ($category) {
+        return in_array($category, $item['categories'] ?? []);
+    });
+}
 ?>
 
 <div class="space-y-6">

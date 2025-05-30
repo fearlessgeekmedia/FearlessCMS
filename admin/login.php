@@ -11,9 +11,14 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once dirname(__DIR__) . '/includes/config.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
 
+// Load configuration
+$configFile = CONFIG_DIR . '/config.json';
+$config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
+$adminPath = $config['admin_path'] ?? 'admin';
+
 // If already logged in, redirect to dashboard
 if (isLoggedIn()) {
-    header('Location: /admin?action=dashboard');
+    header('Location: /' . $adminPath . '?action=dashboard');
     exit;
 }
 
@@ -30,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         if (login($username, $password)) {
             error_log("Login successful for user: " . $username);
-            header('Location: /admin?action=dashboard');
+            header('Location: /' . $adminPath . '?action=dashboard');
             exit;
         } else {
             error_log("Login failed for user: " . $username);

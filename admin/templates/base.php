@@ -1,6 +1,11 @@
 <?php
 error_log("Base template - Current session: " . print_r($_SESSION, true));
 require_once dirname(dirname(__DIR__)) . '/version.php';
+
+// Load configuration
+$configFile = CONFIG_DIR . '/config.json';
+$config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
+$adminPath = $config['admin_path'] ?? 'admin';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -22,16 +27,16 @@ require_once dirname(dirname(__DIR__)) . '/version.php';
     <nav class="bg-green-600 text-white p-4">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-4">
-                <h1 class="text-xl font-bold fira-code"><a href="<?php echo BASE_URL; ?>?action=dashboard">Mission Control</a></h1>
+                <h1 class="text-xl font-bold fira-code"><a href="/<?php echo $adminPath; ?>?action=dashboard">Mission Control</a></h1>
                 <span class="text-sm">Welcome, <?php echo htmlspecialchars($username ?? ''); ?></span>
                 <a href="/" target="_blank">Your site</a>
             </div>
             <div class="flex items-center space-x-4">
-                <a href="<?php echo BASE_URL; ?>?action=manage_users" class="hover:text-green-200">Users</a>
-                <a href="<?php echo BASE_URL; ?>?action=files" class="hover:text-green-200">Files</a>
-                <a href="<?php echo BASE_URL; ?>?action=manage_themes" class="hover:text-green-200">Themes</a>
-                <a href="<?php echo BASE_URL; ?>?action=manage_menus" class="hover:text-green-200">Menus</a>
-                <a href="<?php echo BASE_URL; ?>?action=manage_widgets" class="hover:text-green-200">Widgets</a>
+                <a href="/<?php echo $adminPath; ?>?action=manage_users" class="hover:text-green-200">Users</a>
+                <a href="/<?php echo $adminPath; ?>?action=files" class="hover:text-green-200">Files</a>
+                <a href="/<?php echo $adminPath; ?>?action=manage_themes" class="hover:text-green-200">Themes</a>
+                <a href="/<?php echo $adminPath; ?>?action=manage_menus" class="hover:text-green-200">Menus</a>
+                <a href="/<?php echo $adminPath; ?>?action=manage_widgets" class="hover:text-green-200">Widgets</a>
                 <?php 
                 // Add admin sections to navigation
                 $admin_sections = fcms_get_admin_sections();
@@ -39,18 +44,18 @@ require_once dirname(dirname(__DIR__)) . '/version.php';
                     if (isset($section['children'])) {
                         // This is a parent menu with children
                         echo '<div class="relative group">';
-                        echo '<a href="' . BASE_URL . '?action=manage_plugins" class="hover:text-green-200">' . htmlspecialchars($section['label']) . '</a>';
+                        echo '<a href="/' . $adminPath . '?action=manage_plugins" class="hover:text-green-200">' . htmlspecialchars($section['label']) . '</a>';
                         echo '<div class="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-in-out z-50">';
                         // Add the main plugins page as the first item
-                        echo '<a href="' . BASE_URL . '?action=manage_plugins" class="block px-4 py-2 text-gray-800 hover:bg-green-100 border-b border-gray-200">Manage Plugins</a>';
+                        echo '<a href="/' . $adminPath . '?action=manage_plugins" class="block px-4 py-2 text-gray-800 hover:bg-green-100 border-b border-gray-200">Manage Plugins</a>';
                         foreach ($section['children'] as $child_id => $child) {
-                            echo '<a href="' . BASE_URL . '?action=' . htmlspecialchars($child['id']) . '" class="block px-4 py-2 text-gray-800 hover:bg-green-100">' . htmlspecialchars($child['label']) . '</a>';
+                            echo '<a href="/' . $adminPath . '?action=' . htmlspecialchars($child['id']) . '" class="block px-4 py-2 text-gray-800 hover:bg-green-100">' . htmlspecialchars($child['label']) . '</a>';
                         }
                         echo '</div>';
                         echo '</div>';
                     } else {
                         // This is a regular menu item
-                        echo '<a href="' . BASE_URL . '?action=' . htmlspecialchars($section['id']) . '" class="hover:text-green-200">' . htmlspecialchars($section['label']) . '</a>';
+                        echo '<a href="/' . $adminPath . '?action=' . htmlspecialchars($section['id']) . '" class="hover:text-green-200">' . htmlspecialchars($section['label']) . '</a>';
                     }
                 }
                 if (!empty($plugin_nav_items)) echo $plugin_nav_items; 
