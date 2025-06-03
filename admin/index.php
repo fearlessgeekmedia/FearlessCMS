@@ -33,13 +33,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && in_array
 
 // If not logged in and not on login page, redirect to login
 if (!isLoggedIn() && $action !== 'login') {
-    header('Location: /admin/login');
+    header('Location: /' . $adminPath . '/login');
     exit;
 }
 
 // If logged in and trying to access login page, redirect to dashboard
 if (isLoggedIn() && $action === 'login') {
-    header('Location: /admin?action=dashboard');
+    header('Location: /' . $adminPath . '?action=dashboard');
     exit;
 }
 
@@ -210,7 +210,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Handle logout
     if (isset($_POST['action']) && $_POST['action'] === 'logout') {
         logout();
-        header('Location: /admin/login');
+        header('Location: /' . $adminPath . '/login');
         exit;
     }
     

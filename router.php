@@ -52,19 +52,12 @@ if (php_sapi_name() == 'cli-server') {
     }
 
     // Route /admin/anything else to /admin/index.php
-    if (preg_match('#^/' . $adminPath . '/.*#', $path)) {
-        error_log("Router: Checking login status for admin route: " . $path);
-        if (!isLoggedIn()) {
-            error_log("Router: Not logged in, redirecting to login");
-            header('Location: /' . $adminPath . '/login');
-            exit;
-        }
-        error_log("Router: Logged in, loading admin index");
+    if (strpos($path, '/' . $adminPath . '/') === 0) {
+        error_log("Router: Routing admin subpath to index.php");
         require __DIR__ . '/admin/index.php';  // Physical path remains 'admin'
         exit;
     }
-}
 
-// All other requests go to the main site
-error_log("Router: Routing to main site");
-require_once __DIR__ . '/index.php';
+    // If we get here, let the main index.php handle it
+    require __DIR__ . '/index.php';
+}
