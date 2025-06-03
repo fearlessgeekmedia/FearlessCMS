@@ -22,5 +22,13 @@
         "date": "2025-06-03",
         "content": "This is just a test",
         "status": "published"
+    },
+    {
+        "id": 1748934996,
+        "title": "Is this working?",
+        "slug": "is-this-working",
+        "date": "2025-06-03",
+        "content": "# New Blog Post\r\n\r\nStart writing your content here...",
+        "status": "published"
     }
 ]

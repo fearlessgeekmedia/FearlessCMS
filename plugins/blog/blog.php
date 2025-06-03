@@ -16,15 +16,23 @@ function blog_load_posts() {
 }
 
 function blog_save_posts($posts) {
-    file_put_contents(BLOG_POSTS_FILE, json_encode($posts, JSON_PRETTY_PRINT));
+    error_log("Blog plugin - blog_save_posts called");
+    error_log("Blog plugin - Saving to file: " . BLOG_POSTS_FILE);
+    error_log("Blog plugin - Posts to save: " . print_r($posts, true));
+    
+    $json = json_encode($posts, JSON_PRETTY_PRINT);
+    error_log("Blog plugin - JSON to write: " . $json);
+    
+    $result = file_put_contents(BLOG_POSTS_FILE, $json);
+    error_log("Blog plugin - Save result: " . ($result !== false ? "success" : "failed"));
+    
+    return $result;
 }
 
 // Helper function to create URL-friendly slugs
 function blog_create_slug($text) {
     // Replace non letter or digits by -
     $text = preg_replace('~[^\pL\d]+~u', '-', $text);
-    // Transliterate
-    $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
     // Remove unwanted characters
     $text = preg_replace('~[^-\w]+~', '', $text);
     // Trim
@@ -45,24 +53,39 @@ fcms_register_admin_section('blog', [
         $posts = blog_load_posts();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (isset($_POST['action']) && $_POST['action'] === 'save_post') {
+                error_log("Blog plugin - Starting save_post action");
+                error_log("Blog plugin - POST data: " . print_r($_POST, true));
+                
                 $id = $_POST['id'] ?? null;
                 $title = trim($_POST['title'] ?? '');
                 $slug = trim($_POST['slug'] ?? '');
                 
+                error_log("Blog plugin - ID: " . $id);
+                error_log("Blog plugin - Title: " . $title);
+                error_log("Blog plugin - Slug: " . $slug);
+                
                 // Auto-generate slug if empty
                 if (empty($slug) && !empty($title)) {
                     $slug = blog_create_slug($title);
+                    error_log("Blog plugin - Generated slug: " . $slug);
                 } else {
                     // Ensure slug is URL-friendly
                     $slug = blog_create_slug($slug);
+                    error_log("Blog plugin - URL-friendly slug: " . $slug);
                 }
                 
                 $date = trim($_POST['date'] ?? date('Y-m-d'));
                 $content = $_POST['content'] ?? '';
                 $status = $_POST['status'] ?? 'draft';
                 
+                error_log("Blog plugin - Date: " . $date);
+                error_log("Blog plugin - Status: " . $status);
+                error_log("Blog plugin - Content length: " . strlen($content));
+                
                 if ($title && $slug) {
+                    error_log("Blog plugin - Title and slug are valid, proceeding with save");
                     if ($id) {
+                        error_log("Blog plugin - Updating existing post with ID: " . $id);
                         foreach ($posts as &$post) {
                             if ($post['id'] == $id) {
                                 $post['title'] = $title;
@@ -70,10 +93,12 @@ fcms_register_admin_section('blog', [
                                 $post['date'] = $date;
                                 $post['content'] = $content;
                                 $post['status'] = $status;
+                                error_log("Blog plugin - Updated post: " . print_r($post, true));
                             }
                         }
                     } else {
-                        $posts[] = [
+                        error_log("Blog plugin - Creating new post");
+                        $newPost = [
                             'id' => time(),
                             'title' => $title,
                             'slug' => $slug,
@@ -81,12 +106,26 @@ fcms_register_admin_section('blog', [
                             'content' => $content,
                             'status' => $status
                         ];
+                        $posts[] = $newPost;
+                        error_log("Blog plugin - Added new post: " . print_r($newPost, true));
                     }
-                    blog_save_posts($posts);
+                    error_log("Blog plugin - Saving posts to file");
+                    error_log("Blog plugin - Posts to save: " . print_r($posts, true));
+                    $result = blog_save_posts($posts);
+                    error_log("Blog plugin - Save result: " . ($result !== false ? "success" : "failed"));
+                    
+                    // Redirect back to blog list after saving
+                    header('Location: ?action=blog');
+                    exit;
+                } else {
+                    error_log("Blog plugin - Invalid title or slug, skipping save");
                 }
             } elseif (isset($_POST['action']) && $_POST['action'] === 'delete_post' && isset($_POST['id'])) {
+                error_log("Blog plugin - Deleting post with ID: " . $_POST['id']);
                 $posts = array_filter($posts, fn($p) => $p['id'] != $_POST['id']);
                 blog_save_posts($posts);
+                header('Location: ?action=blog');
+                exit;
             }
         }
         echo '<h2 class="text-2xl font-bold mb-6 fira-code">Blog Posts</h2>';
@@ -98,7 +137,7 @@ fcms_register_admin_section('blog', [
                 echo '<div class="bg-red-100 text-red-700 p-4 rounded mb-4">Post not found</div>';
                 echo '<a href="?action=blog" class="inline-block mt-4 text-blue-600 hover:underline">Back to list</a>';
             } else {
-                echo '<form method="POST" class="space-y-4" id="blog-post-form">';
+                echo '<form method="POST" class="space-y-4" id="blog-post-form" data-ajax="false">';
                 echo '<input type="hidden" name="action" value="save_post">';
                 echo '<input type="hidden" name="id" value="' . htmlspecialchars($edit['id']) . '">';
                 echo '<div><label>Title:</label><input name="title" value="' . htmlspecialchars($edit['title']) . '" class="border rounded px-2 py-1 w-full"></div>';
@@ -128,13 +167,16 @@ fcms_register_admin_section('blog', [
                     });
                     
                     document.getElementById("blog-post-form").addEventListener("submit", function(e) {
-                        document.getElementById("blog-editor-content").value = editor.getMarkdown();
+                        var content = editor.getMarkdown();
+                        console.log("Editor content before save:", content);
+                        document.getElementById("blog-editor-content").value = content;
+                        console.log("Form content after setting:", document.getElementById("blog-editor-content").value);
                     });
                 });
                 </script>';
             }
         } elseif (isset($_GET['new'])) {
-            echo '<form method="POST" class="space-y-4" id="blog-post-form">';
+            echo '<form method="POST" class="space-y-4" id="blog-post-form" data-ajax="false">';
             echo '<input type="hidden" name="action" value="save_post">';
             echo '<div><label>Title:</label><input name="title" class="border rounded px-2 py-1 w-full"></div>';
             echo '<div><label>Slug:</label><input name="slug" class="border rounded px-2 py-1 w-full" placeholder="auto-generated-if-empty"></div>';
@@ -161,7 +203,10 @@ fcms_register_admin_section('blog', [
                 });
                 
                 document.getElementById("blog-post-form").addEventListener("submit", function(e) {
-                    document.getElementById("blog-editor-content").value = editor.getMarkdown();
+                    var content = editor.getMarkdown();
+                    console.log("Editor content before save:", content);
+                    document.getElementById("blog-editor-content").value = content;
+                    console.log("Form content after setting:", document.getElementById("blog-editor-content").value);
                 });
             });
             </script>';
