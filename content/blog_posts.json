@@ -6,5 +6,21 @@
         "date": "2025-05-02",
         "content": "# New Blog Post\r\n\r\nStart writing your content here...",
         "status": "published"
+    },
+    {
+        "id": 1748925264,
+        "title": "test blog",
+        "slug": "test-blog",
+        "date": "2025-06-03",
+        "content": "This is a test",
+        "status": "published"
+    },
+    {
+        "id": 1748925434,
+        "title": "Another test post",
+        "slug": "another-test-post",
+        "date": "2025-06-03",
+        "content": "This is just a test",
+        "status": "published"
     }
 ]

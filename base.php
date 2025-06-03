@@ -22,22 +22,22 @@ require_once dirname(dirname(__DIR__)) . '/version.php';
     <nav class="bg-green-600 text-white p-4">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-4">
-                <h1 class="text-xl font-bold fira-code"><a href="/<?php echo $adminPath; ?>?action=dashboard">Mission Control</a></h1>
+                <h1 class="text-xl font-bold fira-code"><a href="<?php echo BASE_URL; ?>?action=dashboard">Mission Control</a></h1>
                 <span class="text-sm">Welcome, <?php echo htmlspecialchars($username ?? ''); ?></span>
                 <a href="/" target="_blank">Your site</a>
             </div>
             <div class="flex items-center space-x-4">
-                <a href="/<?php echo $adminPath; ?>?action=manage_users" class="hover:text-green-200">Users</a>
-                <a href="/<?php echo $adminPath; ?>?action=files" class="hover:text-green-200">Files</a>
-                <a href="/<?php echo $adminPath; ?>?action=manage_themes" class="hover:text-green-200">Themes</a>
-                <a href="/<?php echo $adminPath; ?>?action=manage_menus" class="hover:text-green-200">Menus</a>
-                <a href="/<?php echo $adminPath; ?>?action=manage_widgets" class="hover:text-green-200">Widgets</a>
-                <a href="/<?php echo $adminPath; ?>?action=manage_plugins" class="hover:text-green-200">Plugins</a>
+                <a href="<?php echo BASE_URL; ?>?action=manage_users" class="hover:text-green-200">Users</a>
+                <a href="<?php echo BASE_URL; ?>?action=files" class="hover:text-green-200">Files</a>
+                <a href="<?php echo BASE_URL; ?>?action=manage_themes" class="hover:text-green-200">Themes</a>
+                <a href="<?php echo BASE_URL; ?>?action=manage_menus" class="hover:text-green-200">Menus</a>
+                <a href="<?php echo BASE_URL; ?>?action=manage_widgets" class="hover:text-green-200">Widgets</a>
+                <a href="<?php echo BASE_URL; ?>?action=manage_plugins" class="hover:text-green-200">Plugins</a>
                 <?php 
                 // Add admin sections to navigation
                 $admin_sections = fcms_get_admin_sections();
                 foreach ($admin_sections as $id => $section) {
-                    echo '<a href="/' . $adminPath . '?action=' . htmlspecialchars($id) . '" class="hover:text-green-200">' . htmlspecialchars($section['label']) . '</a>';
+                    echo '<a href="' . BASE_URL . '?action=' . htmlspecialchars($id) . '" class="hover:text-green-200">' . htmlspecialchars($section['label']) . '</a>';
                 }
                 if (!empty($plugin_nav_items)) echo $plugin_nav_items; 
                 ?>
@@ -173,7 +173,7 @@ require_once dirname(dirname(__DIR__)) . '/version.php';
     
     <!-- Version Bar -->
     <div class="fixed bottom-0 left-0 right-0 bg-gray-800 text-white text-sm py-1 px-4 text-center">
-        FearlessCMS v<?php echo APP_VERSION; ?> | <a href="https://ko-fi.com/fearlessgeekmedia" target="_blank" class="text-green-400 hover:text-green-300">Support FearlessCMS on Ko-fi</a>
+        FearlessCMS v<?php echo APP_VERSION; ?>
     </div>
 </body>
 </html>

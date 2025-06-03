@@ -248,103 +248,114 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Handle menu actions
     if ($action === 'save_menu' || $action === 'create_menu' || $action === 'delete_menu') {
-        header('Content-Type: application/json');
-        
-        switch ($action) {
-            case 'save_menu':
-                error_log("Processing save_menu action");
-                if (empty($data['menu_id']) || empty($data['menu_data'])) {
-                    error_log("Missing menu_id or menu_data");
-                    echo json_encode(['success' => false, 'error' => 'Menu ID and data are required']);
-                    exit;
-                }
-                
-                $menuId = $data['menu_id'];
-                $menuData = $data['menu_data'];
-                
-                if (!is_array($menuData)) {
-                    error_log("Invalid menu data format");
-                    echo json_encode(['success' => false, 'error' => 'Invalid menu data format']);
-                    exit;
-                }
-                
-                $menuFile = CONFIG_DIR . '/menus.json';
-                $menus = file_exists($menuFile) ? json_decode(file_get_contents($menuFile), true) : [];
-                $menus[$menuId] = $menuData;
-                
-                if (file_put_contents($menuFile, json_encode($menus, JSON_PRETTY_PRINT))) {
-                    error_log("Menu saved successfully");
-                    echo json_encode(['success' => true]);
-                } else {
-                    error_log("Failed to save menu");
-                    echo json_encode(['success' => false, 'error' => 'Failed to save menu']);
-                }
-                exit;
-
-            case 'create_menu':
-                error_log("Processing create_menu action");
-                if (empty($data['name'])) {
-                    error_log("Menu name is required");
-                    echo json_encode(['success' => false, 'error' => 'Menu name is required']);
-                    exit;
-                }
-                
-                $menuId = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $data['name']));
-                $menuFile = CONFIG_DIR . '/menus.json';
-                $menus = file_exists($menuFile) ? json_decode(file_get_contents($menuFile), true) : [];
-                
-                if (isset($menus[$menuId])) {
-                    error_log("Menu already exists: " . $menuId);
-                    echo json_encode(['success' => false, 'error' => 'Menu with this name already exists']);
-                    exit;
-                }
-                
-                $menus[$menuId] = [
-                    'label' => $data['name'],
-                    'menu_class' => $data['class'] ?? '',
-                    'items' => []
-                ];
-                
-                if (file_put_contents($menuFile, json_encode($menus, JSON_PRETTY_PRINT))) {
-                    error_log("Menu created successfully");
-                    echo json_encode(['success' => true]);
-                } else {
-                    error_log("Failed to create menu");
-                    echo json_encode(['success' => false, 'error' => 'Failed to create menu']);
-                }
-                exit;
-
-            case 'delete_menu':
-                error_log("Processing delete_menu action");
-                if (empty($data['menu_id'])) {
-                    error_log("Menu ID is required");
-                    echo json_encode(['success' => false, 'error' => 'Menu ID is required']);
-                    exit;
-                }
-                
-                $menuId = $data['menu_id'];
-                $menuFile = CONFIG_DIR . '/menus.json';
-                $menus = file_exists($menuFile) ? json_decode(file_get_contents($menuFile), true) : [];
-                
-                if (isset($menus[$menuId])) {
-                    unset($menus[$menuId]);
-                    if (file_put_contents($menuFile, json_encode($menus, JSON_PRETTY_PRINT))) {
-                        error_log("Menu deleted successfully");
-                        echo json_encode(['success' => true]);
-                    } else {
-                        error_log("Failed to delete menu");
-                        echo json_encode(['success' => false, 'error' => 'Failed to delete menu']);
-                    }
-                } else {
-                    error_log("Menu not found: " . $menuId);
-                    echo json_encode(['success' => false, 'error' => 'Menu not found']);
-                }
-                exit;
+        require_once __DIR__ . '/menu-handler.php';
+        exit;
+    }
+    
+    // Handle blog actions
+    if ($action === 'save_post' || $action === 'delete_post') {
+        // Let the blog plugin handle these actions
+        $admin_sections = fcms_get_admin_sections();
+        if (isset($admin_sections['blog'])) {
+            $content = call_user_func($admin_sections['blog']['render_callback']);
+            // After handling the action, redirect back to the blog list
+            header('Location: ?action=blog');
+            exit;
         }
     }
     
     // Handle other actions
     switch ($action) {
+        case 'save_menu':
+            error_log("Processing save_menu action");
+            if (empty($data['menu_id']) || empty($data['menu_data'])) {
+                error_log("Missing menu_id or menu_data");
+                echo json_encode(['success' => false, 'error' => 'Menu ID and data are required']);
+                exit;
+            }
+            
+            $menuId = $data['menu_id'];
+            $menuData = $data['menu_data'];
+            
+            if (!is_array($menuData)) {
+                error_log("Invalid menu data format");
+                echo json_encode(['success' => false, 'error' => 'Invalid menu data format']);
+                exit;
+            }
+            
+            $menuFile = CONFIG_DIR . '/menus.json';
+            $menus = file_exists($menuFile) ? json_decode(file_get_contents($menuFile), true) : [];
+            $menus[$menuId] = $menuData;
+            
+            if (file_put_contents($menuFile, json_encode($menus, JSON_PRETTY_PRINT))) {
+                error_log("Menu saved successfully");
+                echo json_encode(['success' => true]);
+            } else {
+                error_log("Failed to save menu");
+                echo json_encode(['success' => false, 'error' => 'Failed to save menu']);
+            }
+            exit;
+
+        case 'create_menu':
+            error_log("Processing create_menu action");
+            if (empty($data['name'])) {
+                error_log("Menu name is required");
+                echo json_encode(['success' => false, 'error' => 'Menu name is required']);
+                exit;
+            }
+            
+            $menuId = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $data['name']));
+            $menuFile = CONFIG_DIR . '/menus.json';
+            $menus = file_exists($menuFile) ? json_decode(file_get_contents($menuFile), true) : [];
+            
+            if (isset($menus[$menuId])) {
+                error_log("Menu already exists: " . $menuId);
+                echo json_encode(['success' => false, 'error' => 'Menu with this name already exists']);
+                exit;
+            }
+            
+            $menus[$menuId] = [
+                'label' => $data['name'],
+                'menu_class' => $data['class'] ?? '',
+                'items' => []
+            ];
+            
+            if (file_put_contents($menuFile, json_encode($menus, JSON_PRETTY_PRINT))) {
+                error_log("Menu created successfully");
+                echo json_encode(['success' => true]);
+            } else {
+                error_log("Failed to create menu");
+                echo json_encode(['success' => false, 'error' => 'Failed to create menu']);
+            }
+            exit;
+
+        case 'delete_menu':
+            error_log("Processing delete_menu action");
+            if (empty($data['menu_id'])) {
+                error_log("Menu ID is required");
+                echo json_encode(['success' => false, 'error' => 'Menu ID is required']);
+                exit;
+            }
+            
+            $menuId = $data['menu_id'];
+            $menuFile = CONFIG_DIR . '/menus.json';
+            $menus = file_exists($menuFile) ? json_decode(file_get_contents($menuFile), true) : [];
+            
+            if (isset($menus[$menuId])) {
+                unset($menus[$menuId]);
+                if (file_put_contents($menuFile, json_encode($menus, JSON_PRETTY_PRINT))) {
+                    error_log("Menu deleted successfully");
+                    echo json_encode(['success' => true]);
+                } else {
+                    error_log("Failed to delete menu");
+                    echo json_encode(['success' => false, 'error' => 'Failed to delete menu']);
+                }
+            } else {
+                error_log("Menu not found: " . $menuId);
+                echo json_encode(['success' => false, 'error' => 'Menu not found']);
+            }
+            exit;
+
         case 'save_content':
             $path = $_POST['path'] ?? '';
             $title = $_POST['title'] ?? '';
@@ -453,6 +464,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $siteName = $newSiteName;
             } else {
                 $error = 'Failed to update site name';
+            }
+            break;
+            
+        case 'save_post':
+        case 'delete_post':
+            $admin_sections = fcms_get_admin_sections();
+            if (isset($admin_sections['blog'])) {
+                $content = call_user_func($admin_sections['blog']['render_callback']);
+                header('Location: ?action=blog');
+                exit;
             }
             break;
     }
