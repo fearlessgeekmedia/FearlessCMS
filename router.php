@@ -15,6 +15,17 @@ if (php_sapi_name() == 'cli-server') {
     $config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
     $adminPath = $config['admin_path'] ?? 'admin';
 
+    // Handle uploads directory access
+    if (strpos($path, '/uploads/') === 0) {
+        $uploadsFile = __DIR__ . $path;
+        if (file_exists($uploadsFile) && is_file($uploadsFile)) {
+            $mime = mime_content_type($uploadsFile);
+            header('Content-Type: ' . $mime);
+            readfile($uploadsFile);
+            exit;
+        }
+    }
+
     // Serve static files directly
     if (is_file($file)) {
         error_log("Router: Serving static file: " . $file);

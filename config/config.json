@@ -1,8 +1,8 @@
 {
-    "active_theme": "default",
+    "active_theme": "whisperwind",
     "site_name": "FearlessCMS",
-    "admin_path": "missioncontrol",
+    "admin_path": "admin",
     "custom_css": "",
     "custom_js": "",
-    "store_url": "https://raw.githubusercontent.com/fearlessgeekmedia/FearlessCMS-Store/main/store.json"
+    "store_url": "https:\/\/raw.githubusercontent.com\/fearlessgeekmedia\/FearlessCMS-Store\/main\/store.json"
 }

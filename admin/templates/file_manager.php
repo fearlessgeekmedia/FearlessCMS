@@ -6,7 +6,7 @@ $allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'zip', 'svg', 'txt',
 $maxFileSize = 10 * 1024 * 1024;
 
 // Get uploads directory
-$uploadsDir = dirname(__DIR__) . '/uploads';
+$uploadsDir = dirname(dirname(__DIR__)) . '/uploads';
 $webUploadsDir = '/uploads';
 
 // Ensure uploads directory exists
@@ -27,6 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $target = $uploadsDir . '/' . basename($file['name']);
             if (move_uploaded_file($file['tmp_name'], $target)) {
                 $success = 'File uploaded successfully.';
+                // Ensure proper permissions
+                chmod($target, 0644);
             } else {
                 $error = 'Failed to upload file.';
             }
@@ -54,19 +56,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 // List files
 $files = [];
 if (is_dir($uploadsDir)) {
-    foreach (scandir($uploadsDir) as $file) {
-        if ($file === '.' || $file === '..') continue;
-        $filepath = $uploadsDir . '/' . $file;
-        if (is_file($filepath)) {
-            $files[] = [
-                'name' => $file,
-                'size' => filesize($filepath),
-                'type' => mime_content_type($filepath),
-                'modified' => filemtime($filepath),
-                'url' => $webUploadsDir . '/' . $file
-            ];
-        }
-    }
+    $files = array_diff(scandir($uploadsDir), ['.', '..']);
+    $files = array_map(function($file) use ($uploadsDir, $webUploadsDir) {
+        $filePath = $uploadsDir . '/' . $file;
+        $fileInfo = [
+            'name' => $file,
+            'size' => filesize($filePath),
+            'type' => mime_content_type($filePath),
+            'ext' => strtolower(pathinfo($file, PATHINFO_EXTENSION)),
+            'url' => $webUploadsDir . '/' . $file,
+            'modified' => filemtime($filePath)
+        ];
+        return $fileInfo;
+    }, $files);
 }
 ?>
 

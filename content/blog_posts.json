@@ -1,34 +1,11 @@
 [
     {
-        "id": 1746164988,
-        "title": "test",
-        "slug": "test",
-        "date": "2025-05-02",
+        "id": 1749013095,
+        "title": "test post",
+        "slug": "test-post",
+        "date": "2025-06-04",
         "content": "# New Blog Post\r\n\r\nStart writing your content here...",
-        "status": "published"
-    },
-    {
-        "id": 1748925264,
-        "title": "test blog",
-        "slug": "test-blog",
-        "date": "2025-06-03",
-        "content": "This is a test",
-        "status": "published"
-    },
-    {
-        "id": 1748925434,
-        "title": "Another test post",
-        "slug": "another-test-post",
-        "date": "2025-06-03",
-        "content": "This is just a test",
-        "status": "published"
-    },
-    {
-        "id": 1748934996,
-        "title": "Is this working?",
-        "slug": "is-this-working",
-        "date": "2025-06-03",
-        "content": "# New Blog Post\r\n\r\nStart writing your content here...",
-        "status": "published"
+        "status": "published",
+        "featured_image": "http:\/\/localhost:8080\/uploads\/fearlesscms-logo.png"
     }
 ]
