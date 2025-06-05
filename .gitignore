@@ -5,3 +5,6 @@ themes/whisperwind
 # Files containing actual secrets
 content/forms/forms.log
 content/forms/settings.json
+
+# Log files
+error.log
