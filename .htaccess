@@ -1,5 +1,15 @@
 RewriteEngine On
 
+# Load admin path from config
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Get admin path from config
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [L,QSA]
+
 # Handle admin section
 RewriteCond %{REQUEST_URI} ^/admin/?$
 RewriteRule ^admin/?$ admin/index.php [L]

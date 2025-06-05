@@ -1,2 +1,7 @@
 admin/config/users.json
 serve-log.tmp
+themes/whisperwind
+
+# Files containing actual secrets
+content/forms/forms.log
+content/forms/settings.json
