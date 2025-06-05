@@ -1,0 +1,473 @@
+[2025-06-05 00:51:38] Form submission handler called
+[2025-06-05 00:51:38] Not a POST request
+[2025-06-05 00:51:49] Form submission handler called
+[2025-06-05 00:51:49] Processing form submission for form ID: form_6840d43e84989
+[2025-06-05 00:51:49] Form data loaded: Array
+(
+    [id] => form_6840d43e84989
+    [title] => Form
+    [description] => A form
+    [email_recipients] => Array
+        (
+            [0] => service@fearlessgeekmedia.com
+        )
+
+    [email_from] => service@fearlessgeekmedia.com
+    [fields] => Array
+        (
+            [0] => Array
+                (
+                    [id] => field_0
+                    [label] => test input
+                    [type] => text
+                    [required] => 
+                    [options] => 
+                )
+
+            [1] => Array
+                (
+                    [id] => field_1
+                    [label] => test e-mail
+                    [type] => email
+                    [required] => 
+                    [options] => 
+                )
+
+            [2] => Array
+                (
+                    [id] => field_2
+                    [label] => test message
+                    [type] => textarea
+                    [required] => 
+                    [options] => 
+                )
+
+        )
+
+)
+
+[2025-06-05 00:51:49] Plugin settings loaded: Array
+(
+    [smtp_host] => smtp.gmail.com
+    [smtp_port] => 587
+    [smtp_username] => michaelaverywilliams@gmail.com
+    [smtp_password] => Take0ff$2023
+    [smtp_encryption] => tls
+    [from_email] => service@fearlessgeekmedia.com
+    [from_name] => Fearless Geek Media
+)
+
+[2025-06-05 00:51:49] Email message prepared: New form submission from Form
+
+Submitted on: 2025-06-05 00:51:49
+
+test input: Test inpu
+test e-mail: test@test.com
+test message: test message
+
+[2025-06-05 00:51:49] Email recipients found: Array
+(
+    [0] => service@fearlessgeekmedia.com
+)
+
+[2025-06-05 00:51:49] Attempting SMTP connection to smtp.gmail.com:587
+[2025-06-05 00:51:50] SMTP Server response: 220 smtp.gmail.com ESMTP 98e67ed59e1d1-313319020e0sm45061a91.12 - gsmtp
+[2025-06-05 00:51:50] SMTP EHLO response: 250-smtp.gmail.com at your service, [65.181.52.82]
+[2025-06-05 00:51:50] SMTP STARTTLS response: 250-SIZE 35882577
+[2025-06-05 00:51:50] SMTP AUTH response: 250-8BITMIME
+[2025-06-05 00:51:50] SMTP Username response: 250-STARTTLS
+[2025-06-05 00:51:50] SMTP Password response: 250-ENHANCEDSTATUSCODES
+[2025-06-05 00:51:50] SMTP MAIL FROM response: 250-PIPELINING
+[2025-06-05 00:51:50] SMTP RCPT TO response for service@fearlessgeekmedia.com: 250-CHUNKING
+[2025-06-05 00:51:50] SMTP DATA response: 250 SMTPUTF8
+[2025-06-05 00:51:50] SMTP Message send response: .0.0 Ready to start TLS
+[2025-06-05 00:51:50] SMTP connection closed
+[2025-06-05 00:51:50] Form submission handler called
+[2025-06-05 00:51:50] Not a POST request
+[2025-06-05 00:51:50] Form submission handler called
+[2025-06-05 00:51:50] Not a POST request
+[2025-06-05 01:03:42] Test email requested
+[2025-06-05 01:03:42] Test email settings: Array
+(
+    [smtp_host] => smtp.gmail.com
+    [smtp_port] => 587
+    [smtp_username] => michaelaverywilliams@gmail.com
+    [smtp_password] => Take0ff$2023
+    [smtp_encryption] => tls
+    [from_email] => service@fearlessgeekmedia.com
+    [from_name] => Fearless Geek Media
+)
+
+[2025-06-05 01:03:42] Attempting to send test email to: service@fearlessgeekmedia.com
+[2025-06-05 01:03:42] Testing SMTP connection to smtp.gmail.com:587
+[2025-06-05 01:03:42] SMTP connection established
+[2025-06-05 01:03:42] SMTP Server response: 220 smtp.gmail.com ESMTP d9443c01a7336-23506d16e1asm109534625ad.243 - gsmtp
+[2025-06-05 01:03:42] SMTP EHLO response: 250-smtp.gmail.com at your service, [65.181.52.82]
+[2025-06-05 01:03:42] Starting TLS encryption
+[2025-06-05 01:03:42] SMTP STARTTLS response: 250-SIZE 35882577
+[2025-06-05 01:03:42] TLS encryption failed
+[2025-06-05 01:04:46] Test email requested
+[2025-06-05 01:04:46] Test email settings: Array
+(
+    [smtp_host] => smtp.gmail.com
+    [smtp_port] => 587
+    [smtp_username] => michaelaverywilliams@gmail.com
+    [smtp_password] => Take0ff$2023
+    [smtp_encryption] => tls
+    [from_email] => service@fearlessgeekmedia.com
+    [from_name] => Fearless Geek Media
+)
+
+[2025-06-05 01:04:46] Attempting to send test email to: service@fearlessgeekmedia.com
+[2025-06-05 01:04:46] Testing SMTP connection to smtp.gmail.com:587
+[2025-06-05 01:04:46] SMTP connection established
+[2025-06-05 01:04:46] SMTP Server response: 220 smtp.gmail.com ESMTP d9443c01a7336-235caa81bc2sm33874295ad.205 - gsmtp
+[2025-06-05 01:04:46] Starting TLS encryption
+[2025-06-05 01:04:46] SMTP STARTTLS response: 503-5.5.1 EHLO/HELO first. A mail transaction protocol command was issued out of
+[2025-06-05 01:04:46] STARTTLS command failed: 503-5.5.1 EHLO/HELO first. A mail transaction protocol command was issued out of
+[2025-06-05 01:08:37] Test email requested
+[2025-06-05 01:08:37] Test email settings: Array
+(
+    [smtp_host] => smtp.gmail.com
+    [smtp_port] => 587
+    [smtp_username] => michaelaverywilliams@gmail.com
+    [smtp_password] => Take0ff$2023
+    [smtp_encryption] => tls
+    [from_email] => service@fearlessgeekmedia.com
+    [from_name] => Fearless Geek Media
+)
+
+[2025-06-05 01:08:37] Attempting to send test email to: service@fearlessgeekmedia.com
+[2025-06-05 01:08:37] Testing SMTP connection to smtp.gmail.com:587
+[2025-06-05 01:08:38] SMTP connection established
+[2025-06-05 01:08:38] SMTP Server response: 220 smtp.gmail.com ESMTP d9443c01a7336-23506cf5249sm109473915ad.192 - gsmtp
+[2025-06-05 01:08:38] SMTP EHLO response: 250-smtp.gmail.com at your service, [65.181.52.82]
+[2025-06-05 01:08:38] Starting TLS encryption
+[2025-06-05 01:08:38] SMTP STARTTLS response: 250-SIZE 35882577
+[2025-06-05 01:08:38] STARTTLS command failed: 250-SIZE 35882577
+[2025-06-05 01:11:49] Test email requested
+[2025-06-05 01:11:49] Test email settings: Array
+(
+    [smtp_host] => smtp.gmail.com
+    [smtp_port] => 587
+    [smtp_username] => michaelaverywilliams@gmail.com
+    [smtp_password] => Take0ff$2023
+    [smtp_encryption] => tls
+    [from_email] => service@fearlessgeekmedia.com
+    [from_name] => Fearless Geek Media
+)
+
+[2025-06-05 01:11:49] Test email failed: No email address provided
+[2025-06-05 01:12:08] Test email requested
+[2025-06-05 01:12:08] Test email settings: Array
+(
+    [smtp_host] => smtp.gmail.com
+    [smtp_port] => 587
+    [smtp_username] => michaelaverywilliams@gmail.com
+    [smtp_password] => Take0ff$2023
+    [smtp_encryption] => tls
+    [from_email] => service@fearlessgeekmedia.com
+    [from_name] => Fearless Geek Media
+)
+
+[2025-06-05 01:12:08] Attempting to send test email to: service@fearlessgeekmedia.com
+[2025-06-05 01:12:08] Testing SMTP connection to smtp.gmail.com:587
+[2025-06-05 01:12:08] SMTP connection established
+[2025-06-05 01:12:08] SMTP Server response: 220 smtp.gmail.com ESMTP d9443c01a7336-23506bd94a7sm109709115ad.93 - gsmtp
+[2025-06-05 01:12:09] SMTP EHLO response line: 250-smtp.gmail.com at your service, [65.181.52.82]
+[2025-06-05 01:12:09] SMTP EHLO response line: 250-SIZE 35882577
+[2025-06-05 01:12:09] SMTP EHLO response line: 250-8BITMIME
+[2025-06-05 01:12:09] SMTP EHLO response line: 250-STARTTLS
+[2025-06-05 01:12:09] SMTP EHLO response line: 250-ENHANCEDSTATUSCODES
+[2025-06-05 01:12:09] SMTP EHLO response line: 250-PIPELINING
+[2025-06-05 01:12:09] SMTP EHLO response line: 250-CHUNKING
+[2025-06-05 01:12:09] SMTP EHLO response line: 250 SMTPUTF8
+[2025-06-05 01:12:09] Starting TLS encryption
+[2025-06-05 01:12:09] SMTP STARTTLS response line: 220 2.0.0 Ready to start TLS
+[2025-06-05 01:12:09] Failed to establish TLS connection:  (0)
+[2025-06-05 01:17:19] Test email requested
+[2025-06-05 01:17:19] Test email settings: Array
+(
+    [smtp_host] => smtp.gmail.com
+    [smtp_port] => 587
+    [smtp_username] => michaelaverywilliams@gmail.com
+    [smtp_password] => Take0ff$2023
+    [smtp_encryption] => tls
+    [from_email] => service@fearlessgeekmedia.com
+    [from_name] => Fearless Geek Media
+)
+
+[2025-06-05 01:17:19] Attempting to send test email to: service@fearlessgeekmedia.com
+[2025-06-05 01:17:19] Testing SMTP connection to smtp.gmail.com:587
+[2025-06-05 01:17:19] SMTP connection established
+[2025-06-05 01:17:20] SMTP Server response: 220 smtp.gmail.com ESMTP 98e67ed59e1d1-3132c0987eesm316417a91.24 - gsmtp
+[2025-06-05 01:17:20] SMTP EHLO response line: 250-smtp.gmail.com at your service, [65.181.52.82]
+[2025-06-05 01:17:20] SMTP EHLO response line: 250-SIZE 35882577
+[2025-06-05 01:17:20] SMTP EHLO response line: 250-8BITMIME
+[2025-06-05 01:17:20] SMTP EHLO response line: 250-STARTTLS
+[2025-06-05 01:17:20] SMTP EHLO response line: 250-ENHANCEDSTATUSCODES
+[2025-06-05 01:17:20] SMTP EHLO response line: 250-PIPELINING
+[2025-06-05 01:17:20] SMTP EHLO response line: 250-CHUNKING
+[2025-06-05 01:17:20] SMTP EHLO response line: 250 SMTPUTF8
+[2025-06-05 01:17:20] Starting TLS encryption
+[2025-06-05 01:17:20] SMTP STARTTLS response line: 220 2.0.0 Ready to start TLS
+[2025-06-05 01:17:20] Enabling TLS on existing connection
+[2025-06-05 01:17:20] TLS encryption enabled successfully
+[2025-06-05 01:17:20] SMTP EHLO response after TLS: 250-smtp.gmail.com at your service, [65.181.52.82]
+[2025-06-05 01:17:20] SMTP EHLO response after TLS: 250-SIZE 35882577
+[2025-06-05 01:17:20] SMTP EHLO response after TLS: 250-8BITMIME
+[2025-06-05 01:17:20] SMTP EHLO response after TLS: 250-AUTH LOGIN PLAIN XOAUTH2 PLAIN-CLIENTTOKEN OAUTHBEARER XOAUTH
+[2025-06-05 01:17:20] SMTP EHLO response after TLS: 250-ENHANCEDSTATUSCODES
+[2025-06-05 01:17:20] SMTP EHLO response after TLS: 250-PIPELINING
+[2025-06-05 01:17:20] SMTP EHLO response after TLS: 250-CHUNKING
+[2025-06-05 01:17:20] SMTP EHLO response after TLS: 250 SMTPUTF8
+[2025-06-05 01:17:20] Starting SMTP authentication
+[2025-06-05 01:17:20] SMTP AUTH response: 334 VXNlcm5hbWU6
+[2025-06-05 01:17:20] SMTP Username response: 334 UGFzc3dvcmQ6
+[2025-06-05 01:17:20] SMTP Password response: 534-5.7.9 Application-specific password required. For more information, go to
+[2025-06-05 01:17:20] Password authentication failed: 534-5.7.9 Application-specific password required. For more information, go to
+[2025-06-05 01:28:09] Test email requested
+[2025-06-05 01:28:09] Test email settings: Array
+(
+    [smtp_host] => smtp.gmail.com
+    [smtp_port] => 587
+    [smtp_username] => michaelaverywilliams@gmail.com
+    [smtp_password] => twxa flrg felm ifqo 
+    [smtp_encryption] => tls
+    [from_email] => service@fearlessgeekmedia.com
+    [from_name] => Fearless Geek Media
+)
+
+[2025-06-05 01:28:09] Attempting to send test email to: service@fearlessgeekmedia.com
+[2025-06-05 01:28:09] Testing SMTP connection to smtp.gmail.com:587
+[2025-06-05 01:28:09] SMTP connection established
+[2025-06-05 01:28:09] SMTP Server response: 220 smtp.gmail.com ESMTP d9443c01a7336-23506bd90ebsm110076885ad.75 - gsmtp
+[2025-06-05 01:28:10] SMTP EHLO response line: 250-smtp.gmail.com at your service, [65.181.52.82]
+[2025-06-05 01:28:10] SMTP EHLO response line: 250-SIZE 35882577
+[2025-06-05 01:28:10] SMTP EHLO response line: 250-8BITMIME
+[2025-06-05 01:28:10] SMTP EHLO response line: 250-STARTTLS
+[2025-06-05 01:28:10] SMTP EHLO response line: 250-ENHANCEDSTATUSCODES
+[2025-06-05 01:28:10] SMTP EHLO response line: 250-PIPELINING
+[2025-06-05 01:28:10] SMTP EHLO response line: 250-CHUNKING
+[2025-06-05 01:28:10] SMTP EHLO response line: 250 SMTPUTF8
+[2025-06-05 01:28:10] Starting TLS encryption
+[2025-06-05 01:28:10] SMTP STARTTLS response line: 220 2.0.0 Ready to start TLS
+[2025-06-05 01:28:10] Enabling TLS on existing connection
+[2025-06-05 01:28:10] TLS encryption enabled successfully
+[2025-06-05 01:28:10] SMTP EHLO response after TLS: 250-smtp.gmail.com at your service, [65.181.52.82]
+[2025-06-05 01:28:10] SMTP EHLO response after TLS: 250-SIZE 35882577
+[2025-06-05 01:28:10] SMTP EHLO response after TLS: 250-8BITMIME
+[2025-06-05 01:28:10] SMTP EHLO response after TLS: 250-AUTH LOGIN PLAIN XOAUTH2 PLAIN-CLIENTTOKEN OAUTHBEARER XOAUTH
+[2025-06-05 01:28:10] SMTP EHLO response after TLS: 250-ENHANCEDSTATUSCODES
+[2025-06-05 01:28:10] SMTP EHLO response after TLS: 250-PIPELINING
+[2025-06-05 01:28:10] SMTP EHLO response after TLS: 250-CHUNKING
+[2025-06-05 01:28:10] SMTP EHLO response after TLS: 250 SMTPUTF8
+[2025-06-05 01:28:10] Starting SMTP authentication
+[2025-06-05 01:28:10] SMTP AUTH response: 334 VXNlcm5hbWU6
+[2025-06-05 01:28:10] SMTP Username response: 334 UGFzc3dvcmQ6
+[2025-06-05 01:28:11] SMTP Password response: 235 2.7.0 Accepted
+[2025-06-05 01:28:11] SMTP Authentication successful
+[2025-06-05 01:28:11] SMTP MAIL FROM response: 250 2.1.0 OK d9443c01a7336-23506bd90ebsm110076885ad.75 - gsmtp
+[2025-06-05 01:28:11] SMTP RCPT TO response: 250 2.1.5 OK d9443c01a7336-23506bd90ebsm110076885ad.75 - gsmtp
+[2025-06-05 01:28:11] SMTP DATA response: 354 Go ahead d9443c01a7336-23506bd90ebsm110076885ad.75 - gsmtp
+[2025-06-05 01:28:12] SMTP Message send response: 250 2.0.0 OK  1749086892 d9443c01a7336-23506bd90ebsm110076885ad.75 - gsmtp
+[2025-06-05 01:28:12] Test email sent successfully to: service@fearlessgeekmedia.com
+[2025-06-05 01:29:40] Form submission handler called
+[2025-06-05 01:29:40] Not a POST request
+[2025-06-05 01:29:41] Form submission handler called
+[2025-06-05 01:29:41] Not a POST request
+[2025-06-05 01:30:01] Form submission handler called
+[2025-06-05 01:30:01] Processing form submission for form ID: form_6840d43e84989
+[2025-06-05 01:30:01] Form data loaded: Array
+(
+    [id] => form_6840d43e84989
+    [title] => Form
+    [description] => A form
+    [email_recipients] => Array
+        (
+            [0] => service@fearlessgeekmedia.com
+        )
+
+    [email_from] => service@fearlessgeekmedia.com
+    [fields] => Array
+        (
+            [0] => Array
+                (
+                    [id] => field_0
+                    [label] => test input
+                    [type] => text
+                    [required] => 
+                    [options] => 
+                )
+
+            [1] => Array
+                (
+                    [id] => field_1
+                    [label] => test e-mail
+                    [type] => email
+                    [required] => 
+                    [options] => 
+                )
+
+            [2] => Array
+                (
+                    [id] => field_2
+                    [label] => test message
+                    [type] => textarea
+                    [required] => 
+                    [options] => 
+                )
+
+        )
+
+)
+
+[2025-06-05 01:30:01] Plugin settings loaded: Array
+(
+    [smtp_host] => smtp.gmail.com
+    [smtp_port] => 587
+    [smtp_username] => michaelaverywilliams@gmail.com
+    [smtp_password] => twxa flrg felm ifqo 
+    [smtp_encryption] => tls
+    [from_email] => service@fearlessgeekmedia.com
+    [from_name] => Fearless Geek Media
+)
+
+[2025-06-05 01:30:01] Email message prepared: New form submission from Form
+
+Submitted on: 2025-06-05 01:30:01
+
+test input: This is test input
+test e-mail: someone@something.com
+test message: This is a test message
+
+[2025-06-05 01:30:01] Email recipients found: Array
+(
+    [0] => service@fearlessgeekmedia.com
+)
+
+[2025-06-05 01:30:01] Attempting SMTP connection to smtp.gmail.com:587
+[2025-06-05 01:30:01] SMTP Server response: 220 smtp.gmail.com ESMTP d2e1a72fcca58-747afeab33dsm11704502b3a.41 - gsmtp
+[2025-06-05 01:30:02] SMTP EHLO response: 250-smtp.gmail.com at your service, [65.181.52.82]
+[2025-06-05 01:30:02] SMTP STARTTLS response: 250-SIZE 35882577
+[2025-06-05 01:30:02] SMTP AUTH response: 250-8BITMIME
+[2025-06-05 01:30:02] SMTP Username response: 250-STARTTLS
+[2025-06-05 01:30:02] SMTP Password response: 250-ENHANCEDSTATUSCODES
+[2025-06-05 01:30:02] SMTP MAIL FROM response: 250-PIPELINING
+[2025-06-05 01:30:02] SMTP RCPT TO response for service@fearlessgeekmedia.com: 250-CHUNKING
+[2025-06-05 01:30:02] SMTP DATA response: 250 SMTPUTF8
+[2025-06-05 01:30:02] SMTP Message send response: .0.0 Ready to start TLS
+[2025-06-05 01:30:02] SMTP connection closed
+[2025-06-05 01:30:02] Form submission handler called
+[2025-06-05 01:30:02] Not a POST request
+[2025-06-05 01:31:40] Form submission handler called
+[2025-06-05 01:31:40] Not a POST request
+[2025-06-05 01:32:01] Form submission handler called
+[2025-06-05 01:32:01] Processing form submission for form ID: form_6840d43e84989
+[2025-06-05 01:32:01] Form data loaded: Array
+(
+    [id] => form_6840d43e84989
+    [title] => Form
+    [description] => A form
+    [email_recipients] => Array
+        (
+            [0] => service@fearlessgeekmedia.com
+        )
+
+    [email_from] => service@fearlessgeekmedia.com
+    [fields] => Array
+        (
+            [0] => Array
+                (
+                    [id] => field_0
+                    [label] => test input
+                    [type] => text
+                    [required] => 
+                    [options] => 
+                )
+
+            [1] => Array
+                (
+                    [id] => field_1
+                    [label] => test e-mail
+                    [type] => email
+                    [required] => 
+                    [options] => 
+                )
+
+            [2] => Array
+                (
+                    [id] => field_2
+                    [label] => test message
+                    [type] => textarea
+                    [required] => 
+                    [options] => 
+                )
+
+        )
+
+)
+
+[2025-06-05 01:32:01] Plugin settings loaded: Array
+(
+    [smtp_host] => smtp.gmail.com
+    [smtp_port] => 587
+    [smtp_username] => michaelaverywilliams@gmail.com
+    [smtp_password] => twxa flrg felm ifqo 
+    [smtp_encryption] => tls
+    [from_email] => service@fearlessgeekmedia.com
+    [from_name] => Fearless Geek Media
+)
+
+[2025-06-05 01:32:01] Email message prepared: New form submission from Form
+
+Submitted on: 2025-06-05 01:32:01
+
+test input: This is test input
+test e-mail: linux@linux.org
+test message: This is a test message
+
+[2025-06-05 01:32:01] Email recipients found: Array
+(
+    [0] => service@fearlessgeekmedia.com
+)
+
+[2025-06-05 01:32:01] Attempting SMTP connection to smtp.gmail.com:587
+[2025-06-05 01:32:01] SMTP connection established
+[2025-06-05 01:32:01] SMTP Server response: 220 smtp.gmail.com ESMTP 98e67ed59e1d1-3132bff67a0sm334044a91.10 - gsmtp
+[2025-06-05 01:32:01] SMTP EHLO response line: 250-smtp.gmail.com at your service, [65.181.52.82]
+[2025-06-05 01:32:01] SMTP EHLO response line: 250-SIZE 35882577
+[2025-06-05 01:32:01] SMTP EHLO response line: 250-8BITMIME
+[2025-06-05 01:32:01] SMTP EHLO response line: 250-STARTTLS
+[2025-06-05 01:32:01] SMTP EHLO response line: 250-ENHANCEDSTATUSCODES
+[2025-06-05 01:32:01] SMTP EHLO response line: 250-PIPELINING
+[2025-06-05 01:32:01] SMTP EHLO response line: 250-CHUNKING
+[2025-06-05 01:32:01] SMTP EHLO response line: 250 SMTPUTF8
+[2025-06-05 01:32:01] Starting TLS encryption
+[2025-06-05 01:32:01] SMTP STARTTLS response line: 220 2.0.0 Ready to start TLS
+[2025-06-05 01:32:01] Enabling TLS on existing connection
+[2025-06-05 01:32:01] TLS encryption enabled successfully
+[2025-06-05 01:32:01] SMTP EHLO response after TLS: 250-smtp.gmail.com at your service, [65.181.52.82]
+[2025-06-05 01:32:01] SMTP EHLO response after TLS: 250-SIZE 35882577
+[2025-06-05 01:32:01] SMTP EHLO response after TLS: 250-8BITMIME
+[2025-06-05 01:32:01] SMTP EHLO response after TLS: 250-AUTH LOGIN PLAIN XOAUTH2 PLAIN-CLIENTTOKEN OAUTHBEARER XOAUTH
+[2025-06-05 01:32:01] SMTP EHLO response after TLS: 250-ENHANCEDSTATUSCODES
+[2025-06-05 01:32:01] SMTP EHLO response after TLS: 250-PIPELINING
+[2025-06-05 01:32:01] SMTP EHLO response after TLS: 250-CHUNKING
+[2025-06-05 01:32:01] SMTP EHLO response after TLS: 250 SMTPUTF8
+[2025-06-05 01:32:01] Starting SMTP authentication
+[2025-06-05 01:32:01] SMTP AUTH response: 334 VXNlcm5hbWU6
+[2025-06-05 01:32:01] SMTP Username response: 334 UGFzc3dvcmQ6
+[2025-06-05 01:32:02] SMTP Password response: 235 2.7.0 Accepted
+[2025-06-05 01:32:02] SMTP Authentication successful
+[2025-06-05 01:32:02] SMTP MAIL FROM response: 250 2.1.0 OK 98e67ed59e1d1-3132bff67a0sm334044a91.10 - gsmtp
+[2025-06-05 01:32:02] SMTP RCPT TO response for service@fearlessgeekmedia.com: 250 2.1.5 OK 98e67ed59e1d1-3132bff67a0sm334044a91.10 - gsmtp
+[2025-06-05 01:32:02] SMTP DATA response: 354 Go ahead 98e67ed59e1d1-3132bff67a0sm334044a91.10 - gsmtp
+[2025-06-05 01:32:02] SMTP Message send response: 250 2.0.0 OK  1749087122 98e67ed59e1d1-3132bff67a0sm334044a91.10 - gsmtp
+[2025-06-05 01:32:02] SMTP connection closed
+[2025-06-05 01:32:02] Form submission handler called
+[2025-06-05 01:32:02] Not a POST request
+[2025-06-05 01:36:08] Form submission handler called
+[2025-06-05 01:36:08] Not a POST request
+[2025-06-05 01:36:12] Form submission handler called
+[2025-06-05 01:36:12] Not a POST request

@@ -16,6 +16,9 @@ foreach ($contentFiles as $file) {
     }
     $pages[basename($file, '.md')] = $pageTitle;
 }
+
+// Debug log
+error_log("Available templates: " . print_r($templates, true));
 ?>
 
 <div class="bg-white shadow rounded-lg p-6">
@@ -26,32 +29,32 @@ foreach ($contentFiles as $file) {
         </div>
     </div>
 
-    <form method="POST" id="editForm" class="space-y-6">
-        <input type="hidden" name="action" value="save_content">
+    <form method="POST" action="?action=create_page" id="editForm" class="space-y-6">
+        <input type="hidden" name="action" value="create_page">
         
         <div class="grid grid-cols-2 gap-6">
             <div>
                 <label class="block mb-2">Title</label>
-                <input type="text" name="title" required class="w-full px-3 py-2 border border-gray-300 rounded">
+                <input type="text" name="page_title" required class="w-full px-3 py-2 border border-gray-300 rounded">
             </div>
             <div>
                 <label class="block mb-2">URL Slug</label>
-                <input type="text" name="path" required pattern="[a-z0-9-]+" title="Only lowercase letters, numbers, and hyphens allowed" class="w-full px-3 py-2 border border-gray-300 rounded">
+                <input type="text" name="new_page_filename" required pattern="[a-z0-9\-]+" title="Only lowercase letters, numbers, and hyphens allowed" class="w-full px-3 py-2 border border-gray-300 rounded">
                 <p class="text-sm text-gray-500 mt-1">Use lowercase letters, numbers, and hyphens only</p>
             </div>
         </div>
 
         <div class="grid grid-cols-2 gap-6">
-        <div>
-            <label class="block mb-2">Parent Page</label>
-            <select name="parent" class="w-full px-3 py-2 border border-gray-300 rounded">
-                <option value="">None (Top Level)</option>
-                <?php foreach ($pages as $pagePath => $pageTitle): ?>
-                    <option value="<?php echo htmlspecialchars($pagePath); ?>">
-                        <?php echo htmlspecialchars($pageTitle); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
+            <div>
+                <label class="block mb-2">Parent Page</label>
+                <select name="parent_page" class="w-full px-3 py-2 border border-gray-300 rounded">
+                    <option value="">None (Top Level)</option>
+                    <?php foreach ($pages as $pagePath => $pageTitle): ?>
+                        <option value="<?php echo htmlspecialchars($pagePath); ?>">
+                            <?php echo htmlspecialchars($pageTitle); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
             </div>
             <div>
                 <label class="block mb-2">Template</label>
@@ -68,7 +71,7 @@ foreach ($contentFiles as $file) {
         <div>
             <label class="block mb-2">Content</label>
             <div id="editor" style="height: 600px;"></div>
-            <input type="hidden" name="content" id="content">
+            <input type="hidden" name="new_page_content" id="content">
         </div>
 
         <div class="flex justify-end gap-4">
@@ -99,8 +102,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Generate slug from title
-    const titleInput = document.querySelector('input[name="title"]');
-    const pathInput = document.querySelector('input[name="path"]');
+    const titleInput = document.querySelector('input[name="page_title"]');
+    const pathInput = document.querySelector('input[name="new_page_filename"]');
     titleInput.addEventListener('input', function() {
         if (!pathInput.value) { // Only auto-generate if path is empty
             pathInput.value = this.value
@@ -111,8 +114,19 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Update hidden input before form submission
-    document.getElementById('editForm').addEventListener('submit', function() {
-        document.getElementById('content').value = editor.getMarkdown();
+    document.getElementById('editForm').addEventListener('submit', function(e) {
+        e.preventDefault(); // Prevent default submission
+        const content = editor.getMarkdown();
+        document.getElementById('content').value = content;
+        console.log('Submitting form with data:', {
+            action: this.action,
+            page_title: this.page_title.value,
+            new_page_filename: this.new_page_filename.value,
+            parent_page: this.parent_page.value,
+            template: this.template.value,
+            content_length: content.length
+        });
+        this.submit(); // Submit the form
     });
 });
 </script> 

@@ -32,14 +32,28 @@ require_once dirname(dirname(__DIR__)) . '/version.php';
                 <a href="/<?php echo $adminPath; ?>?action=manage_themes" class="hover:text-green-200">Themes</a>
                 <a href="/<?php echo $adminPath; ?>?action=manage_menus" class="hover:text-green-200">Menus</a>
                 <a href="/<?php echo $adminPath; ?>?action=manage_widgets" class="hover:text-green-200">Widgets</a>
-                <a href="/<?php echo $adminPath; ?>?action=manage_plugins" class="hover:text-green-200">Plugins</a>
                 <?php 
                 // Add admin sections to navigation
                 $admin_sections = fcms_get_admin_sections();
+                error_log("Rendering admin sections: " . print_r($admin_sections, true));
+                
                 foreach ($admin_sections as $id => $section) {
-                    echo '<a href="/' . $adminPath . '?action=' . htmlspecialchars($id) . '" class="hover:text-green-200">' . htmlspecialchars($section['label']) . '</a>';
+                    error_log("Processing section: " . $id . " - " . print_r($section, true));
+                    if (isset($section['children'])) {
+                        // This is a parent section with children
+                        echo '<div class="relative inline-block group">';
+                        echo '<a href="/' . $adminPath . '?action=' . htmlspecialchars($id) . '" class="hover:text-green-200 px-3 py-2">' . htmlspecialchars($section['label']) . '</a>';
+                        echo '<div class="absolute left-0 mt-1 w-48 bg-white rounded-md shadow-lg py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-in-out z-50">';
+                        foreach ($section['children'] as $child_id => $child) {
+                            echo '<a href="/' . $adminPath . '?action=' . htmlspecialchars($child_id) . '" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 whitespace-nowrap">' . htmlspecialchars($child['label']) . '</a>';
+                        }
+                        echo '</div>';
+                        echo '</div>';
+                    } else {
+                        // This is a standalone section
+                        echo '<a href="/' . $adminPath . '?action=' . htmlspecialchars($id) . '" class="hover:text-green-200 px-3 py-2">' . htmlspecialchars($section['label']) . '</a>';
+                    }
                 }
-                if (!empty($plugin_nav_items)) echo $plugin_nav_items; 
                 ?>
                 <div class="flex items-center">
                     <form method="POST" class="inline">

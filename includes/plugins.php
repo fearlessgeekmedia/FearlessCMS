@@ -31,6 +31,7 @@ $GLOBALS['fcms_hooks'] = [
     'route' => [],
     'check_permission' => [],
     'filter_admin_sections' => [],
+    'content' => [], // Add content filter
     // ...add more as needed
 ];
 
@@ -59,6 +60,11 @@ function fcms_apply_filter($hook, $value, ...$args) {
     return $value;
 }
 
+// Add a filter
+function add_filter($hook, $callback) {
+    fcms_add_hook($hook, $callback);
+}
+
 // Add permission check function
 function fcms_check_plugin_permission($username, $capability) {
     $result = false;
@@ -84,6 +90,15 @@ function fcms_register_permission_hook($hook, $callback) {
 // --- Admin section registration ---
 $GLOBALS['fcms_admin_sections'] = [];
 
+// Register the Plugins section
+fcms_register_admin_section('plugins', [
+    'label' => 'Plugins',
+    'menu_order' => 45,
+    'render_callback' => function() {
+        include PROJECT_ROOT . '/admin/templates/plugins.php';
+    }
+]);
+
 /**
  * Register an admin section.
  * @param string $id Unique section id (e.g. 'blog')
@@ -95,6 +110,7 @@ $GLOBALS['fcms_admin_sections'] = [];
  * ]
  */
 function fcms_register_admin_section($id, $opts) {
+    error_log("Registering admin section: " . $id . " with options: " . print_r($opts, true));
     $GLOBALS['fcms_admin_sections'][$id] = $opts;
 }
 
@@ -105,28 +121,48 @@ function fcms_register_admin_section($id, $opts) {
 function fcms_get_admin_sections() {
     $sections = $GLOBALS['fcms_admin_sections'];
     
+    error_log("Admin sections before sorting: " . print_r($sections, true));
+    
     // First, sort by menu_order
     uasort($sections, function($a, $b) {
         return ($a['menu_order'] ?? 100) <=> ($b['menu_order'] ?? 100);
     });
     
+    error_log("Admin sections after sorting: " . print_r($sections, true));
+    
     // Then, organize into parent/child structure
     $organized = [];
     foreach ($sections as $id => $section) {
         if (isset($section['parent'])) {
-            if (!isset($organized[$section['parent']])) {
-                $organized[$section['parent']] = [
-                    'label' => ucfirst($section['parent']),
-                    'children' => []
-                ];
+            $parent_id = $section['parent'];
+            if (!isset($organized[$parent_id])) {
+                // Find the parent section
+                $parent_section = null;
+                foreach ($sections as $sid => $s) {
+                    if ($sid === $parent_id) {
+                        $parent_section = $s;
+                        break;
+                    }
+                }
+                if ($parent_section) {
+                    $organized[$parent_id] = array_merge($parent_section, [
+                        'id' => $parent_id,
+                        'children' => []
+                    ]);
+                }
             }
-            // Preserve the original section ID
-            $organized[$section['parent']]['children'][$id] = array_merge($section, ['id' => $id]);
+            if (isset($organized[$parent_id])) {
+                $organized[$parent_id]['children'][$id] = array_merge($section, ['id' => $id]);
+            }
         } else {
-            // Preserve the original section ID
-            $organized[$id] = array_merge($section, ['id' => $id]);
+            // Only add as a top-level section if it's not already added as a parent
+            if (!isset($organized[$id])) {
+                $organized[$id] = array_merge($section, ['id' => $id]);
+            }
         }
     }
+    
+    error_log("Admin sections after organization: " . print_r($organized, true));
     
     return $organized;
 }

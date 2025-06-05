@@ -13,6 +13,7 @@ define('SEO_CONFIG_FILE', ADMIN_CONFIG_DIR . '/seo_settings.json');
 fcms_register_admin_section('seo', [
     'label' => 'SEO',
     'menu_order' => 30,
+    'parent' => 'plugins',
     'render_callback' => 'seo_admin_page'
 ]);
 

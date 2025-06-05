@@ -338,6 +338,9 @@ if (!class_exists('Parsedown')) {
 $Parsedown = new Parsedown();
 $pageContentHtml = $Parsedown->text($pageContent);
 
+// Apply content filters
+$pageContentHtml = fcms_apply_filter('content', $pageContentHtml);
+
 // --- Theme and template ---
 $themeManager = new ThemeManager();
 
