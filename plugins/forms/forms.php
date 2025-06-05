@@ -6,6 +6,11 @@ Version: 1.0
 Author: Fearless Geek
 */
 
+// Start session if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 // Define constants
 define('FORMS_DIR', PLUGIN_DIR . '/forms');
 define('FORMS_DATA_DIR', CONTENT_DIR . '/forms');
