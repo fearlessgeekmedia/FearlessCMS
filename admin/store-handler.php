@@ -44,18 +44,24 @@ class SimpleMarkdown {
  * Fetch content from GitHub repository
  */
 function fetch_github_content($path) {
+    error_log("[Store Handler] UNIQUE DEBUG: fetch_github_content called");
     $storeUrl = defined('STORE_URL') ? STORE_URL : 'https://github.com/fearlessgeekmedia/FearlessCMS-Store.git';
     
     error_log("[Store Handler] Starting fetch_github_content");
     error_log("[Store Handler] Store URL: " . $storeUrl);
     error_log("[Store Handler] Requested path: " . $path);
     
-    // Determine if this is a raw content URL or a GitHub repository URL
-    $rawUrl = $path;
-    if (strpos($path, 'http') !== 0) {
+    // If path is already a full URL, use it directly
+    if (strpos($path, 'http') === 0) {
+        $rawUrl = $path;
+    } else {
+        // Transform GitHub repository URL to raw content URL
         if (strpos($storeUrl, 'github.com') !== false) {
-            // Transform GitHub repository URL to raw content URL
-            $rawUrl = preg_replace('#https?://github\\.com/([^/]+)/([^/]+)\\.git#', 'https://raw.githubusercontent.com/$1/$2', $storeUrl) . '/main/' . $path;
+            error_log("[Store Handler] Before transformation: " . $storeUrl);
+            $rawUrl = preg_replace('#https?://github\.com/([^/]+)/([^/]+)\.git#', 'https://raw.githubusercontent.com/$1/$2', $storeUrl);
+            error_log("[Store Handler] After transformation: " . $rawUrl);
+            $rawUrl .= '/main/' . $path;
+            error_log("[Store Handler] After adding path: " . $rawUrl);
         } else {
             // For other URLs, ensure we don't double-append store.json
             $baseUrl = rtrim($storeUrl, '/');
@@ -147,22 +153,14 @@ function get_markdown_parser() {
 function search_plugins($query) {
     $storeUrl = defined('STORE_URL') ? STORE_URL : 'https://github.com/fearlessgeekmedia/FearlessCMS-Store.git';
     
-    // Determine if this is a raw content URL or a GitHub repository URL
-    $base_url = $storeUrl;
-    if (strpos($storeUrl, 'github.com') !== false) {
-        // Transform GitHub repository URL to raw content URL
-        $base_url = str_replace(['github.com', '.git'], ['raw.githubusercontent.com', ''], $storeUrl) . '/main';
-    } elseif (strpos($storeUrl, 'raw.githubusercontent.com') !== false) {
-        // If it's a raw content URL, remove the store.json part to get the base URL
-        $base_url = dirname($storeUrl);
+    // Always pass just the filename to fetch_github_content
+    $storeContent = fetch_github_content('store.json');
+    if ($storeContent === false) {
+        error_log("Failed to fetch store data");
+        return [];
     }
     
-    $store_json_url = $base_url . '/store.json';
-    error_log("Searching plugins using URL: " . $store_json_url);
-    
-    $storeContent = fetch_github_content($store_json_url);
     $store = json_decode($storeContent, true);
-    
     if (!$store || !isset($store['plugins'])) {
         error_log("No plugins found in store data");
         return [];
@@ -185,22 +183,14 @@ function search_plugins($query) {
 function search_themes($query) {
     $storeUrl = defined('STORE_URL') ? STORE_URL : 'https://github.com/fearlessgeekmedia/FearlessCMS-Store.git';
     
-    // Determine if this is a raw content URL or a GitHub repository URL
-    $base_url = $storeUrl;
-    if (strpos($storeUrl, 'github.com') !== false) {
-        // Transform GitHub repository URL to raw content URL
-        $base_url = str_replace(['github.com', '.git'], ['raw.githubusercontent.com', ''], $storeUrl) . '/main';
-    } elseif (strpos($storeUrl, 'raw.githubusercontent.com') !== false) {
-        // If it's a raw content URL, remove the store.json part to get the base URL
-        $base_url = dirname($storeUrl);
+    // Always pass just the filename to fetch_github_content
+    $storeContent = fetch_github_content('store.json');
+    if ($storeContent === false) {
+        error_log("Failed to fetch store data");
+        return [];
     }
     
-    $store_json_url = $base_url . '/store.json';
-    error_log("Searching themes using URL: " . $store_json_url);
-    
-    $storeContent = fetch_github_content($store_json_url);
     $store = json_decode($storeContent, true);
-    
     if (!$store || !isset($store['themes'])) {
         error_log("No themes found in store data");
         return [];
@@ -220,207 +210,115 @@ function search_themes($query) {
 /**
  * Handle admin actions
  */
-if (isset($_GET['action'])) {
-    switch ($_GET['action']) {
-        case 'store':
-            if (isset($_GET['search_plugins'])) {
-                $query = $_POST['query'] ?? '';
-                $results = search_plugins($query);
-                header('Content-Type: application/json');
-                echo json_encode($results);
+if (isset($_POST['action'])) {
+    switch ($_POST['action']) {
+        case 'search_plugins':
+            $query = $_POST['query'] ?? '';
+            $results = search_plugins($query);
+            header('Content-Type: application/json');
+            echo json_encode($results);
+            exit;
+            
+        case 'search_themes':
+            $query = $_POST['query'] ?? '';
+            $results = search_themes($query);
+            header('Content-Type: application/json');
+            echo json_encode($results);
+            exit;
+            
+        case 'update_store_settings':
+            header('Content-Type: application/json');
+            
+            if (!isset($_POST['store_url'])) {
+                echo json_encode(['success' => false, 'message' => 'Store URL is required']);
                 exit;
             }
             
-            if (isset($_GET['search_themes'])) {
-                $query = $_POST['query'] ?? '';
-                $results = search_themes($query);
-                header('Content-Type: application/json');
-                echo json_encode($results);
+            $store_url = $_POST['store_url'];
+            error_log("Updating store configuration with URL: " . $store_url);
+            
+            // Validate the URL
+            if (!filter_var($store_url, FILTER_VALIDATE_URL)) {
+                error_log("Invalid store URL: " . $store_url);
+                echo json_encode(['success' => false, 'message' => 'Invalid store URL']);
                 exit;
             }
             
-            if (isset($_GET['update_config'])) {
-                header('Content-Type: application/json');
+            // Update the store URL in the configuration
+            $config_file = dirname(__DIR__) . '/config/config.json';
+            error_log("Updating config file: " . $config_file);
+            
+            if (file_exists($config_file)) {
+                $config = json_decode(file_get_contents($config_file), true) ?: [];
+                $config['store_url'] = $store_url;
                 
-                if (!isset($_POST['store_repo'])) {
-                    echo json_encode(['success' => false, 'message' => 'Store repository URL is required']);
-                    exit;
-                }
-                
-                $store_repo = $_POST['store_repo'];
-                error_log("Updating store configuration with URL: " . $store_repo);
-                
-                // Validate the URL
-                if (!filter_var($store_repo, FILTER_VALIDATE_URL)) {
-                    error_log("Invalid store repository URL: " . $store_repo);
-                    echo json_encode(['success' => false, 'message' => 'Invalid store repository URL']);
-                    exit;
-                }
-                
-                // Determine if this is a raw content URL or a GitHub repository URL
-                $store_json_url = $store_repo;
-                if (strpos($store_repo, 'github.com') !== false) {
-                    // Transform GitHub repository URL to raw content URL
-                    $store_json_url = str_replace(['github.com', '.git'], ['raw.githubusercontent.com', ''], $store_repo) . '/main/store.json';
-                } elseif (strpos($store_repo, 'raw.githubusercontent.com') === false) {
-                    // If it's neither a GitHub URL nor a raw content URL, append store.json
-                    $store_json_url = rtrim($store_repo, '/') . '/store.json';
-                }
-                
-                error_log("Testing store.json URL: " . $store_json_url);
-                
-                // Make a direct curl request to test the URL
-                $ch = curl_init();
-                curl_setopt($ch, CURLOPT_URL, $store_json_url);
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-                curl_setopt($ch, CURLOPT_USERAGENT, 'FearlessCMS/1.0');
-                curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                    'Accept: application/json, text/plain, */*',
-                    'Accept-Language: en-US,en;q=0.9'
-                ]);
-                
-                $content = curl_exec($ch);
-                $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                $error = curl_error($ch);
-                
-                error_log("Direct CURL test - HTTP code: " . $http_code);
-                if ($error) {
-                    error_log("Direct CURL test - Error: " . $error);
-                }
-                error_log("Direct CURL test - Response: " . substr($content, 0, 1000));
-                
-                curl_close($ch);
-                
-                if ($http_code !== 200) {
-                    error_log("Failed to fetch store.json directly. HTTP code: " . $http_code);
-                    echo json_encode(['success' => false, 'message' => 'Could not fetch store data from the provided repository']);
-                    exit;
-                }
-                
-                // Try to decode the JSON to validate it
-                $store_data = json_decode($content, true);
-                if (json_last_error() !== JSON_ERROR_NONE) {
-                    error_log("Invalid JSON in store.json: " . json_last_error_msg());
-                    echo json_encode(['success' => false, 'message' => 'Invalid store data format']);
-                    exit;
-                }
-                
-                error_log("Successfully validated store.json");
-                
-                // Update the store URL in the configuration
-                $config_file = dirname(__DIR__) . '/config/config.json';
-                error_log("Updating config file: " . $config_file);
-                
-                if (file_exists($config_file)) {
-                    $config = json_decode(file_get_contents($config_file), true) ?: [];
-                    $config['store_url'] = $store_repo;
-                    
-                    if (file_put_contents($config_file, json_encode($config, JSON_PRETTY_PRINT))) {
-                        error_log("Successfully updated config file");
-                        echo json_encode(['success' => true]);
-                    } else {
-                        error_log("Failed to write to config file");
-                        echo json_encode(['success' => false, 'message' => 'Failed to update configuration file']);
-                    }
+                if (file_put_contents($config_file, json_encode($config, JSON_PRETTY_PRINT))) {
+                    error_log("Successfully updated config file");
+                    echo json_encode(['success' => true]);
                 } else {
-                    error_log("Config file not found: " . $config_file);
-                    echo json_encode(['success' => false, 'message' => 'Configuration file not found']);
+                    error_log("Failed to write to config file");
+                    echo json_encode(['success' => false, 'message' => 'Failed to update configuration file']);
                 }
-                exit;
+            } else {
+                error_log("Config file not found: " . $config_file);
+                echo json_encode(['success' => false, 'message' => 'Configuration file not found']);
             }
+            exit;
             
-            if (isset($_GET['install_plugin'])) {
-                $plugin_slug = $_POST['plugin_slug'] ?? '';
-                if (empty($plugin_slug)) {
-                    header('Content-Type: application/json');
-                    echo json_encode(['success' => false, 'message' => 'Plugin slug is required']);
-                    exit;
-                }
-                
-                // Get plugin data from store
-                $store_data = fetch_github_content('store.json');
-                if (!$store_data) {
-                    header('Content-Type: application/json');
-                    echo json_encode(['success' => false, 'message' => 'Could not fetch store data']);
-                    exit;
-                }
-                
-                $store = json_decode($store_data, true);
-                if (!$store || !isset($store['plugins'])) {
-                    header('Content-Type: application/json');
-                    echo json_encode(['success' => false, 'message' => 'Invalid store data']);
-                    exit;
-                }
-                
-                $plugin_data = null;
-                foreach ($store['plugins'] as $plugin) {
-                    if ($plugin['slug'] === $plugin_slug) {
-                        $plugin_data = $plugin;
-                        break;
-                    }
-                }
-                
-                if (!$plugin_data) {
-                    header('Content-Type: application/json');
-                    echo json_encode(['success' => false, 'message' => 'Plugin not found in store']);
-                    exit;
-                }
-                
-                $success = install_plugin($plugin_data);
+        case 'install_plugin':
+            $plugin_slug = $_POST['plugin_slug'] ?? '';
+            if (empty($plugin_slug)) {
                 header('Content-Type: application/json');
-                echo json_encode(['success' => $success]);
+                echo json_encode(['success' => false, 'message' => 'Plugin slug is required']);
                 exit;
             }
             
-            if (isset($_GET['install_theme'])) {
-                $theme_slug = $_POST['theme_slug'] ?? '';
-                if (empty($theme_slug)) {
-                    header('Content-Type: application/json');
-                    echo json_encode(['success' => false, 'message' => 'Theme slug is required']);
-                    exit;
-                }
-                
-                // Get theme data from store
-                $store_data = fetch_github_content('store.json');
-                if (!$store_data) {
-                    header('Content-Type: application/json');
-                    echo json_encode(['success' => false, 'message' => 'Could not fetch store data']);
-                    exit;
-                }
-                
-                $store = json_decode($store_data, true);
-                if (!$store || !isset($store['themes'])) {
-                    header('Content-Type: application/json');
-                    echo json_encode(['success' => false, 'message' => 'Invalid store data']);
-                    exit;
-                }
-                
-                $theme_data = null;
-                foreach ($store['themes'] as $theme) {
-                    if ($theme['slug'] === $theme_slug) {
-                        $theme_data = $theme;
-                        break;
-                    }
-                }
-                
-                if (!$theme_data) {
-                    header('Content-Type: application/json');
-                    echo json_encode(['success' => false, 'message' => 'Theme not found in store']);
-                    exit;
-                }
-                
-                $success = install_theme($theme_data);
+            // Get plugin data from store
+            $store_data = fetch_github_content('store.json');
+            if (!$store_data) {
                 header('Content-Type: application/json');
-                echo json_encode(['success' => $success]);
+                echo json_encode(['success' => false, 'message' => 'Could not fetch store data']);
                 exit;
             }
-            break;
             
-        default:
-            // Let other handlers process their actions
-            return;
+            $store = json_decode($store_data, true);
+            if (!$store || !isset($store['plugins'])) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Invalid store data']);
+                exit;
+            }
+            
+            $plugin_data = null;
+            foreach ($store['plugins'] as $plugin) {
+                if ($plugin['slug'] === $plugin_slug) {
+                    $plugin_data = $plugin;
+                    break;
+                }
+            }
+            
+            if (!$plugin_data) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Plugin not found in store']);
+                exit;
+            }
+            
+            $success = install_plugin($plugin_data);
+            header('Content-Type: application/json');
+            echo json_encode(['success' => $success]);
+            exit;
+            
+        case 'delete_plugin':
+            $plugin_slug = $_POST['plugin_slug'] ?? '';
+            if (empty($plugin_slug)) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Plugin slug is required']);
+                exit;
+            }
+            
+            $success = delete_plugin($plugin_slug);
+            header('Content-Type: application/json');
+            echo json_encode(['success' => $success]);
+            exit;
     }
 }
 
@@ -601,42 +499,6 @@ function delete_plugin($plugin_slug) {
         error_log("Error deleting plugin directory: " . $e->getMessage());
         return false;
     }
-}
-
-/**
- * Handle plugin deletion
- */
-if (isset($_POST['action']) && $_POST['action'] === 'delete_plugin') {
-    header('Content-Type: application/json');
-    
-    try {
-        $plugin_slug = $_POST['plugin_slug'] ?? '';
-        if (empty($plugin_slug)) {
-            echo json_encode(['success' => false, 'error' => 'Plugin slug is required']);
-            exit;
-        }
-        
-        // Check if plugin is active before deletion
-        $plugin_file = dirname(__DIR__) . '/plugins/' . $plugin_slug . '/plugin.json';
-        if (file_exists($plugin_file)) {
-            $plugin_data = json_decode(file_get_contents($plugin_file), true);
-            if ($plugin_data && isset($plugin_data['active']) && $plugin_data['active']) {
-                echo json_encode(['success' => false, 'error' => 'Cannot delete an active plugin. Please deactivate it first.']);
-                exit;
-            }
-        }
-        
-        $success = delete_plugin($plugin_slug);
-        if ($success) {
-            echo json_encode(['success' => true, 'message' => 'Plugin deleted successfully']);
-        } else {
-            echo json_encode(['success' => false, 'error' => 'Failed to delete plugin. Please try again.']);
-        }
-    } catch (Exception $e) {
-        error_log("Error in plugin deletion handler: " . $e->getMessage());
-        echo json_encode(['success' => false, 'error' => 'An unexpected error occurred while deleting the plugin.']);
-    }
-    exit;
 }
 
 /**
