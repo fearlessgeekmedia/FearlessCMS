@@ -120,6 +120,7 @@ footer {
     background: #111;
     padding: 2rem;
     border: 2px dashed #333;
+    box-shadow: 5px 5px 5px 5px #000;
 }
 
 .main-content h1 {
@@ -265,9 +266,10 @@ footer {
     z-index: 1
   }
 
-.hero-banner img {
+  hero-banner img {
     max-width: 100%;
     height: auto;
     display: block;
     margin: 0 auto;
-} 
+    box-shadow: 3px 3px 3px 3px #000;
+  }

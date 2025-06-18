@@ -145,7 +145,8 @@ function addMenuItem() {
         label: 'New Item',
         url: '#',
         class: '',
-        target: ''
+        target: '',
+        children: []
     };
     
     menuData.items = menuData.items || [];
@@ -177,36 +178,22 @@ function removeMenuItem(itemId) {
 }
 
 function renderMenuItems() {
-    console.log('Rendering menu items');
-    console.log('Current menuData:', menuData);
-    
     const container = document.getElementById('menu-items');
     container.innerHTML = '';
     
-    if (!menuData.items || menuData.items.length === 0) {
-        container.innerHTML = '<p class="text-gray-500">No menu items. Click "Add Item" to create one.</p>';
-        return;
-    }
+    if (!menuData.items) return;
     
     menuData.items.forEach(item => {
-        console.log('Rendering item:', item);
+        if (!item) return;
         const div = document.createElement('div');
-        div.className = 'flex flex-col space-y-2 p-2 border rounded bg-white cursor-move';
+        div.className = 'border rounded p-4 bg-gray-50';
         div.setAttribute('data-id', item.id);
         div.innerHTML = `
-            <div class="flex items-center space-x-2">
-                <div class="cursor-move text-gray-400 px-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>
-                    </svg>
-                </div>
+            <div class="flex items-center space-x-2 mb-2">
+                <div class="cursor-move text-gray-400">⋮⋮</div>
                 <input type="text" value="${item.label || ''}" onchange="updateMenuItem('${item.id}', 'label', this.value)" class="flex-1 px-2 py-1 border rounded" placeholder="Label">
                 <input type="text" value="${item.url || ''}" onchange="updateMenuItem('${item.id}', 'url', this.value)" class="flex-1 px-2 py-1 border rounded" placeholder="URL">
-                <button type="button" onclick="removeMenuItem('${item.id}')" class="text-red-500 hover:text-red-600">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                    </svg>
-                </button>
+                <button onclick="removeMenuItem('${item.id}')" class="text-red-500 hover:text-red-600">×</button>
             </div>
             <div class="flex items-center space-x-2">
                 <input type="text" value="${item.class || ''}" onchange="updateMenuItem('${item.id}', 'class', this.value)" class="flex-1 px-2 py-1 border rounded" placeholder="CSS Class">
@@ -215,13 +202,35 @@ function renderMenuItems() {
                     <option value="_blank" ${item.target === '_blank' ? 'selected' : ''}>New Window</option>
                 </select>
             </div>
+            <div class="mt-2">
+                <button onclick="addSubMenuItem('${item.id}')" class="text-sm text-blue-500 hover:text-blue-600">+ Add Sub-item</button>
+                <div class="ml-4 mt-2 space-y-2" id="sub-items-${item.id}">
+                    ${renderSubItems(item)}
+                </div>
+            </div>
         `;
         container.appendChild(div);
     });
 }
 
+function renderSubItems(item) {
+    if (!item.children || !item.children.length) return '';
+    
+    return item.children.map(subItem => `
+        <div class="border rounded p-2 bg-white">
+            <div class="flex items-center space-x-2">
+                <input type="text" value="${subItem.label || ''}" onchange="updateSubMenuItem('${item.id}', '${subItem.id}', 'label', this.value)" class="flex-1 px-2 py-1 border rounded" placeholder="Label">
+                <input type="text" value="${subItem.url || ''}" onchange="updateSubMenuItem('${item.id}', '${subItem.id}', 'url', this.value)" class="flex-1 px-2 py-1 border rounded" placeholder="URL">
+                <button onclick="removeSubMenuItem('${item.id}', '${subItem.id}')" class="text-red-500 hover:text-red-600">×</button>
+            </div>
+        </div>
+    `).join('');
+}
+
 function initSortable() {
     const container = document.getElementById('menu-items');
+    if (!container) return;
+    
     new Sortable(container, {
         animation: 150,
         handle: '.cursor-move',
@@ -234,6 +243,47 @@ function initSortable() {
             updatePreview();
         }
     });
+}
+
+function addSubMenuItem(parentId) {
+    const parent = menuData.items.find(item => item.id === parentId);
+    if (!parent) return;
+    
+    if (!parent.children) {
+        parent.children = [];
+    }
+    
+    const subItem = {
+        id: `sub_${Date.now()}`,
+        label: 'New Sub-item',
+        url: '#',
+        class: '',
+        target: ''
+    };
+    
+    parent.children.push(subItem);
+    renderMenuItems();
+    updatePreview();
+}
+
+function removeSubMenuItem(parentId, subItemId) {
+    const parent = menuData.items.find(item => item.id === parentId);
+    if (!parent || !parent.children) return;
+    
+    parent.children = parent.children.filter(item => item.id !== subItemId);
+    renderMenuItems();
+    updatePreview();
+}
+
+function updateSubMenuItem(parentId, subItemId, field, value) {
+    const parent = menuData.items.find(item => item.id === parentId);
+    if (!parent || !parent.children) return;
+    
+    const subItem = parent.children.find(item => item.id === subItemId);
+    if (subItem) {
+        subItem[field] = value;
+        updatePreview();
+    }
 }
 
 function updateMenuItem(itemId, field, value) {
@@ -260,6 +310,7 @@ function updatePreview() {
         html += `
             <li>
                 <a href="${item.url || '#'}"${itemClass}${target} class="text-blue-500 hover:text-blue-600">${item.label || 'Unnamed Item'}</a>
+                ${renderSubItemsPreview(item)}
             </li>
         `;
     });
@@ -267,29 +318,56 @@ function updatePreview() {
     preview.innerHTML = html;
 }
 
+function renderSubItemsPreview(item) {
+    if (!item.children || !item.children.length) return '';
+    
+    let html = '<ul class="ml-4 mt-1 space-y-1">';
+    item.children.forEach(subItem => {
+        const itemClass = subItem.class ? ` class="${subItem.class}"` : '';
+        const target = subItem.target ? ` target="${subItem.target}"` : '';
+        html += `
+            <li>
+                <a href="${subItem.url || '#'}"${itemClass}${target} class="text-blue-500 hover:text-blue-600">${subItem.label || 'Unnamed Sub-item'}</a>
+            </li>
+        `;
+    });
+    html += '</ul>';
+    return html;
+}
+
 function saveMenu() {
     if (!currentMenu) return;
     
     const menuClass = document.getElementById('menu-class').value;
+    const menuDataToSave = {
+        action: 'save_menu',
+        menu_id: currentMenu,
+        label: currentMenu,
+        class: menuClass,
+        items: menuData.items
+    };
+    
+    console.log('Sending menu data:', menuDataToSave);
     
     fetch('?action=manage_menus', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-            action: 'save_menu',
-            menu_id: currentMenu,
-            label: currentMenu,
-            class: menuClass,
-            items: menuData.items
-        })
+        body: JSON.stringify(menuDataToSave)
     })
     .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json();
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        return response.text().then(text => {
+            console.log('Response text:', text);
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                console.error('Failed to parse JSON:', e);
+                throw new Error('Invalid JSON response from server');
+            }
+        });
     })
     .then(data => {
         if (data.success) {
