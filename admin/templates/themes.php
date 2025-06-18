@@ -2,33 +2,35 @@
 // Load theme options
 $themeOptionsFile = CONFIG_DIR . '/theme_options.json';
 $themeOptions = file_exists($themeOptionsFile) ? json_decode(file_get_contents($themeOptionsFile), true) : [];
+
+// Load active theme config
+$activeTheme = $themeManager->getActiveTheme();
+$activeThemeConfigFile = THEMES_DIR . "/$activeTheme/config.json";
+$activeThemeConfig = file_exists($activeThemeConfigFile) ? json_decode(file_get_contents($activeThemeConfigFile), true) : [];
+$themeOptionFields = isset($activeThemeConfig['options']) ? $activeThemeConfig['options'] : [];
 ?>
 
 <!-- Theme Management -->
 <div class="space-y-8">
-    <?php if ($themeManager->getActiveTheme() === 'heroic'): ?>
+    <?php if (!empty($themeOptionFields)): ?>
     <!-- Theme Options -->
     <div class="bg-white shadow rounded-lg p-6">
         <h3 class="text-lg font-medium mb-4">Theme Options</h3>
         <form id="theme-options-form" class="space-y-4">
+            <?php foreach ($themeOptionFields as $optionKey => $option):
+                if (!is_array($option) || ($option['type'] ?? '') !== 'image') continue;
+                $label = $option['label'] ?? ucfirst($optionKey);
+            ?>
             <div>
-                <label class="block mb-1">Logo</label>
+                <label class="block mb-1"><?php echo htmlspecialchars($label); ?></label>
                 <div class="flex items-center space-x-4">
-                    <?php if (!empty($themeOptions['logo'])): ?>
-                    <img src="/<?php echo htmlspecialchars($themeOptions['logo']); ?>" alt="Current Logo" class="h-12">
+                    <?php if (!empty($themeOptions[$optionKey])): ?>
+                    <img src="/<?php echo htmlspecialchars($themeOptions[$optionKey]); ?>" alt="Current <?php echo htmlspecialchars($label); ?>" class="h-12">
                     <?php endif; ?>
-                    <input type="file" name="logo" accept="image/*" class="flex-1">
+                    <input type="file" name="<?php echo htmlspecialchars($optionKey); ?>" accept="image/*" class="flex-1">
                 </div>
             </div>
-            <div>
-                <label class="block mb-1">Hero Banner</label>
-                <div class="flex items-center space-x-4">
-                    <?php if (!empty($themeOptions['herobanner'])): ?>
-                    <img src="/<?php echo htmlspecialchars($themeOptions['herobanner']); ?>" alt="Current Hero Banner" class="h-24">
-                    <?php endif; ?>
-                    <input type="file" name="herobanner" accept="image/*" class="flex-1">
-                </div>
-            </div>
+            <?php endforeach; ?>
             <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Save Theme Options</button>
         </form>
     </div>
@@ -72,16 +74,14 @@ document.getElementById('theme-options-form')?.addEventListener('submit', functi
     
     const formData = new FormData();
     formData.append('action', 'save_theme_options');
-    const logoFile = this.querySelector('input[name="logo"]').files[0];
-    const herobannerFile = this.querySelector('input[name="herobanner"]').files[0];
-    
-    if (logoFile) {
-        formData.append('logo', logoFile);
+    <?php foreach ($themeOptionFields as $optionKey => $option):
+        if (!is_array($option) || ($option['type'] ?? '') !== 'image') continue;
+    ?>
+    const <?php echo $optionKey; ?>File = this.querySelector('input[name="<?php echo $optionKey; ?>"]').files[0];
+    if (<?php echo $optionKey; ?>File) {
+        formData.append('<?php echo $optionKey; ?>', <?php echo $optionKey; ?>File);
     }
-    if (herobannerFile) {
-        formData.append('herobanner', herobannerFile);
-    }
-    
+    <?php endforeach; ?>
     fetch('?action=manage_themes', {
         method: 'POST',
         body: formData

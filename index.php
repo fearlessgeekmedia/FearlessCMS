@@ -63,12 +63,16 @@ if (strpos($requestPath, '_preview/') === 0) {
         // Get site name from config
         $configFile = CONFIG_DIR . '/config.json';
         $siteName = 'FearlessCMS';
+        $siteDescription = '';
         $custom_css = '';
         $custom_js = '';
         if (file_exists($configFile)) {
             $config = json_decode(file_get_contents($configFile), true);
             if (isset($config['site_name'])) {
                 $siteName = $config['site_name'];
+            }
+            if (isset($config['site_description'])) {
+                $siteDescription = $config['site_description'];
             }
             if (isset($config['custom_css'])) {
                 $custom_css = $config['custom_css'];
@@ -105,6 +109,7 @@ if (strpos($requestPath, '_preview/') === 0) {
             'title' => $pageTitle,
             'content' => $pageContentHtml,
             'siteName' => $siteName,
+            'siteDescription' => $siteDescription,
             'currentYear' => date('Y'),
             'logo' => $themeOptions['logo'] ?? null,
             'heroBanner' => $themeOptions['herobanner'] ?? null,
@@ -162,12 +167,16 @@ if ($handled) {
     // Get site name from config
     $configFile = CONFIG_DIR . '/config.json';
     $siteName = 'FearlessCMS';
+    $siteDescription = '';
     $custom_css = '';
     $custom_js = '';
     if (file_exists($configFile)) {
         $config = json_decode(file_get_contents($configFile), true);
         if (isset($config['site_name'])) {
             $siteName = $config['site_name'];
+        }
+        if (isset($config['site_description'])) {
+            $siteDescription = $config['site_description'];
         }
         if (isset($config['custom_css'])) {
             $custom_css = $config['custom_css'];
@@ -208,6 +217,7 @@ if ($handled) {
         'title' => $title,
         'content' => $content,
         'siteName' => $siteName,
+        'siteDescription' => $siteDescription,
         'currentYear' => date('Y'),
         'logo' => $themeOptions['logo'] ?? null,
         'heroBanner' => $themeOptions['herobanner'] ?? null,
@@ -300,6 +310,7 @@ if (!file_exists($contentFile)) {
             'title' => $pageTitle,
             'content' => $pageContent,
             'siteName' => 'FearlessCMS',
+            'siteDescription' => '',
             'currentYear' => date('Y'),
             'logo' => $themeOptions['logo'] ?? null,
             'heroBanner' => $themeOptions['herobanner'] ?? null,
@@ -352,12 +363,16 @@ $themeManager = new ThemeManager();
 // --- Get site name ---
 $configFile = CONFIG_DIR . '/config.json';
 $siteName = 'FearlessCMS';
+$siteDescription = '';
 $custom_css = '';
 $custom_js = '';
 if (file_exists($configFile)) {
     $config = json_decode(file_get_contents($configFile), true);
     if (isset($config['site_name'])) {
         $siteName = $config['site_name'];
+    }
+    if (isset($config['site_description'])) {
+        $siteDescription = $config['site_description'];
     }
     if (isset($config['custom_css'])) {
         $custom_css = $config['custom_css'];
@@ -389,6 +404,7 @@ $templateData = [
     'title' => $pageTitle,
     'content' => $pageContentHtml,
     'siteName' => $siteName,
+    'siteDescription' => $siteDescription,
     'currentYear' => date('Y'),
     'logo' => $themeOptions['logo'] ?? null,
     'heroBanner' => $themeOptions['herobanner'] ?? null,

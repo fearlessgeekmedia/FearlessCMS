@@ -1,26 +1,26 @@
 {
     "main": {
         "label": "main",
-        "menu_class": "main-nav",
+        "menu_class": "main-menu",
         "items": [
             {
                 "label": "Home",
-                "url": "\/",
+                "url": "/",
                 "target": "",
-                "class": "nav-item",
+                "class": "",
                 "id": "item_0"
             },
             {
                 "label": "About",
-                "url": "\/about",
+                "url": "/about",
                 "target": "",
-                "class": "nav-item",
+                "class": "",
                 "id": "item_1",
                 "children": [
                     {
                         "id": "item_1747854721742",
                         "label": "Contact Us",
-                        "url": "\/about\/contact",
+                        "url": "/about/contact",
                         "class": "",
                         "target": "",
                         "children": []

@@ -63,10 +63,14 @@ $activePlugins = file_exists($pluginsFile) ? json_decode(file_get_contents($plug
 // Load site name from config
 $configFile = CONFIG_DIR . '/config.json';
 $siteName = 'FearlessCMS'; // Default
+$siteDescription = ''; // Default empty tagline
 if (file_exists($configFile)) {
     $config = json_decode(file_get_contents($configFile), true);
     if (isset($config['site_name'])) {
         $siteName = $config['site_name'];
+    }
+    if (isset($config['site_description'])) {
+        $siteDescription = $config['site_description'];
     }
     // Load custom code
     $custom_css = $config['custom_css'] ?? '';
@@ -215,6 +219,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $action = 'blog';
     }
     // Add other section-specific actions here as needed
+}
+
+// Handle POST for site name and tagline update
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_site_name') {
+    $newSiteName = trim($_POST['site_name'] ?? '');
+    $newTagline = trim($_POST['site_description'] ?? '');
+    $configFile = CONFIG_DIR . '/config.json';
+    $config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
+    if ($newSiteName !== '') {
+        $config['site_name'] = $newSiteName;
+    }
+    $config['site_description'] = $newTagline;
+    file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT));
+    // Optionally, reload config for this request
+    $siteName = $config['site_name'];
+    $siteDescription = $config['site_description'];
+    $success = 'Site name and tagline updated.';
+}
+
+// Handle POST requests for saving content
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_content') {
+    if (!isLoggedIn()) {
+        $error = 'You must be logged in to edit files';
+    } else {
+        $fileName = $_POST['path'] ?? '';
+        $content = $_POST['content'] ?? '';
+        $pageTitle = $_POST['title'] ?? '';
+        $parentPage = $_POST['parent'] ?? '';
+        $template = $_POST['template'] ?? 'page';
+        $editorMode = $_POST['editor_mode'] ?? 'easy';
+
+        // Validate filename: allow slashes for subfolders
+        if (empty($fileName) || !preg_match('/^[a-zA-Z0-9_\/-]+$/', $fileName)) {
+            $error = 'Invalid filename';
+        } else {
+            $filePath = CONTENT_DIR . '/' . $fileName . '.md';
+            $dir = dirname($filePath);
+            if (!is_dir($dir)) {
+                mkdir($dir, 0755, true);
+            }
+            // Check if content already has JSON frontmatter
+            $hasFrontmatter = preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $content, $matches);
+            if ($hasFrontmatter) {
+                $metadata = json_decode($matches[1], true) ?: [];
+                $metadata['title'] = $pageTitle;
+                $metadata['editor_mode'] = $editorMode;
+                $metadata['template'] = $template;
+                if (!empty($parentPage)) {
+                    $metadata['parent'] = $parentPage;
+                } elseif (isset($metadata['parent'])) {
+                    unset($metadata['parent']);
+                }
+                $newFrontmatter = '<!-- json ' . json_encode($metadata, JSON_PRETTY_PRINT) . ' -->';
+                $content = preg_replace('/^<!--\s*json\s*.*?\s*-->/s', $newFrontmatter, $content);
+            } else {
+                $metadata = [
+                    'title' => $pageTitle,
+                    'editor_mode' => $editorMode,
+                    'template' => $template
+                ];
+                if (!empty($parentPage)) {
+                    $metadata['parent'] = $parentPage;
+                }
+                $newFrontmatter = '<!-- json ' . json_encode($metadata, JSON_PRETTY_PRINT) . ' -->';
+                $content = $newFrontmatter . "\n\n" . $content;
+            }
+            if (file_put_contents($filePath, $content) !== false) {
+                $success = 'File saved successfully';
+            } else {
+                $error = 'Failed to save file';
+            }
+        }
+    }
 }
 
 // Map actions to their template files

@@ -25,7 +25,7 @@ then
 fi
 
 # run server and log output
-php -S localhost:$port router.php > serve-log.tmp 2>&1 &
+php -c php.ini -S localhost:$port router.php > serve-log.tmp 2>&1 &
 pid=$!
 echo "Server started on port $port with PID $pid"
 echo "To stop the server, run: kill $pid"

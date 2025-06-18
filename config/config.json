@@ -1,6 +1,7 @@
 {
-    "active_theme": "whisperwind",
-    "site_name": "FearlessCMS",
+    "active_theme": "punk_rock",
+    "site_name": "The Rest Of Us",
+    "site_description": "Loud. Broke. Unapologetically Real.",
     "admin_path": "admin",
     "custom_css": "",
     "custom_js": "",

@@ -10,6 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $pageTitle = $_POST['page_title'] ?? '';
         $parentPage = $_POST['parent_page'] ?? '';
         $editorMode = $_POST['editor_mode'] ?? 'easy';
+        $template = $_POST['template'] ?? 'page';
 
         // Validate filename: allow slashes for subfolders
         if (empty($fileName) || !preg_match('/^[a-zA-Z0-9_\/-]+\.md$/', $fileName)) {
@@ -31,14 +32,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $metadata = json_decode($matches[1], true) ?: [];
                 $metadata['title'] = $pageTitle;
                 $metadata['editor_mode'] = $editorMode;
+                $metadata['template'] = $template;
                 if (!empty($parentPage)) {
                     $metadata['parent'] = $parentPage;
                 } elseif (isset($metadata['parent'])) {
                     unset($metadata['parent']); // Remove parent if empty
-                }
-                // Keep existing template if set
-                if (!isset($metadata['template'])) {
-                    $metadata['template'] = 'page';
                 }
                 $newFrontmatter = '<!-- json ' . json_encode($metadata, JSON_PRETTY_PRINT) . ' -->';
                 $content = preg_replace('/^<!--\s*json\s*.*?\s*-->/s', $newFrontmatter, $content);
@@ -47,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $metadata = [
                     'title' => $pageTitle,
                     'editor_mode' => $editorMode,
-                    'template' => 'page' // Default template
+                    'template' => $template
                 ];
                 if (!empty($parentPage)) {
                     $metadata['parent'] = $parentPage;
