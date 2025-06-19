@@ -13,7 +13,7 @@ body {
 }
 
 header {
-    background: #000;
+    background: #000000cf;
     padding: 2rem 1rem;
     border-bottom: 6px dashed #fff;
     box-shadow: 0 0 20px #ff0055;
@@ -153,7 +153,9 @@ footer {
 .main-menu {
     margin: 1.5rem 0 0.5rem 0;
     text-align: center;
-}
+    z-index: 200;
+    position: relative;
+  }
 
 .main-menu ul {
     list-style: none;
@@ -264,12 +266,13 @@ footer {
     margin: -2rem auto;
     max-width: 1200px;
     z-index: 1
-  }
+}
 
-  hero-banner img {
+.hero-banner img {
     max-width: 100%;
     height: auto;
     display: block;
     margin: 0 auto;
     box-shadow: 3px 3px 3px 3px #000;
-  }
+    opacity: 0.8;
+}
