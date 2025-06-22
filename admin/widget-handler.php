@@ -176,16 +176,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                     throw new Exception('Sidebar not found');
                 }
 
-                // Generate widget ID if not provided
-                $widgetId = $data['id'] ?? 'widget-' . uniqid();
-                
-                $widgets[$data['sidebar']]['widgets'][$widgetId] = [
-                    'id' => $widgetId,
-                    'title' => $data['title'],
-                    'type' => $data['type'],
-                    'content' => $data['content'],
-                    'classes' => $data['classes'] ?? ''
-                ];
+                // Check if this is an update or new widget
+                if (!empty($data['id']) && isset($widgets[$data['sidebar']]['widgets'][$data['id']])) {
+                    // Update existing widget
+                    error_log("Widget Handler: Updating existing widget: " . $data['id']);
+                    $widgets[$data['sidebar']]['widgets'][$data['id']] = [
+                        'id' => $data['id'],
+                        'title' => $data['title'],
+                        'type' => $data['type'],
+                        'content' => $data['content'],
+                        'classes' => $data['classes'] ?? ''
+                    ];
+                } else {
+                    // Create new widget
+                    $widgetId = 'widget-' . uniqid();
+                    error_log("Widget Handler: Creating new widget: " . $widgetId);
+                    $widgets[$data['sidebar']]['widgets'][$widgetId] = [
+                        'id' => $widgetId,
+                        'title' => $data['title'],
+                        'type' => $data['type'],
+                        'content' => $data['content'],
+                        'classes' => $data['classes'] ?? ''
+                    ];
+                }
                 break;
 
             case 'delete_widget':
@@ -231,20 +244,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                 $widgets[$data['sidebar']]['widgets'] = $orderedWidgets;
                 break;
 
+            case 'save_sidebar':
+                if (empty($data['sidebar'])) {
+                    throw new Exception('Sidebar ID is required');
+                }
+                if (!isset($widgets[$data['sidebar']])) {
+                    throw new Exception('Sidebar not found');
+                }
+                // The sidebar is already loaded and will be saved at the end
+                error_log("Widget Handler: Saving sidebar: " . $data['sidebar']);
+                break;
+
             default:
                 throw new Exception('Invalid action');
         }
 
-        // Save changes
+        // Save changes to admin config
         if (!is_dir(dirname($widgetsFile))) {
             mkdir(dirname($widgetsFile), 0755, true);
         }
         
         $jsonData = json_encode($widgets, JSON_PRETTY_PRINT);
-        error_log("Widget Handler: Saving widgets: " . $jsonData);
+        error_log("Widget Handler: Saving widgets to admin config: " . $jsonData);
         
         if (file_put_contents($widgetsFile, $jsonData) === false) {
             throw new Exception('Failed to save widgets file');
+        }
+
+        // Also save to public config for the frontend
+        $publicWidgetsFile = CONFIG_DIR . '/widgets.json';
+        if (!is_dir(dirname($publicWidgetsFile))) {
+            mkdir(dirname($publicWidgetsFile), 0755, true);
+        }
+        
+        // Convert to array format for the WidgetManager
+        $publicWidgets = [];
+        foreach ($widgets as $sidebarId => $sidebar) {
+            $publicWidgets[$sidebarId] = [
+                'id' => $sidebar['id'],
+                'classes' => $sidebar['classes'],
+                'widgets' => array_values($sidebar['widgets']) // Convert to array
+            ];
+        }
+        
+        $publicJsonData = json_encode($publicWidgets, JSON_PRETTY_PRINT);
+        error_log("Widget Handler: Saving widgets to public config: " . $publicJsonData);
+        
+        if (file_put_contents($publicWidgetsFile, $publicJsonData) === false) {
+            error_log("Widget Handler: Warning - Failed to save to public config, but admin config was saved");
         }
 
         echo json_encode(['success' => true]);

@@ -1,17 +1,94 @@
+<?php
+// Initialize widget management variables
+$widgetsFile = ADMIN_CONFIG_DIR . '/widgets.json';
+$widgets = file_exists($widgetsFile) ? json_decode(file_get_contents($widgetsFile), true) : [];
+
+// Set current sidebar with default fallback
+$current_sidebar = $_GET['sidebar'] ?? '';
+if (empty($current_sidebar) && !empty($widgets)) {
+    // Default to the first available sidebar
+    $current_sidebar = array_keys($widgets)[0];
+}
+
+// Build sidebar selection dropdown
+$sidebar_selection = '<select id="sidebar-select" class="w-full px-3 py-2 border border-gray-300 rounded" onchange="window.location.href=\'?action=manage_widgets&sidebar=\' + this.value">';
+$sidebar_selection .= '<option value="">Select a sidebar...</option>';
+foreach ($widgets as $sidebarId => $sidebar) {
+    $selected = ($sidebarId === $current_sidebar) ? 'selected' : '';
+    $sidebar_selection .= '<option value="' . htmlspecialchars($sidebarId) . '" ' . $selected . '>' . htmlspecialchars($sidebar['name'] ?? $sidebarId) . '</option>';
+}
+$sidebar_selection .= '</select>';
+
+// Get widgets for current sidebar
+$sidebarWidgets = [];
+error_log("Widgets template - Current sidebar: " . $current_sidebar);
+error_log("Widgets template - Available sidebars: " . print_r(array_keys($widgets), true));
+
+if (!empty($current_sidebar) && isset($widgets[$current_sidebar])) {
+    $sidebarWidgets = $widgets[$current_sidebar]['widgets'] ?? [];
+    error_log("Widgets template - Found " . count($sidebarWidgets) . " widgets in sidebar");
+    
+    // Normalize widget structure - ensure it's always an array
+    if (!is_array($sidebarWidgets)) {
+        $sidebarWidgets = [];
+    }
+    
+    // If widgets are indexed by keys instead of being a sequential array, convert them
+    if (!empty($sidebarWidgets) && array_keys($sidebarWidgets) !== range(0, count($sidebarWidgets) - 1)) {
+        $normalizedWidgets = [];
+        foreach ($sidebarWidgets as $widget) {
+            if (is_array($widget) && isset($widget['id'])) {
+                $normalizedWidgets[] = $widget;
+            }
+        }
+        $sidebarWidgets = $normalizedWidgets;
+    }
+}
+
+// Build widget list for current sidebar
+$widget_list = '';
+error_log("Widgets template - Current sidebar: " . $current_sidebar);
+error_log("Widgets template - Available widgets: " . print_r($widgets, true));
+
+if (!empty($current_sidebar) && isset($widgets[$current_sidebar])) {
+    $sidebarWidgets = $widgets[$current_sidebar]['widgets'] ?? [];
+    error_log("Widgets template - Sidebar widgets: " . print_r($sidebarWidgets, true));
+    
+    if (empty($sidebarWidgets)) {
+        $widget_list = '<p class="text-gray-500 text-center py-8">No widgets in this sidebar yet. Add one above!</p>';
+    } else {
+        foreach ($sidebarWidgets as $index => $widget) {
+            error_log("Widgets template - Processing widget: " . print_r($widget, true));
+            $widget_list .= '<div class="widget-item" data-id="' . htmlspecialchars($widget['id'] ?? $index) . '" data-content="' . htmlspecialchars($widget['content'] ?? '') . '" data-classes="' . htmlspecialchars($widget['classes'] ?? '') . '">';
+            $widget_list .= '<div class="widget-header">';
+            $widget_list .= '<div class="widget-drag-handle">';
+            $widget_list .= '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">';
+            $widget_list .= '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path>';
+            $widget_list .= '</svg>';
+            $widget_list .= '</div>';
+            $widget_list .= '<h4 class="widget-title">' . htmlspecialchars($widget['title'] ?? 'Untitled Widget') . '</h4>';
+            $widget_list .= '<span class="text-sm text-gray-500">' . htmlspecialchars($widget['type'] ?? 'text') . '</span>';
+            $widget_list .= '</div>';
+            $widget_list .= '<div class="widget-content">' . htmlspecialchars(substr($widget['content'] ?? '', 0, 100)) . (strlen($widget['content'] ?? '') > 100 ? '...' : '') . '</div>';
+            $widget_list .= '<div class="widget-actions">';
+            $widget_list .= '<button class="edit-widget" data-id="' . htmlspecialchars($widget['id'] ?? $index) . '">Edit</button>';
+            $widget_list .= '<button class="delete-widget" data-id="' . htmlspecialchars($widget['id'] ?? $index) . '">Delete</button>';
+            $widget_list .= '</div>';
+            $widget_list .= '</div>';
+        }
+    }
+}
+?>
+
 <!-- Add Sortable.js in the head section -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
 <div class="space-y-6">
-    <!-- Error Message Display -->
-    <div id="error-message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-        <span class="block sm:inline" id="error-text"></span>
-        <span class="absolute top-0 bottom-0 right-0 px-4 py-3">
-            <svg class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                <title>Close</title>
-                <path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/>
-            </svg>
-        </span>
-    </div>
+    <!-- Error Message -->
+    <div id="error-message" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"></div>
+    
+    <!-- Success Message -->
+    <div id="success-message" class="hidden bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4"></div>
 
     <!-- Sidebar Management -->
     <div class="bg-white p-4 rounded-lg shadow">
@@ -42,26 +119,23 @@
         </div>
 
         <!-- Add Widget Form -->
-        <form id="add-widget-form" class="mb-6" data-ajax="true">
+        <form id="add-widget-form" class="space-y-4">
             <input type="hidden" name="action" value="save_widget">
             <input type="hidden" name="sidebar" value="<?php echo htmlspecialchars($current_sidebar); ?>">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <input type="text" name="title" placeholder="Widget Title" class="px-3 py-2 border rounded" required>
-                <select name="type" class="px-3 py-2 border rounded" required>
-                    <option value="">Select Widget Type</option>
-                    <option value="text">Text Widget</option>
-                    <option value="html">HTML Widget</option>
-                    <option value="menu">Menu Widget</option>
-                    <option value="image">Image Widget</option>
-                </select>
-            </div>
-            <div class="mb-4">
-                <textarea name="content" placeholder="Widget Content" class="w-full px-3 py-2 border rounded" rows="4" required></textarea>
-            </div>
-            <div class="mb-4">
+            <input type="text" name="title" placeholder="Widget Title" class="px-3 py-2 border rounded" required>
+            <select name="type" class="px-3 py-2 border rounded" required>
+                <option value="">Select Widget Type</option>
+                <option value="text">Text Widget</option>
+                <option value="html">HTML Widget</option>
+                <option value="image">Image Widget</option>
+                <option value="link">Link Widget</option>
+                <option value="list">List Widget</option>
+            </select>
+            <textarea name="content" placeholder="Widget Content" class="w-full px-3 py-2 border rounded" rows="4" required></textarea>
+            <div class="flex gap-2">
                 <input type="text" name="classes" placeholder="CSS Classes (optional)" class="w-full px-3 py-2 border rounded">
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Save Widget</button>
             </div>
-            <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Add Widget</button>
         </form>
 
         <!-- Widget List -->
@@ -75,6 +149,13 @@
         </div>
         <div id="widget-list" class="space-y-4">
             <?php echo $widget_list; ?>
+        </div>
+        
+        <!-- Save Sidebar Button -->
+        <div class="mt-6">
+            <button id="save-sidebar-btn" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                Save Sidebar Changes
+            </button>
         </div>
     </div>
 </div>
@@ -234,22 +315,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const addWidgetForm = document.getElementById('add-widget-form');
     const widgetList = document.getElementById('widget-list');
     const errorMessage = document.getElementById('error-message');
-    const errorText = document.getElementById('error-text');
 
     // Function to show error message
     function showError(message) {
-        errorText.textContent = message;
-        errorMessage.classList.remove('hidden');
-        errorMessage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (errorMessage) {
+            errorMessage.textContent = message;
+            errorMessage.classList.remove('hidden');
+            errorMessage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            alert('Error: ' + message);
+        }
     }
 
     // Function to hide error message
     function hideError() {
-        errorMessage.classList.add('hidden');
+        if (errorMessage) {
+            errorMessage.classList.add('hidden');
+        }
     }
-
-    // Close error message when clicking the X
-    errorMessage.querySelector('svg').addEventListener('click', hideError);
 
     // Initialize Sortable
     if (widgetList) {
@@ -350,10 +433,18 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.target.classList.contains('delete-widget')) {
             if (confirm('Are you sure you want to delete this widget?')) {
                 const widgetId = e.target.dataset.id;
+                const sidebarId = sidebarSelect.value;
                 const formData = new FormData();
                 formData.append('action', 'delete_widget');
-                formData.append('sidebar', sidebarSelect.value);
+                formData.append('sidebar', sidebarId);
                 formData.append('id', widgetId);
+
+                // Debug logging
+                console.log('Deleting widget:', {
+                    widgetId: widgetId,
+                    sidebarId: sidebarId,
+                    action: 'delete_widget'
+                });
 
                 fetch(window.location.href, {
                     method: 'POST',
@@ -364,6 +455,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .then(response => response.json())
                 .then(data => {
+                    console.log('Delete response:', data);
                     if (data.success) {
                         e.target.closest('.widget-item').remove();
                     } else {
@@ -384,7 +476,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const widgetItem = e.target.closest('.widget-item');
             const widgetId = e.target.dataset.id;
             const title = widgetItem.querySelector('.widget-title').textContent;
-            const type = widgetItem.querySelector('.widget-content p').textContent.replace('Type: ', '');
+            const type = widgetItem.querySelector('.text-sm.text-gray-500').textContent;
             
             // Populate the form
             addWidgetForm.querySelector('[name="title"]').value = title;
@@ -393,11 +485,14 @@ document.addEventListener('DOMContentLoaded', function() {
             addWidgetForm.querySelector('[name="classes"]').value = widgetItem.dataset.classes || '';
             
             // Add widget ID for update
-            const idInput = document.createElement('input');
-            idInput.type = 'hidden';
-            idInput.name = 'id';
+            let idInput = addWidgetForm.querySelector('[name="id"]');
+            if (!idInput) {
+                idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'id';
+                addWidgetForm.appendChild(idInput);
+            }
             idInput.value = widgetId;
-            addWidgetForm.appendChild(idInput);
             
             // Change button text
             addWidgetForm.querySelector('button[type="submit"]').textContent = 'Update Widget';
@@ -407,10 +502,65 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Function to reset form for adding new widgets
+    function resetForm() {
+        addWidgetForm.reset();
+        addWidgetForm.querySelector('[name="action"]').value = 'save_widget';
+        addWidgetForm.querySelector('button[type="submit"]').textContent = 'Save Widget';
+        
+        // Remove widget ID if it exists
+        const idInput = addWidgetForm.querySelector('[name="id"]');
+        if (idInput) {
+            idInput.remove();
+        }
+    }
+
     // Handle form submission
     addWidgetForm.addEventListener('submit', function(e) {
         e.preventDefault();
         const formData = new FormData(this);
+        
+        // Debug logging
+        console.log('Form submission data:');
+        for (let [key, value] of formData.entries()) {
+            console.log(key + ': ' + value);
+        }
+        
+        fetch(window.location.href, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Save response:', data);
+            if (data.success) {
+                window.location.reload();
+            } else {
+                showError(data.error || 'Failed to save widget');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showError('An error occurred while saving the widget: ' + error.message);
+        });
+    });
+
+    // Add a button to reset form for adding new widgets
+    const resetButton = document.createElement('button');
+    resetButton.type = 'button';
+    resetButton.textContent = 'Add New Widget';
+    resetButton.className = 'bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 ml-2';
+    resetButton.onclick = resetForm;
+    addWidgetForm.querySelector('button[type="submit"]').parentNode.appendChild(resetButton);
+
+    // Handle save sidebar button
+    document.getElementById('save-sidebar-btn').addEventListener('click', function() {
+        const formData = new FormData();
+        formData.append('action', 'save_sidebar');
+        formData.append('sidebar', sidebarSelect.value);
         
         fetch(window.location.href, {
             method: 'POST',
@@ -422,14 +572,14 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                window.location.reload();
+                showSuccess('Sidebar changes saved successfully!');
             } else {
-                showError(data.error || 'Failed to save widget');
+                showError(data.error || 'Failed to save sidebar');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            showError('An error occurred while saving the widget: ' + error.message);
+            showError('An error occurred while saving the sidebar: ' + error.message);
         });
     });
 
@@ -458,5 +608,18 @@ document.addEventListener('DOMContentLoaded', function() {
             showError('An error occurred while creating the sidebar: ' + error.message);
         });
     });
+
+    function showSuccess(message) {
+        const successDiv = document.getElementById('success-message');
+        if (successDiv) {
+            successDiv.textContent = message;
+            successDiv.classList.remove('hidden');
+            setTimeout(() => {
+                successDiv.classList.add('hidden');
+            }, 5000);
+        } else {
+            alert('Success: ' + message);
+        }
+    }
 });
 </script>

@@ -23,6 +23,7 @@ require_once __DIR__ . '/theme-handler.php';
 require_once __DIR__ . '/store-handler.php';
 require_once __DIR__ . '/newpage-handler.php';
 require_once __DIR__ . '/filedel-handler.php';
+require_once __DIR__ . '/widgets-handler.php';
 
 // Get action from GET or POST, default to dashboard
 $action = $_GET['action'] ?? $_POST['action'] ?? 'dashboard';
@@ -367,6 +368,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     // Check if this is a blog action
     else if (in_array($postAction, ['save_post', 'delete_post'])) {
         $action = 'blog';
+    }
+    // Check if this is a widget action
+    else if (in_array($postAction, ['save_widget', 'delete_widget', 'add_sidebar', 'delete_sidebar', 'reorder_widgets', 'save_sidebar'])) {
+        error_log("Admin index.php - Widget action detected: " . $postAction);
+        $action = 'manage_widgets'; // Set the action to 'manage_widgets' to use the widgets handler
     }
     // Add other section-specific actions here as needed
 }

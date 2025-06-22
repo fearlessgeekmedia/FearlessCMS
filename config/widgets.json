@@ -1,17 +1,20 @@
 {
     "main": {
-        "name": "Main Sidebar",
+        "id": "main",
+        "classes": "main-sidebar",
         "widgets": [
             {
-                "type": "text",
-                "title": "About Us",
-                "content": "Welcome to our website! We're dedicated to providing the best service to our customers."
-            },
-            {
-                "type": "text",
-                "title": "Contact Info",
-                "content": "Email: info@example.com<br>Phone: (555) 123-4567"
+                "id": "685874c9a61a9",
+                "title": "Albums",
+                "type": "html",
+                "content": "<a href=\"https:\/\/ko-fi.com\/s\/0e629c3369\" target=\"_blank\"><img src=\"..\/uploads\/look-ma-i-created-ai-slop.png\"><\/a>",
+                "classes": ""
             }
         ]
+    },
+    "right-sidebar": {
+        "id": "right-sidebar",
+        "classes": "right-sidebar",
+        "widgets": []
     }
-} 
+}
