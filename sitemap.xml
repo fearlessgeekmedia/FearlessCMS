@@ -2,25 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://localhost:8080/about</loc>
-    <lastmod>2025-06-17</lastmod>
-    <priority>0.5</priority>
-    <changefreq>weekly</changefreq>
-  </url>
-  <url>
-    <loc>https://localhost:8080/about/contact</loc>
-    <lastmod>2025-06-17</lastmod>
-    <priority>0.5</priority>
-    <changefreq>weekly</changefreq>
-  </url>
-  <url>
-    <loc>https://localhost:8080/about/team</loc>
-    <lastmod>2025-06-17</lastmod>
-    <priority>0.5</priority>
-    <changefreq>weekly</changefreq>
-  </url>
-  <url>
-    <loc>https://localhost:8080/anothernewpage</loc>
-    <lastmod>2025-06-17</lastmod>
+    <lastmod>2025-06-22</lastmod>
     <priority>0.5</priority>
     <changefreq>weekly</changefreq>
   </url>
@@ -31,19 +13,7 @@
     <changefreq>weekly</changefreq>
   </url>
   <url>
-    <loc>https://localhost:8080/newpage</loc>
-    <lastmod>2025-06-17</lastmod>
-    <priority>0.5</priority>
-    <changefreq>weekly</changefreq>
-  </url>
-  <url>
-    <loc>https://localhost:8080/form</loc>
-    <lastmod>2025-06-17</lastmod>
-    <priority>0.5</priority>
-    <changefreq>weekly</changefreq>
-  </url>
-  <url>
-    <loc>https://localhost:8080/test-nightfall</loc>
+    <loc>https://localhost:8080/music</loc>
     <lastmod>2025-06-22</lastmod>
     <priority>0.5</priority>
     <changefreq>weekly</changefreq>

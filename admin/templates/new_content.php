@@ -1,4 +1,21 @@
 <?php
+// Get available templates
+$templates = [];
+$templateDir = PROJECT_ROOT . '/themes/' . ($themeManager->getActiveTheme() ?? 'punk_rock') . '/templates';
+if (is_dir($templateDir)) {
+    foreach (glob($templateDir . '/*.html') as $template) {
+        $templateName = basename($template, '.html');
+        if ($templateName !== '404') { // Exclude 404 template
+            $templates[] = $templateName;
+        }
+    }
+}
+
+// Debug output
+error_log("New content template - Active theme: " . ($themeManager->getActiveTheme() ?? 'NOT AVAILABLE'));
+error_log("New content template - Template directory: " . $templateDir);
+error_log("New content template - Templates found: " . print_r($templates, true));
+
 // Get all content files for parent selection
 $contentFiles = glob(CONTENT_DIR . '/*.md');
 $pages = [];
@@ -59,12 +76,21 @@ error_log("Available templates: " . print_r($templates, true));
             <div>
                 <label class="block mb-2">Template</label>
                 <select name="template" class="w-full px-3 py-2 border border-gray-300 rounded">
-                    <?php foreach ($templates as $template): ?>
-                        <option value="<?php echo htmlspecialchars($template); ?>">
-                            <?php echo ucfirst(htmlspecialchars($template)); ?>
-                        </option>
-                    <?php endforeach; ?>
+                    <?php if (empty($templates)): ?>
+                        <option value="page">Page (No templates found)</option>
+                    <?php else: ?>
+                        <?php foreach ($templates as $template): ?>
+                            <option value="<?php echo htmlspecialchars($template); ?>">
+                                <?php echo ucfirst(htmlspecialchars($template)); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </select>
+                <?php if (empty($templates)): ?>
+                    <p class="text-sm text-red-500 mt-1">Debug: No templates found. Template dir: <?php echo htmlspecialchars($templateDir); ?></p>
+                <?php else: ?>
+                    <p class="text-sm text-gray-500 mt-1">Found <?php echo count($templates); ?> templates</p>
+                <?php endif; ?>
             </div>
         </div>
 

@@ -1,0 +1,432 @@
+# FearlessCMS Template Reference
+
+This document provides a comprehensive reference for the FearlessCMS template system, including all available variables, syntax, and examples.
+
+## Template Syntax Overview
+
+FearlessCMS uses a simple template system with double curly braces `{{}}` for variables and special tags for conditionals and loops.
+
+## Variables
+
+### Global Variables
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `{{siteName}}` | Site name from config | "My Awesome Site" |
+| `{{siteDescription}}` | Site description/tagline | "A great website" |
+| `{{theme}}` | Current theme name | "nightfall" |
+| `{{currentYear}}` | Current year | "2024" |
+| `{{baseUrl}}` | Base URL of the site | "https://example.com" |
+| `{{currentUrl}}` | Current page URL | "/about" |
+
+### Page Variables
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `{{title}}` | Page title | "About Us" |
+| `{{content}}` | Page content (HTML) | "<p>Page content...</p>" |
+| `{{url}}` | Current page URL | "about" |
+| `{{parent}}` | Parent page object | `{"title": "Home", "url": "home"}` |
+| `{{children}}` | Array of child pages | `[{"title": "Child 1", "url": "child1"}]` |
+| `{{excerpt}}` | Page excerpt (first paragraph) | "This is the excerpt..." |
+| `{{date}}` | Page creation date | "2024-01-15" |
+| `{{author}}` | Page author | "John Doe" |
+
+### Menu Variables
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `{{menu.main}}` | Main menu items | Array of menu objects |
+| `{{menu.footer}}` | Footer menu items | Array of menu objects |
+| `{{menu.sidebar}}` | Sidebar menu items | Array of menu objects |
+
+### Theme Options
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `{{themeOptions.key}}` | Custom theme option | Value depends on theme |
+
+## Conditional Statements
+
+### Basic If/Else
+
+```html
+{{if condition}}
+    <!-- Content when condition is true -->
+{{else}}
+    <!-- Content when condition is false -->
+{{endif}}
+```
+
+### Examples
+
+```html
+<!-- Check if title exists -->
+{{if title}}
+    <h1>{{title}}</h1>
+{{endif}}
+
+<!-- Check if children exist -->
+{{if children}}
+    <ul>
+        {{foreach children}}
+            <li><a href="/{{url}}">{{title}}</a></li>
+        {{endforeach}}
+    </ul>
+{{endif}}
+
+<!-- Check theme option -->
+{{if themeOptions.showSidebar}}
+    <aside class="sidebar">
+        <!-- Sidebar content -->
+    </aside>
+{{endif}}
+
+<!-- Multiple conditions -->
+{{if title && content}}
+    <article>
+        <h1>{{title}}</h1>
+        {{content}}
+    </article>
+{{else}}
+    <p>No content available</p>
+{{endif}}
+```
+
+## Loops
+
+### Foreach Loop
+
+```html
+{{foreach array}}
+    <!-- Content for each item -->
+{{endforeach}}
+```
+
+### Examples
+
+```html
+<!-- Loop through menu items -->
+<nav>
+    <ul>
+        {{foreach menu.main}}
+            <li><a href="/{{url}}">{{title}}</a></li>
+        {{endforeach}}
+    </ul>
+</nav>
+
+<!-- Loop through children -->
+{{if children}}
+    <div class="child-pages">
+        {{foreach children}}
+            <div class="child-page">
+                <h3><a href="/{{url}}">{{title}}</a></h3>
+                {{if excerpt}}
+                    <p>{{excerpt}}</p>
+                {{endif}}
+            </div>
+        {{endforeach}}
+    </div>
+{{endif}}
+
+<!-- Loop through theme options -->
+{{if themeOptions.socialLinks}}
+    <div class="social-links">
+        {{foreach themeOptions.socialLinks}}
+            <a href="{{url}}" target="{{target}}" rel="{{rel}}">
+                {{if icon}}
+                    <i class="{{icon}}"></i>
+                {{endif}}
+                {{name}}
+            </a>
+        {{endforeach}}
+    </div>
+{{endif}}
+```
+
+## Template Functions
+
+### Include Function
+
+Include other template files:
+
+```html
+{{include "partials/header.html"}}
+{{include "partials/footer.html"}}
+```
+
+### Date Formatting
+
+Format dates using PHP's date format:
+
+```html
+{{date "Y-m-d"}}  <!-- 2024-01-15 -->
+{{date "F j, Y"}} <!-- January 15, 2024 -->
+{{date "M j"}}    <!-- Jan 15 -->
+```
+
+## Template Examples
+
+### Complete Home Template
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{siteName}}</title>
+    <meta name="description" content="{{siteDescription}}">
+    <link rel="stylesheet" href="/themes/{{theme}}/assets/style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            {{if themeOptions.logo}}
+                <img src="/{{themeOptions.logo}}" alt="{{siteName}}" class="logo">
+            {{else}}
+                <h1>{{siteName}}</h1>
+            {{endif}}
+            
+            {{if siteDescription}}
+                <p class="tagline">{{siteDescription}}</p>
+            {{endif}}
+            
+            {{if menu.main}}
+                <nav>
+                    <ul>
+                        {{foreach menu.main}}
+                            <li><a href="/{{url}}">{{title}}</a></li>
+                        {{endforeach}}
+                    </ul>
+                </nav>
+            {{endif}}
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <article>
+                {{content}}
+            </article>
+            
+            {{if children}}
+                <section class="child-pages">
+                    <h2>Related Pages</h2>
+                    <div class="grid">
+                        {{foreach children}}
+                            <div class="card">
+                                <h3><a href="/{{url}}">{{title}}</a></h3>
+                                {{if excerpt}}
+                                    <p>{{excerpt}}</p>
+                                {{endif}}
+                            </div>
+                        {{endforeach}}
+                    </div>
+                </section>
+            {{endif}}
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; {{currentYear}} {{siteName}}. All rights reserved.</p>
+            
+            {{if themeOptions.socialLinks}}
+                <div class="social-links">
+                    {{foreach themeOptions.socialLinks}}
+                        <a href="{{url}}" target="{{target}}" rel="{{rel}}">
+                            {{if icon}}
+                                <i class="{{icon}}"></i>
+                            {{endif}}
+                            {{name}}
+                        </a>
+                    {{endforeach}}
+                </div>
+            {{endif}}
+        </div>
+    </footer>
+</body>
+</html>
+```
+
+### Blog Template
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}} - {{siteName}}</title>
+    <link rel="stylesheet" href="/themes/{{theme}}/assets/style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>{{title}}</h1>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="blog-layout">
+                <div class="blog-content">
+                    {{if children}}
+                        {{foreach children}}
+                            <article class="blog-post">
+                                <header>
+                                    <h2><a href="/{{url}}">{{title}}</a></h2>
+                                    {{if date}}
+                                        <time datetime="{{date}}">{{date "F j, Y"}}</time>
+                                    {{endif}}
+                                    {{if author}}
+                                        <span class="author">by {{author}}</span>
+                                    {{endif}}
+                                </header>
+                                
+                                {{if excerpt}}
+                                    <div class="excerpt">
+                                        {{excerpt}}
+                                    </div>
+                                {{endif}}
+                                
+                                <a href="/{{url}}" class="read-more">Read More</a>
+                            </article>
+                        {{endforeach}}
+                    {{else}}
+                        <p>No blog posts found.</p>
+                    {{endif}}
+                </div>
+                
+                {{if themeOptions.showSidebar}}
+                    <aside class="sidebar">
+                        {{if menu.sidebar}}
+                            <nav class="sidebar-nav">
+                                <h3>Categories</h3>
+                                <ul>
+                                    {{foreach menu.sidebar}}
+                                        <li><a href="/{{url}}">{{title}}</a></li>
+                                    {{endforeach}}
+                                </ul>
+                            </nav>
+                        {{endif}}
+                    </aside>
+                {{endif}}
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; {{currentYear}} {{siteName}}</p>
+        </div>
+    </footer>
+</body>
+</html>
+```
+
+### 404 Error Template
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Not Found - {{siteName}}</title>
+    <link rel="stylesheet" href="/themes/{{theme}}/assets/style.css">
+</head>
+<body>
+    <div class="error-page">
+        <div class="container">
+            <h1>404</h1>
+            <h2>Page Not Found</h2>
+            <p>The page you're looking for doesn't exist.</p>
+            
+            {{if menu.main}}
+                <p>Try one of these pages:</p>
+                <ul>
+                    {{foreach menu.main}}
+                        <li><a href="/{{url}}">{{title}}</a></li>
+                    {{endforeach}}
+                </ul>
+            {{endif}}
+            
+            <a href="/" class="btn">Go Home</a>
+        </div>
+    </div>
+</body>
+</html>
+```
+
+## Advanced Techniques
+
+### Nested Conditionals
+
+```html
+{{if themeOptions.showSidebar}}
+    <aside class="sidebar">
+        {{if menu.sidebar}}
+            <nav>
+                {{foreach menu.sidebar}}
+                    <div class="menu-item">
+                        <a href="/{{url}}">{{title}}</a>
+                        {{if children}}
+                            <ul>
+                                {{foreach children}}
+                                    <li><a href="/{{url}}">{{title}}</a></li>
+                                {{endforeach}}
+                            </ul>
+                        {{endif}}
+                    </div>
+                {{endforeach}}
+            </nav>
+        {{endif}}
+    </aside>
+{{endif}}
+```
+
+### Dynamic Classes
+
+```html
+<div class="page {{if parent}}has-parent{{endif}} {{if children}}has-children{{endif}}">
+    <!-- Content -->
+</div>
+```
+
+### Conditional Attributes
+
+```html
+<a href="/{{url}}" 
+   {{if target}}target="{{target}}"{{endif}}
+   {{if rel}}rel="{{rel}}"{{endif}}>
+    {{title}}
+</a>
+```
+
+## Best Practices
+
+1. **Always check if variables exist** before using them
+2. **Use semantic HTML** elements
+3. **Keep templates DRY** - reuse common elements
+4. **Test with different content** scenarios
+5. **Use meaningful variable names** in theme options
+6. **Include proper meta tags** for SEO
+7. **Make templates accessible** with proper ARIA labels
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Variable not showing**: Check if the variable exists in the data
+2. **Conditional not working**: Verify the condition syntax
+3. **Loop not iterating**: Ensure the array is not empty
+4. **Template not loading**: Check file paths and names
+
+### Debug Tips
+
+- Use `{{debug}}` to output all available variables
+- Check the browser console for JavaScript errors
+- Verify template file permissions
+- Test with simple content first 

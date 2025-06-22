@@ -22,6 +22,7 @@ require_once __DIR__ . '/widget-handler.php';
 require_once __DIR__ . '/theme-handler.php';
 require_once __DIR__ . '/store-handler.php';
 require_once __DIR__ . '/newpage-handler.php';
+require_once __DIR__ . '/filedel-handler.php';
 
 // Get action from GET or POST, default to dashboard
 $action = $_GET['action'] ?? $_POST['action'] ?? 'dashboard';
