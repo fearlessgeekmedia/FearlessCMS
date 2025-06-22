@@ -42,4 +42,10 @@
     <priority>0.5</priority>
     <changefreq>weekly</changefreq>
   </url>
+  <url>
+    <loc>https://localhost:8080/test-nightfall</loc>
+    <lastmod>2025-06-22</lastmod>
+    <priority>0.5</priority>
+    <changefreq>weekly</changefreq>
+  </url>
 </urlset>

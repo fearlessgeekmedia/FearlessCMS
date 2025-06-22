@@ -39,6 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     exit;
                 }
 
+                // Only handle file uploads (logo, hero banner) - let the main index.php handle other options
                 $themeOptionsFile = CONFIG_DIR . '/theme_options.json';
                 $themeOptions = file_exists($themeOptionsFile) ? json_decode(file_get_contents($themeOptionsFile), true) : [];
                 $uploadsDir = PROJECT_ROOT . '/uploads';
@@ -159,16 +160,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $themeOptions['herobanner'] = 'uploads/' . $filename;
                 }
 
-                // Save updated options
-                if (file_put_contents($themeOptionsFile, json_encode($themeOptions, JSON_PRETTY_PRINT))) {
-                    header('Content-Type: application/json');
-                    echo json_encode(['success' => true]);
-                    exit;
-                } else {
-                    header('Content-Type: application/json');
-                    echo json_encode(['success' => false, 'error' => 'Failed to save theme options']);
-                    exit;
+                // Only save if we handled file uploads, otherwise let the main index.php handle it
+                if (isset($_FILES['logo']) || isset($_FILES['herobanner']) || isset($_POST['remove_logo']) || isset($_POST['remove_herobanner'])) {
+                    // Save updated options
+                    if (file_put_contents($themeOptionsFile, json_encode($themeOptions, JSON_PRETTY_PRINT))) {
+                        header('Content-Type: application/json');
+                        echo json_encode(['success' => true]);
+                        exit;
+                    } else {
+                        header('Content-Type: application/json');
+                        echo json_encode(['success' => false, 'error' => 'Failed to save theme options']);
+                        exit;
+                    }
                 }
+                // If no file uploads, don't handle this action - let the main index.php handle it
                 break;
         }
     }

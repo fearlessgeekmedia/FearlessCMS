@@ -50,7 +50,9 @@ class TemplateRenderer {
             'current_year' => date('Y'),
             'mainMenu' => $this->menuManager->renderMenu('main'),
             'custom_css' => $data['custom_css'] ?? '',
-            'custom_js' => $data['custom_js'] ?? ''
+            'custom_js' => $data['custom_js'] ?? '',
+            'themeOptions' => $this->themeOptions,
+            'theme_options' => $this->themeOptions
         ];
 
         // Merge with any additional data
@@ -85,6 +87,42 @@ class TemplateRenderer {
             return $this->menuManager->renderMenu($menuId);
         }, $content);
 
+        // Handle themeOptions access ({{themeOptions.key}})
+        $content = preg_replace_callback('/{{themeOptions\.([^}]+)}}/', function($matches) use ($data) {
+            $key = trim($matches[1]);
+            return $data['themeOptions'][$key] ?? '';
+        }, $content);
+
+        // Handle foreach loops for arrays ({{#each array}}...{{/each}})
+        $content = preg_replace_callback('/{{#each\s+([^}]+)}}(.*?){{\/each}}/s', function($matches) use ($data) {
+            $arrayKey = trim($matches[1]);
+            $loopContent = $matches[2];
+            
+            // Check for themeOptions.array format
+            if (preg_match('/^themeOptions\.(.+)$/', $arrayKey, $themeMatches)) {
+                $key = $themeMatches[1];
+                $array = $data['themeOptions'][$key] ?? [];
+            } else {
+                $array = $data[$arrayKey] ?? [];
+            }
+            
+            if (!is_array($array)) {
+                return '';
+            }
+            
+            $result = '';
+            foreach ($array as $item) {
+                $itemContent = $loopContent;
+                // Replace {{key}} with item values
+                foreach ($item as $itemKey => $itemValue) {
+                    $itemContent = str_replace('{{' . $itemKey . '}}', $itemValue, $itemContent);
+                }
+                $result .= $itemContent;
+            }
+            
+            return $result;
+        }, $content);
+
         // Handle if conditions with else blocks (run multiple times for nested blocks)
         for ($i = 0; $i < 5; $i++) {
             $newContent = preg_replace_callback(
@@ -95,11 +133,17 @@ class TemplateRenderer {
                     $elseContent = $matches[3] ?? '';
                     $snakeCase = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $condition));
                     $conditionMet = false;
-                    if (isset($data[$condition])) {
+                    
+                    // Check for themeOptions.key format
+                    if (preg_match('/^themeOptions\.(.+)$/', $condition, $themeMatches)) {
+                        $key = $themeMatches[1];
+                        $conditionMet = !empty($data['themeOptions'][$key]);
+                    } elseif (isset($data[$condition])) {
                         $conditionMet = !empty($data[$condition]);
                     } elseif (isset($data[$snakeCase])) {
                         $conditionMet = !empty($data[$snakeCase]);
                     }
+                    
                     if ($conditionMet) {
                         return $this->replaceVariables($ifContent, $data);
                     } else {

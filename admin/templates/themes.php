@@ -12,8 +12,118 @@ $themeOptionFields = isset($activeThemeConfig['options']) ? $activeThemeConfig['
 
 <!-- Theme Management -->
 <div class="space-y-8">
-    <?php if (!empty($themeOptionFields)): ?>
-    <!-- Theme Options -->
+    <?php if ($activeTheme === 'nightfall'): ?>
+    <!-- Nightfall Theme Options -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <h3 class="text-lg font-medium mb-4">Nightfall Theme Options</h3>
+        <form method="POST" class="space-y-6">
+            <input type="hidden" name="action" value="save_theme_options">
+            
+            <!-- Author Settings -->
+            <div class="border-b pb-6">
+                <h4 class="text-md font-medium mb-4">Author Settings</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block mb-1">Author Name</label>
+                        <input type="text" name="author_name" value="<?php echo htmlspecialchars($themeOptions['author_name'] ?? ''); ?>" class="w-full px-3 py-2 border border-gray-300 rounded" required>
+                    </div>
+                    <div>
+                        <label class="block mb-1">Avatar Image Path</label>
+                        <input type="text" name="author_avatar" value="<?php echo htmlspecialchars($themeOptions['author_avatar'] ?? ''); ?>" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="uploads/avatar.jpg">
+                        <small class="text-gray-500">Path relative to your site root (e.g., uploads/avatar.jpg)</small>
+                    </div>
+                    <div>
+                        <label class="block mb-1">Avatar Size</label>
+                        <select name="avatar_size" class="w-full px-3 py-2 border border-gray-300 rounded">
+                            <option value="size-s" <?php echo ($themeOptions['avatar_size'] ?? '') === 'size-s' ? 'selected' : ''; ?>>Small (80px)</option>
+                            <option value="size-m" <?php echo ($themeOptions['avatar_size'] ?? '') === 'size-m' ? 'selected' : ''; ?>>Medium (120px)</option>
+                            <option value="size-l" <?php echo ($themeOptions['avatar_size'] ?? '') === 'size-l' ? 'selected' : ''; ?>>Large (160px)</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center">
+                        <label class="flex items-center">
+                            <input type="checkbox" name="avatar_first" <?php echo ($themeOptions['avatar_first'] ?? false) ? 'checked' : ''; ?> class="mr-2">
+                            Show avatar before name
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Terminal Header -->
+            <div class="border-b pb-6">
+                <h4 class="text-md font-medium mb-4">Terminal Header</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block mb-1">Username</label>
+                        <input type="text" name="user" value="<?php echo htmlspecialchars($themeOptions['user'] ?? 'user'); ?>" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="user">
+                    </div>
+                    <div>
+                        <label class="block mb-1">Hostname</label>
+                        <input type="text" name="hostname" value="<?php echo htmlspecialchars($themeOptions['hostname'] ?? 'localhost'); ?>" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="localhost">
+                    </div>
+                </div>
+                <p class="text-sm text-gray-500 mt-2">This will display as: <code><?php echo htmlspecialchars($themeOptions['user'] ?? 'user'); ?>@<?php echo htmlspecialchars($themeOptions['hostname'] ?? 'localhost'); ?> ~ $</code></p>
+            </div>
+            
+            <!-- Social Links -->
+            <div class="border-b pb-6">
+                <h4 class="text-md font-medium mb-4">Social Links</h4>
+                <div id="social-links-container">
+                    <?php foreach (($themeOptions['social_links'] ?? []) as $index => $social): ?>
+                    <div class="social-link-group border rounded p-4 mb-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block mb-1">Name</label>
+                                <input type="text" name="social_name[]" value="<?php echo htmlspecialchars($social['name']); ?>" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="GitHub">
+                            </div>
+                            <div>
+                                <label class="block mb-1">URL</label>
+                                <input type="text" name="social_url[]" value="<?php echo htmlspecialchars($social['url']); ?>" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="https://github.com/username">
+                            </div>
+                            <div>
+                                <label class="block mb-1">Icon Class</label>
+                                <input type="text" name="social_icon[]" value="<?php echo htmlspecialchars($social['icon']); ?>" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="fab fa-github">
+                            </div>
+                            <div>
+                                <label class="block mb-1">Target</label>
+                                <input type="text" name="social_target[]" value="<?php echo htmlspecialchars($social['target']); ?>" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="_blank">
+                            </div>
+                        </div>
+                        <button type="button" class="remove-social-link mt-2 bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">Remove</button>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <button type="button" id="add-social-link" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Add Social Link</button>
+            </div>
+            
+            <!-- Footer -->
+            <div class="border-b pb-6">
+                <h4 class="text-md font-medium mb-4">Footer</h4>
+                <div>
+                    <label class="block mb-1">Custom Footer HTML</label>
+                    <textarea name="footer_html" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="Leave empty for default footer"><?php echo htmlspecialchars($themeOptions['footer_html'] ?? ''); ?></textarea>
+                </div>
+            </div>
+            
+            <!-- Color Scheme -->
+            <div class="pb-6">
+                <h4 class="text-md font-medium mb-4">Color Scheme</h4>
+                <div>
+                    <label class="block mb-1">Primary Color</label>
+                    <select name="color_scheme" class="w-full px-3 py-2 border border-gray-300 rounded">
+                        <option value="blue" <?php echo ($themeOptions['color_scheme'] ?? '') === 'blue' ? 'selected' : ''; ?>>Blue</option>
+                        <option value="orange" <?php echo ($themeOptions['color_scheme'] ?? '') === 'orange' ? 'selected' : ''; ?>>Orange</option>
+                        <option value="green" <?php echo ($themeOptions['color_scheme'] ?? '') === 'green' ? 'selected' : ''; ?>>Green</option>
+                        <option value="red" <?php echo ($themeOptions['color_scheme'] ?? '') === 'red' ? 'selected' : ''; ?>>Red</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">Save Theme Options</button>
+        </form>
+    </div>
+    <?php elseif (!empty($themeOptionFields)): ?>
+    <!-- Generic Theme Options -->
     <div class="bg-white shadow rounded-lg p-6">
         <h3 class="text-lg font-medium mb-4">Theme Options</h3>
         <form id="theme-options-form" class="space-y-4">
@@ -69,6 +179,43 @@ $themeOptionFields = isset($activeThemeConfig['options']) ? $activeThemeConfig['
 </div>
 
 <script>
+// Social links management
+document.getElementById('add-social-link')?.addEventListener('click', function() {
+    const container = document.getElementById('social-links-container');
+    const socialDiv = document.createElement('div');
+    socialDiv.className = 'social-link-group border rounded p-4 mb-4';
+    socialDiv.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+                <label class="block mb-1">Name</label>
+                <input type="text" name="social_name[]" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="GitHub">
+            </div>
+            <div>
+                <label class="block mb-1">URL</label>
+                <input type="text" name="social_url[]" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="https://github.com/username">
+            </div>
+            <div>
+                <label class="block mb-1">Icon Class</label>
+                <input type="text" name="social_icon[]" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="fab fa-github">
+            </div>
+            <div>
+                <label class="block mb-1">Target</label>
+                <input type="text" name="social_target[]" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="_blank">
+            </div>
+        </div>
+        <button type="button" class="remove-social-link mt-2 bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">Remove</button>
+    `;
+    container.appendChild(socialDiv);
+});
+
+// Remove social link
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('remove-social-link')) {
+        e.target.closest('.social-link-group').remove();
+    }
+});
+
+// Generic theme options form (for non-Nightfall themes)
 document.getElementById('theme-options-form')?.addEventListener('submit', function(e) {
     e.preventDefault();
     

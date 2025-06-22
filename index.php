@@ -280,6 +280,10 @@ if (!file_exists($contentFile)) {
 if (!file_exists($contentFile)) {
     error_log("No content file found, showing 404");
     http_response_code(404);
+    
+    // Trigger 404 error hook for monitoring
+    fcms_do_hook('404_error', $_SERVER['REQUEST_URI']);
+    
     $contentFile = CONTENT_DIR . '/404.md';
     error_log("Looking for 404 file: " . $contentFile);
     if (!file_exists($contentFile)) {

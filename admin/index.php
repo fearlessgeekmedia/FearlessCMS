@@ -443,6 +443,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
+// Handle theme options form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_theme_options') {
+    if (!isLoggedIn()) {
+        $error = 'You must be logged in to edit theme options';
+    } else {
+        $themeOptionsFile = CONFIG_DIR . '/theme_options.json';
+        $themeOptions = file_exists($themeOptionsFile) ? json_decode(file_get_contents($themeOptionsFile), true) : [];
+        
+        // Update theme options
+        $themeOptions['author_name'] = $_POST['author_name'] ?? '';
+        $themeOptions['author_avatar'] = $_POST['author_avatar'] ?? '';
+        $themeOptions['avatar_size'] = $_POST['avatar_size'] ?? 'size-m';
+        $themeOptions['avatar_first'] = isset($_POST['avatar_first']);
+        $themeOptions['user'] = $_POST['user'] ?? 'user';
+        $themeOptions['hostname'] = $_POST['hostname'] ?? 'localhost';
+        $themeOptions['footer_html'] = $_POST['footer_html'] ?? '';
+        $themeOptions['color_scheme'] = $_POST['color_scheme'] ?? 'blue';
+        
+        // Handle social links
+        $socialLinks = [];
+        if (isset($_POST['social_name']) && is_array($_POST['social_name'])) {
+            for ($i = 0; $i < count($_POST['social_name']); $i++) {
+                if (!empty($_POST['social_name'][$i]) && !empty($_POST['social_url'][$i])) {
+                    $socialLinks[] = [
+                        'name' => $_POST['social_name'][$i],
+                        'url' => $_POST['social_url'][$i],
+                        'icon' => $_POST['social_icon'][$i] ?? '',
+                        'target' => $_POST['social_target'][$i] ?? '',
+                        'aria' => $_POST['social_aria'][$i] ?? '',
+                        'rel' => $_POST['social_rel'][$i] ?? ''
+                    ];
+                }
+            }
+        }
+        $themeOptions['social_links'] = $socialLinks;
+        
+        // Save options
+        if (file_put_contents($themeOptionsFile, json_encode($themeOptions, JSON_PRETTY_PRINT))) {
+            $success = 'Theme options updated successfully!';
+        } else {
+            $error = 'Failed to save theme options';
+        }
+    }
+}
+
 // Map actions to their template files
 $template_map = [
     'dashboard' => 'dashboard.php',
