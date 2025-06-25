@@ -3,6 +3,11 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+// Start session if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once __DIR__ . '/includes/config.php';
 require_once PROJECT_ROOT . '/includes/ThemeManager.php';
 require_once PROJECT_ROOT . '/includes/MenuManager.php';
@@ -58,12 +63,16 @@ if (strpos($requestPath, '_preview/') === 0) {
         // Get site name from config
         $configFile = CONFIG_DIR . '/config.json';
         $siteName = 'FearlessCMS';
+        $siteDescription = '';
         $custom_css = '';
         $custom_js = '';
         if (file_exists($configFile)) {
             $config = json_decode(file_get_contents($configFile), true);
             if (isset($config['site_name'])) {
                 $siteName = $config['site_name'];
+            }
+            if (isset($config['site_description'])) {
+                $siteDescription = $config['site_description'];
             }
             if (isset($config['custom_css'])) {
                 $custom_css = $config['custom_css'];
@@ -100,6 +109,7 @@ if (strpos($requestPath, '_preview/') === 0) {
             'title' => $pageTitle,
             'content' => $pageContentHtml,
             'siteName' => $siteName,
+            'siteDescription' => $siteDescription,
             'currentYear' => date('Y'),
             'logo' => $themeOptions['logo'] ?? null,
             'heroBanner' => $themeOptions['herobanner'] ?? null,
@@ -157,12 +167,16 @@ if ($handled) {
     // Get site name from config
     $configFile = CONFIG_DIR . '/config.json';
     $siteName = 'FearlessCMS';
+    $siteDescription = '';
     $custom_css = '';
     $custom_js = '';
     if (file_exists($configFile)) {
         $config = json_decode(file_get_contents($configFile), true);
         if (isset($config['site_name'])) {
             $siteName = $config['site_name'];
+        }
+        if (isset($config['site_description'])) {
+            $siteDescription = $config['site_description'];
         }
         if (isset($config['custom_css'])) {
             $custom_css = $config['custom_css'];
@@ -203,6 +217,7 @@ if ($handled) {
         'title' => $title,
         'content' => $content,
         'siteName' => $siteName,
+        'siteDescription' => $siteDescription,
         'currentYear' => date('Y'),
         'logo' => $themeOptions['logo'] ?? null,
         'heroBanner' => $themeOptions['herobanner'] ?? null,
@@ -265,6 +280,10 @@ if (!file_exists($contentFile)) {
 if (!file_exists($contentFile)) {
     error_log("No content file found, showing 404");
     http_response_code(404);
+    
+    // Trigger 404 error hook for monitoring
+    fcms_do_hook('404_error', $_SERVER['REQUEST_URI']);
+    
     $contentFile = CONTENT_DIR . '/404.md';
     error_log("Looking for 404 file: " . $contentFile);
     if (!file_exists($contentFile)) {
@@ -295,6 +314,7 @@ if (!file_exists($contentFile)) {
             'title' => $pageTitle,
             'content' => $pageContent,
             'siteName' => 'FearlessCMS',
+            'siteDescription' => '',
             'currentYear' => date('Y'),
             'logo' => $themeOptions['logo'] ?? null,
             'heroBanner' => $themeOptions['herobanner'] ?? null,
@@ -338,18 +358,25 @@ if (!class_exists('Parsedown')) {
 $Parsedown = new Parsedown();
 $pageContentHtml = $Parsedown->text($pageContent);
 
+// Apply content filters
+$pageContentHtml = fcms_apply_filter('content', $pageContentHtml);
+
 // --- Theme and template ---
 $themeManager = new ThemeManager();
 
 // --- Get site name ---
 $configFile = CONFIG_DIR . '/config.json';
 $siteName = 'FearlessCMS';
+$siteDescription = '';
 $custom_css = '';
 $custom_js = '';
 if (file_exists($configFile)) {
     $config = json_decode(file_get_contents($configFile), true);
     if (isset($config['site_name'])) {
         $siteName = $config['site_name'];
+    }
+    if (isset($config['site_description'])) {
+        $siteDescription = $config['site_description'];
     }
     if (isset($config['custom_css'])) {
         $custom_css = $config['custom_css'];
@@ -381,6 +408,7 @@ $templateData = [
     'title' => $pageTitle,
     'content' => $pageContentHtml,
     'siteName' => $siteName,
+    'siteDescription' => $siteDescription,
     'currentYear' => date('Y'),
     'logo' => $themeOptions['logo'] ?? null,
     'heroBanner' => $themeOptions['herobanner'] ?? null,

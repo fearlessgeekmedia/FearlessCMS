@@ -27,7 +27,13 @@ class WidgetManager {
     private function renderWidget($widget) {
         $type = $widget['type'] ?? '';
         $title = htmlspecialchars($widget['title'] ?? '');
-        $content = htmlspecialchars($widget['content'] ?? '');
+        
+        // For HTML widgets, don't escape the content
+        if ($type === 'html') {
+            $content = $widget['content'] ?? '';
+        } else {
+            $content = htmlspecialchars($widget['content'] ?? '');
+        }
 
         $html = '<div class="widget widget-' . htmlspecialchars($type) . '">';
         if ($title) {

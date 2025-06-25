@@ -50,7 +50,9 @@ class TemplateRenderer {
             'current_year' => date('Y'),
             'mainMenu' => $this->menuManager->renderMenu('main'),
             'custom_css' => $data['custom_css'] ?? '',
-            'custom_js' => $data['custom_js'] ?? ''
+            'custom_js' => $data['custom_js'] ?? '',
+            'themeOptions' => $this->themeOptions,
+            'theme_options' => $this->themeOptions
         ];
 
         // Merge with any additional data
@@ -72,6 +74,12 @@ class TemplateRenderer {
     private function replaceVariables($content, $data) {
         error_log("Template content before processing: " . $content);
         
+        // Handle module includes first ({{module=filename.html}})
+        $content = preg_replace_callback('/{{module=([^}]+)}}/', function($matches) use ($data) {
+            $moduleFile = trim($matches[1]);
+            return $this->includeModule($moduleFile, $data);
+        }, $content);
+        
         // Handle special tags first
         // Handle sidebar syntax (only {{sidebar=name}} form)
         $content = preg_replace_callback('/{{sidebar=([^}]+)}}/', function($matches) {
@@ -85,6 +93,42 @@ class TemplateRenderer {
             return $this->menuManager->renderMenu($menuId);
         }, $content);
 
+        // Handle themeOptions access ({{themeOptions.key}})
+        $content = preg_replace_callback('/{{themeOptions\.([^}]+)}}/', function($matches) use ($data) {
+            $key = trim($matches[1]);
+            return $data['themeOptions'][$key] ?? '';
+        }, $content);
+
+        // Handle foreach loops for arrays ({{#each array}}...{{/each}})
+        $content = preg_replace_callback('/{{#each\s+([^}]+)}}(.*?){{\/each}}/s', function($matches) use ($data) {
+            $arrayKey = trim($matches[1]);
+            $loopContent = $matches[2];
+            
+            // Check for themeOptions.array format
+            if (preg_match('/^themeOptions\.(.+)$/', $arrayKey, $themeMatches)) {
+                $key = $themeMatches[1];
+                $array = $data['themeOptions'][$key] ?? [];
+            } else {
+                $array = $data[$arrayKey] ?? [];
+            }
+            
+            if (!is_array($array)) {
+                return '';
+            }
+            
+            $result = '';
+            foreach ($array as $item) {
+                $itemContent = $loopContent;
+                // Replace {{key}} with item values
+                foreach ($item as $itemKey => $itemValue) {
+                    $itemContent = str_replace('{{' . $itemKey . '}}', $itemValue, $itemContent);
+                }
+                $result .= $itemContent;
+            }
+            
+            return $result;
+        }, $content);
+
         // Handle if conditions with else blocks (run multiple times for nested blocks)
         for ($i = 0; $i < 5; $i++) {
             $newContent = preg_replace_callback(
@@ -95,11 +139,17 @@ class TemplateRenderer {
                     $elseContent = $matches[3] ?? '';
                     $snakeCase = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $condition));
                     $conditionMet = false;
-                    if (isset($data[$condition])) {
+                    
+                    // Check for themeOptions.key format
+                    if (preg_match('/^themeOptions\.(.+)$/', $condition, $themeMatches)) {
+                        $key = $themeMatches[1];
+                        $conditionMet = !empty($data['themeOptions'][$key]);
+                    } elseif (isset($data[$condition])) {
                         $conditionMet = !empty($data[$condition]);
                     } elseif (isset($data[$snakeCase])) {
                         $conditionMet = !empty($data[$snakeCase]);
                     }
+                    
                     if ($conditionMet) {
                         return $this->replaceVariables($ifContent, $data);
                     } else {
@@ -141,5 +191,33 @@ class TemplateRenderer {
         }
 
         return $content;
+    }
+
+    /**
+     * Include a module template file
+     * 
+     * @param string $moduleFile The module file name (e.g., "header.html")
+     * @param array $data The template data to pass to the module
+     * @return string The rendered module content
+     */
+    private function includeModule($moduleFile, $data) {
+        // Look for the module file in the current theme's templates directory
+        $modulePath = PROJECT_ROOT . '/themes/' . $this->theme . '/templates/' . $moduleFile;
+        
+        // If the file doesn't have an extension, try adding .html
+        if (!file_exists($modulePath) && !pathinfo($moduleFile, PATHINFO_EXTENSION)) {
+            $modulePath .= '.html';
+        }
+        
+        if (!file_exists($modulePath)) {
+            error_log("Module file not found: " . $modulePath);
+            return "<!-- Module not found: $moduleFile -->";
+        }
+        
+        // Read the module content
+        $moduleContent = file_get_contents($modulePath);
+        
+        // Process the module content with the same data
+        return $this->replaceVariables($moduleContent, $data);
     }
 } 

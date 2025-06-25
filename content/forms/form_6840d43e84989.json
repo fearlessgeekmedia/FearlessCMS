@@ -1,0 +1,32 @@
+{
+    "id": "form_6840d43e84989",
+    "title": "Form",
+    "description": "A form",
+    "email_recipients": [
+        "service@fearlessgeekmedia.com"
+    ],
+    "email_from": "service@fearlessgeekmedia.com",
+    "fields": [
+        {
+            "id": "field_0",
+            "label": "test input",
+            "type": "text",
+            "required": false,
+            "options": ""
+        },
+        {
+            "id": "field_1",
+            "label": "test e-mail",
+            "type": "email",
+            "required": false,
+            "options": ""
+        },
+        {
+            "id": "field_2",
+            "label": "test message",
+            "type": "textarea",
+            "required": false,
+            "options": ""
+        }
+    ]
+}

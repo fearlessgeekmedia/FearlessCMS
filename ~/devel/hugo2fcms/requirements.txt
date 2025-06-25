@@ -1,0 +1,7 @@
+# Hugo to FearlessCMS Theme Converter
+# No external dependencies required
+
+# Optional: For development and testing
+# pytest>=6.0.0
+# black>=21.0.0
+# flake8>=3.8.0 

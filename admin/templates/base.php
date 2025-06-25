@@ -1,11 +1,6 @@
 <?php
 error_log("Base template - Current session: " . print_r($_SESSION, true));
 require_once dirname(dirname(__DIR__)) . '/version.php';
-
-// Load configuration
-$configFile = CONFIG_DIR . '/config.json';
-$config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
-$adminPath = $config['admin_path'] ?? 'admin';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -40,25 +35,25 @@ $adminPath = $config['admin_path'] ?? 'admin';
                 <?php 
                 // Add admin sections to navigation
                 $admin_sections = fcms_get_admin_sections();
+                error_log("Rendering admin sections: " . print_r($admin_sections, true));
+                
                 foreach ($admin_sections as $id => $section) {
+                    error_log("Processing section: " . $id . " - " . print_r($section, true));
                     if (isset($section['children'])) {
-                        // This is a parent menu with children
-                        echo '<div class="relative group">';
-                        echo '<a href="/' . $adminPath . '?action=manage_plugins" class="hover:text-green-200">' . htmlspecialchars($section['label']) . '</a>';
-                        echo '<div class="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-in-out z-50">';
-                        // Add the main plugins page as the first item
-                        echo '<a href="/' . $adminPath . '?action=manage_plugins" class="block px-4 py-2 text-gray-800 hover:bg-green-100 border-b border-gray-200">Manage Plugins</a>';
+                        // This is a parent section with children
+                        echo '<div class="relative inline-block group">';
+                        echo '<a href="/' . $adminPath . '?action=' . htmlspecialchars($id) . '" class="hover:text-green-200 px-3 py-2">' . htmlspecialchars($section['label']) . '</a>';
+                        echo '<div class="absolute left-0 mt-1 w-48 bg-white rounded-md shadow-lg py-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-in-out z-50">';
                         foreach ($section['children'] as $child_id => $child) {
-                            echo '<a href="/' . $adminPath . '?action=' . htmlspecialchars($child['id']) . '" class="block px-4 py-2 text-gray-800 hover:bg-green-100">' . htmlspecialchars($child['label']) . '</a>';
+                            echo '<a href="/' . $adminPath . '?action=' . htmlspecialchars($child_id) . '" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 whitespace-nowrap">' . htmlspecialchars($child['label']) . '</a>';
                         }
                         echo '</div>';
                         echo '</div>';
                     } else {
-                        // This is a regular menu item
-                        echo '<a href="/' . $adminPath . '?action=' . htmlspecialchars($section['id']) . '" class="hover:text-green-200">' . htmlspecialchars($section['label']) . '</a>';
+                        // This is a standalone section
+                        echo '<a href="/' . $adminPath . '?action=' . htmlspecialchars($id) . '" class="hover:text-green-200 px-3 py-2">' . htmlspecialchars($section['label']) . '</a>';
                     }
                 }
-                if (!empty($plugin_nav_items)) echo $plugin_nav_items; 
                 ?>
                 <div class="flex items-center">
                     <form method="POST" class="inline">
@@ -192,7 +187,7 @@ $adminPath = $config['admin_path'] ?? 'admin';
     
     <!-- Version Bar -->
     <div class="fixed bottom-0 left-0 right-0 bg-gray-800 text-white text-sm py-1 px-4 text-center">
-        FearlessCMS v<?php echo APP_VERSION; ?> | <a href="https://ko-fi.com/fearlessgeekmedia" target="_blank" class="text-green-400 hover:text-green-300">Sponsor FearlessCMS on Ko-Fi</a>
+        FearlessCMS v<?php echo APP_VERSION; ?> | <a href="https://ko-fi.com/fearlessgeekmedia" target="_blank" class="text-green-400 hover:text-green-300">Support FearlessCMS on Ko-fi</a>
     </div>
 </body>
 </html>

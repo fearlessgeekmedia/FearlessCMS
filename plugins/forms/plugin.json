@@ -1,0 +1,7 @@
+{
+    "name": "Forms",
+    "description": "Create and manage forms with submission handling",
+    "version": "1.0.0",
+    "author": "FearlessCMS",
+    "main": "forms.php"
+}

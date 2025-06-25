@@ -35,18 +35,12 @@ if (customJs) {
     fs.writeFileSync(customJsPath, customJs);
 }
 
-// Copy theme assets
-const themeAssetsDir = path.join('themes', theme, 'assets');
-const exportThemeAssetsDir = path.join(exportDir, 'themes', theme, 'assets');
-if (fs.existsSync(themeAssetsDir)) {
-    fs.copySync(themeAssetsDir, exportThemeAssetsDir, { recursive: true });
-}
-
-// Copy theme CSS
-const themeCssFile = path.join('themes', theme, 'style.css');
-const exportThemeCssFile = path.join(exportDir, 'themes', theme, 'style.css');
-if (fs.existsSync(themeCssFile)) {
-    fs.copySync(themeCssFile, exportThemeCssFile);
+// Copy the entire theme directory (css, js, assets, etc)
+const themeDir = path.join('themes', theme);
+const exportThemeDir = path.join(exportDir, 'themes', theme);
+if (fs.existsSync(themeDir)) {
+    fs.copySync(themeDir, exportThemeDir, { recursive: true });
+    console.log(`Copied theme directory: ${themeDir} -> ${exportThemeDir}`);
 }
 
 // Copy site assets
@@ -63,74 +57,87 @@ if (fs.existsSync(uploadsDir)) {
     fs.copySync(uploadsDir, exportUploadsDir, { recursive: true });
 }
 
+// Copy widgets.json for static site
+const widgetsFile = 'config/widgets.json';
+const exportWidgetsFile = path.join(exportDir, 'config', 'widgets.json');
+if (fs.existsSync(widgetsFile)) {
+    fs.mkdirSync(path.dirname(exportWidgetsFile), { recursive: true });
+    fs.copySync(widgetsFile, exportWidgetsFile);
+    console.log('Copied widgets.json to export');
+}
+
+// Read theme options
+const themeOptionsFile = path.join('config', 'theme_options.json');
+let themeOptions = {};
+if (fs.existsSync(themeOptionsFile)) {
+    themeOptions = JSON.parse(fs.readFileSync(themeOptionsFile, 'utf8'));
+}
+
+// Read site configuration
+const configFile = path.join('config', 'config.json');
+let siteConfig = {};
+if (fs.existsSync(configFile)) {
+    siteConfig = JSON.parse(fs.readFileSync(configFile, 'utf8'));
+}
+
 // Generate main menu
 function generateMenu(currentPage = '') {
-    let menuJson;
+    let menusJson;
     try {
-        menuJson = JSON.parse(fs.readFileSync('config/menus.json', 'utf8'));
+        menusJson = JSON.parse(fs.readFileSync('config/menus.json', 'utf8'));
     } catch (error) {
-        console.warn('Warning: Could not read menus.json, using default menu');
-        menuJson = {
-            main: {
-                items: [
-                    { label: 'Home', url: 'home', class: 'nav-link' },
-                    { label: 'About', url: 'about', class: 'nav-link' },
-                    { label: 'Contact', url: 'contact', class: 'nav-link' }
-                ]
-            }
-        };
+        console.warn('Warning: Could not read menus.json, using empty menu');
+        return '';
     }
 
-    // Get the main menu items
-    const menuItems = menuJson.main?.items || menuJson.items || [];
-    
-    // Ensure menuItems is an array
-    if (!Array.isArray(menuItems)) {
-        console.warn('Warning: Invalid menu structure, using default menu');
-        menuItems = [
-            { label: 'Home', url: 'home', class: 'nav-link' },
-            { label: 'About', url: 'about', class: 'nav-link' },
-            { label: 'Contact', url: 'contact', class: 'nav-link' }
-        ];
+    const mainMenu = menusJson.main;
+    if (!mainMenu || !mainMenu.items || !Array.isArray(mainMenu.items)) {
+        console.warn('Warning: Invalid main menu structure, using empty menu');
+        return '';
     }
 
-    let menuHtml = '';
-    menuItems.forEach(item => {
-        // Handle external URLs
-        if (item.url.startsWith('http')) {
-            menuHtml += `<a href="${item.url}" class="${item.class}" ${item.target ? `target="${item.target}"` : ''}>${item.label}</a>`;
-            return;
+    let menuHtml = `<ul class="${mainMenu.menu_class || 'main-nav'}">`;
+    mainMenu.items.forEach(item => {
+        const label = item.label || '';
+        const url = item.url || '#';
+        const className = item.class || '';
+        const target = item.target ? ` target="${item.target}"` : '';
+        
+        menuHtml += `<li class="${item.children && item.children.length > 0 ? 'has-submenu' : ''}">`;
+        menuHtml += `<a href="${url}" class="${className}"${target}>${label}</a>`;
+        
+        // Add submenu if children exist
+        if (item.children && item.children.length > 0) {
+            menuHtml += '<ul class="submenu">';
+            item.children.forEach(child => {
+                const childLabel = child.label || '';
+                const childUrl = child.url || '#';
+                const childClassName = child.class || '';
+                const childTarget = child.target ? ` target="${child.target}"` : '';
+                
+                menuHtml += `<li><a href="${childUrl}" class="${childClassName}"${childTarget}>${childLabel}</a></li>`;
+            });
+            menuHtml += '</ul>';
         }
         
-        // For internal URLs, use absolute paths from root
-        let url = item.url;
-        if (url.startsWith('/')) {
-            url = url.substring(1); // Remove leading slash
-        }
-        
-        // Special case for home page
-        if (url === 'home' || url === '') {
-            url = '/';
-        } else {
-            url = '/' + url + '/';
-        }
-        
-        menuHtml += `<a href="${url}" class="${item.class}" ${item.target ? `target="${item.target}"` : ''}>${item.label}</a>`;
+        menuHtml += '</li>';
     });
+    menuHtml += '</ul>';
+    
     return menuHtml;
 }
 
 // Generate sidebar
 function generateSidebar(sidebarName) {
-    let sidebarJson;
+    let widgetsJson;
     try {
-        sidebarJson = JSON.parse(fs.readFileSync('config/sidebars.json', 'utf8'));
+        widgetsJson = JSON.parse(fs.readFileSync('config/widgets.json', 'utf8'));
     } catch (error) {
-        console.warn('Warning: Could not read sidebars.json, using empty sidebar');
+        console.warn('Warning: Could not read widgets.json, using empty sidebar');
         return '';
     }
 
-    const sidebar = sidebarJson[sidebarName];
+    const sidebar = widgetsJson[sidebarName];
     if (!sidebar || !sidebar.widgets || !Array.isArray(sidebar.widgets)) {
         console.warn(`Warning: Invalid sidebar structure for ${sidebarName}, using empty sidebar`);
         return '';
@@ -138,9 +145,20 @@ function generateSidebar(sidebarName) {
 
     let sidebarHtml = '';
     sidebar.widgets.forEach(widget => {
-        sidebarHtml += `<div class="widget widget-${widget.type}">`;
-        sidebarHtml += `<h3 class="widget-title">${widget.title}</h3>`;
-        sidebarHtml += `<div class="widget-content">${widget.content}</div>`;
+        const type = widget.type || 'text';
+        const title = widget.title || '';
+        let content = widget.content || '';
+        
+        // For HTML widgets, don't escape the content
+        if (type !== 'html') {
+            content = content.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+        
+        sidebarHtml += `<div class="widget widget-${type}">`;
+        if (title) {
+            sidebarHtml += `<h3 class="widget-title">${title}</h3>`;
+        }
+        sidebarHtml += `<div class="widget-content">${content}</div>`;
         sidebarHtml += '</div>';
     });
     return sidebarHtml;
@@ -194,12 +212,13 @@ function processContentDirectory(dir, basePath = '') {
         // Extract sidebar name from template
         const sidebarMatch = templateContent.match(/{{sidebar=([^}]+)}}/);
         const templateSidebar = sidebarMatch ? sidebarMatch[1] : null;
-        const sidebarName = metadata.sidebar || templateSidebar;
+        // Use template sidebar if metadata explicitly requests one, or if template is designed for sidebars
+        const sidebarName = metadata.sidebar || (template === 'sidebar-only' ? templateSidebar : null);
 
         // Replace custom syntax with Handlebars syntax
         templateContent = templateContent.replace(/{{sidebar=([^}]+)}}/g, '{{{sidebar}}}');
+        templateContent = templateContent.replace(/{{menu=([^}]+)}}/g, '{{{mainMenu}}}');
         templateContent = templateContent.replace(/{{content}}/g, '{{{content}}}');
-        templateContent = templateContent.replace(/{{mainMenu}}/g, '{{{mainMenu}}}');
 
         // Compile template
         const compiledTemplate = handlebars.compile(templateContent);
@@ -207,14 +226,15 @@ function processContentDirectory(dir, basePath = '') {
         // Generate menu and sidebar
         const mainMenu = generateMenu(basePath ? `${basePath}/${filename}` : filename);
         const sidebarContent = sidebarName ? generateSidebar(sidebarName) : '';
+        const hasSidebar = sidebarContent && sidebarContent.trim() !== '';
 
         // Convert markdown to HTML
         const markdownContent = content.replace(/^<!--\s*json\s*.*?-->\n/, '');
         const htmlContent = marked(markdownContent);
 
-        // Use default logo and heroBanner if not set in metadata
-        const logoValue = logo ? `uploads/theme/${logo}` : 'uploads/theme/logo.png';
-        const heroBannerValue = heroBanner ? `uploads/theme/${heroBanner}` : 'uploads/theme/herobanner.jpg';
+        // Use logo and heroBanner from metadata or theme options
+        const logoValue = logo ? `uploads/theme/${logo}` : themeOptions.logo || '';
+        const heroBannerValue = heroBanner ? `uploads/theme/${heroBanner}` : themeOptions.herobanner || '';
 
         // Debug output for logo and heroBanner
         console.log(`DEBUG: For page '${filename}': logo='${logoValue}', heroBanner='${heroBannerValue}'`);
@@ -236,22 +256,6 @@ function processContentDirectory(dir, basePath = '') {
             appendSiteTitle: seoSettings.append_site_title !== false
         });
 
-        // Render template
-        let renderedHtml = compiledTemplate({
-            title: pageTitle,
-            siteName,
-            theme,
-            currentYear: new Date().getFullYear(),
-            custom_css: customCss,
-            custom_js: customJs,
-            mainMenu,
-            sidebar: sidebarContent,
-            content: htmlContent,
-            heroBanner: heroBannerValue,
-            logo: logoValue,
-            metaTags
-        });
-
         // Determine export path based on parent-child relationships
         let exportFilePath;
         if (filename === 'home' && basePath === '') {
@@ -268,7 +272,35 @@ function processContentDirectory(dir, basePath = '') {
                 exportFilePath = path.join(exportDir, filename, 'index.html');
             }
         }
+
+        // Calculate page depth for relative paths
+        const pageDepth = calculatePageDepth(exportFilePath);
         
+        // Render template
+        let renderedHtml = compiledTemplate({
+            title: pageTitle,
+            siteName,
+            siteDescription: siteConfig.site_description || '',
+            theme,
+            currentYear: new Date().getFullYear(),
+            custom_css: customCss,
+            custom_js: customJs,
+            mainMenu,
+            sidebar: hasSidebar ? sidebarContent : false,
+            content: htmlContent,
+            heroBanner: heroBannerValue,
+            logo: logoValue,
+            metaTags
+        });
+
+        // Convert absolute paths to relative paths
+        renderedHtml = renderedHtml.replace(/href="\/themes\/([^"]+)"/g, `href="${makeRelativePath('/themes/$1', pageDepth)}"`);
+        renderedHtml = renderedHtml.replace(/src="\/themes\/([^"]+)"/g, `src="${makeRelativePath('/themes/$1', pageDepth)}"`);
+        renderedHtml = renderedHtml.replace(/href="\/uploads\/([^"]+)"/g, `href="${makeRelativePath('/uploads/$1', pageDepth)}"`);
+        renderedHtml = renderedHtml.replace(/src="\/uploads\/([^"]+)"/g, `src="${makeRelativePath('/uploads/$1', pageDepth)}"`);
+        renderedHtml = renderedHtml.replace(/href="\/assets\/([^"]+)"/g, `href="${makeRelativePath('/assets/$1', pageDepth)}"`);
+        renderedHtml = renderedHtml.replace(/src="\/assets\/([^"]+)"/g, `src="${makeRelativePath('/assets/$1', pageDepth)}"`);
+
         fs.mkdirSync(path.dirname(exportFilePath), { recursive: true });
         fs.writeFileSync(exportFilePath, renderedHtml);
         console.log(`Created page: ${filename}`);
@@ -294,26 +326,19 @@ if (fs.existsSync(blogPostsFile)) {
         
         // Replace custom syntax with Handlebars syntax
         templateContent = templateContent.replace(/{{sidebar=([^}]+)}}/g, '{{{sidebar}}}');
+        templateContent = templateContent.replace(/{{menu=([^}]+)}}/g, '{{{mainMenu}}}');
         templateContent = templateContent.replace(/{{content}}/g, '{{{content}}}');
-        templateContent = templateContent.replace(/{{mainMenu}}/g, '{{{mainMenu}}}');
-        
+
         const compiledTemplate = handlebars.compile(templateContent);
         
-        // Generate blog index content
-        let blogIndexContent = '<div class="max-w-4xl mx-auto px-4 py-8">';
-        blogIndexContent += '<h1 class="text-3xl font-bold mb-8">Blog Posts</h1>';
-        blogIndexContent += '<div class="space-y-8">';
-        
+        // Generate blog index content - let the theme template handle styling
+        let blogIndexContent = '';
         publishedPosts.forEach(post => {
-            blogIndexContent += '<article class="border-b pb-8">';
-            blogIndexContent += `<h2 class="text-2xl font-bold mb-2"><a href="/blog/${post.slug}/" class="text-blue-600 hover:underline">${post.title}</a></h2>`;
-            blogIndexContent += `<div class="text-gray-600 mb-4">${post.date}</div>`;
-            blogIndexContent += `<div class="prose">${marked(post.content.substring(0, 300) + '...')}</div>`;
-            blogIndexContent += `<a href="/blog/${post.slug}/" class="text-blue-600 hover:underline mt-4 inline-block">Read more →</a>`;
-            blogIndexContent += '</article>';
+            blogIndexContent += `<article><h2><a href="/blog/${post.slug}/">${post.title}</a></h2>`;
+            blogIndexContent += `<div>${post.date}</div>`;
+            blogIndexContent += `<div>${marked(post.content.substring(0, 300) + '...')}</div>`;
+            blogIndexContent += `<a href="/blog/${post.slug}/">Read more →</a></article>`;
         });
-        
-        blogIndexContent += '</div></div>';
         
         // Generate menu and sidebar
         const mainMenu = generateMenu('blog');
@@ -340,6 +365,7 @@ if (fs.existsSync(blogPostsFile)) {
         const renderedHtml = compiledTemplate({
             title: 'Blog',
             siteName,
+            siteDescription: siteConfig.site_description || '',
             theme,
             currentYear: new Date().getFullYear(),
             custom_css: customCss,
@@ -347,15 +373,25 @@ if (fs.existsSync(blogPostsFile)) {
             mainMenu,
             sidebar: sidebarContent,
             content: blogIndexContent,
-            heroBanner: 'uploads/theme/herobanner.jpg',
-            logo: 'uploads/theme/logo.png',
+            heroBanner: themeOptions.herobanner || '',
+            logo: themeOptions.logo || '',
             metaTags
         });
+
+        // Convert absolute paths to relative paths for blog index
+        const blogIndexDepth = 1; // blog/index.html is one level deep
+        let processedBlogHtml = renderedHtml;
+        processedBlogHtml = processedBlogHtml.replace(/href="\/themes\/([^"]+)"/g, `href="${makeRelativePath('/themes/$1', blogIndexDepth)}"`);
+        processedBlogHtml = processedBlogHtml.replace(/src="\/themes\/([^"]+)"/g, `src="${makeRelativePath('/themes/$1', blogIndexDepth)}"`);
+        processedBlogHtml = processedBlogHtml.replace(/href="\/uploads\/([^"]+)"/g, `href="${makeRelativePath('/uploads/$1', blogIndexDepth)}"`);
+        processedBlogHtml = processedBlogHtml.replace(/src="\/uploads\/([^"]+)"/g, `src="${makeRelativePath('/uploads/$1', blogIndexDepth)}"`);
+        processedBlogHtml = processedBlogHtml.replace(/href="\/assets\/([^"]+)"/g, `href="${makeRelativePath('/assets/$1', blogIndexDepth)}"`);
+        processedBlogHtml = processedBlogHtml.replace(/src="\/assets\/([^"]+)"/g, `src="${makeRelativePath('/assets/$1', blogIndexDepth)}"`);
         
         // Write blog index
         const blogIndexPath = path.join(exportDir, 'blog', 'index.html');
         fs.mkdirSync(path.dirname(blogIndexPath), { recursive: true });
-        fs.writeFileSync(blogIndexPath, renderedHtml);
+        fs.writeFileSync(blogIndexPath, processedBlogHtml);
         console.log('Created blog index page');
         
         // Create individual blog post pages
@@ -376,26 +412,33 @@ if (fs.existsSync(blogPostsFile)) {
             const postHtml = compiledTemplate({
                 title: post.title,
                 siteName,
+                siteDescription: siteConfig.site_description || '',
                 theme,
                 currentYear: new Date().getFullYear(),
                 custom_css: customCss,
                 custom_js: customJs,
                 mainMenu,
                 sidebar: sidebarContent,
-                content: `<article class="max-w-4xl mx-auto px-4 py-8">
-                    <h1 class="text-3xl font-bold mb-4">${post.title}</h1>
-                    <div class="text-gray-600 mb-8">${post.date}</div>
-                    <div class="prose">${postContent}</div>
-                </article>`,
-                heroBanner: 'uploads/theme/herobanner.jpg',
-                logo: 'uploads/theme/logo.png',
+                content: postContent,
+                heroBanner: themeOptions.herobanner || '',
+                logo: themeOptions.logo || '',
                 metaTags: postMetaTags
             });
+            
+            // Convert absolute paths to relative paths for blog posts
+            const blogPostDepth = 2; // blog/post-slug/index.html is two levels deep
+            let processedPostHtml = postHtml;
+            processedPostHtml = processedPostHtml.replace(/href="\/themes\/([^"]+)"/g, `href="${makeRelativePath('/themes/$1', blogPostDepth)}"`);
+            processedPostHtml = processedPostHtml.replace(/src="\/themes\/([^"]+)"/g, `src="${makeRelativePath('/themes/$1', blogPostDepth)}"`);
+            processedPostHtml = processedPostHtml.replace(/href="\/uploads\/([^"]+)"/g, `href="${makeRelativePath('/uploads/$1', blogPostDepth)}"`);
+            processedPostHtml = processedPostHtml.replace(/src="\/uploads\/([^"]+)"/g, `src="${makeRelativePath('/uploads/$1', blogPostDepth)}"`);
+            processedPostHtml = processedPostHtml.replace(/href="\/assets\/([^"]+)"/g, `href="${makeRelativePath('/assets/$1', blogPostDepth)}"`);
+            processedPostHtml = processedPostHtml.replace(/src="\/assets\/([^"]+)"/g, `src="${makeRelativePath('/assets/$1', blogPostDepth)}"`);
             
             // Write blog post
             const postPath = path.join(exportDir, 'blog', post.slug, 'index.html');
             fs.mkdirSync(path.dirname(postPath), { recursive: true });
-            fs.writeFileSync(postPath, postHtml);
+            fs.writeFileSync(postPath, processedPostHtml);
             console.log(`Created blog post: ${post.slug}`);
         });
     } else {
@@ -448,4 +491,21 @@ function buildMetaTags({ title, description, socialImage, siteTitle, titleSepara
     }
     
     return metaTags;
+}
+
+// Helper function to convert absolute paths to relative paths
+function makeRelativePath(absolutePath, currentDepth = 0) {
+    if (!absolutePath.startsWith('/')) {
+        return absolutePath;
+    }
+    
+    const relativePath = '../'.repeat(currentDepth) + absolutePath.substring(1);
+    return relativePath;
+}
+
+// Helper function to calculate page depth
+function calculatePageDepth(exportPath) {
+    const relativePath = path.relative(exportDir, exportPath);
+    const depth = relativePath.split(path.sep).length - 1;
+    return depth;
 }

@@ -1,3 +1,10 @@
+// Register file manager admin section
+fcms_register_admin_section('files', [
+    'label' => 'Files',
+    'menu_order' => 50,
+    'render_callback' => 'fcms_render_file_manager'
+]);
+
 function fcms_render_file_manager() {
     $uploadsDir = dirname(__DIR__) . '/uploads';
     $webUploadsDir = '/uploads';
@@ -102,11 +109,26 @@ function fcms_render_file_manager() {
                         <button type="submit" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">Delete</button>
                     </form>
                     <a href="<?= htmlspecialchars($file['url']) ?>" download class="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600 ml-2">Download</a>
+                    <?php if (strpos($file['type'], 'image/') === 0): ?>
+                    <button onclick="selectFile('<?= htmlspecialchars($file['url']) ?>')" class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 ml-2">Select</button>
+                    <?php endif; ?>
                 </td>
             </tr>
         <?php endforeach; ?>
         </tbody>
     </table>
+
+    <script>
+    function selectFile(url) {
+        if (window.opener) {
+            window.opener.postMessage({
+                type: 'file_selected',
+                url: url
+            }, '*');
+            window.close();
+        }
+    }
+    </script>
     <?php
     return ob_get_clean();
 }

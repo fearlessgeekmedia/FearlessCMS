@@ -118,23 +118,11 @@ function deletePlugin(slug) {
     formData.append('action', 'delete_plugin');
     formData.append('plugin_slug', slug);
     
-    fetch('/admin/store-handler.php', {
+    fetch(window.location.href, {
         method: 'POST',
         body: formData
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.text().then(text => {
-            try {
-                return JSON.parse(text);
-            } catch (e) {
-                console.error('Response text:', text);
-                throw new Error('Invalid JSON response from server');
-            }
-        });
-    })
+    .then(response => response.json())
     .then(result => {
         if (result.success) {
             alert('Plugin deleted successfully!');
@@ -145,7 +133,7 @@ function deletePlugin(slug) {
     })
     .catch(error => {
         console.error('Error deleting plugin:', error);
-        alert('Error deleting plugin: ' + error.message);
+        alert('Error deleting plugin. Please try again.');
     });
 }
 

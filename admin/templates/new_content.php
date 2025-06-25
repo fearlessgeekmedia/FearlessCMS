@@ -1,17 +1,20 @@
 <?php
 // Get available templates
 $templates = [];
-$activeTheme = $themeManager->getActiveTheme();
-$templateDir = PROJECT_ROOT . '/themes/' . $activeTheme . '/templates';
-
-// Get all template files
-$templateFiles = glob($templateDir . '/*.html');
-foreach ($templateFiles as $template) {
-    $templateName = basename($template, '.html');
-    if ($templateName !== '404') { // Exclude 404 template
-        $templates[] = $templateName;
+$templateDir = PROJECT_ROOT . '/themes/' . ($themeManager->getActiveTheme() ?? 'punk_rock') . '/templates';
+if (is_dir($templateDir)) {
+    foreach (glob($templateDir . '/*.html') as $template) {
+        $templateName = basename($template, '.html');
+        if ($templateName !== '404') { // Exclude 404 template
+            $templates[] = $templateName;
+        }
     }
 }
+
+// Debug output
+error_log("New content template - Active theme: " . ($themeManager->getActiveTheme() ?? 'NOT AVAILABLE'));
+error_log("New content template - Template directory: " . $templateDir);
+error_log("New content template - Templates found: " . print_r($templates, true));
 
 // Get all content files for parent selection
 $contentFiles = glob(CONTENT_DIR . '/*.md');
@@ -30,6 +33,9 @@ foreach ($contentFiles as $file) {
     }
     $pages[basename($file, '.md')] = $pageTitle;
 }
+
+// Debug log
+error_log("Available templates: " . print_r($templates, true));
 ?>
 
 <div class="bg-white shadow rounded-lg p-6">
@@ -40,57 +46,63 @@ foreach ($contentFiles as $file) {
         </div>
     </div>
 
-    <form method="POST" id="editForm" class="space-y-6">
-        <input type="hidden" name="action" value="save_content">
+    <form method="POST" action="?action=create_page" id="editForm" class="space-y-6">
+        <input type="hidden" name="action" value="create_page">
         
         <div class="grid grid-cols-2 gap-6">
             <div>
                 <label class="block mb-2">Title</label>
-                <input type="text" name="title" required class="w-full px-3 py-2 border border-gray-300 rounded">
+                <input type="text" name="page_title" required class="w-full px-3 py-2 border border-gray-300 rounded">
             </div>
             <div>
                 <label class="block mb-2">URL Slug</label>
-                <input type="text" name="path" required pattern="[a-z0-9-]+" title="Only lowercase letters, numbers, and hyphens allowed" class="w-full px-3 py-2 border border-gray-300 rounded">
+                <input type="text" name="new_page_filename" required pattern="[a-z0-9\-]+" title="Only lowercase letters, numbers, and hyphens allowed" class="w-full px-3 py-2 border border-gray-300 rounded">
                 <p class="text-sm text-gray-500 mt-1">Use lowercase letters, numbers, and hyphens only</p>
             </div>
         </div>
 
         <div class="grid grid-cols-2 gap-6">
-        <div>
-            <label class="block mb-2">Parent Page</label>
-            <select name="parent" class="w-full px-3 py-2 border border-gray-300 rounded">
-                <option value="">None (Top Level)</option>
-                <?php foreach ($pages as $pagePath => $pageTitle): ?>
-                    <option value="<?php echo htmlspecialchars($pagePath); ?>">
-                        <?php echo htmlspecialchars($pageTitle); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
+            <div>
+                <label class="block mb-2">Parent Page</label>
+                <select name="parent_page" class="w-full px-3 py-2 border border-gray-300 rounded">
+                    <option value="">None (Top Level)</option>
+                    <?php foreach ($pages as $pagePath => $pageTitle): ?>
+                        <option value="<?php echo htmlspecialchars($pagePath); ?>">
+                            <?php echo htmlspecialchars($pageTitle); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
             </div>
             <div>
                 <label class="block mb-2">Template</label>
                 <select name="template" class="w-full px-3 py-2 border border-gray-300 rounded">
-                    <?php foreach ($templates as $template): ?>
-                        <option value="<?php echo htmlspecialchars($template); ?>">
-                            <?php echo ucfirst(htmlspecialchars($template)); ?>
-                        </option>
-                    <?php endforeach; ?>
+                    <?php if (empty($templates)): ?>
+                        <option value="page">Page (No templates found)</option>
+                    <?php else: ?>
+                        <?php foreach ($templates as $template): ?>
+                            <option value="<?php echo htmlspecialchars($template); ?>">
+                                <?php echo ucfirst(htmlspecialchars($template)); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </select>
+                <?php if (empty($templates)): ?>
+                    <p class="text-sm text-red-500 mt-1">Debug: No templates found. Template dir: <?php echo htmlspecialchars($templateDir); ?></p>
+                <?php else: ?>
+                    <p class="text-sm text-gray-500 mt-1">Found <?php echo count($templates); ?> templates</p>
+                <?php endif; ?>
             </div>
         </div>
 
         <div>
             <label class="block mb-2">Content</label>
             <div id="editor" style="height: 600px;"></div>
-            <input type="hidden" name="content" id="content">
+            <input type="hidden" name="new_page_content" id="content">
         </div>
 
         <div class="flex justify-end gap-4">
-            <div class="space-x-2">
-                <button type="button" id="preview-button" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Preview</button>
-                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Create Page</button>
-            </div>
             <button type="button" onclick="window.location.href='?action=dashboard'" class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">Cancel</button>
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Create Page</button>
         </div>
     </form>
 </div>
@@ -115,41 +127,9 @@ document.addEventListener('DOMContentLoaded', function() {
         ]
     });
 
-    // Preview button functionality
-    document.getElementById('preview-button').addEventListener('click', function() {
-        const markdownContent = editor.getMarkdown();
-        const title = document.querySelector('input[name="title"]').value;
-        const template = document.querySelector('select[name="template"]').value;
-        
-        // Create a temporary preview file
-        fetch('/admin/preview-handler.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                content: markdownContent,
-                title: title,
-                template: template
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                window.open('/_preview/' + data.path.replace('.md', ''), '_blank');
-            } else {
-                alert('Failed to create preview: ' + data.error);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Failed to create preview');
-        });
-    });
-
     // Generate slug from title
-    const titleInput = document.querySelector('input[name="title"]');
-    const pathInput = document.querySelector('input[name="path"]');
+    const titleInput = document.querySelector('input[name="page_title"]');
+    const pathInput = document.querySelector('input[name="new_page_filename"]');
     titleInput.addEventListener('input', function() {
         if (!pathInput.value) { // Only auto-generate if path is empty
             pathInput.value = this.value
@@ -160,8 +140,19 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Update hidden input before form submission
-    document.getElementById('editForm').addEventListener('submit', function() {
-        document.getElementById('content').value = editor.getMarkdown();
+    document.getElementById('editForm').addEventListener('submit', function(e) {
+        e.preventDefault(); // Prevent default submission
+        const content = editor.getMarkdown();
+        document.getElementById('content').value = content;
+        console.log('Submitting form with data:', {
+            action: this.action,
+            page_title: this.page_title.value,
+            new_page_filename: this.new_page_filename.value,
+            parent_page: this.parent_page.value,
+            template: this.template.value,
+            content_length: content.length
+        });
+        this.submit(); // Submit the form
     });
 });
 </script> 

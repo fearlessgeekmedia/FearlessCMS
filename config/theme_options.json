@@ -1,4 +1,13 @@
 {
-    "herobanner": "uploads\/herobanner_1748391080.jpg",
-    "logo": ""
+    "herobanner": "uploads\/herobanner_1750210656.png",
+    "logo": "",
+    "author_name": "Will",
+    "author_avatar": "",
+    "avatar_size": "size-s",
+    "avatar_first": false,
+    "user": "user",
+    "hostname": "localhost",
+    "footer_html": "",
+    "color_scheme": "blue",
+    "social_links": []
 }

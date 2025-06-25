@@ -3,62 +3,144 @@
 $themeOptionsFile = CONFIG_DIR . '/theme_options.json';
 $themeOptions = file_exists($themeOptionsFile) ? json_decode(file_get_contents($themeOptionsFile), true) : [];
 
-// Check if current theme supports logo and hero banner
+// Load active theme config
 $activeTheme = $themeManager->getActiveTheme();
-$themeDir = PROJECT_ROOT . '/themes/' . $activeTheme;
-$pageTemplate = file_exists($themeDir . '/templates/page.html') ? file_get_contents($themeDir . '/templates/page.html') : '';
-$homeTemplate = file_exists($themeDir . '/templates/home.html') ? file_get_contents($themeDir . '/templates/home.html') : '';
-
-$supportsLogo = (strpos($pageTemplate, '{{logo}}') !== false) || (strpos($homeTemplate, '{{logo}}') !== false);
-$supportsHerobanner = (strpos($pageTemplate, '{{herobanner}}') !== false) || (strpos($homeTemplate, '{{herobanner}}') !== false) ||
-                      (strpos($pageTemplate, '{{heroBanner}}') !== false) || (strpos($homeTemplate, '{{heroBanner}}') !== false);
+$activeThemeConfigFile = THEMES_DIR . "/$activeTheme/config.json";
+$activeThemeConfig = file_exists($activeThemeConfigFile) ? json_decode(file_get_contents($activeThemeConfigFile), true) : [];
+$themeOptionFields = isset($activeThemeConfig['options']) ? $activeThemeConfig['options'] : [];
 ?>
 
 <!-- Theme Management -->
 <div class="space-y-8">
-    <?php if ($supportsLogo || $supportsHerobanner): ?>
-    <!-- Theme Options -->
+    <?php if ($activeTheme === 'nightfall'): ?>
+    <!-- Nightfall Theme Options -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <h3 class="text-lg font-medium mb-4">Nightfall Theme Options</h3>
+        <form method="POST" class="space-y-6">
+            <input type="hidden" name="action" value="save_theme_options">
+            
+            <!-- Author Settings -->
+            <div class="border-b pb-6">
+                <h4 class="text-md font-medium mb-4">Author Settings</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block mb-1">Author Name</label>
+                        <input type="text" name="author_name" value="<?php echo htmlspecialchars($themeOptions['author_name'] ?? ''); ?>" class="w-full px-3 py-2 border border-gray-300 rounded" required>
+                    </div>
+                    <div>
+                        <label class="block mb-1">Avatar Image Path</label>
+                        <input type="text" name="author_avatar" value="<?php echo htmlspecialchars($themeOptions['author_avatar'] ?? ''); ?>" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="uploads/avatar.jpg">
+                        <small class="text-gray-500">Path relative to your site root (e.g., uploads/avatar.jpg)</small>
+                    </div>
+                    <div>
+                        <label class="block mb-1">Avatar Size</label>
+                        <select name="avatar_size" class="w-full px-3 py-2 border border-gray-300 rounded">
+                            <option value="size-s" <?php echo ($themeOptions['avatar_size'] ?? '') === 'size-s' ? 'selected' : ''; ?>>Small (80px)</option>
+                            <option value="size-m" <?php echo ($themeOptions['avatar_size'] ?? '') === 'size-m' ? 'selected' : ''; ?>>Medium (120px)</option>
+                            <option value="size-l" <?php echo ($themeOptions['avatar_size'] ?? '') === 'size-l' ? 'selected' : ''; ?>>Large (160px)</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center">
+                        <label class="flex items-center">
+                            <input type="checkbox" name="avatar_first" <?php echo ($themeOptions['avatar_first'] ?? false) ? 'checked' : ''; ?> class="mr-2">
+                            Show avatar before name
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Terminal Header -->
+            <div class="border-b pb-6">
+                <h4 class="text-md font-medium mb-4">Terminal Header</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block mb-1">Username</label>
+                        <input type="text" name="user" value="<?php echo htmlspecialchars($themeOptions['user'] ?? 'user'); ?>" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="user">
+                    </div>
+                    <div>
+                        <label class="block mb-1">Hostname</label>
+                        <input type="text" name="hostname" value="<?php echo htmlspecialchars($themeOptions['hostname'] ?? 'localhost'); ?>" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="localhost">
+                    </div>
+                </div>
+                <p class="text-sm text-gray-500 mt-2">This will display as: <code><?php echo htmlspecialchars($themeOptions['user'] ?? 'user'); ?>@<?php echo htmlspecialchars($themeOptions['hostname'] ?? 'localhost'); ?> ~ $</code></p>
+            </div>
+            
+            <!-- Social Links -->
+            <div class="border-b pb-6">
+                <h4 class="text-md font-medium mb-4">Social Links</h4>
+                <div id="social-links-container">
+                    <?php foreach (($themeOptions['social_links'] ?? []) as $index => $social): ?>
+                    <div class="social-link-group border rounded p-4 mb-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block mb-1">Name</label>
+                                <input type="text" name="social_name[]" value="<?php echo htmlspecialchars($social['name']); ?>" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="GitHub">
+                            </div>
+                            <div>
+                                <label class="block mb-1">URL</label>
+                                <input type="text" name="social_url[]" value="<?php echo htmlspecialchars($social['url']); ?>" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="https://github.com/username">
+                            </div>
+                            <div>
+                                <label class="block mb-1">Icon Class</label>
+                                <input type="text" name="social_icon[]" value="<?php echo htmlspecialchars($social['icon']); ?>" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="fab fa-github">
+                            </div>
+                            <div>
+                                <label class="block mb-1">Target</label>
+                                <input type="text" name="social_target[]" value="<?php echo htmlspecialchars($social['target']); ?>" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="_blank">
+                            </div>
+                        </div>
+                        <button type="button" class="remove-social-link mt-2 bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">Remove</button>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <button type="button" id="add-social-link" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Add Social Link</button>
+            </div>
+            
+            <!-- Footer -->
+            <div class="border-b pb-6">
+                <h4 class="text-md font-medium mb-4">Footer</h4>
+                <div>
+                    <label class="block mb-1">Custom Footer HTML</label>
+                    <textarea name="footer_html" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="Leave empty for default footer"><?php echo htmlspecialchars($themeOptions['footer_html'] ?? ''); ?></textarea>
+                </div>
+            </div>
+            
+            <!-- Color Scheme -->
+            <div class="pb-6">
+                <h4 class="text-md font-medium mb-4">Color Scheme</h4>
+                <div>
+                    <label class="block mb-1">Primary Color</label>
+                    <select name="color_scheme" class="w-full px-3 py-2 border border-gray-300 rounded">
+                        <option value="blue" <?php echo ($themeOptions['color_scheme'] ?? '') === 'blue' ? 'selected' : ''; ?>>Blue</option>
+                        <option value="orange" <?php echo ($themeOptions['color_scheme'] ?? '') === 'orange' ? 'selected' : ''; ?>>Orange</option>
+                        <option value="green" <?php echo ($themeOptions['color_scheme'] ?? '') === 'green' ? 'selected' : ''; ?>>Green</option>
+                        <option value="red" <?php echo ($themeOptions['color_scheme'] ?? '') === 'red' ? 'selected' : ''; ?>>Red</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">Save Theme Options</button>
+        </form>
+    </div>
+    <?php elseif (!empty($themeOptionFields)): ?>
+    <!-- Generic Theme Options -->
     <div class="bg-white shadow rounded-lg p-6">
         <h3 class="text-lg font-medium mb-4">Theme Options</h3>
         <form id="theme-options-form" class="space-y-4">
-            <?php if ($supportsLogo): ?>
+            <?php foreach ($themeOptionFields as $optionKey => $option):
+                if (!is_array($option) || ($option['type'] ?? '') !== 'image') continue;
+                $label = $option['label'] ?? ucfirst($optionKey);
+            ?>
             <div>
-                <label class="block mb-1">Logo</label>
+                <label class="block mb-1"><?php echo htmlspecialchars($label); ?></label>
                 <div class="flex items-center space-x-4">
-                    <?php if (!empty($themeOptions['logo'])): ?>
-                    <div class="flex items-center space-x-2">
-                        <img src="<?php echo htmlspecialchars($themeOptions['logo']); ?>" alt="Current Logo" class="h-12">
-                        <button type="button" onclick="removeImage('logo')" class="text-red-500 hover:text-red-700">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                            </svg>
-                        </button>
-                    </div>
+                    <?php if (!empty($themeOptions[$optionKey])): ?>
+                    <img src="/<?php echo htmlspecialchars($themeOptions[$optionKey]); ?>" alt="Current <?php echo htmlspecialchars($label); ?>" class="h-12">
                     <?php endif; ?>
-                    <input type="file" name="logo" accept="image/*" class="flex-1">
+                    <input type="file" name="<?php echo htmlspecialchars($optionKey); ?>" accept="image/*" class="flex-1">
                 </div>
             </div>
-            <?php endif; ?>
-            
-            <?php if ($supportsHerobanner): ?>
-            <div>
-                <label class="block mb-1">Hero Banner</label>
-                <div class="flex items-center space-x-4">
-                    <?php if (!empty($themeOptions['herobanner'])): ?>
-                    <div class="flex items-center space-x-2">
-                        <img src="<?php echo htmlspecialchars($themeOptions['herobanner']); ?>" alt="Current Hero Banner" class="h-24">
-                        <button type="button" onclick="removeImage('herobanner')" class="text-red-500 hover:text-red-700">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                            </svg>
-                        </button>
-                    </div>
-                    <?php endif; ?>
-                    <input type="file" name="herobanner" accept="image/*" class="flex-1">
-                </div>
-            </div>
-            <?php endif; ?>
-            
+            <?php endforeach; ?>
             <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Save Theme Options</button>
         </form>
     </div>
@@ -68,25 +150,8 @@ $supportsHerobanner = (strpos($pageTemplate, '{{herobanner}}') !== false) || (st
     <div class="bg-white shadow rounded-lg p-6">
         <h3 class="text-lg font-medium mb-4">Available Themes</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <?php foreach ($themes as $theme): 
-                // Check for theme screenshot
-                $themeDir = PROJECT_ROOT . '/themes/' . $theme['id'];
-                $screenshot = null;
-                $screenshotExtensions = ['png', 'jpg', 'gif'];
-                foreach ($screenshotExtensions as $ext) {
-                    $screenshotPath = $themeDir . '/assets/screenshot.' . $ext;
-                    if (file_exists($screenshotPath)) {
-                        $screenshot = '/themes/' . $theme['id'] . '/assets/screenshot.' . $ext;
-                        break;
-                    }
-                }
-            ?>
+            <?php foreach ($themes as $theme): ?>
             <div class="border rounded-lg p-4 <?php echo $theme['id'] === $themeManager->getActiveTheme() ? 'ring-2 ring-green-500 bg-green-50' : ''; ?>">
-                <?php if ($screenshot): ?>
-                <div class="mb-4">
-                    <img src="<?php echo htmlspecialchars($screenshot); ?>" alt="<?php echo htmlspecialchars($theme['name']); ?> Screenshot" class="w-full h-48 object-cover rounded">
-                </div>
-                <?php endif; ?>
                 <h3 class="text-lg font-medium mb-2"><?php echo htmlspecialchars($theme['name']); ?></h3>
                 <p class="text-sm text-gray-600 mb-4"><?php echo htmlspecialchars($theme['description']); ?></p>
                 <div class="text-sm text-gray-500 mb-4">
@@ -101,7 +166,7 @@ $supportsHerobanner = (strpos($pageTemplate, '{{herobanner}}') !== false) || (st
                         <span class="font-medium">Active Theme</span>
                     </div>
                 <?php else: ?>
-                    <form method="POST" action="/admin?action=manage_themes">
+                    <form method="POST" action="">
                         <input type="hidden" name="action" value="activate_theme" />
                         <input type="hidden" name="theme" value="<?php echo htmlspecialchars($theme['id']); ?>" />
                         <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full">Activate Theme</button>
@@ -114,44 +179,56 @@ $supportsHerobanner = (strpos($pageTemplate, '{{herobanner}}') !== false) || (st
 </div>
 
 <script>
-function removeImage(type) {
-    const formData = new FormData();
-    formData.append('action', 'save_theme_options');
-    formData.append('remove_' + type, '1');
-    
-    fetch('?action=manage_themes', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            window.location.reload();
-        } else {
-            alert('Error removing image: ' + (data.error || 'Unknown error'));
-        }
-    })
-    .catch(error => {
-        console.error('Error removing image:', error);
-        alert('Failed to remove image. Please try again.');
-    });
-}
+// Social links management
+document.getElementById('add-social-link')?.addEventListener('click', function() {
+    const container = document.getElementById('social-links-container');
+    const socialDiv = document.createElement('div');
+    socialDiv.className = 'social-link-group border rounded p-4 mb-4';
+    socialDiv.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+                <label class="block mb-1">Name</label>
+                <input type="text" name="social_name[]" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="GitHub">
+            </div>
+            <div>
+                <label class="block mb-1">URL</label>
+                <input type="text" name="social_url[]" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="https://github.com/username">
+            </div>
+            <div>
+                <label class="block mb-1">Icon Class</label>
+                <input type="text" name="social_icon[]" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="fab fa-github">
+            </div>
+            <div>
+                <label class="block mb-1">Target</label>
+                <input type="text" name="social_target[]" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="_blank">
+            </div>
+        </div>
+        <button type="button" class="remove-social-link mt-2 bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">Remove</button>
+    `;
+    container.appendChild(socialDiv);
+});
 
+// Remove social link
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('remove-social-link')) {
+        e.target.closest('.social-link-group').remove();
+    }
+});
+
+// Generic theme options form (for non-Nightfall themes)
 document.getElementById('theme-options-form')?.addEventListener('submit', function(e) {
     e.preventDefault();
     
     const formData = new FormData();
     formData.append('action', 'save_theme_options');
-    const logoFile = this.querySelector('input[name="logo"]')?.files[0];
-    const herobannerFile = this.querySelector('input[name="herobanner"]')?.files[0];
-    
-    if (logoFile) {
-        formData.append('logo', logoFile);
+    <?php foreach ($themeOptionFields as $optionKey => $option):
+        if (!is_array($option) || ($option['type'] ?? '') !== 'image') continue;
+    ?>
+    const <?php echo $optionKey; ?>File = this.querySelector('input[name="<?php echo $optionKey; ?>"]').files[0];
+    if (<?php echo $optionKey; ?>File) {
+        formData.append('<?php echo $optionKey; ?>', <?php echo $optionKey; ?>File);
     }
-    if (herobannerFile) {
-        formData.append('herobanner', herobannerFile);
-    }
-    
+    <?php endforeach; ?>
     fetch('?action=manage_themes', {
         method: 'POST',
         body: formData

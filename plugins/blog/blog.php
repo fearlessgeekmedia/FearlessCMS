@@ -1,3 +1,4 @@
+<?php error_log("Blog plugin - POST request received"); error_log("Blog plugin - POST data: " . print_r($_POST, true)); ?>
 <?php
 /*
 Plugin Name: Blog
@@ -15,15 +16,23 @@ function blog_load_posts() {
 }
 
 function blog_save_posts($posts) {
-    file_put_contents(BLOG_POSTS_FILE, json_encode($posts, JSON_PRETTY_PRINT));
+    error_log("Blog plugin - blog_save_posts called");
+    error_log("Blog plugin - Saving to file: " . BLOG_POSTS_FILE);
+    error_log("Blog plugin - Posts to save: " . print_r($posts, true));
+    
+    $json = json_encode($posts, JSON_PRETTY_PRINT);
+    error_log("Blog plugin - JSON to write: " . $json);
+    
+    $result = file_put_contents(BLOG_POSTS_FILE, $json);
+    error_log("Blog plugin - Save result: " . ($result !== false ? "success" : "failed"));
+    
+    return $result;
 }
 
 // Helper function to create URL-friendly slugs
 function blog_create_slug($text) {
     // Replace non letter or digits by -
     $text = preg_replace('~[^\pL\d]+~u', '-', $text);
-    // Transliterate
-    $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
     // Remove unwanted characters
     $text = preg_replace('~[^-\w]+~', '', $text);
     // Trim
@@ -38,28 +47,41 @@ function blog_create_slug($text) {
 
 fcms_register_admin_section('blog', [
     'label' => 'Blog',
-    'menu_order' => 3,
+    'menu_order' => 40,
     'parent' => 'plugins',
     'render_callback' => function() {
         ob_start();
         $posts = blog_load_posts();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (isset($_POST['action']) && $_POST['action'] === 'save_post') {
+                error_log("Blog plugin - Starting save_post action");
+                error_log("Blog plugin - POST data: " . print_r($_POST, true));
+                
                 $id = $_POST['id'] ?? null;
                 $title = trim($_POST['title'] ?? '');
                 $slug = trim($_POST['slug'] ?? '');
                 
+                error_log("Blog plugin - ID: " . $id);
+                error_log("Blog plugin - Title: " . $title);
+                error_log("Blog plugin - Slug: " . $slug);
+                
                 // Auto-generate slug if empty
                 if (empty($slug) && !empty($title)) {
                     $slug = blog_create_slug($title);
+                    error_log("Blog plugin - Generated slug: " . $slug);
                 } else {
                     // Ensure slug is URL-friendly
                     $slug = blog_create_slug($slug);
+                    error_log("Blog plugin - URL-friendly slug: " . $slug);
                 }
                 
                 $date = trim($_POST['date'] ?? date('Y-m-d'));
                 $content = $_POST['content'] ?? '';
                 $status = $_POST['status'] ?? 'draft';
+                
+                error_log("Blog plugin - Date: " . $date);
+                error_log("Blog plugin - Status: " . $status);
+                error_log("Blog plugin - Content length: " . strlen($content));
                 
                 if ($title && $slug) {
                     if ($id) {
@@ -70,6 +92,7 @@ fcms_register_admin_section('blog', [
                                 $post['date'] = $date;
                                 $post['content'] = $content;
                                 $post['status'] = $status;
+                                $post['featured_image'] = $_POST['featured_image'] ?? '';
                             }
                         }
                     } else {
@@ -79,18 +102,48 @@ fcms_register_admin_section('blog', [
                             'slug' => $slug,
                             'date' => $date,
                             'content' => $content,
-                            'status' => $status
+                            'status' => $status,
+                            'featured_image' => $_POST['featured_image'] ?? ''
                         ];
                     }
                     blog_save_posts($posts);
+                    header('Location: ?action=blog');
+                    exit;
+                } else {
+                    error_log("Blog plugin - Invalid title or slug, skipping save");
                 }
             } elseif (isset($_POST['action']) && $_POST['action'] === 'delete_post' && isset($_POST['id'])) {
                 $posts = array_filter($posts, fn($p) => $p['id'] != $_POST['id']);
                 blog_save_posts($posts);
+                header('Location: ?action=blog');
+                exit;
             }
         }
         echo '<h2 class="text-2xl font-bold mb-6 fira-code">Blog Posts</h2>';
         echo '<a href="?action=blog&new=1" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">New Post</a><br><br>';
+        
+        // Add file manager script
+        echo '<script>
+        function openFileManager() {
+            window.open("/admin?action=files", "filemanager", "width=800,height=600");
+            window.addEventListener("message", function(event) {
+                if (event.data.type === "file_selected") {
+                    document.querySelector("input[name=\'featured_image\']").value = event.data.url;
+                    // Update preview if it exists
+                    const previewContainer = document.querySelector("input[name=\'featured_image\']").closest("div").nextElementSibling;
+                    if (previewContainer) {
+                        previewContainer.innerHTML = `<img src="${event.data.url}" alt="Featured image preview" class="max-w-xs h-auto">`;
+                    } else {
+                        const newPreview = document.createElement("div");
+                        newPreview.className = "mt-2";
+                        newPreview.innerHTML = `<img src="${event.data.url}" alt="Featured image preview" class="max-w-xs h-auto">`;
+                        document.querySelector("input[name=\'featured_image\']").closest("div").after(newPreview);
+                    }
+                }
+            });
+        }
+        </script>';
+
         if (isset($_GET['edit'])) {
             $edit = null;
             foreach ($posts as $p) if ($p['id'] == $_GET['edit']) $edit = $p;
@@ -98,7 +151,7 @@ fcms_register_admin_section('blog', [
                 echo '<div class="bg-red-100 text-red-700 p-4 rounded mb-4">Post not found</div>';
                 echo '<a href="?action=blog" class="inline-block mt-4 text-blue-600 hover:underline">Back to list</a>';
             } else {
-                echo '<form method="POST" class="space-y-4" id="blog-post-form">';
+                echo '<form method="POST" class="space-y-4" id="blog-post-form" data-ajax="false">';
                 echo '<input type="hidden" name="action" value="save_post">';
                 echo '<input type="hidden" name="id" value="' . htmlspecialchars($edit['id']) . '">';
                 echo '<div><label>Title:</label><input name="title" value="' . htmlspecialchars($edit['title']) . '" class="border rounded px-2 py-1 w-full"></div>';
@@ -106,6 +159,15 @@ fcms_register_admin_section('blog', [
                 echo '<div class="text-sm text-gray-500">The slug should be URL-friendly (lowercase, no spaces). Example: my-blog-post</div>';
                 echo '<div><label>Date:</label><input name="date" value="' . htmlspecialchars($edit['date']) . '" class="border rounded px-2 py-1 w-full"></div>';
                 echo '<div><label>Status:</label><select name="status" class="border rounded px-2 py-1 w-full"><option value="published"' . ($edit['status'] === 'published' ? ' selected' : '') . '>Published</option><option value="draft"' . ($edit['status'] === 'draft' ? ' selected' : '') . '>Draft</option></select></div>';
+                echo '<div><label>Featured Image:</label>';
+                echo '<div class="flex items-center space-x-4">';
+                echo '<input type="text" name="featured_image" value="' . htmlspecialchars($edit['featured_image'] ?? '') . '" class="border rounded px-2 py-1 flex-grow" placeholder="Image URL or path">';
+                echo '<button type="button" onclick="openFileManager()" class="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600">Select Image</button>';
+                echo '</div>';
+                if (!empty($edit['featured_image'])) {
+                    echo '<div class="mt-2"><img src="' . htmlspecialchars($edit['featured_image']) . '" alt="Featured image preview" class="max-w-xs h-auto"></div>';
+                }
+                echo '</div>';
                 echo '<div><label>Content:</label></div>';
                 echo '<div id="blog-toast-editor"></div>';
                 echo '<input type="hidden" name="content" id="blog-editor-content">';
@@ -128,19 +190,28 @@ fcms_register_admin_section('blog', [
                     });
                     
                     document.getElementById("blog-post-form").addEventListener("submit", function(e) {
-                        document.getElementById("blog-editor-content").value = editor.getMarkdown();
+                        var content = editor.getMarkdown();
+                        console.log("Editor content before save:", content);
+                        document.getElementById("blog-editor-content").value = content;
+                        console.log("Form content after setting:", document.getElementById("blog-editor-content").value);
                     });
                 });
                 </script>';
             }
         } elseif (isset($_GET['new'])) {
-            echo '<form method="POST" class="space-y-4" id="blog-post-form">';
+            echo '<form method="POST" class="space-y-4" id="blog-post-form" data-ajax="false">';
             echo '<input type="hidden" name="action" value="save_post">';
             echo '<div><label>Title:</label><input name="title" class="border rounded px-2 py-1 w-full"></div>';
             echo '<div><label>Slug:</label><input name="slug" class="border rounded px-2 py-1 w-full" placeholder="auto-generated-if-empty"></div>';
             echo '<div class="text-sm text-gray-500">The slug should be URL-friendly (lowercase, no spaces). Example: my-blog-post</div>';
             echo '<div><label>Date:</label><input name="date" value="' . date('Y-m-d') . '" class="border rounded px-2 py-1 w-full"></div>';
             echo '<div><label>Status:</label><select name="status" class="border rounded px-2 py-1 w-full"><option value="published">Published</option><option value="draft">Draft</option></select></div>';
+            echo '<div><label>Featured Image:</label>';
+            echo '<div class="flex items-center space-x-4">';
+            echo '<input type="text" name="featured_image" class="border rounded px-2 py-1 flex-grow" placeholder="Image URL or path">';
+            echo '<button type="button" onclick="openFileManager()" class="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600">Select Image</button>';
+            echo '</div>';
+            echo '</div>';
             echo '<div><label>Content:</label></div>';
             echo '<div id="blog-toast-editor"></div>';
             echo '<input type="hidden" name="content" id="blog-editor-content">';
@@ -161,7 +232,10 @@ fcms_register_admin_section('blog', [
                 });
                 
                 document.getElementById("blog-post-form").addEventListener("submit", function(e) {
-                    document.getElementById("blog-editor-content").value = editor.getMarkdown();
+                    var content = editor.getMarkdown();
+                    console.log("Editor content before save:", content);
+                    document.getElementById("blog-editor-content").value = content;
+                    console.log("Form content after setting:", document.getElementById("blog-editor-content").value);
                 });
             });
             </script>';
@@ -175,7 +249,12 @@ fcms_register_admin_section('blog', [
                 echo '<td class="py-2 border-b">' . htmlspecialchars($p['status']) . '</td>';
                 echo '<td class="py-2 border-b">
                     <a href="?action=blog&edit=' . $p['id'] . '" class="text-blue-600 hover:underline mr-2">Edit</a>
-                    <a href="/blog/' . urlencode($p['slug']) . '" target="_blank" class="text-green-600 hover:underline">View</a>
+                    <a href="/blog/' . urlencode($p['slug']) . '" target="_blank" class="text-green-600 hover:underline mr-2">View</a>
+                    <form method="POST" class="inline">
+                        <input type="hidden" name="action" value="delete_post">
+                        <input type="hidden" name="id" value="' . htmlspecialchars($p['id']) . '">
+                        <button type="submit" onclick="return confirm(\'Are you sure you want to delete this post?\')" class="text-red-600 hover:underline">Delete</button>
+                    </form>
                 </td>';
                 echo '</tr>';
             }
@@ -198,7 +277,13 @@ fcms_add_hook('route', function (&$handled, &$title, &$content, $path) {
                     $title = $post['title'];
                     if (!class_exists('Parsedown')) require_once PROJECT_ROOT . '/includes/Parsedown.php';
                     $Parsedown = new Parsedown();
-                    $content = $Parsedown->text($post['content']);
+                    $content = '<article class="max-w-4xl mx-auto px-4 py-8">';
+                    if (!empty($post['featured_image'])) {
+                        $content .= '<div class="mb-8"><img src="' . htmlspecialchars($post['featured_image']) . '" alt="' . htmlspecialchars($post['title']) . '" class="w-full h-96 object-cover rounded-lg shadow-lg"></div>';
+                    }
+                    $content .= '<div class="text-gray-600 mb-8">' . htmlspecialchars($post['date']) . '</div>';
+                    $content .= '<div class="prose max-w-none">' . $Parsedown->text($post['content']) . '</div>';
+                    $content .= '</article>';
                     $handled = true;
                     return;
                 }
@@ -216,6 +301,9 @@ fcms_add_hook('route', function (&$handled, &$title, &$content, $path) {
             $content .= '<div class="space-y-8">';
             foreach ($published as $post) {
                 $content .= '<article class="border-b pb-8">';
+                if (!empty($post['featured_image'])) {
+                    $content .= '<div class="mb-4"><img src="' . htmlspecialchars($post['featured_image']) . '" alt="' . htmlspecialchars($post['title']) . '" class="w-full h-64 object-cover rounded"></div>';
+                }
                 $content .= '<h2 class="text-2xl font-bold mb-2"><a href="/blog/' . urlencode($post['slug']) . '" class="text-blue-600 hover:underline">' . htmlspecialchars($post['title']) . '</a></h2>';
                 $content .= '<div class="text-gray-600 mb-4">' . htmlspecialchars($post['date']) . '</div>';
                 if (!class_exists('Parsedown')) require_once PROJECT_ROOT . '/includes/Parsedown.php';

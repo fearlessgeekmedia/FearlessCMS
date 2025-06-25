@@ -3,6 +3,9 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+// Start output buffering at the very beginning
+ob_start();
+
 // Start session if not already started
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -18,12 +21,148 @@ require_once dirname(__DIR__) . '/includes/plugins.php';
 require_once __DIR__ . '/widget-handler.php';
 require_once __DIR__ . '/theme-handler.php';
 require_once __DIR__ . '/store-handler.php';
+require_once __DIR__ . '/newpage-handler.php';
+require_once __DIR__ . '/filedel-handler.php';
+require_once __DIR__ . '/widgets-handler.php';
 
 // Get action from GET or POST, default to dashboard
 $action = $_GET['action'] ?? $_POST['action'] ?? 'dashboard';
 
 // Debug logging
 error_log("Admin index.php - Action: " . $action);
+error_log("Admin index.php - Request Method: " . $_SERVER['REQUEST_METHOD']);
+error_log("Admin index.php - POST data: " . print_r($_POST, true));
+error_log("Admin index.php - GET data: " . print_r($_GET, true));
+
+// Handle AJAX requests for menu management
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'manage_menus') {
+    // Clear any output
+    ob_clean();
+    header('Content-Type: application/json');
+    
+    if (!isLoggedIn()) {
+        echo json_encode(['success' => false, 'error' => 'You must be logged in to perform this action']);
+        exit;
+    }
+    
+    // Get JSON input
+    $json = file_get_contents('php://input');
+    $data = json_decode($json, true);
+    
+    if (!isset($data['action'])) {
+        echo json_encode(['success' => false, 'error' => 'No action specified']);
+        exit;
+    }
+    
+    $menuFile = CONFIG_DIR . '/menus.json';
+    $menus = file_exists($menuFile) ? json_decode(file_get_contents($menuFile), true) : [];
+    
+    switch ($data['action']) {
+        case 'save_menu':
+            if (empty($data['menu_id']) || empty($data['items'])) {
+                echo json_encode(['success' => false, 'error' => 'Menu ID and items are required']);
+                exit;
+            }
+            
+            $menuId = $data['menu_id'];
+            $menus[$menuId] = [
+                'label' => $data['label'] ?? ucwords(str_replace('_', ' ', $menuId)),
+                'menu_class' => $data['class'] ?? '',
+                'items' => $data['items']
+            ];
+            
+            if (file_put_contents($menuFile, json_encode($menus, JSON_PRETTY_PRINT))) {
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['success' => false, 'error' => 'Failed to save menu']);
+            }
+            exit;
+            
+        case 'create_menu':
+            if (empty($data['name'])) {
+                echo json_encode(['success' => false, 'error' => 'Menu name is required']);
+                exit;
+            }
+            
+            $menuId = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $data['name']));
+            
+            if (isset($menus[$menuId])) {
+                echo json_encode(['success' => false, 'error' => 'Menu with this name already exists']);
+                exit;
+            }
+            
+            $menus[$menuId] = [
+                'label' => $data['name'],
+                'menu_class' => $data['class'] ?? '',
+                'items' => []
+            ];
+            
+            if (file_put_contents($menuFile, json_encode($menus, JSON_PRETTY_PRINT))) {
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['success' => false, 'error' => 'Failed to create menu']);
+            }
+            exit;
+            
+        case 'delete_menu':
+            if (empty($data['menu_id'])) {
+                echo json_encode(['success' => false, 'error' => 'Menu ID is required']);
+                exit;
+            }
+            
+            $menuId = $data['menu_id'];
+            
+            if (isset($menus[$menuId])) {
+                unset($menus[$menuId]);
+                if (file_put_contents($menuFile, json_encode($menus, JSON_PRETTY_PRINT))) {
+                    echo json_encode(['success' => true]);
+                } else {
+                    echo json_encode(['success' => false, 'error' => 'Failed to delete menu']);
+                }
+            } else {
+                echo json_encode(['success' => false, 'error' => 'Menu not found']);
+            }
+            exit;
+            
+        default:
+            echo json_encode(['success' => false, 'error' => 'Invalid action']);
+            exit;
+    }
+}
+
+// Handle AJAX requests for loading menu data
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'load_menu') {
+    // Clear any output
+    ob_clean();
+    header('Content-Type: application/json');
+    
+    if (!isLoggedIn()) {
+        echo json_encode(['success' => false, 'error' => 'You must be logged in to perform this action']);
+        exit;
+    }
+    
+    if (!isset($_GET['menu_id'])) {
+        echo json_encode(['success' => false, 'error' => 'Menu ID is required']);
+        exit;
+    }
+    
+    $menuId = $_GET['menu_id'];
+    $menuFile = CONFIG_DIR . '/menus.json';
+    
+    if (!file_exists($menuFile)) {
+        echo json_encode(['success' => false, 'error' => 'Menu file not found']);
+        exit;
+    }
+    
+    $menus = json_decode(file_get_contents($menuFile), true);
+    if (!isset($menus[$menuId])) {
+        echo json_encode(['success' => false, 'error' => 'Menu not found']);
+        exit;
+    }
+    
+    echo json_encode($menus[$menuId]);
+    exit;
+}
 
 // Handle plugin actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && in_array($_POST['action'], ['activate_plugin', 'deactivate_plugin'])) {
@@ -33,13 +172,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && in_array
 
 // If not logged in and not on login page, redirect to login
 if (!isLoggedIn() && $action !== 'login') {
-    header('Location: /admin/login');
+    header('Location: /' . $adminPath . '/login');
     exit;
 }
 
 // If logged in and trying to access login page, redirect to dashboard
 if (isLoggedIn() && $action === 'login') {
-    header('Location: /admin?action=dashboard');
+    header('Location: /' . $adminPath . '?action=dashboard');
     exit;
 }
 
@@ -62,14 +201,31 @@ $activePlugins = file_exists($pluginsFile) ? json_decode(file_get_contents($plug
 // Load site name from config
 $configFile = CONFIG_DIR . '/config.json';
 $siteName = 'FearlessCMS'; // Default
+$siteDescription = ''; // Default empty tagline
 if (file_exists($configFile)) {
     $config = json_decode(file_get_contents($configFile), true);
     if (isset($config['site_name'])) {
         $siteName = $config['site_name'];
     }
+    if (isset($config['site_description'])) {
+        $siteDescription = $config['site_description'];
+    }
     // Load custom code
     $custom_css = $config['custom_css'] ?? '';
     $custom_js = $config['custom_js'] ?? '';
+}
+
+// Load menu options for menu management
+$menu_options = '';
+if (file_exists($menusFile)) {
+    $menus = json_decode(file_get_contents($menusFile), true);
+    foreach ($menus as $menuId => $menu) {
+        $menu_options .= sprintf(
+            '<option value="%s">%s</option>',
+            htmlspecialchars($menuId),
+            htmlspecialchars($menu['label'] ?? ucwords(str_replace('_', ' ', $menuId)))
+        );
+    }
 }
 
 // Calculate total pages
@@ -201,287 +357,142 @@ if ($action === 'edit_content' && isset($_GET['path'])) {
     $title = '';
 }
 
-// Process POST actions
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    error_log("POST request received");
-    error_log("POST data: " . print_r($_POST, true));
-    error_log("Request headers: " . print_r(getallheaders(), true));
+// Handle POST requests for admin sections
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    $postAction = $_POST['action'];
     
-    // Handle logout
-    if (isset($_POST['action']) && $_POST['action'] === 'logout') {
-        logout();
-        header('Location: /admin/login');
-        exit;
+    // Check if this is a file manager action
+    if (in_array($postAction, ['upload_file', 'delete_file'])) {
+        $action = 'files'; // Set the action to 'files' to use the file manager's render callback
     }
-    
-    // Get the action from either POST data or JSON input
-    $action = null;
-    $data = [];
-    
-    // Check if this is a JSON request
-    $contentType = isset($_SERVER['CONTENT_TYPE']) ? $_SERVER['CONTENT_TYPE'] : '';
-    if (strpos($contentType, 'application/json') !== false) {
-        error_log("JSON request detected");
-        $json = file_get_contents('php://input');
-        error_log("Received JSON data: " . $json);
-        
-        $data = json_decode($json, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            error_log("JSON decode error: " . json_last_error_msg());
-            echo json_encode(['success' => false, 'error' => 'Invalid JSON data: ' . json_last_error_msg()]);
-            exit;
-        }
-        
-        if (isset($data['action'])) {
-            $action = $data['action'];
-        }
+    // Check if this is a blog action
+    else if (in_array($postAction, ['save_post', 'delete_post'])) {
+        $action = 'blog';
+    }
+    // Check if this is a widget action
+    else if (in_array($postAction, ['save_widget', 'delete_widget', 'add_sidebar', 'delete_sidebar', 'reorder_widgets', 'save_sidebar'])) {
+        error_log("Admin index.php - Widget action detected: " . $postAction);
+        $action = 'manage_widgets'; // Set the action to 'manage_widgets' to use the widgets handler
+    }
+    // Add other section-specific actions here as needed
+}
+
+// Handle POST for site name and tagline update
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_site_name') {
+    $newSiteName = trim($_POST['site_name'] ?? '');
+    $newTagline = trim($_POST['site_description'] ?? '');
+    $configFile = CONFIG_DIR . '/config.json';
+    $config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
+    if ($newSiteName !== '') {
+        $config['site_name'] = $newSiteName;
+    }
+    $config['site_description'] = $newTagline;
+    file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT));
+    // Optionally, reload config for this request
+    $siteName = $config['site_name'];
+    $siteDescription = $config['site_description'];
+    $success = 'Site name and tagline updated.';
+}
+
+// Handle POST requests for saving content
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_content') {
+    if (!isLoggedIn()) {
+        $error = 'You must be logged in to edit files';
     } else {
-        // Regular POST data
-        $data = $_POST;
-        if (isset($_POST['action'])) {
-            $action = $_POST['action'];
-        }
-    }
-    
-    error_log("Action: " . ($action ?? 'none'));
-    error_log("Data: " . print_r($data, true));
-    
-    // Handle menu actions
-    if ($action === 'save_menu' || $action === 'create_menu' || $action === 'delete_menu') {
-        header('Content-Type: application/json');
-        
-        switch ($action) {
-            case 'save_menu':
-                error_log("Processing save_menu action");
-                if (empty($data['menu_id']) || empty($data['menu_data'])) {
-                    error_log("Missing menu_id or menu_data");
-                    echo json_encode(['success' => false, 'error' => 'Menu ID and data are required']);
-                    exit;
-                }
-                
-                $menuId = $data['menu_id'];
-                $menuData = $data['menu_data'];
-                
-                if (!is_array($menuData)) {
-                    error_log("Invalid menu data format");
-                    echo json_encode(['success' => false, 'error' => 'Invalid menu data format']);
-                    exit;
-                }
-                
-                $menuFile = CONFIG_DIR . '/menus.json';
-                $menus = file_exists($menuFile) ? json_decode(file_get_contents($menuFile), true) : [];
-                $menus[$menuId] = $menuData;
-                
-                if (file_put_contents($menuFile, json_encode($menus, JSON_PRETTY_PRINT))) {
-                    error_log("Menu saved successfully");
-                    echo json_encode(['success' => true]);
-                } else {
-                    error_log("Failed to save menu");
-                    echo json_encode(['success' => false, 'error' => 'Failed to save menu']);
-                }
-                exit;
+        $fileName = $_POST['path'] ?? '';
+        $content = $_POST['content'] ?? '';
+        $pageTitle = $_POST['title'] ?? '';
+        $parentPage = $_POST['parent'] ?? '';
+        $template = $_POST['template'] ?? 'page';
+        $editorMode = $_POST['editor_mode'] ?? 'easy';
 
-            case 'create_menu':
-                error_log("Processing create_menu action");
-                if (empty($data['name'])) {
-                    error_log("Menu name is required");
-                    echo json_encode(['success' => false, 'error' => 'Menu name is required']);
-                    exit;
+        // Validate filename: allow slashes for subfolders
+        if (empty($fileName) || !preg_match('/^[a-zA-Z0-9_\/-]+$/', $fileName)) {
+            $error = 'Invalid filename';
+        } else {
+            $filePath = CONTENT_DIR . '/' . $fileName . '.md';
+            $dir = dirname($filePath);
+            if (!is_dir($dir)) {
+                mkdir($dir, 0755, true);
+            }
+            // Check if content already has JSON frontmatter
+            $hasFrontmatter = preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $content, $matches);
+            if ($hasFrontmatter) {
+                $metadata = json_decode($matches[1], true) ?: [];
+                $metadata['title'] = $pageTitle;
+                $metadata['editor_mode'] = $editorMode;
+                $metadata['template'] = $template;
+                if (!empty($parentPage)) {
+                    $metadata['parent'] = $parentPage;
+                } elseif (isset($metadata['parent'])) {
+                    unset($metadata['parent']);
                 }
-                
-                $menuId = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $data['name']));
-                $menuFile = CONFIG_DIR . '/menus.json';
-                $menus = file_exists($menuFile) ? json_decode(file_get_contents($menuFile), true) : [];
-                
-                if (isset($menus[$menuId])) {
-                    error_log("Menu already exists: " . $menuId);
-                    echo json_encode(['success' => false, 'error' => 'Menu with this name already exists']);
-                    exit;
-                }
-                
-                $menus[$menuId] = [
-                    'label' => $data['name'],
-                    'menu_class' => $data['class'] ?? '',
-                    'items' => []
-                ];
-                
-                if (file_put_contents($menuFile, json_encode($menus, JSON_PRETTY_PRINT))) {
-                    error_log("Menu created successfully");
-                    echo json_encode(['success' => true]);
-                } else {
-                    error_log("Failed to create menu");
-                    echo json_encode(['success' => false, 'error' => 'Failed to create menu']);
-                }
-                exit;
-
-            case 'delete_menu':
-                error_log("Processing delete_menu action");
-                if (empty($data['menu_id'])) {
-                    error_log("Menu ID is required");
-                    echo json_encode(['success' => false, 'error' => 'Menu ID is required']);
-                    exit;
-                }
-                
-                $menuId = $data['menu_id'];
-                $menuFile = CONFIG_DIR . '/menus.json';
-                $menus = file_exists($menuFile) ? json_decode(file_get_contents($menuFile), true) : [];
-                
-                if (isset($menus[$menuId])) {
-                    unset($menus[$menuId]);
-                    if (file_put_contents($menuFile, json_encode($menus, JSON_PRETTY_PRINT))) {
-                        error_log("Menu deleted successfully");
-                        echo json_encode(['success' => true]);
-                    } else {
-                        error_log("Failed to delete menu");
-                        echo json_encode(['success' => false, 'error' => 'Failed to delete menu']);
-                    }
-                } else {
-                    error_log("Menu not found: " . $menuId);
-                    echo json_encode(['success' => false, 'error' => 'Menu not found']);
-                }
-                exit;
-        }
-    }
-    
-    // Handle other actions
-    switch ($action) {
-        case 'save_content':
-            $path = $_POST['path'] ?? '';
-            $title = $_POST['title'] ?? '';
-            $template = $_POST['template'] ?? 'page';
-            $content = $_POST['content'] ?? '';
-            $parent = $_POST['parent'] ?? '';
-            
-            error_log("Save content - Path: " . $path);
-            error_log("Save content - Title: " . $title);
-            error_log("Save content - Template: " . $template);
-            error_log("Save content - Parent: " . $parent);
-            error_log("Save content - Content length: " . strlen($content));
-            error_log("Save content - Content preview: " . substr($content, 0, 100));
-            
-            if (empty($path) || empty($title)) {
-                $error = 'Path and title are required';
+                $newFrontmatter = '<!-- json ' . json_encode($metadata, JSON_PRETTY_PRINT) . ' -->';
+                $content = preg_replace('/^<!--\s*json\s*.*?\s*-->/s', $newFrontmatter, $content);
             } else {
-                // Determine the target directory and file path
-                $targetDir = CONTENT_DIR;
-                $targetPath = $path;
-                
-                // If parent is specified, move content to parent's directory
-                if (!empty($parent)) {
-                    $targetDir = CONTENT_DIR . '/' . $parent;
-                    $targetPath = $parent . '/' . $path;
-                    
-                    // Create parent directory if it doesn't exist
-                    if (!is_dir($targetDir)) {
-                        mkdir($targetDir, 0755, true);
-                    }
-                }
-                
-                $contentFile = $targetDir . '/' . basename($path) . '.md';
-                
-                // Create metadata
                 $metadata = [
-                    'title' => $title,
+                    'title' => $pageTitle,
+                    'editor_mode' => $editorMode,
                     'template' => $template
                 ];
-                
-                // Add parent if specified
-                if (!empty($parent)) {
-                    $metadata['parent'] = $parent;
+                if (!empty($parentPage)) {
+                    $metadata['parent'] = $parentPage;
                 }
-                
-                // Format content with metadata
-                $contentWithMetadata = '<!-- json ' . json_encode($metadata, JSON_PRETTY_PRINT) . ' -->' . "\n\n" . $content;
-                
-                error_log("Save content - Final content length: " . strlen($contentWithMetadata));
-                error_log("Save content - Final content preview: " . substr($contentWithMetadata, 0, 100));
-                error_log("Save content - Target file: " . $contentFile);
-                
-                // If the file is being moved to a new location, delete the old one
-                $oldFile = CONTENT_DIR . '/' . $path . '.md';
-                if ($oldFile !== $contentFile && file_exists($oldFile)) {
-                    unlink($oldFile);
-                }
-                
-                if (file_put_contents($contentFile, $contentWithMetadata) !== false) {
-                    $success = 'Content saved successfully';
-                    // Reload the content data
-                    $contentData = $contentWithMetadata;
-                } else {
-                    $error = 'Failed to save content';
-                    error_log("Save content - Failed to write to file: " . $contentFile);
-                }
+                $newFrontmatter = '<!-- json ' . json_encode($metadata, JSON_PRETTY_PRINT) . ' -->';
+                $content = $newFrontmatter . "\n\n" . $content;
             }
-            break;
-            
-        case 'delete_content':
-            $path = $_POST['path'] ?? '';
-            if (!empty($path)) {
-                $contentFile = CONTENT_DIR . '/' . $path . '.md';
-                if (file_exists($contentFile) && unlink($contentFile)) {
-                    $success = 'Content deleted successfully';
-                    // Redirect to manage_content to refresh the list
-                    header('Location: ?action=manage_content');
-                    exit;
-                } else {
-                    $error = 'Failed to delete content';
-                }
+            if (file_put_contents($filePath, $content) !== false) {
+                $success = 'File saved successfully';
             } else {
-                $error = 'No content specified for deletion';
+                $error = 'Failed to save file';
             }
-            break;
-            
-        case 'update_site_name':
-            if (!isLoggedIn()) {
-                $error = 'You must be logged in to perform this action';
-                break;
-            }
-            if (!fcms_check_permission($_SESSION['username'], 'manage_settings')) {
-                $error = 'You do not have permission to manage settings';
-                break;
-            }
-            $newSiteName = trim($_POST['site_name'] ?? '');
-            if (empty($newSiteName)) {
-                $error = 'Site name cannot be empty';
-                break;
-            }
-            $configFile = CONFIG_DIR . '/config.json';
-            $config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
-            $config['site_name'] = $newSiteName;
-            if (file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT))) {
-                $success = 'Site name updated successfully';
-                $siteName = $newSiteName;
-            } else {
-                $error = 'Failed to update site name';
-            }
-            break;
+        }
     }
 }
 
-// Handle AJAX menu load
-if (isset($_GET['action']) && $_GET['action'] === 'load_menu' && isset($_GET['menu_id'])) {
-    $menuId = $_GET['menu_id'];
-    $menusFile = CONFIG_DIR . '/menus.json';
-    if (file_exists($menusFile)) {
-        $menus = json_decode(file_get_contents($menusFile), true);
-        if (isset($menus[$menuId])) {
-            $menu = $menus[$menuId];
-            // Normalize keys for JS
-            $result = [
-                'class' => $menu['menu_class'] ?? '',
-                'items' => $menu['items'] ?? [],
-                'label' => $menu['label'] ?? $menuId
-            ];
-            header('Content-Type: application/json');
-            echo json_encode($result);
-            exit;
+// Handle theme options form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_theme_options') {
+    if (!isLoggedIn()) {
+        $error = 'You must be logged in to edit theme options';
+    } else {
+        $themeOptionsFile = CONFIG_DIR . '/theme_options.json';
+        $themeOptions = file_exists($themeOptionsFile) ? json_decode(file_get_contents($themeOptionsFile), true) : [];
+        
+        // Update theme options
+        $themeOptions['author_name'] = $_POST['author_name'] ?? '';
+        $themeOptions['author_avatar'] = $_POST['author_avatar'] ?? '';
+        $themeOptions['avatar_size'] = $_POST['avatar_size'] ?? 'size-m';
+        $themeOptions['avatar_first'] = isset($_POST['avatar_first']);
+        $themeOptions['user'] = $_POST['user'] ?? 'user';
+        $themeOptions['hostname'] = $_POST['hostname'] ?? 'localhost';
+        $themeOptions['footer_html'] = $_POST['footer_html'] ?? '';
+        $themeOptions['color_scheme'] = $_POST['color_scheme'] ?? 'blue';
+        
+        // Handle social links
+        $socialLinks = [];
+        if (isset($_POST['social_name']) && is_array($_POST['social_name'])) {
+            for ($i = 0; $i < count($_POST['social_name']); $i++) {
+                if (!empty($_POST['social_name'][$i]) && !empty($_POST['social_url'][$i])) {
+                    $socialLinks[] = [
+                        'name' => $_POST['social_name'][$i],
+                        'url' => $_POST['social_url'][$i],
+                        'icon' => $_POST['social_icon'][$i] ?? '',
+                        'target' => $_POST['social_target'][$i] ?? '',
+                        'aria' => $_POST['social_aria'][$i] ?? '',
+                        'rel' => $_POST['social_rel'][$i] ?? ''
+                    ];
+                }
+            }
+        }
+        $themeOptions['social_links'] = $socialLinks;
+        
+        // Save options
+        if (file_put_contents($themeOptionsFile, json_encode($themeOptions, JSON_PRETTY_PRINT))) {
+            $success = 'Theme options updated successfully!';
+        } else {
+            $error = 'Failed to save theme options';
         }
     }
-    // Not found or error
-    header('Content-Type: application/json');
-    http_response_code(404);
-    echo json_encode(['error' => 'Menu not found']);
-    exit;
 }
 
 // Map actions to their template files
@@ -511,144 +522,14 @@ if (!file_exists($templateFile) && str_ends_with($templateFile, '.php')) {
     }
 }
 
-// Generate $menu_options for manage_menus
-if ($action === 'manage_menus') {
-    if (!fcms_check_permission($_SESSION['username'], 'manage_menus')) {
-        $error = 'You do not have permission to manage menus';
-    } else {
-        // Handle AJAX requests
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-            header('Content-Type: application/json');
-            
-            // Get JSON input
-            $json = file_get_contents('php://input');
-            error_log("Received JSON data: " . $json);
-            
-            $data = json_decode($json, true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                error_log("JSON decode error: " . json_last_error_msg());
-                echo json_encode(['success' => false, 'error' => 'Invalid JSON data: ' . json_last_error_msg()]);
-                exit;
-            }
+// Check if this is a registered admin section
+$admin_sections = fcms_get_admin_sections();
+$section_found = false;
 
-            if (!isset($data['action'])) {
-                echo json_encode(['success' => false, 'error' => 'No action specified']);
-                exit;
-            }
-
-            switch ($data['action']) {
-                case 'save_menu':
-                    if (empty($data['menu_id']) || empty($data['menu_data'])) {
-                        echo json_encode(['success' => false, 'error' => 'Menu ID and data are required']);
-                        exit;
-                    }
-                    
-                    $menuId = $data['menu_id'];
-                    $menuData = $data['menu_data'];
-                    
-                    if (!is_array($menuData)) {
-                        echo json_encode(['success' => false, 'error' => 'Invalid menu data format']);
-                        exit;
-                    }
-                    
-                    $menuFile = CONFIG_DIR . '/menus.json';
-                    $menus = file_exists($menuFile) ? json_decode(file_get_contents($menuFile), true) : [];
-                    $menus[$menuId] = $menuData;
-                    
-                    if (file_put_contents($menuFile, json_encode($menus, JSON_PRETTY_PRINT))) {
-                        echo json_encode(['success' => true]);
-                    } else {
-                        echo json_encode(['success' => false, 'error' => 'Failed to save menu']);
-                    }
-                    exit;
-
-                case 'create_menu':
-                    if (empty($data['name'])) {
-                        echo json_encode(['success' => false, 'error' => 'Menu name is required']);
-                        exit;
-                    }
-                    
-                    $menuId = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $data['name']));
-                    $menuFile = CONFIG_DIR . '/menus.json';
-                    $menus = file_exists($menuFile) ? json_decode(file_get_contents($menuFile), true) : [];
-                    
-                    if (isset($menus[$menuId])) {
-                        echo json_encode(['success' => false, 'error' => 'Menu with this name already exists']);
-                        exit;
-                    }
-                    
-                    $menus[$menuId] = [
-                        'label' => $data['name'],
-                        'menu_class' => $data['class'] ?? '',
-                        'items' => []
-                    ];
-                    
-                    if (file_put_contents($menuFile, json_encode($menus, JSON_PRETTY_PRINT))) {
-                        echo json_encode(['success' => true]);
-                    } else {
-                        echo json_encode(['success' => false, 'error' => 'Failed to create menu']);
-                    }
-                    exit;
-
-                case 'delete_menu':
-                    if (empty($data['menu_id'])) {
-                        echo json_encode(['success' => false, 'error' => 'Menu ID is required']);
-                        exit;
-                    }
-                    
-                    $menuId = $data['menu_id'];
-                    $menuFile = CONFIG_DIR . '/menus.json';
-                    $menus = file_exists($menuFile) ? json_decode(file_get_contents($menuFile), true) : [];
-                    
-                    if (isset($menus[$menuId])) {
-                        unset($menus[$menuId]);
-                        if (file_put_contents($menuFile, json_encode($menus, JSON_PRETTY_PRINT))) {
-                            echo json_encode(['success' => true]);
-                        } else {
-                            echo json_encode(['success' => false, 'error' => 'Failed to delete menu']);
-                        }
-                    } else {
-                        echo json_encode(['success' => false, 'error' => 'Menu not found']);
-                    }
-                    exit;
-            }
-        }
-
-        // Load menus for display
-        $menuFile = CONFIG_DIR . '/menus.json';
-        $menus = file_exists($menuFile) ? json_decode(file_get_contents($menuFile), true) : [];
-        
-        $menu_options = '';
-        foreach ($menus as $id => $menu) {
-            $menu_options .= '<option value="' . htmlspecialchars($id) . '">' . htmlspecialchars($menu['label']) . '</option>';
-        }
-        
-        ob_start();
-        include ADMIN_TEMPLATE_DIR . '/menus.php';
-        $content = ob_get_clean();
-    }
-}
-
-if (file_exists($templateFile)) {
-    error_log("Admin index.php - Loading template: " . $templateFile);
-    ob_start();
-    
-    // Special handling for widgets template
-    if ($action === 'manage_widgets') {
-        $widget_vars = fcms_render_widget_manager();
-        extract($widget_vars);
-    }
-    
-    include $templateFile;
-    $content = ob_get_clean();
-} else {
-    // Check if this is a registered admin section
-    $admin_sections = fcms_get_admin_sections();
-    $section_found = false;
-    
-    // First check direct sections
-    if (isset($admin_sections[$action])) {
-        error_log("Admin index.php - Loading admin section: " . $action);
+// First check direct sections
+if (isset($admin_sections[$action])) {
+    error_log("Admin index.php - Loading admin section: " . $action);
+    if (isset($admin_sections[$action]['render_callback']) && is_callable($admin_sections[$action]['render_callback'])) {
         ob_start();
         $section_content = call_user_func($admin_sections[$action]['render_callback']);
         if (is_string($section_content)) {
@@ -657,10 +538,14 @@ if (file_exists($templateFile)) {
         $content = ob_get_clean();
         $section_found = true;
     } else {
-        // Then check child sections
-        foreach ($admin_sections as $parent_id => $parent) {
-            if (isset($parent['children']) && isset($parent['children'][$action])) {
-                error_log("Admin index.php - Loading child section: " . $action);
+        error_log("Admin index.php - Invalid render callback for section: " . $action);
+    }
+} else {
+    // Then check child sections
+    foreach ($admin_sections as $parent_id => $parent) {
+        if (isset($parent['children']) && isset($parent['children'][$action])) {
+            error_log("Admin index.php - Loading child section: " . $action);
+            if (isset($parent['children'][$action]['render_callback']) && is_callable($parent['children'][$action]['render_callback'])) {
                 ob_start();
                 $section_content = call_user_func($parent['children'][$action]['render_callback']);
                 if (is_string($section_content)) {
@@ -669,11 +554,22 @@ if (file_exists($templateFile)) {
                 $content = ob_get_clean();
                 $section_found = true;
                 break;
+            } else {
+                error_log("Admin index.php - Invalid render callback for child section: " . $action);
             }
         }
     }
-    
-    if (!$section_found) {
+}
+
+// If no admin section was found, try to load the template file
+if (!$section_found) {
+    if (file_exists($templateFile)) {
+        error_log("Admin index.php - Loading template: " . $templateFile);
+        ob_start();
+        include $templateFile;
+        $content = ob_get_clean();
+        $section_found = true;
+    } else {
         error_log("Admin index.php - Invalid action: " . $action . " (Template file not found: " . $templateFile . ")");
         $content = '<div class="alert alert-danger">Invalid action specified.</div>';
     }

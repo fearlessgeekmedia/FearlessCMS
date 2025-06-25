@@ -1,9 +1,15 @@
 <?php
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_page') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && in_array($_POST['action'], ['delete_page', 'delete_content'])) {
     if (!isLoggedIn()) {
         $error = 'You must be logged in to delete pages';
     } else {
-        $fileName = $_POST['file_name'] ?? '';
+        // Handle both old and new parameter names
+        $fileName = $_POST['file_name'] ?? $_POST['path'] ?? '';
+        
+        // If path is provided without .md extension, add it
+        if (!empty($fileName) && !str_ends_with($fileName, '.md')) {
+            $fileName .= '.md';
+        }
         
         // Validate filename: allow slashes for subfolders
         if (empty($fileName) || !preg_match('/^[a-zA-Z0-9_\/-]+\.md$/', $fileName)) {

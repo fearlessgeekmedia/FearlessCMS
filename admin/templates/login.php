@@ -35,7 +35,7 @@
             echo "<!-- Debug: Session: " . print_r($_SESSION, true) . " -->\n";
             ?>
 
-            <form class="mt-8 space-y-6" method="POST" action="/admin/login">
+            <form class="mt-8 space-y-6" method="POST" action="/<?php echo $adminPath; ?>/login">
                 <input type="hidden" name="action" value="login">
                 <div class="rounded-md shadow-sm -space-y-px">
                     <div>

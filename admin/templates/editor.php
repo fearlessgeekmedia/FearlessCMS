@@ -26,9 +26,8 @@
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Template</label>
             <select name="template" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-green-500 focus:border-green-500">
-                <option value="page" <?= ($page['template'] ?? '') === 'page' ? 'selected' : '' ?>>Default Page</option>
-                <option value="home" <?= ($page['template'] ?? '') === 'home' ? 'selected' : '' ?>>Home Page</option>
-                <option value="404" <?= ($page['template'] ?? '') === '404' ? 'selected' : '' ?>>404 Page</option>
+                <option value="page.php" <?= ($page['template'] ?? '') === 'page.php' ? 'selected' : '' ?>>Default Page</option>
+                <option value="home.php" <?= ($page['template'] ?? '') === 'home.php' ? 'selected' : '' ?>>Home Page</option>
             </select>
         </div>
         

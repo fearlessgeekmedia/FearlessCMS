@@ -68,71 +68,64 @@ function fetch_github_content($path) {
     
     error_log("[Store Handler] Final URL to fetch: " . $rawUrl);
     
-    // Create stream context
-    $context = stream_context_create([
-        'http' => [
-            'method' => 'GET',
-            'header' => [
-                'User-Agent: FearlessCMS/1.0',
-                'Accept: application/json, text/plain, */*',
-                'Accept-Language: en-US,en;q=0.9'
-            ],
-            'ignore_errors' => true,
-            'timeout' => 30,
-            'protocol_version' => '1.1'
-        ],
-        'ssl' => [
-            'verify_peer' => true,
-            'verify_peer_name' => true,
-            'allow_self_signed' => false,
-            'cafile' => '/etc/ssl/certs/ca-certificates.crt'
-        ],
-        'socket' => [
-            'bindto' => '0.0.0.0:0', // Force IPv4
-            'tcp_nodelay' => true
-        ]
-    ]);
+    // Try cURL first
+    error_log("[Store Handler] Attempting fetch using cURL");
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $rawUrl);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // Disable SSL verification
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0); // Disable host verification
+    curl_setopt($ch, CURLOPT_USERAGENT, 'FearlessCMS/1.0');
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+    $content = curl_exec($ch);
+    $curl_error = curl_error($ch);
+    $curl_errno = curl_errno($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
     
-    error_log("[Store Handler] Attempting to fetch using file_get_contents");
-    
-    // Initialize response headers array
-    $http_response_header = [];
-    
-    // Try to fetch the content
-    $content = @file_get_contents($rawUrl, false, $context);
-    
-    // Check for errors
     if ($content === false) {
-        $error = error_get_last();
-        error_log("[Store Handler] Failed to fetch content. URL: " . $rawUrl);
-        if ($error) {
-            error_log("[Store Handler] Error details: " . $error['message']);
+        error_log("[Store Handler] cURL failed");
+        error_log("[Store Handler] cURL error: " . $curl_error);
+        error_log("[Store Handler] cURL error number: " . $curl_errno);
+        error_log("[Store Handler] cURL HTTP code: " . $http_code);
+        
+        // Fall back to file_get_contents with SSL verification disabled
+        error_log("[Store Handler] Attempting fallback fetch using file_get_contents");
+        $context = stream_context_create([
+            'http' => [
+                'method' => 'GET',
+                'header' => [
+                    'User-Agent: FearlessCMS/1.0',
+                    'Accept: application/json, text/plain, */*',
+                    'Accept-Language: en-US,en;q=0.9'
+                ],
+                'ignore_errors' => true,
+                'timeout' => 30,
+                'protocol_version' => '1.1'
+            ],
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true
+            ]
+        ]);
+        
+        $content = @file_get_contents($rawUrl, false, $context);
+        if ($content === false) {
+            $error = error_get_last();
+            error_log("[Store Handler] file_get_contents also failed");
+            if ($error) {
+                error_log("[Store Handler] Error details: " . $error['message']);
+            }
+            return false;
         }
-        if (!empty($http_response_header)) {
-            error_log("[Store Handler] HTTP response headers: " . print_r($http_response_header, true));
-        }
-        return false;
-    }
-    
-    // Check if we got a valid response
-    $response_code = 0;
-    if (!empty($http_response_header) && preg_match('/HTTP\/\d\.\d\s+(\d+)/', $http_response_header[0], $matches)) {
-        $response_code = intval($matches[1]);
-    }
-    
-    error_log("[Store Handler] Response code: " . $response_code);
-    if (!empty($http_response_header)) {
-        error_log("[Store Handler] Response headers: " . print_r($http_response_header, true));
-    }
-    error_log("[Store Handler] Response content length: " . strlen($content));
-    error_log("[Store Handler] Response content preview: " . substr($content, 0, 1000));
-    
-    if ($response_code !== 200) {
-        error_log("[Store Handler] Failed to fetch content. HTTP code: " . $response_code);
-        return false;
     }
     
     error_log("[Store Handler] Successfully fetched content");
+    error_log("[Store Handler] Content length: " . strlen($content));
+    error_log("[Store Handler] Content preview: " . substr($content, 0, 1000));
+    
     return $content;
 }
 

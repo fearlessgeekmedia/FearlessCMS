@@ -25,8 +25,14 @@ $base_url = '';
 if (isset($_SERVER['HTTP_HOST'])) {
     $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
     $base_url = $protocol . $_SERVER['HTTP_HOST'];
+    
+    // Load admin path from config
+    $configFile = CONFIG_DIR . '/config.json';
+    $config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
+    $adminPath = $config['admin_path'] ?? 'admin';
+    
     if (strpos($script_filename, '/admin/') !== false) {
-        $base_url .= '/admin';
+        $base_url .= '/' . $adminPath;
     }
 }
 define('BASE_URL', $base_url);

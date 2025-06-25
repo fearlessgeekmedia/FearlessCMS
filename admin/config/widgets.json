@@ -3,32 +3,11 @@
         "id": "main",
         "classes": "main-sidebar",
         "widgets": {
-            "widget-681ad2698552d": {
-                "id": "widget-681ad2698552d",
-                "title": "Text 3",
-                "type": "text",
-                "content": "This is even more text",
-                "classes": ""
-            },
-            "widget-681ad1f880573": {
-                "id": "widget-681ad1f880573",
-                "title": "Text 2",
-                "type": "text",
-                "content": "This is also text",
-                "classes": ""
-            },
-            "widget-681ad1e83c112": {
-                "id": "widget-681ad1e83c112",
-                "title": "Text 1",
+            "685874c9a61a9": {
+                "id": "685874c9a61a9",
+                "title": "Albums",
                 "type": "html",
-                "content": "This is text",
-                "classes": ""
-            },
-            "widget-6824e24900023": {
-                "id": "widget-6824e24900023",
-                "title": "Test",
-                "type": "html",
-                "content": "<p>Test<\/p>",
+                "content": "<a href=\"https:\/\/ko-fi.com\/s\/0e629c3369\" target=\"_blank\"><img src=\"..\/uploads\/look-ma-i-created-ai-slop.png\"><\/a>",
                 "classes": ""
             }
         }
@@ -36,35 +15,6 @@
     "right-sidebar": {
         "id": "right-sidebar",
         "classes": "right-sidebar",
-        "widgets": {
-            "widget-681ad2698552d": {
-                "id": "widget-681ad2698552d",
-                "title": "Text 3",
-                "type": "text",
-                "content": "This is even more text",
-                "classes": ""
-            },
-            "widget-681ad1f880573": {
-                "id": "widget-681ad1f880573",
-                "title": "Text 2",
-                "type": "text",
-                "content": "This is also text",
-                "classes": ""
-            },
-            "widget-681ad1e83c112": {
-                "id": "widget-681ad1e83c112",
-                "title": "Text 1",
-                "type": "html",
-                "content": "This is text",
-                "classes": ""
-            },
-            "widget-6824e24900023": {
-                "id": "widget-6824e24900023",
-                "title": "Test",
-                "type": "html",
-                "content": "<p>Test<\/p>",
-                "classes": ""
-            }
-        }
+        "widgets": []
     }
 }

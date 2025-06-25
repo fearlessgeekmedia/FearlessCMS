@@ -1,0 +1,9 @@
+{
+    "smtp_host": "smtp.gmail.com",
+    "smtp_port": "587",
+    "smtp_username": "michaelaverywilliams@gmail.com",
+    "smtp_password": "twxa flrg felm ifqo ",
+    "smtp_encryption": "tls",
+    "from_email": "service@fearlessgeekmedia.com",
+    "from_name": "Fearless Geek Media"
+}

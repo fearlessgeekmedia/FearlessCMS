@@ -2,32 +2,11 @@
 <html>
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 - Page Not Found - Starterscores</title>
-    <link rel="stylesheet" href="/themes/starterscores/templates/style.css">
-    {{custom_css}}
+    {{module=head.html}}
 </head>
 
 <body>
-    <header class="site-header">
-        <div class="container">
-            <h1 class="site-title">
-                {{#if logo}}
-                <img src="/{{logo}}" alt="{{siteName}}">
-                {{else}}
-                {{siteName}}
-                {{/if}}
-            </h1>
-            <p class="site-description">{{siteDescription}}</p>
-            <nav class="main-navigation">
-                <ul>
-                    {{menu=main}}
-                </ul>
-            </nav>
-        </div>
-    </header>
-
+    {{module=header.html}}
     <main class="site-content">
         <div class="container">
             <h1>404 - Page Not Found</h1>
@@ -35,15 +14,8 @@
             <p><a href="/">Return to Homepage</a></p>
         </div>
     </main>
-
-    <footer class="site-footer">
-        <div class="container">
-            <p>Fearless Geek Media &copy; {{currentYear}}</p>
-        </div>
-    </footer>
-
-    <script src="/themes/starterscores/templates/header.js"></script>
-    {{custom_js}}
+    {{module=footer.html}}
+    {{module=custom_js.html}}
 </body>
 
 </html>
