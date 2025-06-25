@@ -2,51 +2,24 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <title>Page Not Found - Modern Salt Lake City</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="/themes/salt-lake/templates/style.css">
-  {{custom_css}}
+  {{module=head.html}}
 </head>
 
 <body>
-  <header class="site-header">
-    <div class="container">
-      <div class="header-inner">
-        <div class="site-branding">
-          <a href="/" class="site-logo">Modern Salt Lake City</a>
-        </div>
-        <nav class="main-navigation">
-          {{menu=main}}
-        </nav>
-      </div>
-    </div>
-  </header>
+  {{module=header.html}}
   <main class="site-content">
     <div class="container">
-      <div class="page-content">
-        <h1>404 - Page Not Found</h1>
-        <p>The page you requested could not be found.</p>
-        <p><a href="/">Return to Home</a></p>
+      <div class="content-wrapper">
+        <div class="page-content">
+          <h1>404 - Page Not Found</h1>
+          <p>The page you requested could not be found.</p>
+          <p><a href="/">Return to Home</a></p>
+        </div>
       </div>
     </div>
   </main>
-  <footer class="site-footer">
-    <div class="container">
-      <div class="footer-content">
-        <div class="footer-info">
-          <h3>Modern Salt Lake City</h3>
-          <p>A beautiful theme inspired by the landscapes of Utah.</p>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        Fearless Geek Media &copy; 2025
-      </div>
-    </div>
-  </footer>
-  <script>
-    { { custom_js } }
-  </script>
+  {{module=footer.html}}
+  {{module=custom_js.html}}
 </body>
 
 </html>

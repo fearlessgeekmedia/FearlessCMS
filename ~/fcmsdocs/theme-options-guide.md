@@ -193,40 +193,81 @@ Access theme options using the `{{themeOptions.key}}` syntax:
 {{endif}}
 ```
 
-### Advanced Usage
+### Using Theme Options with Modular Templates
 
-#### Looping Through Arrays
+When using modular templates, theme options work seamlessly across all modules:
 
+**Main template (page.html):**
 ```html
-{{if themeOptions.socialLinks}}
-    <div class="social-links">
-        {{foreach themeOptions.socialLinks}}
-            <a href="{{url}}" target="_blank" rel="noopener">
-                {{if icon}}
-                    <i class="{{icon}}"></i>
-                {{endif}}
-                {{name}}
-            </a>
-        {{endforeach}}
-    </div>
-{{endif}}
-```
-
-#### Conditional Styling
-
-```html
-<div class="header {{if themeOptions.transparentHeader}}transparent{{endif}}">
-    <!-- Header content -->
-</div>
-```
-
-#### Dynamic CSS Classes
-
-```html
-<body class="theme-{{themeOptions.colorScheme}} {{if themeOptions.darkMode}}dark{{endif}}">
-    <!-- Body content -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{module=head.html}}
+</head>
+<body>
+    {{module=header.html}}
+    <main>
+        {{module=hero-banner.html}}
+        <div class="content">
+            {{module=sidebar.html}}
+        </div>
+    </main>
+    {{module=footer.html}}
 </body>
+</html>
 ```
+
+**Header module (header.html):**
+```html
+<header class="theme-{{themeOptions.primaryColor}}">
+    {{if themeOptions.logo}}
+        <img src="/{{themeOptions.logo}}" alt="Logo" class="logo">
+    {{else}}
+        <h1>{{siteName}}</h1>
+    {{/if}}
+    
+    {{if themeOptions.showSearch}}
+        <div class="search-box">
+            <!-- Search functionality -->
+        </div>
+    {{/if}}
+</header>
+```
+
+**Sidebar module (sidebar.html):**
+```html
+{{if themeOptions.showSidebar}}
+    <aside class="sidebar">
+        {{if themeOptions.socialLinks}}
+            <div class="social-links">
+                {{#each themeOptions.socialLinks}}
+                    <a href="{{url}}" target="_blank">
+                        <i class="{{icon}}"></i>
+                        {{name}}
+                    </a>
+                {{/each}}
+            </div>
+        {{/if}}
+    </aside>
+{{/if}}
+```
+
+**Footer module (footer.html):**
+```html
+<footer>
+    {{if themeOptions.footerText}}
+        <p>{{themeOptions.footerText}}</p>
+    {{else}}
+        <p>&copy; {{currentYear}} {{siteName}}</p>
+    {{/if}}
+</footer>
+```
+
+This approach allows you to:
+- **Organize theme options** by component (header options in header.html)
+- **Maintain consistency** across all templates
+- **Simplify maintenance** by keeping related code together
+- **Reuse components** with different theme option configurations
 
 ## CSS Integration
 

@@ -1,29 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8">
-    <title>{{title}}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/themes/default/assets/style.css">
-    <style>
-      {{custom_css}}
-    </style>
+    {{module=head.html}}
   </head>
   <body>
-    <header>
-      <h1>{{title}}</h1>
-      <nav>
-        {{menu=main}}
-      </nav>
-    </header>
+    {{module=header.html}}
     <main>
       {{content}}
     </main>
-    <footer>
-      Fearless Geek Media &copy; 2025
-    </footer>
-    <script>
-      {{custom_js}}
-    </script>
+    {{module=footer.html}}
+    {{module=custom_js.html}}
   </body>
 </html>

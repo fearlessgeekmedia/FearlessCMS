@@ -74,6 +74,12 @@ class TemplateRenderer {
     private function replaceVariables($content, $data) {
         error_log("Template content before processing: " . $content);
         
+        // Handle module includes first ({{module=filename.html}})
+        $content = preg_replace_callback('/{{module=([^}]+)}}/', function($matches) use ($data) {
+            $moduleFile = trim($matches[1]);
+            return $this->includeModule($moduleFile, $data);
+        }, $content);
+        
         // Handle special tags first
         // Handle sidebar syntax (only {{sidebar=name}} form)
         $content = preg_replace_callback('/{{sidebar=([^}]+)}}/', function($matches) {
@@ -185,5 +191,33 @@ class TemplateRenderer {
         }
 
         return $content;
+    }
+
+    /**
+     * Include a module template file
+     * 
+     * @param string $moduleFile The module file name (e.g., "header.html")
+     * @param array $data The template data to pass to the module
+     * @return string The rendered module content
+     */
+    private function includeModule($moduleFile, $data) {
+        // Look for the module file in the current theme's templates directory
+        $modulePath = PROJECT_ROOT . '/themes/' . $this->theme . '/templates/' . $moduleFile;
+        
+        // If the file doesn't have an extension, try adding .html
+        if (!file_exists($modulePath) && !pathinfo($moduleFile, PATHINFO_EXTENSION)) {
+            $modulePath .= '.html';
+        }
+        
+        if (!file_exists($modulePath)) {
+            error_log("Module file not found: " . $modulePath);
+            return "<!-- Module not found: $moduleFile -->";
+        }
+        
+        // Read the module content
+        $moduleContent = file_get_contents($modulePath);
+        
+        // Process the module content with the same data
+        return $this->replaceVariables($moduleContent, $data);
     }
 } 

@@ -213,7 +213,47 @@ Begin with a basic, functional theme and add features gradually:
 </html>
 ```
 
-### 2. Use Semantic HTML
+### 2. Use Modular Templates
+
+As your theme grows, break it into reusable components using the modular template system:
+
+```html
+<!-- page.html - Main template -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{module=head.html}}
+</head>
+<body>
+    {{module=header.html}}
+    <main>
+        {{module=hero-banner.html}}
+        <div class="content">
+            {{module=sidebar.html}}
+        </div>
+    </main>
+    {{module=footer.html}}
+</body>
+</html>
+```
+
+**Benefits of modular templates:**
+- **Maintainability**: Common elements in single files
+- **Reusability**: Use modules across multiple templates
+- **Consistency**: Changes update everywhere automatically
+- **Organization**: Cleaner, more organized code structure
+
+**Common modules to create:**
+- `head.html` - HTML head section
+- `header.html` - Site header with navigation
+- `footer.html` - Site footer
+- `navigation.html` - Navigation menus
+- `sidebar.html` - Sidebar content
+- `hero-banner.html` - Hero banner sections
+
+For detailed information, see the [Modular Templates Guide](modular-templates.md).
+
+### 3. Use Semantic HTML
 
 Always use proper HTML5 semantic elements:
 
@@ -244,7 +284,7 @@ Always use proper HTML5 semantic elements:
 </footer>
 ```
 
-### 3. Mobile-First Design
+### 4. Mobile-First Design
 
 Start with mobile styles and add desktop enhancements:
 
@@ -271,7 +311,7 @@ Start with mobile styles and add desktop enhancements:
 }
 ```
 
-### 4. Use CSS Custom Properties
+### 5. Use CSS Custom Properties
 
 Make your theme easily customizable:
 
@@ -300,7 +340,7 @@ Make your theme easily customizable:
 }
 ```
 
-### 5. Progressive Enhancement
+### 6. Progressive Enhancement
 
 Add JavaScript features progressively:
 

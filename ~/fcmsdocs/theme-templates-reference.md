@@ -165,6 +165,156 @@ Format dates using PHP's date format:
 {{date "M j"}}    <!-- Jan 15 -->
 ```
 
+## Modular Templates
+
+FearlessCMS supports modular templates, allowing you to break down templates into reusable components. This makes themes more maintainable and reduces code duplication.
+
+### Module Include Syntax
+
+Use the `{{module=filename.html}}` syntax to include other template files:
+
+```html
+{{module=header.html}}
+{{module=footer.html}}
+{{module=navigation.html}}
+```
+
+### Module Features
+
+#### Variable Access
+Modules have access to all template variables:
+
+```html
+<!-- header.html -->
+<header>
+    <h1>{{siteName}}</h1>
+    {{#if siteDescription}}
+    <p>{{siteDescription}}</p>
+    {{/if}}
+</header>
+```
+
+#### Conditional Logic
+Modules support all template conditionals:
+
+```html
+<!-- hero-banner.html -->
+{{#if heroBanner}}
+<div class="hero-banner">
+    <img src="{{heroBanner}}" alt="{{title}}">
+</div>
+{{/if}}
+```
+
+#### Loops
+Modules support foreach loops:
+
+```html
+<!-- navigation.html -->
+<nav>
+    <ul>
+    {{#each menu.main}}
+        <li><a href="/{{url}}">{{title}}</a></li>
+    {{/each}}
+    </ul>
+</nav>
+```
+
+#### Nested Modules
+Modules can include other modules:
+
+```html
+<!-- header.html -->
+<header>
+    <div class="logo">{{siteName}}</div>
+    {{module=navigation.html}}
+</header>
+```
+
+### File Extensions
+
+You can include modules with or without the `.html` extension:
+
+```html
+{{module=header.html}}  <!-- With extension -->
+{{module=header}}       <!-- Without extension (auto-adds .html) -->
+```
+
+### Error Handling
+
+If a module file is not found, the system will log an error and insert a comment:
+
+```html
+<!-- Module not found: missing-module.html -->
+```
+
+### Example: Modular Template Structure
+
+**Main template (page.html):**
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{module=head.html}}
+</head>
+<body>
+    {{module=header.html}}
+    <main>
+        {{module=hero-banner.html}}
+        <div class="content">
+            {{module=sidebar.html}}
+        </div>
+    </main>
+    {{module=footer.html}}
+</body>
+</html>
+```
+
+**Head module (head.html):**
+```html
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{title}} - {{siteName}}</title>
+<link rel="stylesheet" href="/themes/{{theme}}/assets/style.css">
+```
+
+**Header module (header.html):**
+```html
+<header>
+    <div class="logo">{{siteName}}</div>
+    <nav class="main-menu">
+        {{menu=main}}
+    </nav>
+</header>
+```
+
+**Footer module (footer.html):**
+```html
+<footer>
+    &copy; {{currentYear}} {{siteName}}
+</footer>
+```
+
+### Best Practices for Modular Templates
+
+1. **Keep modules focused** - Each module should have a single responsibility
+2. **Use descriptive names** - Name modules clearly (e.g., `site-header.html` not `h.html`)
+3. **Plan your structure** - Think about what parts are reused across pages
+4. **Avoid deep nesting** - Don't create circular includes or deeply nested structures
+5. **Test thoroughly** - Ensure all variables and conditionals work in modules
+
+### Common Module Types
+
+- `head.html` - HTML head section (meta tags, CSS, JS)
+- `header.html` - Site header (logo, navigation)
+- `footer.html` - Site footer (copyright, links)
+- `navigation.html` - Navigation menus
+- `sidebar.html` - Sidebar content and layout
+- `hero-banner.html` - Hero banner sections
+- `content-layout.html` - Content area layouts
+
+For more detailed information about modular templates, see the [Modular Templates Guide](modular-templates.md).
+
 ## Template Examples
 
 ### Complete Home Template

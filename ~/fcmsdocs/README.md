@@ -11,6 +11,7 @@ Welcome to the FearlessCMS theme development documentation! This collection of g
 ### Reference Guides
 - **[Template Reference](theme-templates-reference.md)** - Complete template syntax and variable reference
 - **[Theme Options Guide](theme-options-guide.md)** - How to implement and use theme options
+- **[Modular Templates](modular-templates.md)** - How to use the modular template system for better code organization
 
 ### Examples and Tutorials
 - **[Nightfall Theme Example](../themes/nightfall/)** - Real-world example of a complete theme
@@ -22,11 +23,13 @@ Welcome to the FearlessCMS theme development documentation! This collection of g
 2. **Follow the Workflow**: Use [Theme Development Workflow](theme-development-workflow.md) for step-by-step guidance
 3. **Reference Syntax**: Check [Template Reference](theme-templates-reference.md) for all available variables and syntax
 4. **Add Options**: Learn about [Theme Options](theme-options-guide.md) to make your theme customizable
+5. **Go Modular**: Explore [Modular Templates](modular-templates.md) for better code organization
 
 ## 🎯 What You'll Learn
 
 - How to create a complete theme from scratch
 - Template system and variable usage
+- **Modular template system for reusable components**
 - Implementing theme options for customization
 - Responsive design principles
 - Best practices for theme development
@@ -42,7 +45,10 @@ themes/your-theme/
 │   ├── home.html      # Homepage template
 │   ├── page.html      # Individual page template
 │   ├── blog.html      # Blog listing template
-│   └── 404.html       # Error page template
+│   ├── 404.html       # Error page template
+│   ├── header.html    # Header module (modular system)
+│   ├── footer.html    # Footer module (modular system)
+│   └── navigation.html # Navigation module (modular system)
 ├── assets/
 │   ├── style.css      # Main stylesheet
 │   ├── images/        # Theme images
@@ -55,6 +61,7 @@ themes/your-theme/
 ## 🔧 Key Features
 
 - **Simple Template System**: Easy-to-learn syntax with powerful features
+- **Modular Templates**: Break down templates into reusable components with `{{module=filename.html}}`
 - **Theme Options**: User-friendly customization without code editing
 - **Responsive Design**: Built-in support for mobile-first design
 - **Extensible**: Add custom functionality with JavaScript
@@ -63,10 +70,11 @@ themes/your-theme/
 ## 💡 Tips for Success
 
 1. **Start Simple**: Begin with a basic, functional theme
-2. **Test Thoroughly**: Check on different devices and browsers
-3. **Use Semantic HTML**: Follow web standards for better accessibility
-4. **Mobile-First**: Design for mobile devices first, then enhance for desktop
-5. **Document Everything**: Include clear documentation for users
+2. **Use Modular Templates**: Break down complex templates into reusable modules
+3. **Test Thoroughly**: Check on different devices and browsers
+4. **Use Semantic HTML**: Follow web standards for better accessibility
+5. **Mobile-First**: Design for mobile devices first, then enhance for desktop
+6. **Document Everything**: Include clear documentation for users
 
 ## 🤝 Contributing
 

@@ -161,6 +161,84 @@ Use loops to iterate over arrays:
 {{endforeach}}
 ```
 
+## Modular Templates
+
+FearlessCMS supports modular templates, allowing you to break down your templates into reusable components. This makes themes more maintainable and reduces code duplication.
+
+### Using Modular Templates
+
+Instead of having everything in one large template file, you can break it into smaller, reusable modules:
+
+```html
+<!-- page.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{module=head.html}}
+</head>
+<body>
+    {{module=header.html}}
+    <main>
+        {{module=hero-banner.html}}
+        <div class="content">
+            {{module=sidebar.html}}
+        </div>
+    </main>
+    {{module=footer.html}}
+</body>
+</html>
+```
+
+### Creating Module Files
+
+Create separate files for each component in your theme's `templates/` directory:
+
+**head.html:**
+```html
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{title}} - {{siteName}}</title>
+<link rel="stylesheet" href="/themes/{{theme}}/assets/style.css">
+```
+
+**header.html:**
+```html
+<header>
+    <div class="logo">{{siteName}}</div>
+    {{#if siteDescription}}
+    <p>{{siteDescription}}</p>
+    {{/if}}
+    <nav class="main-menu">
+        {{menu=main}}
+    </nav>
+</header>
+```
+
+**footer.html:**
+```html
+<footer>
+    &copy; {{currentYear}} {{siteName}}
+</footer>
+```
+
+### Module Features
+
+- **Variable Access**: Modules have access to all template variables
+- **Conditional Logic**: Support for all template conditionals
+- **Loops**: Support for foreach loops
+- **Nested Modules**: Modules can include other modules
+- **File Extensions**: Works with or without `.html` extension
+
+### Benefits of Modular Templates
+
+1. **Maintainability**: Common elements are in single files
+2. **Reusability**: Modules can be used across multiple templates
+3. **Consistency**: Changes update everywhere automatically
+4. **Organization**: Cleaner, more organized code structure
+5. **Testing**: Easier to test individual components
+
+For detailed information about modular templates, see the [Modular Templates Guide](modular-templates.md).
+
 ## Theme Options
 
 You can add custom theme options that users can configure through the admin panel. Create a `config.json` file in your theme directory:

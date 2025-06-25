@@ -116,11 +116,17 @@ footer {
     margin: 0 auto;
 }
 
+.layout-with-sidebar .main-content {
+    width: 100%;
+}
+
 .main-content {
     background: #111;
     padding: 2rem;
     border: 2px dashed #333;
     box-shadow: 5px 5px 5px 5px #000;
+    max-width: 1000px;
+    margin: 0 auto;
 }
 
 .main-content h1 {
@@ -132,21 +138,168 @@ footer {
 }
 
 @media (max-width: 768px) {
-    .layout-with-sidebar {
-        grid-template-columns: 1fr;
+    /* General mobile adjustments */
+    body {
+        font-size: 14px;
+        padding: 0;
     }
     
-    .sidebar {
-        margin-top: 2rem;
+    /* Header mobile adjustments */
+    header {
+        padding: 1rem 0.5rem;
     }
     
     .logo {
-        font-size: 2rem;
+        font-size: 1.8rem;
+        padding: 0.3rem 0.8rem;
+        transform: rotate(-1deg);
     }
     
+    .slogan {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+        transform: rotate(1deg);
+    }
+    
+    /* Main content mobile adjustments */
+    main {
+        padding: 1rem;
+    }
+    
+    .content {
+        padding: 2rem 1rem;
+        margin-top: -4em;
+    }
+    
+    .main-content {
+        padding: 1.5rem;
+        max-width: 100%;
+    }
+    
+    .main-content h1 {
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Layout mobile adjustments */
+    .layout-with-sidebar {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .sidebar {
+        margin-top: 1rem;
+        order: 2;
+    }
+    
+    /* Menu mobile adjustments */
+    .main-menu {
+        margin: 1rem 0 0.5rem 0;
+    }
+    
+    .main-menu li {
+        display: block;
+        margin: 0.3rem 0;
+    }
+    
+    .main-menu li > a {
+        font-size: 1rem;
+        padding: 0.4rem 1rem;
+        transform: rotate(-2deg);
+        display: block;
+        text-align: center;
+    }
+    
+    .main-menu ul ul {
+        position: static;
+        box-shadow: none;
+        min-width: 0;
+        margin-top: 0;
+        padding: 0;
+    }
+    
+    .main-menu ul ul a {
+        padding-left: 2rem;
+    }
+    
+    /* Hero banner mobile adjustments */
+    .hero-banner {
+        margin: -1rem auto;
+    }
+    
+    .hero-banner img {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    /* Iframe mobile adjustments */
+    iframe {
+        margin: 0.8rem 0;
+        border-width: 1px;
+        box-shadow: 2px 2px 2px #000;
+    }
+    
+    /* Widget mobile adjustments */
+    .widget-title {
+        font-size: 1rem;
+    }
+    
+    .sidebar .widget-content img {
+        width: 80px;
+        height: auto;
+    }
+    
+    /* Buttons mobile adjustments */
     .buttons a {
-        font-size: 1.2rem;
-        padding: 0.8rem 1.5rem;
+        font-size: 1.1rem;
+        padding: 0.7rem 1.3rem;
+        margin: 0.3rem;
+    }
+    
+    /* Footer mobile adjustments */
+    footer {
+        margin-top: 2rem;
+        font-size: 0.7rem;
+        padding: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Extra small mobile adjustments */
+    .logo {
+        font-size: 1.5rem;
+        padding: 0.2rem 0.6rem;
+    }
+    
+    .slogan {
+        font-size: 1rem;
+    }
+    
+    .main-content h1 {
+        font-size: 1.8rem;
+    }
+    
+    .main-menu li > a {
+        font-size: 0.9rem;
+        padding: 0.3rem 0.8rem;
+    }
+    
+    .content {
+        padding: 1.5rem 0.5rem;
+    }
+    
+    .main-content {
+        padding: 1rem;
+    }
+    
+    .sidebar .widget-content img {
+        width: 70px;
+    }
+    
+    /* Iframe extra small mobile adjustments */
+    iframe {
+        margin: 0.5rem 0;
+        border-width: 1px;
     }
 }
 
@@ -275,4 +428,30 @@ footer {
     margin: 0 auto;
     box-shadow: 3px 3px 3px 3px #000;
     opacity: 0.8;
+}
+
+.widget-content img {
+    max-width: 100%;
+    height: auto;
+}
+
+.sidebar .widget-content img {
+    width: 100px;
+}
+
+/* Responsive iframe styling */
+iframe {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 1rem 0;
+    border: 2px dashed #333;
+    box-shadow: 3px 3px 3px #000;
+}
+
+/* Ensure iframes maintain aspect ratio */
+iframe[width="760"][height="240"] {
+    aspect-ratio: 760 / 240;
+    width: 100%;
+    height: auto;
 }
