@@ -1,94 +1,193 @@
 # Theme Development Workflow
 
-This guide provides a step-by-step workflow for developing themes in FearlessCMS, from initial setup to final deployment.
+This guide outlines the recommended workflow for developing themes in FearlessCMS, from initial setup to final deployment.
 
-## Prerequisites
+## Table of Contents
 
-Before starting theme development, ensure you have:
+1. [Getting Started](#getting-started)
+2. [Development Environment](#development-environment)
+3. [Theme Structure](#theme-structure)
+4. [Development Process](#development-process)
+5. [Testing and Debugging](#testing-and-debugging)
+6. [Optimization](#optimization)
+7. [Deployment](#deployment)
+8. [Maintenance](#maintenance)
+
+## Getting Started
+
+### Prerequisites
+
+Before developing a theme, ensure you have:
 
 - A working FearlessCMS installation
 - Basic knowledge of HTML, CSS, and JavaScript
+- Understanding of Handlebars template syntax
 - A code editor (VS Code, Sublime Text, etc.)
-- Basic understanding of responsive design principles
+- Browser developer tools
 
-## Development Environment Setup
+### Theme Requirements
 
-### 1. Create Theme Directory
+Every FearlessCMS theme must include:
 
-```bash
-# Navigate to your FearlessCMS themes directory
-cd themes/
+- `theme.json` - Theme metadata and configuration
+- `templates/` directory with required template files
+- `assets/style.css` - Main stylesheet
+- Optional `config.json` for theme options
 
-# Create your theme directory
-mkdir my-theme
-cd my-theme
+## Development Environment
 
-# Create required subdirectories
-mkdir templates
-mkdir assets
-mkdir assets/images
-mkdir assets/js
+### Local Development Setup
+
+1. **Create Theme Directory**
+   ```bash
+   mkdir -p themes/your-theme-name/templates
+   mkdir -p themes/your-theme-name/assets
+   ```
+
+2. **Initialize Theme Files**
+   ```bash
+   touch themes/your-theme-name/theme.json
+   touch themes/your-theme-name/config.json
+   touch themes/your-theme-name/templates/home.html
+   touch themes/your-theme-name/templates/page.html
+   touch themes/your-theme-name/templates/404.html
+   touch themes/your-theme-name/assets/style.css
+   ```
+
+3. **Configure Development Server**
+   ```bash
+   # Start local development server
+   php -S localhost:8000
+   ```
+
+### Recommended Tools
+
+- **Code Editor**: VS Code with extensions for HTML, CSS, and Handlebars
+- **Browser Tools**: Chrome DevTools or Firefox Developer Tools
+- **Version Control**: Git for tracking changes
+- **Image Optimization**: Tools like ImageOptim or TinyPNG
+- **CSS Preprocessors**: Optional SASS/SCSS support
+
+## Theme Structure
+
+### Basic Structure
+
+```
+themes/your-theme-name/
+├── theme.json              # Theme metadata
+├── config.json             # Theme options (optional)
+├── README.md               # Theme documentation
+├── templates/
+│   ├── home.html          # Homepage template
+│   ├── page.html          # Page template
+│   ├── blog.html          # Blog template (optional)
+│   ├── 404.html           # Error page template
+│   ├── head.html          # Head module (optional)
+│   ├── header.html        # Header module (optional)
+│   ├── footer.html        # Footer module (optional)
+│   └── custom_js.html     # Custom JavaScript (optional)
+├── assets/
+│   ├── style.css          # Main stylesheet
+│   ├── images/            # Theme images
+│   └── js/                # Theme JavaScript
+└── preview.png            # Theme preview image
 ```
 
-### 2. Initialize Theme Files
+### Required Files
 
-Create the basic theme structure:
-
-```bash
-# Create theme configuration
-touch theme.json
-touch config.json
-touch README.md
-
-# Create template files
-touch templates/home.html
-touch templates/page.html
-touch templates/blog.html
-touch templates/404.html
-
-# Create assets
-touch assets/style.css
-touch assets/theme.js
-```
-
-## Step-by-Step Development Process
-
-### Step 1: Define Theme Configuration
-
-Start by creating your `theme.json`:
-
+#### theme.json
 ```json
 {
-    "name": "My Awesome Theme",
-    "description": "A modern, responsive theme for blogs and websites",
+    "name": "Your Theme Name",
+    "description": "A brief description of your theme",
     "version": "1.0.0",
     "author": "Your Name",
     "license": "MIT",
     "templates": {
         "home": "home.html",
         "page": "page.html",
-        "blog": "blog.html",
         "404": "404.html"
     }
 }
 ```
 
-### Step 2: Create Basic Templates
-
-Start with a simple `templates/page.html`:
-
+#### Basic Template (home.html)
 ```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{title}} - {{siteName}}</title>
+    <title>{{#if title}}{{title}} - {{/if}}{{siteName}}</title>
+    <link rel="stylesheet" href="/themes/{{theme}}/assets/style.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <h1 class="site-title">{{siteName}}</h1>
+            {{#if siteDescription}}
+                <p class="site-description">{{siteDescription}}</p>
+            {{/if}}
+        </div>
+    </header>
+    
+    <main class="site-main">
+        <div class="container">
+            <article class="content">
+                {{content}}
+            </article>
+        </div>
+    </main>
+    
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; {{currentYear}} {{siteName}}</p>
+        </div>
+    </footer>
+</body>
+</html>
+```
+
+## Development Process
+
+### 1. Planning Phase
+
+- **Define Requirements**: What type of site is this theme for?
+- **Research**: Look at similar themes and websites for inspiration
+- **Wireframing**: Create basic layouts and structure
+- **Design System**: Define colors, typography, and spacing
+
+### 2. Initial Setup
+
+Create the basic theme structure:
+
+```bash
+# Create theme directory
+mkdir -p themes/my-theme/{templates,assets}
+
+# Create basic files
+touch themes/my-theme/theme.json
+touch themes/my-theme/templates/{home,page,404}.html
+touch themes/my-theme/assets/style.css
+```
+
+### 3. Template Development
+
+Start with a minimal template and build up:
+
+#### Step 1: Basic Structure
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{siteName}}</title>
     <link rel="stylesheet" href="/themes/{{theme}}/assets/style.css">
 </head>
 <body>
     <header>
-        <h1>{{title}}</h1>
+        <h1>{{siteName}}</h1>
     </header>
     
     <main>
@@ -102,499 +201,436 @@ Start with a simple `templates/page.html`:
 </html>
 ```
 
-### Step 3: Add Basic Styling
+#### Step 2: Add Navigation
+```html
+<header class="site-header">
+    <div class="container">
+        <h1 class="site-title">{{siteName}}</h1>
+        
+        {{#if menu.main}}
+            <nav class="main-navigation">
+                <ul class="nav-menu">
+                    {{menu=main}}
+                </ul>
+            </nav>
+        {{/if}}
+    </div>
+</header>
+```
 
-Create `assets/style.css`:
+#### Step 3: Add Theme Options
+```html
+{{#if themeOptions.logo}}
+    <img src="/{{themeOptions.logo}}" alt="{{siteName}}" class="logo">
+{{else}}
+    <h1 class="site-title">{{siteName}}</h1>
+{{/if}}
+```
 
+### 4. CSS Development
+
+#### Step 1: Reset and Base Styles
 ```css
-/* Reset and base styles */
+/* Reset */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+/* Base styles */
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     line-height: 1.6;
     color: #333;
 }
 
-/* Layout */
-header, main, footer {
-    padding: 2rem;
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+```
+
+#### Step 2: Layout Components
+```css
+/* Header */
+.site-header {
+    background: #f8f9fa;
+    padding: 1rem 0;
+    border-bottom: 1px solid #e9ecef;
 }
 
-/* Typography */
-h1 {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
+/* Navigation */
+.main-navigation ul {
+    list-style: none;
+    display: flex;
+    gap: 2rem;
 }
 
-/* Responsive */
+.main-navigation a {
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+}
+
+/* Main content */
+.site-main {
+    padding: 2rem 0;
+    min-height: 60vh;
+}
+
+/* Footer */
+.site-footer {
+    background: #343a40;
+    color: white;
+    padding: 2rem 0;
+    margin-top: auto;
+}
+```
+
+#### Step 3: Responsive Design
+```css
+/* Mobile-first approach */
 @media (max-width: 768px) {
-    h1 {
-        font-size: 2rem;
+    .main-navigation ul {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .container {
+        padding: 0 15px;
     }
 }
 ```
 
-### Step 4: Test Your Theme
+### 5. Theme Options Integration
 
-1. **Activate the theme** in the admin panel
-2. **Create a test page** with some content
-3. **View the page** in your browser
-4. **Check for errors** in browser console
-
-### Step 5: Iterate and Improve
-
-Based on your testing, improve the theme:
-
-1. **Fix layout issues**
-2. **Improve typography**
-3. **Add responsive design**
-4. **Enhance visual appeal**
-
-### Step 6: Add Theme Options
-
-Create `config.json` for customizable options:
-
+#### Define Options (config.json)
 ```json
 {
     "options": {
-        "logo": {
-            "type": "image",
-            "label": "Logo Image",
-            "description": "Upload your site logo"
-        },
         "primaryColor": {
             "type": "color",
             "label": "Primary Color",
-            "default": "#007bff"
+            "default": "#007cba"
         },
         "showSidebar": {
-            "type": "checkbox",
+            "type": "boolean",
             "label": "Show Sidebar",
             "default": true
+        },
+        "logo": {
+            "type": "image",
+            "label": "Logo"
         }
     }
 }
 ```
 
-### Step 7: Implement Advanced Features
-
-Add more sophisticated features:
-
-1. **Navigation menus**
-2. **Blog functionality**
-3. **Search capability**
-4. **Social media integration**
-5. **Custom JavaScript**
-
-## Development Best Practices
-
-### 1. Start Simple
-
-Begin with a basic, functional theme and add features gradually:
-
+#### Use in Templates
 ```html
-<!-- Start with this simple structure -->
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{title}}</title>
-    <link rel="stylesheet" href="/themes/{{theme}}/assets/style.css">
-</head>
-<body>
-    <header>{{siteName}}</header>
-    <main>{{content}}</main>
-    <footer>&copy; {{currentYear}}</footer>
-</body>
-</html>
+<style>
+:root {
+    --primary-color: {{themeOptions.primaryColor}};
+}
+</style>
+
+<div class="content-layout {{#if themeOptions.showSidebar}}with-sidebar{{/if}}">
+    <div class="main-content">
+        {{content}}
+    </div>
+    
+    {{#if themeOptions.showSidebar}}
+        <aside class="sidebar">
+            <!-- Sidebar content -->
+        </aside>
+    {{/if}}
+</div>
 ```
 
-### 2. Use Modular Templates
+## Testing and Debugging
 
-As your theme grows, break it into reusable components using the modular template system:
+### 1. Template Testing
 
+Test your templates with different content scenarios:
+
+- **Empty content**: Pages with no content
+- **Long content**: Pages with lots of text
+- **Short content**: Pages with minimal content
+- **Special characters**: Content with HTML, quotes, etc.
+- **Missing variables**: Test fallbacks
+
+### 2. Browser Testing
+
+Test across different browsers and devices:
+
+- Chrome, Firefox, Safari, Edge
+- Mobile devices (iOS, Android)
+- Different screen sizes
+- High DPI displays
+
+### 3. Debugging Techniques
+
+#### Template Debugging
 ```html
-<!-- page.html - Main template -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    {{module=head.html}}
-</head>
-<body>
-    {{module=header.html}}
-    <main>
-        {{module=hero-banner.html}}
-        <div class="content">
-            {{module=sidebar.html}}
-        </div>
-    </main>
-    {{module=footer.html}}
-</body>
-</html>
+<!-- Debug output -->
+<div style="display: none;">
+    <p>Title: {{title}}</p>
+    <p>Children: {{#if children}}Yes{{else}}No{{/if}}</p>
+    <p>Theme options: {{themeOptions}}</p>
+</div>
 ```
 
-**Benefits of modular templates:**
-- **Maintainability**: Common elements in single files
-- **Reusability**: Use modules across multiple templates
-- **Consistency**: Changes update everywhere automatically
-- **Organization**: Cleaner, more organized code structure
-
-**Common modules to create:**
-- `head.html` - HTML head section
-- `header.html` - Site header with navigation
-- `footer.html` - Site footer
-- `navigation.html` - Navigation menus
-- `sidebar.html` - Sidebar content
-- `hero-banner.html` - Hero banner sections
-
-For detailed information, see the [Modular Templates Guide](modular-templates.md).
-
-### 3. Use Semantic HTML
-
-Always use proper HTML5 semantic elements:
-
-```html
-<header>
-    <nav>
-        <ul>
-            {{foreach menu.main}}
-                <li><a href="/{{url}}">{{title}}</a></li>
-            {{endforeach}}
-        </ul>
-    </nav>
-</header>
-
-<main>
-    <article>
-        <header>
-            <h1>{{title}}</h1>
-        </header>
-        <section>
-            {{content}}
-        </section>
-    </article>
-</main>
-
-<footer>
-    <p>&copy; {{currentYear}} {{siteName}}</p>
-</footer>
-```
-
-### 4. Mobile-First Design
-
-Start with mobile styles and add desktop enhancements:
-
+#### CSS Debugging
 ```css
-/* Mobile first */
-.container {
+/* Debug borders */
+* {
+    border: 1px solid red;
+}
+
+/* Debug specific elements */
+.debug {
+    outline: 2px solid blue;
+    background: rgba(0,0,255,0.1);
+}
+```
+
+#### JavaScript Debugging
+```javascript
+// Console logging
+console.log('Theme loaded:', {
+    theme: '{{theme}}',
+    options: {{themeOptions}}
+});
+
+// Error handling
+try {
+    // Your code
+} catch (error) {
+    console.error('Theme error:', error);
+}
+```
+
+### 4. Performance Testing
+
+- **Page load speed**: Use browser dev tools
+- **Image optimization**: Compress images
+- **CSS optimization**: Minify CSS
+- **JavaScript optimization**: Minify JS
+
+## Optimization
+
+### 1. CSS Optimization
+
+#### Use CSS Custom Properties
+```css
+:root {
+    --primary-color: {{themeOptions.primaryColor}};
+    --font-family: {{themeOptions.fontFamily}};
+    --spacing: 1rem;
+}
+
+.button {
+    background: var(--primary-color);
+    padding: var(--spacing);
+    font-family: var(--font-family);
+}
+```
+
+#### Efficient Selectors
+```css
+/* Good */
+.nav-item { }
+
+/* Bad */
+body header nav ul li { }
+```
+
+#### Mobile-First Approach
+```css
+/* Base styles (mobile) */
+.content {
     padding: 1rem;
 }
 
 /* Tablet and up */
 @media (min-width: 768px) {
-    .container {
+    .content {
         padding: 2rem;
-        max-width: 1200px;
-        margin: 0 auto;
     }
 }
 
-/* Desktop */
+/* Desktop and up */
 @media (min-width: 1024px) {
-    .container {
+    .content {
         padding: 3rem;
     }
 }
 ```
 
-### 5. Use CSS Custom Properties
+### 2. Template Optimization
 
-Make your theme easily customizable:
+#### Minimize Conditionals
+```html
+<!-- Good -->
+{{#if menu.main}}
+    <nav class="main-navigation">
+        {{menu=main}}
+    </nav>
+{{/if}}
 
-```css
-:root {
-    --primary-color: #007bff;
-    --secondary-color: #6c757d;
-    --text-color: #333;
-    --bg-color: #fff;
-    --border-color: #e9ecef;
-}
-
-.button {
-    background-color: var(--primary-color);
-    color: white;
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 4px;
-}
-
-.card {
-    background-color: var(--bg-color);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 1rem;
-}
+<!-- Bad -->
+{{#if menu.main}}
+    {{#if menu.main.length}}
+        {{#if menu.main.length > 0}}
+            <nav class="main-navigation">
+                {{menu=main}}
+            </nav>
+        {{/if}}
+    {{/if}}
+{{/if}}
 ```
 
-### 6. Progressive Enhancement
+#### Use Modular Templates
+```html
+<!-- Break into modules -->
+{{module=header.html}}
+{{module=content.html}}
+{{module=footer.html}}
+```
 
-Add JavaScript features progressively:
+### 3. Image Optimization
+
+- Use appropriate formats (WebP, AVIF for modern browsers)
+- Compress images without quality loss
+- Use responsive images
+- Implement lazy loading
 
 ```html
-<!-- Basic functionality works without JS -->
-<nav class="nav">
-    <ul>
-        {{foreach menu.main}}
-            <li><a href="/{{url}}">{{title}}</a></li>
-        {{endforeach}}
-    </ul>
-</nav>
-
-<!-- Enhanced with JavaScript -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Add mobile menu toggle
-    const nav = document.querySelector('.nav');
-    const toggle = document.createElement('button');
-    toggle.textContent = 'Menu';
-    toggle.classList.add('nav-toggle');
-    
-    toggle.addEventListener('click', function() {
-        nav.classList.toggle('nav-open');
-    });
-    
-    nav.parentNode.insertBefore(toggle, nav);
-});
-</script>
-```
-
-## Testing Your Theme
-
-### 1. Content Testing
-
-Test with different types of content:
-
-- **Short pages** (just a title and paragraph)
-- **Long pages** (lots of content)
-- **Pages with images**
-- **Pages with lists and tables**
-- **Blog posts with different formats**
-
-### 2. Browser Testing
-
-Test in multiple browsers:
-
-- Chrome/Chromium
-- Firefox
-- Safari
-- Edge
-
-### 3. Device Testing
-
-Test on different devices:
-
-- **Mobile phones** (portrait and landscape)
-- **Tablets** (portrait and landscape)
-- **Desktop computers** (different screen sizes)
-
-### 4. Performance Testing
-
-Check theme performance:
-
-- **Page load speed**
-- **CSS file size**
-- **JavaScript execution time**
-- **Image optimization**
-
-## Debugging Tips
-
-### 1. Use Browser Developer Tools
-
-- **Inspect elements** to see how CSS is applied
-- **Check console** for JavaScript errors
-- **Use network tab** to see if files are loading
-- **Test responsive design** with device simulation
-
-### 2. Add Debug Output
-
-Temporarily add debug information to your templates:
-
-```html
-<!-- Debug information -->
-<div style="background: #f0f0f0; padding: 1rem; margin: 1rem 0; font-family: monospace;">
-    <strong>Debug Info:</strong><br>
-    Title: {{title}}<br>
-    URL: {{url}}<br>
-    Theme: {{theme}}<br>
-    Children: {{if children}}Yes{{else}}No{{endif}}
-</div>
-```
-
-### 3. Check File Permissions
-
-Ensure your theme files have proper permissions:
-
-```bash
-chmod 644 assets/style.css
-chmod 644 templates/*.html
-chmod 644 theme.json
-chmod 644 config.json
-```
-
-## Version Control
-
-### 1. Initialize Git Repository
-
-```bash
-cd themes/my-theme
-git init
-```
-
-### 2. Create .gitignore
-
-```bash
-# .gitignore
-.DS_Store
-*.log
-node_modules/
-# Add any build tool directories if you use them
-# .sass-cache/
-# dist/
-# build/
-```
-
-### 3. Make Initial Commit
-
-```bash
-git add .
-git commit -m "Initial theme commit"
+<picture>
+    <source srcset="{{image.webp}}" type="image/webp">
+    <img src="{{image.jpg}}" alt="{{image.alt}}" loading="lazy">
+</picture>
 ```
 
 ## Deployment
 
-### 1. Package Your Theme
+### 1. Pre-Deployment Checklist
 
-Create a clean distribution:
+- [ ] All templates work correctly
+- [ ] CSS is optimized and responsive
+- [ ] Images are compressed
+- [ ] Theme options are tested
+- [ ] Cross-browser compatibility verified
+- [ ] Performance is acceptable
+- [ ] Documentation is complete
 
-```bash
-# Remove development files
-rm -rf .git
-rm -rf node_modules
-# Remove any build tool directories
-# rm -rf .sass-cache
-# rm -rf dist
-# rm -rf build
+### 2. File Organization
 
-# Create zip file
-zip -r my-theme-v1.0.0.zip . -x "*.git*" "node_modules/*"
+```
+themes/your-theme/
+├── theme.json
+├── config.json
+├── README.md
+├── preview.png
+├── templates/
+│   ├── home.html
+│   ├── page.html
+│   ├── 404.html
+│   └── modules/
+├── assets/
+│   ├── style.css
+│   ├── images/
+│   └── js/
+└── docs/
+    ├── installation.md
+    ├── customization.md
+    └── troubleshooting.md
 ```
 
-### 2. Install in FearlessCMS
+### 3. Documentation
 
-1. **Upload** the theme to your FearlessCMS installation
-2. **Extract** to the `themes/` directory
-3. **Activate** the theme in admin panel
-4. **Configure** theme options
-5. **Test** thoroughly
+Create comprehensive documentation:
+
+#### README.md
+```markdown
+# Theme Name
+
+Brief description of the theme.
+
+## Features
+
+- Responsive design
+- Customizable colors
+- Multiple layout options
+- SEO optimized
+
+## Installation
+
+1. Upload theme to `themes/` directory
+2. Activate in admin panel
+3. Configure theme options
+
+## Customization
+
+Describe how to customize the theme.
+
+## Support
+
+Contact information and support details.
+```
+
+### 4. Version Control
+
+Use Git for version control:
+
+```bash
+git init
+git add .
+git commit -m "Initial theme release"
+git tag v1.0.0
+```
 
 ## Maintenance
 
-### 1. Keep Dependencies Updated
+### 1. Regular Updates
 
-Regularly update any external dependencies:
+- Monitor for security updates
+- Update dependencies
+- Test with new CMS versions
+- Fix reported issues
 
-- CSS frameworks
-- JavaScript libraries
-- Font files
+### 2. User Feedback
 
-### 2. Monitor Performance
+- Collect user feedback
+- Address common issues
+- Improve documentation
+- Add requested features
 
-Track theme performance over time:
+### 3. Performance Monitoring
 
-- Page load speeds
-- User feedback
-- Browser compatibility issues
+- Monitor page load times
+- Track user experience
+- Optimize based on usage data
+- Update for new web standards
 
-### 3. Version Management
+### 4. Documentation Updates
 
-Use semantic versioning for your theme:
+- Keep documentation current
+- Add troubleshooting guides
+- Update installation instructions
+- Document new features
 
-- **Major version** (1.0.0 → 2.0.0): Breaking changes
-- **Minor version** (1.0.0 → 1.1.0): New features
-- **Patch version** (1.0.0 → 1.0.1): Bug fixes
+## Best Practices Summary
 
-## Example: Complete Development Session
+1. **Start Simple**: Begin with basic templates and add complexity gradually
+2. **Test Thoroughly**: Test with various content types and devices
+3. **Optimize Performance**: Minimize CSS/JS and optimize images
+4. **Use Standards**: Follow HTML5, CSS3, and accessibility guidelines
+5. **Document Everything**: Create clear, comprehensive documentation
+6. **Version Control**: Use Git for tracking changes
+7. **User Feedback**: Listen to users and improve based on feedback
+8. **Regular Updates**: Keep themes current with web standards
 
-Here's an example of a complete development session:
-
-```bash
-# 1. Create theme structure
-mkdir -p themes/my-blog-theme/{templates,assets/{css,js,images}}
-
-# 2. Create basic files
-cd themes/my-blog-theme
-touch theme.json config.json README.md
-touch templates/{home,page,blog,404}.html
-touch assets/css/style.css assets/js/theme.js
-
-# 3. Edit theme.json
-cat > theme.json << 'EOF'
-{
-    "name": "My Blog Theme",
-    "description": "A clean blog theme",
-    "version": "1.0.0",
-    "author": "Your Name",
-    "license": "MIT",
-    "templates": {
-        "home": "home.html",
-        "page": "page.html",
-        "blog": "blog.html",
-        "404": "404.html"
-    }
-}
-EOF
-
-# 4. Create basic template
-cat > templates/page.html << 'EOF'
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{title}} - {{siteName}}</title>
-    <link rel="stylesheet" href="/themes/{{theme}}/assets/css/style.css">
-</head>
-<body>
-    <header>
-        <h1>{{title}}</h1>
-    </header>
-    <main>{{content}}</main>
-    <footer>&copy; {{currentYear}} {{siteName}}</footer>
-</body>
-</html>
-EOF
-
-# 5. Add basic CSS
-cat > assets/css/style.css << 'EOF'
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: sans-serif; line-height: 1.6; padding: 2rem; }
-EOF
-
-# 6. Test the theme
-# - Activate in admin panel
-# - Create test content
-# - View in browser
-# - Debug any issues
-
-# 7. Iterate and improve
-# - Add more styling
-# - Implement responsive design
-# - Add theme options
-# - Test thoroughly
-```
-
-This workflow ensures you create a robust, maintainable theme that works well across different devices and content types. 
+This workflow ensures you create high-quality, maintainable themes that provide a great user experience and are easy to support and update. 

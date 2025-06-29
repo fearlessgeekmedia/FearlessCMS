@@ -1,5 +1,15 @@
 <?php
+// Get the CMS mode manager instance
+global $cmsModeManager;
+
 $page_title = 'Store';
+
+// Check if store access is allowed
+if (!$cmsModeManager->canAccessStore()) {
+    // Redirect to plugins page with a message
+    header('Location: ?action=plugins&error=store_disabled');
+    exit;
+}
 
 // Load store configuration
 $config_file = dirname(__DIR__) . '/../config/config.json';

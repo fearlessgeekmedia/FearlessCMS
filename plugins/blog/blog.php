@@ -48,7 +48,7 @@ function blog_create_slug($text) {
 fcms_register_admin_section('blog', [
     'label' => 'Blog',
     'menu_order' => 40,
-    'parent' => 'plugins',
+    'parent' => 'manage_plugins',
     'render_callback' => function() {
         ob_start();
         $posts = blog_load_posts();

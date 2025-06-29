@@ -7,29 +7,45 @@ if (session_status() === PHP_SESSION_NONE) {
 // Include required files
 require_once dirname(__DIR__) . '/includes/config.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
+require_once dirname(__DIR__) . '/includes/CMSModeManager.php';
 
 // Only handle AJAX requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    error_log("DEBUG: Plugin handler - Action received: " . $_POST['action']);
+    error_log("DEBUG: Plugin handler - POST data: " . print_r($_POST, true));
+    error_log("DEBUG: Plugin handler - Session data: " . print_r($_SESSION, true));
+    
     // Clear any previous output and set JSON header
-    ob_clean();
+    if (ob_get_level()) {
+        ob_end_clean();
+    }
     header('Content-Type: application/json');
 
     if (!isLoggedIn()) {
+        error_log("DEBUG: Plugin handler - User not logged in");
         http_response_code(403);
         echo json_encode(['success' => false, 'error' => 'You must be logged in to perform this action']);
         exit;
     }
 
+    error_log("DEBUG: Plugin handler - User is logged in, proceeding with action");
+
+    // Initialize CMS mode manager
+    $cmsModeManager = new CMSModeManager();
+
     try {
+        error_log("DEBUG: Plugin handler - Entering switch statement for action: " . $_POST['action']);
         switch ($_POST['action']) {
             case 'activate_plugin':
-                if (!fcms_check_permission($_SESSION['username'], 'manage_plugins')) {
-                    throw new Exception('You do not have permission to manage plugins');
+                error_log("DEBUG: Plugin handler - Processing activate_plugin");
+                if (!$cmsModeManager->canActivatePlugins()) {
+                    throw new Exception('Plugin activation is not allowed in the current CMS mode');
                 }
                 if (empty($_POST['plugin_slug'])) {
                     throw new Exception('Plugin slug is required');
                 }
                 $plugin_slug = $_POST['plugin_slug'];
+                error_log("DEBUG: Plugin handler - Activating plugin: " . $plugin_slug);
                 $activePluginsFile = PLUGIN_CONFIG;
                 $activePlugins = file_exists($activePluginsFile) ? json_decode(file_get_contents($activePluginsFile), true) : [];
                 if (!in_array($plugin_slug, $activePlugins)) {
@@ -38,17 +54,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         throw new Exception('Failed to save plugin configuration');
                     }
                 }
+                error_log("DEBUG: Plugin handler - Plugin activated successfully");
                 echo json_encode(['success' => true, 'message' => 'Plugin activated successfully']);
                 break;
                 
             case 'deactivate_plugin':
-                if (!fcms_check_permission($_SESSION['username'], 'manage_plugins')) {
-                    throw new Exception('You do not have permission to manage plugins');
+                error_log("DEBUG: Plugin handler - Processing deactivate_plugin");
+                if (!$cmsModeManager->canDeactivatePlugins()) {
+                    throw new Exception('Plugin deactivation is not allowed in the current CMS mode');
                 }
                 if (empty($_POST['plugin_slug'])) {
                     throw new Exception('Plugin slug is required');
                 }
                 $plugin_slug = $_POST['plugin_slug'];
+                error_log("DEBUG: Plugin handler - Deactivating plugin: " . $plugin_slug);
                 $activePluginsFile = PLUGIN_CONFIG;
                 $activePlugins = file_exists($activePluginsFile) ? json_decode(file_get_contents($activePluginsFile), true) : [];
                 $pluginIndex = array_search($plugin_slug, $activePlugins);
@@ -58,15 +77,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         throw new Exception('Failed to save plugin configuration');
                     }
                 }
+                error_log("DEBUG: Plugin handler - Plugin deactivated successfully");
                 echo json_encode(['success' => true, 'message' => 'Plugin deactivated successfully']);
                 break;
 
+            case 'delete_plugin':
+                error_log("DEBUG: Plugin handler - Processing delete_plugin");
+                if (!$cmsModeManager->canDeletePlugins()) {
+                    throw new Exception('Plugin deletion is not allowed in the current CMS mode');
+                }
+                if (empty($_POST['plugin_slug'])) {
+                    throw new Exception('Plugin slug is required');
+                }
+                $plugin_slug = $_POST['plugin_slug'];
+                error_log("DEBUG: Plugin handler - Deleting plugin: " . $plugin_slug);
+                
+                // Check if plugin is active before deletion
+                $activePluginsFile = PLUGIN_CONFIG;
+                $activePlugins = file_exists($activePluginsFile) ? json_decode(file_get_contents($activePluginsFile), true) : [];
+                if (in_array($plugin_slug, $activePlugins)) {
+                    throw new Exception('Cannot delete an active plugin. Please deactivate it first.');
+                }
+                
+                // Delete plugin directory
+                $pluginDir = PLUGIN_DIR . '/' . $plugin_slug;
+                if (is_dir($pluginDir)) {
+                    if (!deleteDirectory($pluginDir)) {
+                        throw new Exception('Failed to delete plugin directory');
+                    }
+                }
+                
+                error_log("DEBUG: Plugin handler - Plugin deleted successfully");
+                echo json_encode(['success' => true, 'message' => 'Plugin deleted successfully']);
+                break;
+
             default:
+                error_log("DEBUG: Plugin handler - Invalid action: " . $_POST['action']);
                 throw new Exception('Invalid action specified');
         }
     } catch (Exception $e) {
+        error_log("DEBUG: Plugin handler - Exception caught: " . $e->getMessage());
         http_response_code(400);
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
     }
+    error_log("DEBUG: Plugin handler - Exiting");
     exit;
+}
+
+/**
+ * Recursively delete a directory
+ */
+function deleteDirectory($dir) {
+    if (!is_dir($dir)) {
+        return false;
+    }
+    
+    $files = array_diff(scandir($dir), array('.', '..'));
+    foreach ($files as $file) {
+        $path = $dir . '/' . $file;
+        if (is_dir($path)) {
+            deleteDirectory($path);
+        } else {
+            unlink($path);
+        }
+    }
+    
+    return rmdir($dir);
 } 

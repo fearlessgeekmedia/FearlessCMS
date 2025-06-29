@@ -1,0 +1,32 @@
+{
+    "name": "Elegant Dark",
+    "version": "1.0.0",
+    "author": "FearlessCMS",
+    "description": "An elegant dark theme with sophisticated design and premium aesthetics",
+    "options": {
+        "logo": {
+            "type": "image",
+            "label": "Logo"
+        },
+        "accentColor": {
+            "type": "color",
+            "label": "Accent Color",
+            "default": "#c084fc"
+        },
+        "goldAccent": {
+            "type": "color",
+            "label": "Gold Accent",
+            "default": "#fbbf24"
+        },
+        "showAnimations": {
+            "type": "boolean",
+            "label": "Show Animations",
+            "default": true
+        },
+        "elegantMode": {
+            "type": "boolean",
+            "label": "Elegant Mode",
+            "default": true
+        }
+    }
+} 

@@ -1,108 +1,165 @@
-# FearlessCMS Theme Development Documentation
+# FearlessCMS Documentation
 
-Welcome to the FearlessCMS theme development documentation! This collection of guides will help you create beautiful, functional themes for FearlessCMS.
+Welcome to the FearlessCMS documentation. This guide will help you understand how to use and customize FearlessCMS for your website needs.
 
-## 📚 Documentation Index
+## Quick Start
 
-### Getting Started
-- **[Creating Themes in FearlessCMS](creating-themes.md)** - Complete guide to creating themes from scratch
-- **[Theme Development Workflow](theme-development-workflow.md)** - Step-by-step development process and best practices
+**New to FearlessCMS?** Start with our [Customization Overview](customization-overview.md) for a comprehensive guide to all available tweaks and customizations.
 
-### Reference Guides
-- **[Template Reference](theme-templates-reference.md)** - Complete template syntax and variable reference
-- **[Theme Options Guide](theme-options-guide.md)** - How to implement and use theme options
-- **[Modular Templates](modular-templates.md)** - How to use the modular template system for better code organization
+## Table of Contents
 
-### Examples and Tutorials
-- **[Nightfall Theme Example](../themes/nightfall/)** - Real-world example of a complete theme
-- **[Theme Examples](../themes/)** - Browse all available themes for inspiration
+1. [Customization Overview](#customization-overview)
+2. [Creating Themes](#creating-themes)
+3. [Theme Templates Reference](#theme-templates-reference)
+4. [Theme Options Guide](#theme-options-guide)
+5. [Modular Templates](#modular-templates)
+6. [Theme Development Workflow](#theme-development-workflow)
+7. [SASS Theme Guide](#sass-theme-guide)
+8. [Theme Structure Standards](#theme-structure-standards)
 
-## 🚀 Quick Start
+## Customization Overview
 
-1. **Read the Basics**: Start with [Creating Themes in FearlessCMS](creating-themes.md)
-2. **Follow the Workflow**: Use [Theme Development Workflow](theme-development-workflow.md) for step-by-step guidance
-3. **Reference Syntax**: Check [Template Reference](theme-templates-reference.md) for all available variables and syntax
-4. **Add Options**: Learn about [Theme Options](theme-options-guide.md) to make your theme customizable
-5. **Go Modular**: Explore [Modular Templates](modular-templates.md) for better code organization
+A comprehensive overview of all customization options available in FearlessCMS, including:
 
-## 🎯 What You'll Learn
+- Admin path customization
+- CMS mode configuration
+- Custom CSS and JavaScript
+- Theme options and settings
+- Plugin management
+- Menu and widget systems
+- File and user management
+- Advanced customizations
 
-- How to create a complete theme from scratch
-- Template system and variable usage
-- **Modular template system for reusable components**
-- Implementing theme options for customization
-- Responsive design principles
-- Best practices for theme development
-- Testing and deployment strategies
+This guide provides quick references, examples, and links to detailed documentation for each area.
 
-## 📁 Theme Structure
+[Read the Customization Overview →](customization-overview.md)
 
-A typical FearlessCMS theme includes:
+## Creating Themes
+
+Learn how to create custom themes for FearlessCMS from scratch. This guide covers:
+
+- Theme structure and required files
+- Template system and variables
+- Theme options and customization
+- CSS styling and best practices
+- Advanced features and examples
+
+**Key Points:**
+- Use `config.json` (not `theme.json`) for theme configuration
+- Only `page.html` and `404.html` are strictly required templates
+- Theme options can be accessed via direct variables or `themeOptions` object
+
+[Read the Creating Themes Guide →](creating-themes.md)
+
+## Theme Templates Reference
+
+A comprehensive reference for all template syntax, variables, and features available in FearlessCMS themes.
+
+**Features:**
+- Complete template variable reference
+- Conditional logic and loops
+- Modular template system
+- Error handling for missing modules
+
+[Read the Templates Reference →](theme-templates-reference.md)
+
+## Theme Options Guide
+
+Learn how to create and use theme options to make your themes customizable without code changes.
+
+**Supported Types:**
+- Image uploads (logo, banner, etc.)
+- Color pickers
+- Text inputs
+- Select dropdowns
+- Boolean toggles
+
+[Read the Theme Options Guide →](theme-options-guide.md)
+
+## Modular Templates
+
+Break down your templates into reusable components for better maintainability.
+
+**Features:**
+- `{{module=filename.html}}` syntax
+- Automatic error handling for missing modules
+- Support for nested modules
+- Variable access across modules
+
+[Read the Modular Templates Guide →](modular-templates.md)
+
+## Theme Development Workflow
+
+Best practices and workflow for developing themes efficiently.
+
+**Topics:**
+- Development environment setup
+- Testing and debugging
+- Performance optimization
+- Deployment strategies
+
+[Read the Development Workflow Guide →](theme-development-workflow.md)
+
+## SASS Theme Guide
+
+Advanced styling with SASS/SCSS for more sophisticated themes.
+
+**Features:**
+- SASS compilation setup
+- Variable and mixin usage
+- Responsive design patterns
+- Performance optimization
+
+[Read the SASS Guide →](sass-theme-guide.md)
+
+## Theme Structure Standards
+
+**NEW**: Standards for consistent theme structure across all FearlessCMS themes.
+
+**Key Standards:**
+- Required file structure and naming
+- Configuration file requirements
+- Template and module standards
+- Asset organization guidelines
+- Migration guide for existing themes
+
+[Read the Theme Structure Standards →](theme-structure-standards.md)
+
+## Quick Start
+
+1. **Create a new theme directory** in `/themes/your-theme-name/`
+2. **Add required files**:
+   - `config.json` - Theme configuration
+   - `templates/page.html` - Page template (required)
+   - `templates/404.html` - Error page template (required)
+3. **Define theme options** in `config.json`
+4. **Create additional templates** as needed
+5. **Add styling** in `assets/style.css`
+
+## Example Theme Structure
 
 ```
-themes/your-theme/
-├── templates/
-│   ├── home.html      # Homepage template
-│   ├── page.html      # Individual page template
-│   ├── blog.html      # Blog listing template
-│   ├── 404.html       # Error page template
-│   ├── header.html    # Header module (modular system)
-│   ├── footer.html    # Footer module (modular system)
-│   └── navigation.html # Navigation module (modular system)
-├── assets/
-│   ├── style.css      # Main stylesheet
-│   ├── images/        # Theme images
-│   └── js/           # JavaScript files
-├── theme.json        # Theme metadata
-├── config.json       # Theme options (optional)
-└── README.md         # Theme documentation
+themes/
+└── my-theme/
+    ├── config.json          # Theme configuration
+    ├── templates/
+    │   ├── page.html        # Required
+    │   ├── 404.html         # Required
+    │   ├── home.html        # Optional
+    │   ├── header.html      # Module
+    │   └── footer.html      # Module
+    ├── assets/
+    │   └── style.css        # Main stylesheet
+    └── README.md            # Documentation
 ```
 
-## 🔧 Key Features
+## Getting Help
 
-- **Simple Template System**: Easy-to-learn syntax with powerful features
-- **Modular Templates**: Break down templates into reusable components with `{{module=filename.html}}`
-- **Theme Options**: User-friendly customization without code editing
-- **Responsive Design**: Built-in support for mobile-first design
-- **Extensible**: Add custom functionality with JavaScript
-- **SEO-Friendly**: Semantic HTML and meta tag support
-
-## 💡 Tips for Success
-
-1. **Start Simple**: Begin with a basic, functional theme
-2. **Use Modular Templates**: Break down complex templates into reusable modules
-3. **Test Thoroughly**: Check on different devices and browsers
-4. **Use Semantic HTML**: Follow web standards for better accessibility
-5. **Mobile-First**: Design for mobile devices first, then enhance for desktop
-6. **Document Everything**: Include clear documentation for users
-
-## 🤝 Contributing
-
-Found an issue or have a suggestion? Contributions are welcome! Please:
-
-1. Check existing issues first
-2. Follow the established documentation style
-3. Test your changes thoroughly
-4. Submit clear, descriptive pull requests
-
-## 📖 Additional Resources
-
-- [FearlessCMS Main Documentation](../README.md)
-- [Admin Panel Guide](../admin/README.md)
-- [Plugin Development Guide](../plugins/README.md)
-- [API Reference](../docs/api.md)
-
-## 🆘 Getting Help
-
-If you need help with theme development:
-
-1. **Check the documentation** - Most questions are answered here
-2. **Look at examples** - Browse existing themes for inspiration
-3. **Search issues** - Check if your question has been asked before
-4. **Ask the community** - Join discussions in the project forums
+- Check the [Theme Structure Standards](theme-structure-standards.md) for consistency guidelines
+- Review existing themes in the `/themes/` directory for examples
+- Use the [Templates Reference](theme-templates-reference.md) for syntax help
+- Follow the [Development Workflow](theme-development-workflow.md) for best practices
 
 ---
 
-**Happy theme development!** 🎨
-
-*This documentation is maintained by the FearlessCMS community. Last updated: January 2024* 
+*This documentation is maintained by the FearlessCMS team. For issues or suggestions, please contribute to the project.* 

@@ -1,0 +1,14 @@
+
+{
+    "name": "Simple Modern",
+    "description": "A clean and modern theme for FearlessCMS.",
+    "version": "1.0.0",
+    "author": "FearlessGeek",
+    "license": "MIT",
+    "templates": {
+        "home": "home.html",
+        "page": "page.html",
+        "blog": "blog.html",
+        "404": "404.html"
+    }
+}

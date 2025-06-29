@@ -1,4 +1,7 @@
 <?php
+// Simple test to see if this file is being executed
+file_put_contents(__DIR__ . '/test.log', date('Y-m-d H:i:s') . " - Admin index executed\n", FILE_APPEND);
+
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -11,6 +14,9 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Debug logging to specific file
+file_put_contents(__DIR__ . '/../debug.log', date('Y-m-d H:i:s') . " - Admin index started\n", FILE_APPEND);
+
 // Debug session at very start
 error_log("Admin index.php - Initial session state: " . print_r($_SESSION, true));
 
@@ -18,6 +24,15 @@ require_once dirname(__DIR__) . '/includes/config.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
 require_once dirname(__DIR__) . '/includes/ThemeManager.php';
 require_once dirname(__DIR__) . '/includes/plugins.php';
+require_once dirname(__DIR__) . '/includes/CMSModeManager.php';
+
+// Handle plugin actions BEFORE other handlers are included
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && in_array($_POST['action'], ['activate_plugin', 'deactivate_plugin', 'delete_plugin'])) {
+    file_put_contents(__DIR__ . '/test.log', date('Y-m-d H:i:s') . " - Plugin action detected before handlers: " . $_POST['action'] . "\n", FILE_APPEND);
+    require_once __DIR__ . '/plugin-handler.php';
+    exit;
+}
+
 require_once __DIR__ . '/widget-handler.php';
 require_once __DIR__ . '/theme-handler.php';
 require_once __DIR__ . '/store-handler.php';
@@ -29,10 +44,14 @@ require_once __DIR__ . '/widgets-handler.php';
 $action = $_GET['action'] ?? $_POST['action'] ?? 'dashboard';
 
 // Debug logging
-error_log("Admin index.php - Action: " . $action);
-error_log("Admin index.php - Request Method: " . $_SERVER['REQUEST_METHOD']);
-error_log("Admin index.php - POST data: " . print_r($_POST, true));
-error_log("Admin index.php - GET data: " . print_r($_GET, true));
+file_put_contents(__DIR__ . '/../debug.log', date('Y-m-d H:i:s') . " - Action: " . $action . ", Method: " . $_SERVER['REQUEST_METHOD'] . "\n", FILE_APPEND);
+file_put_contents(__DIR__ . '/../debug.log', date('Y-m-d H:i:s') . " - POST: " . print_r($_POST, true) . "\n", FILE_APPEND);
+file_put_contents(__DIR__ . '/../debug.log', date('Y-m-d H:i:s') . " - Session: " . print_r($_SESSION, true) . "\n", FILE_APPEND);
+
+error_log("DEBUG: Admin index - Action: " . $action);
+error_log("DEBUG: Admin index - Request Method: " . $_SERVER['REQUEST_METHOD']);
+error_log("DEBUG: Admin index - POST data: " . print_r($_POST, true));
+error_log("DEBUG: Admin index - GET data: " . print_r($_GET, true));
 
 // Handle AJAX requests for menu management
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'manage_menus') {
@@ -164,12 +183,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'load_menu') {
     exit;
 }
 
-// Handle plugin actions
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && in_array($_POST['action'], ['activate_plugin', 'deactivate_plugin'])) {
-    require_once __DIR__ . '/plugin-handler.php';
-    exit;
-}
-
 // If not logged in and not on login page, redirect to login
 if (!isLoggedIn() && $action !== 'login') {
     header('Location: /' . $adminPath . '/login');
@@ -192,6 +205,26 @@ error_log("Admin index.php - Available admin sections: " . print_r(array_keys($a
 
 $pageTitle = ucfirst($action);
 $themeManager = new ThemeManager();
+$cmsModeManager = new CMSModeManager();
+
+// Check CMS mode access restrictions AFTER $cmsModeManager is created
+if (isLoggedIn()) {
+    // Check if user is trying to access a restricted page
+    $restrictedActions = [
+        'manage_plugins' => 'canManagePlugins',
+        'store' => 'canAccessStore'
+    ];
+    
+    if (isset($restrictedActions[$action])) {
+        $permissionMethod = $restrictedActions[$action];
+        if (!$cmsModeManager->$permissionMethod()) {
+            // Redirect to dashboard with error message
+            header('Location: /' . $adminPath . '?action=dashboard&error=access_denied');
+            exit;
+        }
+    }
+}
+
 $usersFile = ADMIN_CONFIG_DIR . '/users.json';
 $themes = $themeManager->getThemes();
 $menusFile = CONFIG_DIR . '/menus.json';
@@ -329,6 +362,12 @@ $username = $_SESSION['username'] ?? '';
 $content = '';
 $error = '';
 $success = '';
+
+// Handle access denied error
+if (isset($_GET['error']) && $_GET['error'] === 'access_denied') {
+    $error = 'Access denied. This feature is not available in the current CMS mode.';
+}
+
 $plugin_nav_items = '';
 
 // Load content data for edit_content action
@@ -373,6 +412,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     else if (in_array($postAction, ['save_widget', 'delete_widget', 'add_sidebar', 'delete_sidebar', 'reorder_widgets', 'save_sidebar'])) {
         error_log("Admin index.php - Widget action detected: " . $postAction);
         $action = 'manage_widgets'; // Set the action to 'manage_widgets' to use the widgets handler
+    }
+    // Check if this is a plugin action
+    else if (in_array($postAction, ['activate_plugin', 'deactivate_plugin', 'delete_plugin'])) {
+        error_log("Admin index.php - Plugin action detected: " . $postAction);
+        $action = 'manage_plugins'; // Set the action to 'manage_plugins' to use the plugin handler
     }
     // Add other section-specific actions here as needed
 }
@@ -576,5 +620,6 @@ if (!$section_found) {
 }
 
 // Include the base template
+$plugins_menu_label = $cmsModeManager->canManagePlugins() ? 'Plugins' : 'Additional Features';
 include ADMIN_TEMPLATE_DIR . '/base.php';
 ?>

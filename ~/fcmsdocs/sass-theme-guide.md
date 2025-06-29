@@ -1,95 +1,617 @@
 # SASS Theme Development Guide
 
-This guide covers how to develop FearlessCMS themes that use SASS (Syntactically Awesome Style Sheets) for CSS preprocessing. This is useful for complex themes that benefit from SASS features like variables, mixins, and nested rules.
+This guide explains how to use SASS (Syntactically Awesome Style Sheets) to create more maintainable and powerful themes in FearlessCMS.
 
-## When to Use SASS
+## Table of Contents
 
-Consider using SASS for your theme if you need:
+1. [Introduction to SASS](#introduction-to-sass)
+2. [Setting Up SASS](#setting-up-sass)
+3. [SASS Features](#sass-features)
+4. [Theme Integration](#theme-integration)
+5. [Best Practices](#best-practices)
+6. [Advanced Techniques](#advanced-techniques)
+7. [Examples](#examples)
 
-- **Complex styling** with many variables and calculations
-- **Reusable components** that benefit from mixins
-- **Organized CSS structure** with partials and imports
-- **Advanced features** like functions and loops
-- **Better maintainability** for large stylesheets
+## Introduction to SASS
 
-## SASS Setup
+SASS is a CSS preprocessor that extends CSS with powerful features like variables, nesting, mixins, and functions. It makes CSS more maintainable and reduces code duplication.
+
+### Benefits of Using SASS
+
+- **Variables**: Define colors, fonts, and spacing once
+- **Nesting**: Organize CSS logically
+- **Mixins**: Reusable CSS patterns
+- **Functions**: Dynamic value calculations
+- **Partials**: Modular CSS organization
+- **Better organization**: Cleaner, more maintainable code
+
+## Setting Up SASS
 
 ### 1. Install SASS
 
-You'll need to install SASS on your development machine:
+#### Using Node.js
+```bash
+npm install -g sass
+```
+
+#### Using Package Managers
+```bash
+# macOS with Homebrew
+brew install sass/sass/sass
+
+# Ubuntu/Debian
+sudo apt-get install sass
+```
+
+### 2. Project Structure
+
+Organize your SASS files:
+
+```
+themes/your-theme/
+├── sass/
+│   ├── main.scss          # Main SASS file
+│   ├── _variables.scss    # Variables
+│   ├── _mixins.scss       # Mixins
+│   ├── _functions.scss    # Functions
+│   ├── _base.scss         # Base styles
+│   ├── _layout.scss       # Layout styles
+│   ├── _components.scss   # Component styles
+│   └── _utilities.scss    # Utility classes
+├── assets/
+│   └── style.css          # Compiled CSS
+└── templates/
+    └── *.html
+```
+
+### 3. Compilation
+
+Compile SASS to CSS:
 
 ```bash
-# Using npm (recommended)
-npm install -g sass
+# Watch for changes
+sass --watch sass/main.scss:assets/style.css
 
-# Using Ruby (if you have Ruby installed)
-gem install sass
+# One-time compilation
+sass sass/main.scss:assets/style.css
 
-# Using Homebrew (macOS)
-brew install sass/sass/sass
+# Compressed output
+sass sass/main.scss:assets/style.css --style compressed
 ```
 
-### 2. Theme Structure with SASS
+## SASS Features
 
-Organize your SASS files in a logical structure:
+### Variables
 
-```
-themes/your-sass-theme/
-├── templates/
-│   ├── home.html
-│   ├── page.html
-│   ├── blog.html
-│   └── 404.html
-├── assets/
-│   ├── sass/
-│   │   ├── main.scss          # Main SASS file
-│   │   ├── _variables.scss    # Variables
-│   │   ├── _mixins.scss       # Mixins
-│   │   ├── _base.scss         # Base styles
-│   │   ├── _layout.scss       # Layout styles
-│   │   ├── _components.scss   # Component styles
-│   │   └── _utilities.scss    # Utility classes
-│   ├── style.css              # Compiled CSS (generated)
-│   ├── images/
-│   └── js/
-├── theme.json
-├── config.json
-└── README.md
-```
-
-### 3. SASS File Organization
-
-#### main.scss (Main Entry Point)
+Define reusable values:
 
 ```scss
-// Import all SASS files
+// _variables.scss
+$primary-color: #007cba;
+$secondary-color: #6c757d;
+$text-color: #333;
+$background-color: #fff;
+$font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+$border-radius: 4px;
+$spacing: 1rem;
+$container-width: 1200px;
+
+// Breakpoints
+$breakpoint-sm: 576px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 992px;
+$breakpoint-xl: 1200px;
+```
+
+### Nesting
+
+Organize CSS logically:
+
+```scss
+// _components.scss
+.site-header {
+    background: $primary-color;
+    padding: $spacing 0;
+    
+    .container {
+        max-width: $container-width;
+        margin: 0 auto;
+        padding: 0 $spacing;
+    }
+    
+    .site-title {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        
+        a {
+            color: white;
+            text-decoration: none;
+            
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+    }
+    
+    .main-navigation {
+        ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+            
+            li {
+                a {
+                    color: white;
+                    text-decoration: none;
+                    font-weight: 500;
+                    
+                    &:hover {
+                        opacity: 0.8;
+                    }
+                }
+            }
+        }
+    }
+}
+```
+
+### Mixins
+
+Create reusable CSS patterns:
+
+```scss
+// _mixins.scss
+
+// Flexbox center
+@mixin flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+// Responsive breakpoint
+@mixin respond-to($breakpoint) {
+    @if $breakpoint == sm {
+        @media (min-width: $breakpoint-sm) { @content; }
+    } @else if $breakpoint == md {
+        @media (min-width: $breakpoint-md) { @content; }
+    } @else if $breakpoint == lg {
+        @media (min-width: $breakpoint-lg) { @content; }
+    } @else if $breakpoint == xl {
+        @media (min-width: $breakpoint-xl) { @content; }
+    }
+}
+
+// Button styles
+@mixin button($bg-color: $primary-color, $text-color: white) {
+    background: $bg-color;
+    color: $text-color;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: $border-radius;
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    
+    &:hover {
+        opacity: 0.8;
+    }
+}
+
+// Card styles
+@mixin card($bg-color: $background-color, $border-color: #e9ecef) {
+    background: $bg-color;
+    border: 1px solid $border-color;
+    border-radius: $border-radius;
+    padding: $spacing;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+```
+
+### Functions
+
+Create dynamic calculations:
+
+```scss
+// _functions.scss
+
+// Calculate contrast ratio
+@function contrast-ratio($color1, $color2) {
+    $l1: lightness($color1);
+    $l2: lightness($color2);
+    @return ($l1 + 0.05) / ($l2 + 0.05);
+}
+
+// Generate color variations
+@function lighten-color($color, $amount: 10%) {
+    @return lighten($color, $amount);
+}
+
+@function darken-color($color, $amount: 10%) {
+    @return darken($color, $amount);
+}
+
+// Calculate spacing
+@function spacing($multiplier: 1) {
+    @return $spacing * $multiplier;
+}
+```
+
+### Partials
+
+Organize code into modules:
+
+```scss
+// main.scss
 @import 'variables';
 @import 'mixins';
+@import 'functions';
 @import 'base';
 @import 'layout';
 @import 'components';
 @import 'utilities';
 ```
 
-#### _variables.scss (Variables)
+## Theme Integration
+
+### 1. Dynamic Variables with Theme Options
+
+Use SASS with FearlessCMS theme options:
+
+```scss
+// _variables.scss
+// These will be replaced by actual values during compilation
+$primary-color: {{themeOptions.primaryColor}};
+$font-family: {{themeOptions.fontFamily}};
+$show-sidebar: {{themeOptions.showSidebar}};
+```
+
+### 2. Conditional Styles
+
+```scss
+// _layout.scss
+.content-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: spacing(2);
+    
+    @if $show-sidebar == 'true' {
+        grid-template-columns: 2fr 1fr;
+        
+        @include respond-to(md) {
+            grid-template-columns: 1fr 300px;
+        }
+    }
+}
+```
+
+### 3. Component System
+
+```scss
+// _components.scss
+
+// Button component
+.btn {
+    @include button();
+    
+    &--secondary {
+        @include button($secondary-color);
+    }
+    
+    &--large {
+        padding: spacing(0.75) spacing(1.5);
+        font-size: 1.1rem;
+    }
+}
+
+// Card component
+.card {
+    @include card();
+    
+    &--featured {
+        @include card($primary-color, $primary-color);
+        color: white;
+    }
+}
+
+// Navigation component
+.nav {
+    &__list {
+        list-style: none;
+        display: flex;
+        gap: spacing(1);
+    }
+    
+    &__item {
+        a {
+            color: $text-color;
+            text-decoration: none;
+            padding: spacing(0.5);
+            
+            &:hover {
+                color: $primary-color;
+            }
+        }
+    }
+}
+```
+
+## Best Practices
+
+### 1. File Organization
+
+```
+sass/
+├── abstracts/
+│   ├── _variables.scss
+│   ├── _mixins.scss
+│   └── _functions.scss
+├── base/
+│   ├── _reset.scss
+│   ├── _typography.scss
+│   └── _base.scss
+├── components/
+│   ├── _buttons.scss
+│   ├── _cards.scss
+│   └── _navigation.scss
+├── layout/
+│   ├── _header.scss
+│   ├── _footer.scss
+│   └── _sidebar.scss
+├── pages/
+│   ├── _home.scss
+│   └── _blog.scss
+└── main.scss
+```
+
+### 2. Naming Conventions
+
+Use BEM (Block, Element, Modifier) methodology:
+
+```scss
+.site-header {
+    &__logo {
+        // Element
+    }
+    
+    &--dark {
+        // Modifier
+        background: $dark-color;
+    }
+}
+
+.nav {
+    &__list {
+        // Element
+    }
+    
+    &__item {
+        // Element
+        &--active {
+            // Modifier
+        }
+    }
+}
+```
+
+### 3. Variable Naming
 
 ```scss
 // Colors
-$primary-color: #007bff;
-$secondary-color: #6c757d;
+$color-primary: #007cba;
+$color-secondary: #6c757d;
+$color-success: #28a745;
+$color-danger: #dc3545;
+
+// Typography
+$font-family-base: sans-serif;
+$font-size-base: 1rem;
+$line-height-base: 1.6;
+
+// Spacing
+$spacing-xs: 0.25rem;
+$spacing-sm: 0.5rem;
+$spacing-md: 1rem;
+$spacing-lg: 1.5rem;
+$spacing-xl: 3rem;
+```
+
+### 4. Responsive Design
+
+```scss
+// _mixins.scss
+@mixin mobile-first {
+    // Base styles for mobile
+    @content;
+    
+    // Tablet
+    @media (min-width: $breakpoint-md) {
+        @content;
+    }
+    
+    // Desktop
+    @media (min-width: $breakpoint-lg) {
+        @content;
+    }
+}
+
+// Usage
+.content {
+    @include mobile-first {
+        padding: $spacing-sm;
+        
+        @media (min-width: $breakpoint-md) {
+            padding: $spacing-md;
+        }
+        
+        @media (min-width: $breakpoint-lg) {
+            padding: $spacing-lg;
+        }
+    }
+}
+```
+
+## Advanced Techniques
+
+### 1. Theme Option Integration
+
+Create a SASS compilation script that processes theme options:
+
+```javascript
+// build-sass.js
+const sass = require('sass');
+const fs = require('fs');
+
+function compileSassWithOptions(themeOptions) {
+    const sassContent = fs.readFileSync('sass/main.scss', 'utf8');
+    
+    // Replace SASS variables with theme option values
+    const processedContent = sassContent
+        .replace(/\{\{themeOptions\.primaryColor\}\}/g, themeOptions.primaryColor || '#007cba')
+        .replace(/\{\{themeOptions\.fontFamily\}\}/g, themeOptions.fontFamily || 'sans-serif');
+    
+    // Compile SASS
+    const result = sass.compileString(processedContent);
+    
+    fs.writeFileSync('assets/style.css', result.css);
+}
+
+// Usage
+const themeOptions = {
+    primaryColor: '#ff6b6b',
+    fontFamily: 'serif'
+};
+
+compileSassWithOptions(themeOptions);
+```
+
+### 2. CSS Custom Properties
+
+Use SASS to generate CSS custom properties:
+
+```scss
+// _variables.scss
+:root {
+    --primary-color: #{$primary-color};
+    --secondary-color: #{$secondary-color};
+    --font-family: #{$font-family};
+    --spacing: #{$spacing};
+    
+    // Generate spacing scale
+    @for $i from 1 through 10 {
+        --spacing-#{$i}: #{spacing($i)};
+    }
+    
+    // Generate color variations
+    --primary-light: #{lighten-color($primary-color, 10%)};
+    --primary-dark: #{darken-color($primary-color, 10%)};
+}
+```
+
+### 3. Utility Classes
+
+Generate utility classes with SASS:
+
+```scss
+// _utilities.scss
+
+// Spacing utilities
+@each $size, $value in $spacing-scale {
+    .p-#{$size} { padding: $value; }
+    .m-#{$size} { margin: $value; }
+    .pt-#{$size} { padding-top: $value; }
+    .pb-#{$size} { padding-bottom: $value; }
+    .pl-#{$size} { padding-left: $value; }
+    .pr-#{$size} { padding-right: $value; }
+}
+
+// Color utilities
+@each $name, $color in $colors {
+    .text-#{$name} { color: $color; }
+    .bg-#{$name} { background-color: $color; }
+    .border-#{$name} { border-color: $color; }
+}
+
+// Flexbox utilities
+.d-flex { display: flex; }
+.flex-column { flex-direction: column; }
+.justify-center { justify-content: center; }
+.align-center { align-items: center; }
+```
+
+## Examples
+
+### Complete Theme with SASS
+
+#### main.scss
+```scss
+// Abstracts
+@import 'abstracts/variables';
+@import 'abstracts/mixins';
+@import 'abstracts/functions';
+
+// Base
+@import 'base/reset';
+@import 'base/typography';
+@import 'base/base';
+
+// Components
+@import 'components/buttons';
+@import 'components/cards';
+@import 'components/navigation';
+@import 'components/forms';
+
+// Layout
+@import 'layout/header';
+@import 'layout/footer';
+@import 'layout/sidebar';
+@import 'layout/grid';
+
+// Pages
+@import 'pages/home';
+@import 'pages/blog';
+
+// Utilities
+@import 'utilities/spacing';
+@import 'utilities/colors';
+@import 'utilities/flexbox';
+```
+
+#### _variables.scss
+```scss
+// Colors
+$primary-color: {{themeOptions.primaryColor}};
+$secondary-color: {{themeOptions.secondaryColor}};
 $success-color: #28a745;
 $danger-color: #dc3545;
 $warning-color: #ffc107;
 $info-color: #17a2b8;
 
+$text-color: #333;
+$text-muted: #6c757d;
+$background-color: #fff;
+$border-color: #e9ecef;
+
 // Typography
-$font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+$font-family: {{themeOptions.fontFamily}};
 $font-size-base: 1rem;
 $line-height-base: 1.6;
+$font-weight-normal: 400;
+$font-weight-bold: 700;
 
 // Spacing
-$spacing-unit: 1rem;
-$container-max-width: 1200px;
+$spacing: 1rem;
+$spacing-xs: 0.25rem;
+$spacing-sm: 0.5rem;
+$spacing-md: 1rem;
+$spacing-lg: 1.5rem;
+$spacing-xl: 3rem;
+
+// Layout
+$container-width: 1200px;
+$sidebar-width: 300px;
+$header-height: 80px;
 
 // Breakpoints
 $breakpoint-sm: 576px;
@@ -97,529 +619,190 @@ $breakpoint-md: 768px;
 $breakpoint-lg: 992px;
 $breakpoint-xl: 1200px;
 
-// Theme options integration
-$theme-colors: (
-  'blue': #007bff,
-  'green': #28a745,
-  'purple': #6f42c1,
-  'orange': #fd7e14
-);
+// Theme options
+$show-sidebar: {{themeOptions.showSidebar}};
+$logo: {{themeOptions.logo}};
 ```
 
-#### _mixins.scss (Reusable Mixins)
-
-```scss
-// Responsive breakpoint mixin
-@mixin respond-to($breakpoint) {
-  @if $breakpoint == sm {
-    @media (min-width: $breakpoint-sm) { @content; }
-  } @else if $breakpoint == md {
-    @media (min-width: $breakpoint-md) { @content; }
-  } @else if $breakpoint == lg {
-    @media (min-width: $breakpoint-lg) { @content; }
-  } @else if $breakpoint == xl {
-    @media (min-width: $breakpoint-xl) { @content; }
-  }
-}
-
-// Button mixin
-@mixin button($bg-color: $primary-color, $text-color: white) {
-  background-color: $bg-color;
-  color: $text-color;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  
-  &:hover {
-    background-color: darken($bg-color, 10%);
-  }
-}
-
-// Card mixin
-@mixin card($bg-color: white, $border-color: #e9ecef) {
-  background-color: $bg-color;
-  border: 1px solid $border-color;
-  border-radius: 8px;
-  padding: $spacing-unit;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-```
-
-#### _base.scss (Base Styles)
-
-```scss
-// Reset and base styles
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html {
-  font-size: 16px;
-}
-
-body {
-  font-family: $font-family-base;
-  font-size: $font-size-base;
-  line-height: $line-height-base;
-  color: $text-color;
-  background-color: $bg-color;
-}
-
-// Typography
-h1, h2, h3, h4, h5, h6 {
-  margin-bottom: $spacing-unit;
-  font-weight: 600;
-  line-height: 1.2;
-}
-
-h1 { font-size: 2.5rem; }
-h2 { font-size: 2rem; }
-h3 { font-size: 1.75rem; }
-h4 { font-size: 1.5rem; }
-h5 { font-size: 1.25rem; }
-h6 { font-size: 1rem; }
-
-p {
-  margin-bottom: $spacing-unit;
-}
-
-a {
-  color: $primary-color;
-  text-decoration: none;
-  
-  &:hover {
-    text-decoration: underline;
-  }
-}
-```
-
-#### _layout.scss (Layout Styles)
-
-```scss
-// Container
-.container {
-  max-width: $container-max-width;
-  margin: 0 auto;
-  padding: 0 $spacing-unit;
-  
-  @include respond-to(md) {
-    padding: 0 ($spacing-unit * 2);
-  }
-}
-
-// Grid system
-.grid {
-  display: grid;
-  gap: $spacing-unit;
-  
-  &--2-cols {
-    grid-template-columns: 1fr;
-    
-    @include respond-to(md) {
-      grid-template-columns: 1fr 1fr;
-    }
-  }
-  
-  &--3-cols {
-    grid-template-columns: 1fr;
-    
-    @include respond-to(md) {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  }
-}
-
-// Header
-.header {
-  background-color: $header-bg;
-  padding: $spacing-unit 0;
-  border-bottom: 1px solid $border-color;
-}
-
-// Main content
-.main {
-  padding: ($spacing-unit * 2) 0;
-  min-height: 60vh;
-}
-
-// Footer
-.footer {
-  background-color: $footer-bg;
-  color: $footer-text-color;
-  padding: ($spacing-unit * 2) 0;
-  margin-top: auto;
-}
-```
-
-#### _components.scss (Component Styles)
-
+#### _components.scss
 ```scss
 // Buttons
 .btn {
-  @include button;
-  
-  &--secondary {
-    @include button($secondary-color);
-  }
-  
-  &--success {
-    @include button($success-color);
-  }
-  
-  &--danger {
-    @include button($danger-color);
-  }
+    @include button();
+    
+    &--primary {
+        @include button($primary-color);
+    }
+    
+    &--secondary {
+        @include button($secondary-color);
+    }
+    
+    &--large {
+        padding: spacing(0.75) spacing(1.5);
+        font-size: 1.1rem;
+    }
 }
 
 // Cards
 .card {
-  @include card;
-  
-  &--featured {
-    @include card($primary-color, $primary-color);
-    color: white;
-  }
+    @include card();
+    
+    &__header {
+        padding: spacing(1);
+        border-bottom: 1px solid $border-color;
+    }
+    
+    &__body {
+        padding: spacing(1);
+    }
+    
+    &__footer {
+        padding: spacing(1);
+        border-top: 1px solid $border-color;
+        background: lighten($background-color, 2%);
+    }
 }
 
 // Navigation
 .nav {
-  display: flex;
-  align-items: center;
-  
-  &__list {
-    display: flex;
-    list-style: none;
-    gap: $spacing-unit;
-  }
-  
-  &__link {
-    color: $nav-link-color;
-    text-decoration: none;
-    padding: 0.5rem;
-    
-    &:hover {
-      color: $nav-link-hover-color;
+    &__list {
+        list-style: none;
+        display: flex;
+        gap: spacing(1);
+        margin: 0;
+        padding: 0;
     }
-  }
-}
-
-// Blog posts
-.blog-post {
-  margin-bottom: ($spacing-unit * 2);
-  padding-bottom: ($spacing-unit * 2);
-  border-bottom: 1px solid $border-color;
-  
-  &:last-child {
-    border-bottom: none;
-  }
-  
-  &__title {
-    margin-bottom: $spacing-unit;
     
-    a {
-      color: $text-color;
-      text-decoration: none;
-      
-      &:hover {
-        color: $primary-color;
-      }
-    }
-  }
-  
-  &__meta {
-    color: $text-muted;
-    font-size: 0.9rem;
-    margin-bottom: $spacing-unit;
-  }
-  
-  &__excerpt {
-    color: $text-muted;
-    margin-bottom: $spacing-unit;
-  }
-}
-```
-
-## Development Workflow with SASS
-
-### 1. Watch Mode
-
-Use SASS watch mode during development:
-
-```bash
-# Watch for changes and compile automatically
-sass --watch assets/sass/main.scss:assets/style.css
-
-# Or with compressed output
-sass --watch assets/sass/main.scss:assets/style.css --style compressed
-```
-
-### 2. Build Process
-
-For production builds:
-
-```bash
-# Compile once with compressed output
-sass assets/sass/main.scss:assets/style.css --style compressed
-
-# Or create a build script in package.json
-```
-
-### 3. Package.json Scripts
-
-Create a `package.json` file in your theme directory:
-
-```json
-{
-  "name": "your-sass-theme",
-  "version": "1.0.0",
-  "scripts": {
-    "sass:watch": "sass --watch assets/sass/main.scss:assets/style.css",
-    "sass:build": "sass assets/sass/main.scss:assets/style.css --style compressed",
-    "sass:dev": "sass assets/sass/main.scss:assets/style.css --style expanded"
-  },
-  "devDependencies": {
-    "sass": "^1.32.0"
-  }
-}
-```
-
-Then use:
-
-```bash
-npm run sass:watch  # Development
-npm run sass:build  # Production
-npm run sass:dev    # Development with expanded output
-```
-
-## Theme Options Integration
-
-### CSS Custom Properties with SASS
-
-Use SASS to generate CSS custom properties for theme options:
-
-```scss
-// _variables.scss
-$theme-colors: (
-  'blue': #007bff,
-  'green': #28a745,
-  'purple': #6f42c1,
-  'orange': #fd7e14
-);
-
-// Generate CSS custom properties
-:root {
-  @each $name, $color in $theme-colors {
-    --color-#{$name}: #{$color};
-  }
-  
-  --primary-color: var(--color-blue);
-  --secondary-color: var(--color-gray);
-}
-
-// Theme-specific classes
-@each $name, $color in $theme-colors {
-  .theme-#{$name} {
-    --primary-color: var(--color-#{$name});
-  }
-}
-```
-
-### Dynamic Theme Options
-
-Create SASS functions to handle theme options:
-
-```scss
-// _functions.scss
-@function theme-color($color-name) {
-  @return var(--color-#{$color-name});
-}
-
-@function theme-option($option-name) {
-  @return var(--theme-#{$option-name});
-}
-
-// Usage
-.button {
-  background-color: theme-color('primary');
-  color: white;
-}
-
-.sidebar {
-  @if theme-option('show-sidebar') {
-    display: block;
-  } @else {
-    display: none;
-  }
-}
-```
-
-## Example: Complete SASS Theme
-
-### Theme Structure
-
-```
-themes/sass-example/
-├── templates/
-│   ├── home.html
-│   ├── page.html
-│   ├── blog.html
-│   └── 404.html
-├── assets/
-│   ├── sass/
-│   │   ├── main.scss
-│   │   ├── _variables.scss
-│   │   ├── _mixins.scss
-│   │   ├── _base.scss
-│   │   ├── _layout.scss
-│   │   ├── _components.scss
-│   │   └── _utilities.scss
-│   ├── style.css
-│   └── images/
-├── theme.json
-├── config.json
-├── package.json
-└── README.md
-```
-
-### main.scss
-
-```scss
-// Import all SASS files
-@import 'variables';
-@import 'mixins';
-@import 'base';
-@import 'layout';
-@import 'components';
-@import 'utilities';
-
-// Theme-specific overrides
-@import 'theme-overrides';
-```
-
-### Template Usage
-
-```html
-<!DOCTYPE html>
-<html lang="en" class="theme-{{themeOptions.colorScheme}}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{title}} - {{siteName}}</title>
-    <link rel="stylesheet" href="/themes/{{theme}}/assets/style.css">
-</head>
-<body>
-    <header class="header">
-        <div class="container">
-            {{if themeOptions.logo}}
-                <img src="/{{themeOptions.logo}}" alt="{{siteName}}" class="logo">
-            {{else}}
-                <h1>{{siteName}}</h1>
-            {{endif}}
+    &__item {
+        a {
+            color: $text-color;
+            text-decoration: none;
+            padding: spacing(0.5);
+            border-radius: $border-radius;
+            transition: all 0.2s;
             
-            <nav class="nav">
-                {{if menu.main}}
-                    <ul class="nav__list">
-                        {{foreach menu.main}}
-                            <li><a href="/{{url}}" class="nav__link">{{title}}</a></li>
-                        {{endforeach}}
-                    </ul>
-                {{endif}}
-            </nav>
-        </div>
-    </header>
-
-    <main class="main">
-        <div class="container">
-            <article class="content">
-                {{content}}
-            </article>
-        </div>
-    </main>
-
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; {{currentYear}} {{siteName}}</p>
-        </div>
-    </footer>
-</body>
-</html>
+            &:hover {
+                color: $primary-color;
+                background: lighten($primary-color, 45%);
+            }
+        }
+        
+        &--active a {
+            color: $primary-color;
+            background: lighten($primary-color, 45%);
+        }
+    }
+}
 ```
 
-## Best Practices
+#### _layout.scss
+```scss
+// Header
+.site-header {
+    background: $primary-color;
+    color: white;
+    padding: spacing(1) 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    
+    .container {
+        @include flex-center;
+        justify-content: space-between;
+        max-width: $container-width;
+        margin: 0 auto;
+        padding: 0 spacing(1);
+    }
+    
+    .site-title {
+        font-size: 1.5rem;
+        font-weight: $font-weight-bold;
+        margin: 0;
+        
+        a {
+            color: white;
+            text-decoration: none;
+        }
+    }
+    
+    .main-navigation {
+        .nav__list {
+            @include respond-to(md) {
+                gap: spacing(1.5);
+            }
+        }
+    }
+}
 
-### 1. File Organization
+// Main content
+.site-main {
+    min-height: calc(100vh - #{$header-height});
+    padding: spacing(2) 0;
+}
 
-- Keep SASS files modular and focused
-- Use partials (files starting with `_`) for imports
-- Group related styles together
-- Use consistent naming conventions
+.content-layout {
+    display: grid;
+    gap: spacing(2);
+    
+    @if $show-sidebar == 'true' {
+        grid-template-columns: 1fr;
+        
+        @include respond-to(md) {
+            grid-template-columns: 1fr $sidebar-width;
+        }
+    } @else {
+        grid-template-columns: 1fr;
+    }
+}
 
-### 2. Variable Management
+// Sidebar
+.sidebar {
+    @if $show-sidebar == 'true' {
+        background: lighten($background-color, 1%);
+        padding: spacing(1);
+        border-radius: $border-radius;
+        height: fit-content;
+        
+        @include respond-to(md) {
+            position: sticky;
+            top: calc(#{$header-height} + #{spacing(1)});
+        }
+    }
+}
 
-- Define all colors, fonts, and spacing as variables
-- Use semantic variable names
-- Create variable maps for complex data
-- Document variable purposes
+// Footer
+.site-footer {
+    background: $text-color;
+    color: white;
+    padding: spacing(2) 0;
+    margin-top: auto;
+    
+    .container {
+        max-width: $container-width;
+        margin: 0 auto;
+        padding: 0 spacing(1);
+        text-align: center;
+    }
+}
+```
 
-### 3. Mixin Usage
+### Build Script
 
-- Create mixins for repeated patterns
-- Keep mixins focused and reusable
-- Use parameters for flexibility
-- Document mixin parameters
-
-### 4. Performance
-
-- Minimize SASS compilation time
-- Use `@import` sparingly (consider `@use` for newer SASS)
-- Avoid deeply nested selectors
-- Compress output for production
-
-### 5. Maintenance
-
-- Keep SASS files up to date
-- Document complex SASS logic
-- Use consistent formatting
-- Regular refactoring
-
-## Troubleshooting
-
-### Common Issues
-
-1. **SASS not compiling**: Check file paths and syntax
-2. **Variables not working**: Ensure proper import order
-3. **Large CSS output**: Use `@extend` instead of mixins where appropriate
-4. **Slow compilation**: Reduce file complexity and nesting
-
-### Debug Tips
-
-- Use SASS source maps for debugging
-- Check SASS compilation errors
-- Validate CSS output
-- Test with different SASS versions
-
-## Deployment
-
-### 1. Build for Production
+Create a build script to compile SASS with theme options:
 
 ```bash
-# Compile with compressed output
-sass assets/sass/main.scss:assets/style.css --style compressed
+#!/bin/bash
+# build-theme.sh
 
-# Or use npm script
-npm run sass:build
+THEME_NAME="your-theme"
+SASS_DIR="themes/$THEME_NAME/sass"
+CSS_DIR="themes/$THEME_NAME/assets"
+
+# Compile SASS to CSS
+sass --style compressed "$SASS_DIR/main.scss:$CSS_DIR/style.css"
+
+echo "Theme compiled successfully!"
 ```
 
-### 2. Include in Theme Package
-
-Make sure to include the compiled `style.css` file in your theme package, not the SASS source files.
-
-### 3. Documentation
-
-Include SASS setup instructions in your theme's README.md for developers who want to modify the theme.
-
-This approach gives you the power of SASS while maintaining compatibility with FearlessCMS's simple theme system. 
+This comprehensive SASS guide provides everything you need to create maintainable, powerful themes in FearlessCMS using SASS preprocessing. 

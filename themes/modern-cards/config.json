@@ -1,0 +1,31 @@
+{
+    "name": "Modern Cards",
+    "version": "1.0.0",
+    "author": "FearlessCMS",
+    "description": "A modern card-based theme with clean layouts and contemporary design",
+    "options": {
+        "logo": {
+            "type": "image",
+            "label": "Logo"
+        },
+        "heroBanner": {
+            "type": "image",
+            "label": "Hero Banner"
+        },
+        "primaryColor": {
+            "type": "color",
+            "label": "Primary Color",
+            "default": "#6366f1"
+        },
+        "fontFamily": {
+            "type": "select",
+            "label": "Font Family",
+            "options": [
+                {"value": "Inter", "label": "Inter"},
+                {"value": "Poppins", "label": "Poppins"},
+                {"value": "Roboto", "label": "Roboto"}
+            ],
+            "default": "Inter"
+        }
+    }
+} 

@@ -1,0 +1,25 @@
+
+{
+    "options": {
+        "logo": {
+            "type": "image",
+            "label": "Logo",
+            "description": "Upload your site logo"
+        },
+        "accentColor": {
+            "type": "select",
+            "label": "Accent Color",
+            "options": [
+                {"value": "blue", "label": "Blue"},
+                {"value": "green", "label": "Green"},
+                {"value": "purple", "label": "Purple"}
+            ],
+            "default": "blue"
+        },
+        "showSidebar": {
+            "type": "checkbox",
+            "label": "Show Sidebar",
+            "default": true
+        }
+    }
+}

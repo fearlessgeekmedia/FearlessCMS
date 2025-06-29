@@ -174,6 +174,8 @@ If a module file is not found, the system will log an error and insert a comment
 <!-- Module not found: missing-module.html -->
 ```
 
+This allows your theme to continue working even if some modules are missing, making debugging easier.
+
 ## Best Practices
 
 ### 1. Keep Modules Focused

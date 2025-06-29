@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{module=head.html}}
+</head>
+<body class="cyberpunk-theme">
+    <div class="cyberpunk-container">
+        {{module=header.html}}
+        
+        <main class="cyberpunk-main">
+            <div class="content-grid">
+                <div class="content-area">
+                    <article class="cyberpunk-article">
+                        <h1 class="cyberpunk-title">{{title}}</h1>
+                        <div class="cyberpunk-content">
+                            {{content}}
+                        </div>
+                    </article>
+                </div>
+                
+                <aside class="cyberpunk-sidebar">
+                    {{sidebar=main}}
+                </aside>
+            </div>
+        </main>
+        
+        {{module=footer.html}}
+    </div>
+    
+    <div class="cyberpunk-overlay"></div>
+    {{module=custom_js.html}}
+</body>
+</html> 

@@ -1,20 +1,47 @@
-# FearlessCMS Template Reference
+# Theme Templates Reference
 
-This document provides a comprehensive reference for the FearlessCMS template system, including all available variables, syntax, and examples.
+This document provides a comprehensive reference for all template syntax, variables, and features available in FearlessCMS themes.
 
-## Template Syntax Overview
+## Table of Contents
 
-FearlessCMS uses a simple template system with double curly braces `{{}}` for variables and special tags for conditionals and loops.
+1. [Template Syntax](#template-syntax)
+2. [Template Variables](#template-variables)
+3. [Custom Variables](#custom-variables)
+4. [Conditional Logic](#conditional-logic)
+5. [Loops and Iteration](#loops-and-iteration)
+6. [Modular Templates](#modular-templates)
+7. [Sidebars and Widgets](#sidebars-and-widgets)
+8. [Template Examples](#template-examples)
+9. [Advanced Features](#advanced-features)
 
-## Variables
+## Template Syntax
+
+FearlessCMS uses Handlebars template syntax for dynamic content rendering. All templates are HTML files with embedded Handlebars expressions.
+
+### Basic Syntax
+
+```html
+<!-- Variable output -->
+<h1>{{title}}</h1>
+<p>{{content}}</p>
+
+<!-- HTML attributes -->
+<img src="{{imageUrl}}" alt="{{imageAlt}}">
+<a href="/{{url}}" class="{{#if active}}active{{/if}}">Link</a>
+
+<!-- Comments -->
+{{!-- This is a Handlebars comment --}}
+```
+
+## Template Variables
 
 ### Global Variables
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `{{siteName}}` | Site name from config | "My Awesome Site" |
+| `{{siteName}}` | Site name from configuration | "My Website" |
 | `{{siteDescription}}` | Site description/tagline | "A great website" |
-| `{{theme}}` | Current theme name | "nightfall" |
+| `{{theme}}` | Current theme name | "modern-minimal" |
 | `{{currentYear}}` | Current year | "2024" |
 | `{{baseUrl}}` | Base URL of the site | "https://example.com" |
 | `{{currentUrl}}` | Current page URL | "/about" |
@@ -25,210 +52,387 @@ FearlessCMS uses a simple template system with double curly braces `{{}}` for va
 |----------|-------------|---------|
 | `{{title}}` | Page title | "About Us" |
 | `{{content}}` | Page content (HTML) | "<p>Page content...</p>" |
-| `{{url}}` | Current page URL | "about" |
-| `{{parent}}` | Parent page object | `{"title": "Home", "url": "home"}` |
-| `{{children}}` | Array of child pages | `[{"title": "Child 1", "url": "child1"}]` |
-| `{{excerpt}}` | Page excerpt (first paragraph) | "This is the excerpt..." |
-| `{{date}}` | Page creation date | "2024-01-15" |
-| `{{author}}` | Page author | "John Doe" |
+| `{{url}}` | Page URL | "about" |
+| `{{excerpt}}` | Page excerpt | "Brief description..." |
+| `{{date}}` | Page date (if set) | "2024-01-15" |
+| `{{author}}` | Page author (if set) | "John Doe" |
+| `{{parent}}` | Parent page object | Object with parent page data |
+| `{{children}}` | Array of child pages | Array of page objects |
 
 ### Menu Variables
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `{{menu.main}}` | Main menu items | Array of menu objects |
-| `{{menu.footer}}` | Footer menu items | Array of menu objects |
-| `{{menu.sidebar}}` | Sidebar menu items | Array of menu objects |
+| `{{menu=name}}` | Any menu by name | Rendered menu HTML |
 
 ### Theme Options
 
+Theme options can be accessed in two ways:
+
+#### Direct Variable Access
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `{{themeOptions.key}}` | Custom theme option | Value depends on theme |
+| `{{logo}}` | Logo from theme options | "/uploads/logo.png" |
+| `{{heroBanner}}` | Hero banner from theme options | "/uploads/banner.jpg" |
+| `{{primaryColor}}` | Primary color setting | "#007cba" |
+| `{{fontFamily}}` | Font family setting | "sans-serif" |
 
-## Conditional Statements
+#### Theme Options Object Access
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `{{themeOptions.logo}}` | Logo from theme options | "/uploads/logo.png" |
+| `{{themeOptions.herobanner}}` | Hero banner from theme options | "/uploads/banner.jpg" |
+| `{{themeOptions.primaryColor}}` | Primary color setting | "#007cba" |
+| `{{themeOptions.fontFamily}}` | Font family setting | "sans-serif" |
 
-### Basic If/Else
+## Custom Variables
 
-```html
-{{if condition}}
-    <!-- Content when condition is true -->
-{{else}}
-    <!-- Content when condition is false -->
-{{endif}}
+FearlessCMS supports custom variables that you can define and use in your templates. These provide flexibility for creating dynamic, customizable content.
+
+### Page-Level Custom Variables
+
+Add custom fields to your markdown files using JSON frontmatter at the top of the file:
+
+```markdown
+<!-- json {
+    "title": "My Page Title",
+    "customField": "My Custom Value",
+    "showSidebar": true,
+    "specialColor": "#ff0000",
+    "featuredImage": "/uploads/featured.jpg",
+    "tags": ["tag1", "tag2", "tag3"],
+    "meta": {
+        "description": "Custom meta description",
+        "keywords": "custom, keywords"
+    }
+} -->
+
+Your page content here...
 ```
 
-### Examples
+### Using Custom Variables in Templates
+
+Once defined in frontmatter, custom variables are automatically available in your templates:
 
 ```html
-<!-- Check if title exists -->
-{{if title}}
-    <h1>{{title}}</h1>
-{{endif}}
+<h1>{{title}}</h1>
+<p>{{customField}}</p>
 
-<!-- Check if children exist -->
-{{if children}}
-    <ul>
-        {{foreach children}}
-            <li><a href="/{{url}}">{{title}}</a></li>
-        {{endforeach}}
-    </ul>
-{{endif}}
-
-<!-- Check theme option -->
-{{if themeOptions.showSidebar}}
+{{#if showSidebar}}
     <aside class="sidebar">
-        <!-- Sidebar content -->
+        {{sidebar=main}}
     </aside>
-{{endif}}
+{{/if}}
 
-<!-- Multiple conditions -->
-{{if title && content}}
-    <article>
+<div style="color: {{specialColor}}">
+    Custom colored text
+</div>
+
+{{#if featuredImage}}
+    <img src="{{featuredImage}}" alt="{{title}}" class="featured-image">
+{{/if}}
+
+{{#if tags}}
+    <div class="tags">
+        {{#each tags}}
+            <span class="tag">{{this}}</span>
+        {{/each}}
+    </div>
+{{/if}}
+
+{{#if meta.description}}
+    <meta name="description" content="{{meta.description}}">
+{{/if}}
+```
+
+### Global Custom Variables (Theme Options)
+
+Define custom theme options in your theme's `config.json` file:
+
+```json
+{
+    "name": "My Theme",
+    "version": "1.0.0",
+    "options": {
+        "customSetting": {
+            "type": "text",
+            "label": "Custom Setting",
+            "default": "default value"
+        },
+        "showFeature": {
+            "type": "boolean",
+            "label": "Show Feature",
+            "default": true
+        },
+        "accentColor": {
+            "type": "color",
+            "label": "Accent Color",
+            "default": "#007cba"
+        }
+    }
+}
+```
+
+These options appear in the admin panel and become available as variables:
+
+```html
+<p>{{customSetting}}</p>
+
+{{#if showFeature}}
+    <div class="feature">Feature content</div>
+{{/if}}
+
+<div style="color: {{accentColor}}">
+    Accent colored text
+</div>
+```
+
+### Custom Variable Types
+
+#### Text Variables
+```markdown
+<!-- json {
+    "textField": "Simple text value"
+} -->
+```
+
+#### Boolean Variables
+```markdown
+<!-- json {
+    "showElement": true,
+    "hideElement": false
+} -->
+```
+
+#### Numeric Variables
+```markdown
+<!-- json {
+    "priority": 5,
+    "rating": 4.5
+} -->
+```
+
+#### Array Variables
+```markdown
+<!-- json {
+    "categories": ["tech", "design", "business"],
+    "numbers": [1, 2, 3, 4, 5]
+} -->
+```
+
+#### Object Variables
+```markdown
+<!-- json {
+    "settings": {
+        "enabled": true,
+        "count": 10,
+        "name": "My Setting"
+    }
+} -->
+```
+
+### Accessing Nested Variables
+
+For object variables, use dot notation:
+
+```html
+{{#if settings.enabled}}
+    <div class="feature">
+        Count: {{settings.count}}
+        Name: {{settings.name}}
+    </div>
+{{/if}}
+```
+
+### Best Practices for Custom Variables
+
+1. **Use Descriptive Names**: Choose clear, meaningful variable names
+2. **Consistent Naming**: Use camelCase or snake_case consistently
+3. **Default Values**: Provide sensible defaults for theme options
+4. **Documentation**: Document custom variables in your theme's README
+5. **Validation**: Use conditional checks before using variables
+
+### Example: Blog Post with Custom Fields
+
+```markdown
+<!-- json {
+    "title": "My Blog Post",
+    "author": "John Doe",
+    "publishDate": "2024-01-15",
+    "category": "Technology",
+    "tags": ["php", "cms", "tutorial"],
+    "featured": true,
+    "readingTime": 5,
+    "meta": {
+        "description": "Learn how to build a custom CMS",
+        "keywords": "php, cms, development"
+    }
+} -->
+
+Your blog post content here...
+```
+
+```html
+<article class="blog-post {{#if featured}}featured{{/if}}">
+    <header class="post-header">
         <h1>{{title}}</h1>
+        <div class="post-meta">
+            <span class="author">By {{author}}</span>
+            <span class="date">{{publishDate}}</span>
+            <span class="category">{{category}}</span>
+            <span class="reading-time">{{readingTime}} min read</span>
+        </div>
+    </header>
+    
+    <div class="post-content">
         {{content}}
-    </article>
-{{else}}
-    <p>No content available</p>
-{{endif}}
+    </div>
+    
+    {{#if tags}}
+        <footer class="post-footer">
+            <div class="tags">
+                {{#each tags}}
+                    <span class="tag">{{this}}</span>
+                {{/each}}
+            </div>
+        </footer>
+    {{/if}}
+</article>
 ```
 
-## Loops
+## Conditional Logic
 
-### Foreach Loop
-
-```html
-{{foreach array}}
-    <!-- Content for each item -->
-{{endforeach}}
-```
-
-### Examples
+### Basic Conditionals
 
 ```html
-<!-- Loop through menu items -->
-<nav>
+{{#if title}}
+    <h1>{{title}}</h1>
+{{/if}}
+
+{{#if children}}
     <ul>
-        {{foreach menu.main}}
+        {{#each children}}
             <li><a href="/{{url}}">{{title}}</a></li>
-        {{endforeach}}
+        {{/each}}
     </ul>
+{{/if}}
+```
+
+### If-Else Statements
+
+```html
+{{#if themeOptions.logo}}
+    <img src="/{{themeOptions.logo}}" alt="{{siteName}}">
+{{else}}
+    <h1>{{siteName}}</h1>
+{{/if}}
+```
+
+### Complex Conditions
+
+```html
+{{#if title}}
+    {{#if content}}
+        <article>
+            <h1>{{title}}</h1>
+            <div>{{content}}</div>
+        </article>
+    {{/if}}
+{{/if}}
+```
+
+### Unless (Inverse If)
+
+```html
+{{#unless children}}
+    <p>No child pages found.</p>
+{{/unless}}
+```
+
+## Loops and Iteration
+
+### Basic Loops
+
+```html
+{{#each children}}
+    <div class="child-page">
+        <h3><a href="/{{url}}">{{title}}</a></h3>
+        {{#if excerpt}}
+            <p>{{excerpt}}</p>
+        {{/if}}
+    </div>
+{{/each}}
+```
+
+### Menu Rendering
+
+```html
+<nav class="main-navigation">
+    {{menu=main}}
 </nav>
 
-<!-- Loop through children -->
-{{if children}}
-    <div class="child-pages">
-        {{foreach children}}
-            <div class="child-page">
-                <h3><a href="/{{url}}">{{title}}</a></h3>
-                {{if excerpt}}
-                    <p>{{excerpt}}</p>
-                {{endif}}
-            </div>
-        {{endforeach}}
-    </div>
-{{endif}}
-
-<!-- Loop through theme options -->
-{{if themeOptions.socialLinks}}
-    <div class="social-links">
-        {{foreach themeOptions.socialLinks}}
-            <a href="{{url}}" target="{{target}}" rel="{{rel}}">
-                {{if icon}}
-                    <i class="{{icon}}"></i>
-                {{endif}}
-                {{name}}
-            </a>
-        {{endforeach}}
-    </div>
-{{endif}}
+<nav class="footer-navigation">
+    {{menu=footer}}
+</nav>
 ```
 
-## Template Functions
-
-### Include Function
-
-Include other template files:
+### Array Loops
 
 ```html
-{{include "partials/header.html"}}
-{{include "partials/footer.html"}}
+{{#each themeOptions.socialLinks}}
+    <a href="{{url}}" target="_blank" rel="noopener">
+        {{#if icon}}
+            <i class="{{icon}}"></i>
+        {{/if}}
+        {{name}}
+    </a>
+{{/each}}
 ```
 
-### Date Formatting
-
-Format dates using PHP's date format:
+### Loop Context
 
 ```html
-{{date "Y-m-d"}}  <!-- 2024-01-15 -->
-{{date "F j, Y"}} <!-- January 15, 2024 -->
-{{date "M j"}}    <!-- Jan 15 -->
+{{#each children}}
+    <div class="page-item {{#if @first}}first{{/if}} {{#if @last}}last{{/if}}">
+        <h3>{{title}}</h3>
+        <p>Index: {{@index}}</p>
+    </div>
+{{/each}}
 ```
 
 ## Modular Templates
 
-FearlessCMS supports modular templates, allowing you to break down templates into reusable components. This makes themes more maintainable and reduces code duplication.
-
-### Module Include Syntax
-
-Use the `{{module=filename.html}}` syntax to include other template files:
+### Including Modules
 
 ```html
-{{module=header.html}}
-{{module=footer.html}}
-{{module=navigation.html}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{module=head.html}}
+</head>
+<body>
+    {{module=header.html}}
+    <main>
+        {{content}}
+    </main>
+    {{module=footer.html}}
+</body>
+</html>
 ```
 
-### Module Features
+### Module File Locations
 
-#### Variable Access
-Modules have access to all template variables:
+Module files should be placed in your theme's `templates/` directory:
 
-```html
-<!-- header.html -->
-<header>
-    <h1>{{siteName}}</h1>
-    {{#if siteDescription}}
-    <p>{{siteDescription}}</p>
-    {{/if}}
-</header>
 ```
-
-#### Conditional Logic
-Modules support all template conditionals:
-
-```html
-<!-- hero-banner.html -->
-{{#if heroBanner}}
-<div class="hero-banner">
-    <img src="{{heroBanner}}" alt="{{title}}">
-</div>
-{{/if}}
-```
-
-#### Loops
-Modules support foreach loops:
-
-```html
-<!-- navigation.html -->
-<nav>
-    <ul>
-    {{#each menu.main}}
-        <li><a href="/{{url}}">{{title}}</a></li>
-    {{/each}}
-    </ul>
-</nav>
-```
-
-#### Nested Modules
-Modules can include other modules:
-
-```html
-<!-- header.html -->
-<header>
-    <div class="logo">{{siteName}}</div>
-    {{module=navigation.html}}
-</header>
+themes/
+└── my-theme/
+    └── templates/
+        ├── page.html          # Main template
+        ├── header.html        # Header module
+        ├── footer.html        # Footer module
+        ├── navigation.html    # Navigation module
+        └── head.html          # Head module
 ```
 
 ### File Extensions
@@ -248,9 +452,241 @@ If a module file is not found, the system will log an error and insert a comment
 <!-- Module not found: missing-module.html -->
 ```
 
-### Example: Modular Template Structure
+This allows your theme to continue working even if some modules are missing, making debugging easier.
 
-**Main template (page.html):**
+### Module Variables
+
+Modules have access to all template variables:
+
+```html
+<!-- header.html -->
+<header class="site-header">
+    <div class="container">
+        {{#if themeOptions.logo}}
+            <img src="/{{themeOptions.logo}}" alt="{{siteName}}" class="logo">
+        {{else}}
+            <h1 class="site-title">{{siteName}}</h1>
+        {{/if}}
+        
+        {{#if siteDescription}}
+            <p class="site-description">{{siteDescription}}</p>
+        {{/if}}
+        
+        <nav class="main-navigation">
+            {{menu=main}}
+        </nav>
+    </div>
+</header>
+```
+
+## Sidebars and Widgets
+
+### Sidebar Syntax
+
+To render sidebars with widgets, use the `{{sidebar=sidebar-name}}` syntax:
+
+```html
+<aside class="sidebar">
+    {{sidebar=main}}
+</aside>
+```
+
+### Available Sidebars
+
+| Sidebar Name | Description | Usage |
+|--------------|-------------|-------|
+| `main` | Main sidebar with widgets | `{{sidebar=main}}` |
+| `footer` | Footer sidebar | `{{sidebar=footer}}` |
+| `left` | Left sidebar | `{{sidebar=left}}` |
+| `right` | Right sidebar | `{{sidebar=right}}` |
+
+### Sidebar with Conditional Logic
+
+```html
+{{#if themeOptions.showSidebar}}
+    <aside class="sidebar">
+        {{sidebar=main}}
+    </aside>
+{{/if}}
+```
+
+### Multiple Sidebars
+
+```html
+<div class="content-layout">
+    <aside class="sidebar-left">
+        {{sidebar=left}}
+    </aside>
+    
+    <main class="main-content">
+        {{content}}
+    </main>
+    
+    <aside class="sidebar-right">
+        {{sidebar=right}}
+    </aside>
+</div>
+```
+
+### Widget Rendering
+
+Sidebars automatically render widgets based on the sidebar configuration. Widgets are managed through the admin panel and can include:
+
+- Navigation menus
+- Recent posts
+- Categories
+- Search forms
+- Custom HTML
+- Social media links
+
+### Sidebar Configuration
+
+Sidebars are configured in the admin panel under Widgets. You can:
+
+1. Add widgets to specific sidebars
+2. Reorder widgets within sidebars
+3. Configure widget settings
+4. Enable/disable sidebars per page
+
+## Template Examples
+
+### Complete Page Template
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{#if title}}{{title}} - {{/if}}{{siteName}}</title>
+    <link rel="stylesheet" href="/themes/{{theme}}/assets/style.css">
+    {{#if themeOptions.customCSS}}
+        <style>{{themeOptions.customCSS}}</style>
+    {{/if}}
+</head>
+<body class="theme-{{themeOptions.fontFamily}} {{#if themeOptions.showSidebar}}with-sidebar{{/if}}">
+    <header class="site-header">
+        <div class="container">
+            <div class="header-content">
+                {{#if themeOptions.logo}}
+                    <img src="/{{themeOptions.logo}}" alt="{{siteName}}" class="logo">
+                {{else}}
+                    <h1 class="site-title">{{siteName}}</h1>
+                {{/if}}
+                
+                {{#if siteDescription}}
+                    <p class="site-description">{{siteDescription}}</p>
+                {{/if}}
+                
+                <nav class="main-navigation">
+                    {{menu=main}}
+                </nav>
+            </div>
+        </div>
+    </header>
+    
+    <main class="site-main">
+        <div class="container">
+            <div class="content-layout">
+                <div class="main-content">
+                    <article class="content">
+                        {{#if title}}
+                            <header class="content-header">
+                                <h1 class="content-title">{{title}}</h1>
+                                {{#if date}}
+                                    <time class="content-date">{{date}}</time>
+                                {{/if}}
+                                {{#if author}}
+                                    <span class="content-author">by {{author}}</span>
+                                {{/if}}
+                            </header>
+                        {{/if}}
+                        
+                        {{#if excerpt}}
+                            <div class="content-excerpt">
+                                <p>{{excerpt}}</p>
+                            </div>
+                        {{/if}}
+                        
+                        <div class="content-body">
+                            {{content}}
+                        </div>
+                    </article>
+                </div>
+                
+                {{#if themeOptions.showSidebar}}
+                    <aside class="sidebar">
+                        {{#if children}}
+                            <div class="sidebar-widget">
+                                <h3>Related Pages</h3>
+                                <ul class="related-pages">
+                                    {{#each children}}
+                                        <li class="related-page">
+                                            <a href="/{{url}}" class="related-link">{{title}}</a>
+                                        </li>
+                                    {{/each}}
+                                </ul>
+                            </div>
+                        {{/if}}
+                        
+                        {{#if menu.sidebar}}
+                            <div class="sidebar-widget">
+                                <h3>Quick Links</h3>
+                                <ul class="sidebar-menu">
+                                    {{#each menu.sidebar}}
+                                        <li class="sidebar-item">
+                                            <a href="/{{url}}" class="sidebar-link">{{title}}</a>
+                                        </li>
+                                    {{/each}}
+                                </ul>
+                            </div>
+                        {{/if}}
+                    </aside>
+                {{/if}}
+            </div>
+        </div>
+    </main>
+    
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <p>&copy; {{currentYear}} {{siteName}}. All rights reserved.</p>
+                </div>
+                
+                {{#if menu.footer}}
+                    <nav class="footer-navigation">
+                        <ul class="footer-menu">
+                            {{#each menu.footer}}
+                                <li class="footer-item">
+                                    <a href="/{{url}}" class="footer-link">{{title}}</a>
+                                </li>
+                            {{/each}}
+                        </ul>
+                    </nav>
+                {{/if}}
+                
+                {{#if themeOptions.socialLinks}}
+                    <div class="social-links">
+                        {{#each themeOptions.socialLinks}}
+                            <a href="{{url}}" target="_blank" rel="noopener" class="social-link">
+                                {{#if icon}}
+                                    <i class="{{icon}}"></i>
+                                {{/if}}
+                                {{name}}
+                            </a>
+                        {{/each}}
+                    </div>
+                {{/if}}
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
+```
+
+### Home Template
+
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -259,143 +695,44 @@ If a module file is not found, the system will log an error and insert a comment
 </head>
 <body>
     {{module=header.html}}
-    <main>
-        {{module=hero-banner.html}}
-        <div class="content">
-            {{module=sidebar.html}}
-        </div>
-    </main>
-    {{module=footer.html}}
-</body>
-</html>
-```
-
-**Head module (head.html):**
-```html
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{title}} - {{siteName}}</title>
-<link rel="stylesheet" href="/themes/{{theme}}/assets/style.css">
-```
-
-**Header module (header.html):**
-```html
-<header>
-    <div class="logo">{{siteName}}</div>
-    <nav class="main-menu">
-        {{menu=main}}
-    </nav>
-</header>
-```
-
-**Footer module (footer.html):**
-```html
-<footer>
-    &copy; {{currentYear}} {{siteName}}
-</footer>
-```
-
-### Best Practices for Modular Templates
-
-1. **Keep modules focused** - Each module should have a single responsibility
-2. **Use descriptive names** - Name modules clearly (e.g., `site-header.html` not `h.html`)
-3. **Plan your structure** - Think about what parts are reused across pages
-4. **Avoid deep nesting** - Don't create circular includes or deeply nested structures
-5. **Test thoroughly** - Ensure all variables and conditionals work in modules
-
-### Common Module Types
-
-- `head.html` - HTML head section (meta tags, CSS, JS)
-- `header.html` - Site header (logo, navigation)
-- `footer.html` - Site footer (copyright, links)
-- `navigation.html` - Navigation menus
-- `sidebar.html` - Sidebar content and layout
-- `hero-banner.html` - Hero banner sections
-- `content-layout.html` - Content area layouts
-
-For more detailed information about modular templates, see the [Modular Templates Guide](modular-templates.md).
-
-## Template Examples
-
-### Complete Home Template
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{siteName}}</title>
-    <meta name="description" content="{{siteDescription}}">
-    <link rel="stylesheet" href="/themes/{{theme}}/assets/style.css">
-</head>
-<body>
-    <header>
+    
+    <main class="site-main">
         <div class="container">
-            {{if themeOptions.logo}}
-                <img src="/{{themeOptions.logo}}" alt="{{siteName}}" class="logo">
-            {{else}}
-                <h1>{{siteName}}</h1>
-            {{endif}}
+            <div class="home-hero">
+                <h1 class="hero-title">{{#if title}}{{title}}{{else}}Welcome to {{siteName}}{{/if}}</h1>
+                {{#if excerpt}}
+                    <p class="hero-subtitle">{{excerpt}}</p>
+                {{/if}}
+            </div>
             
-            {{if siteDescription}}
-                <p class="tagline">{{siteDescription}}</p>
-            {{endif}}
-            
-            {{if menu.main}}
-                <nav>
-                    <ul>
-                        {{foreach menu.main}}
-                            <li><a href="/{{url}}">{{title}}</a></li>
-                        {{endforeach}}
-                    </ul>
-                </nav>
-            {{endif}}
-        </div>
-    </header>
-
-    <main>
-        <div class="container">
-            <article>
-                {{content}}
-            </article>
-            
-            {{if children}}
-                <section class="child-pages">
-                    <h2>Related Pages</h2>
-                    <div class="grid">
-                        {{foreach children}}
-                            <div class="card">
-                                <h3><a href="/{{url}}">{{title}}</a></h3>
-                                {{if excerpt}}
-                                    <p>{{excerpt}}</p>
-                                {{endif}}
-                            </div>
-                        {{endforeach}}
-                    </div>
-                </section>
-            {{endif}}
-        </div>
-    </main>
-
-    <footer>
-        <div class="container">
-            <p>&copy; {{currentYear}} {{siteName}}. All rights reserved.</p>
-            
-            {{if themeOptions.socialLinks}}
-                <div class="social-links">
-                    {{foreach themeOptions.socialLinks}}
-                        <a href="{{url}}" target="{{target}}" rel="{{rel}}">
-                            {{if icon}}
-                                <i class="{{icon}}"></i>
-                            {{endif}}
-                            {{name}}
-                        </a>
-                    {{endforeach}}
+            <div class="content-layout">
+                <div class="main-content">
+                    <article class="content">
+                        {{content}}
+                    </article>
                 </div>
-            {{endif}}
+                
+                {{#if themeOptions.showSidebar}}
+                    <aside class="sidebar">
+                        {{#if children}}
+                            <div class="sidebar-widget">
+                                <h3>Recent Pages</h3>
+                                <ul class="recent-pages">
+                                    {{#each children}}
+                                        <li class="recent-page">
+                                            <a href="/{{url}}" class="recent-link">{{title}}</a>
+                                        </li>
+                                    {{/each}}
+                                </ul>
+                            </div>
+                        {{/if}}
+                    </aside>
+                {{/if}}
+            </div>
         </div>
-    </footer>
+    </main>
+    
+    {{module=footer.html}}
 </body>
 </html>
 ```
@@ -406,72 +743,57 @@ For more detailed information about modular templates, see the [Modular Template
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{title}} - {{siteName}}</title>
-    <link rel="stylesheet" href="/themes/{{theme}}/assets/style.css">
+    {{module=head.html}}
 </head>
 <body>
-    <header>
+    {{module=header.html}}
+    
+    <main class="site-main">
         <div class="container">
-            <h1>{{title}}</h1>
-        </div>
-    </header>
-
-    <main>
-        <div class="container">
-            <div class="blog-layout">
-                <div class="blog-content">
-                    {{if children}}
-                        {{foreach children}}
-                            <article class="blog-post">
-                                <header>
-                                    <h2><a href="/{{url}}">{{title}}</a></h2>
-                                    {{if date}}
-                                        <time datetime="{{date}}">{{date "F j, Y"}}</time>
-                                    {{endif}}
-                                    {{if author}}
-                                        <span class="author">by {{author}}</span>
-                                    {{endif}}
-                                </header>
-                                
-                                {{if excerpt}}
-                                    <div class="excerpt">
-                                        {{excerpt}}
-                                    </div>
-                                {{endif}}
-                                
-                                <a href="/{{url}}" class="read-more">Read More</a>
-                            </article>
-                        {{endforeach}}
-                    {{else}}
-                        <p>No blog posts found.</p>
-                    {{endif}}
-                </div>
-                
-                {{if themeOptions.showSidebar}}
-                    <aside class="sidebar">
-                        {{if menu.sidebar}}
-                            <nav class="sidebar-nav">
-                                <h3>Categories</h3>
-                                <ul>
-                                    {{foreach menu.sidebar}}
-                                        <li><a href="/{{url}}">{{title}}</a></li>
-                                    {{endforeach}}
-                                </ul>
-                            </nav>
-                        {{endif}}
-                    </aside>
-                {{endif}}
+            <div class="blog-header">
+                <h1 class="blog-title">{{#if title}}{{title}}{{else}}Blog{{/if}}</h1>
+                {{#if excerpt}}
+                    <p class="blog-description">{{excerpt}}</p>
+                {{/if}}
             </div>
+            
+            <div class="blog-content">
+                {{content}}
+            </div>
+            
+            {{#if children}}
+                <div class="blog-posts">
+                    {{#each children}}
+                        <article class="blog-post">
+                            <header class="post-header">
+                                <h2 class="post-title">
+                                    <a href="/{{url}}" class="post-link">{{title}}</a>
+                                </h2>
+                                {{#if date}}
+                                    <time class="post-date">{{date}}</time>
+                                {{/if}}
+                                {{#if author}}
+                                    <span class="post-author">by {{author}}</span>
+                                {{/if}}
+                            </header>
+                            
+                            {{#if excerpt}}
+                                <div class="post-excerpt">
+                                    <p>{{excerpt}}</p>
+                                </div>
+                            {{/if}}
+                            
+                            <footer class="post-footer">
+                                <a href="/{{url}}" class="read-more">Read More</a>
+                            </footer>
+                        </article>
+                    {{/each}}
+                </div>
+            {{/if}}
         </div>
     </main>
-
-    <footer>
-        <div class="container">
-            <p>&copy; {{currentYear}} {{siteName}}</p>
-        </div>
-    </footer>
+    
+    {{module=footer.html}}
 </body>
 </html>
 ```
@@ -482,101 +804,103 @@ For more detailed information about modular templates, see the [Modular Template
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Page Not Found - {{siteName}}</title>
-    <link rel="stylesheet" href="/themes/{{theme}}/assets/style.css">
+    {{module=head.html}}
+    <title>404 - Page Not Found - {{siteName}}</title>
 </head>
 <body>
-    <div class="error-page">
+    {{module=header.html}}
+    
+    <main class="site-main">
         <div class="container">
-            <h1>404</h1>
-            <h2>Page Not Found</h2>
-            <p>The page you're looking for doesn't exist.</p>
-            
-            {{if menu.main}}
-                <p>Try one of these pages:</p>
-                <ul>
-                    {{foreach menu.main}}
-                        <li><a href="/{{url}}">{{title}}</a></li>
-                    {{endforeach}}
-                </ul>
-            {{endif}}
-            
-            <a href="/" class="btn">Go Home</a>
+            <div class="error-page">
+                <h1 class="error-title">404 - Page Not Found</h1>
+                <p class="error-message">The page you are looking for does not exist.</p>
+                <div class="error-actions">
+                    <a href="/" class="btn btn-primary">Return to Homepage</a>
+                </div>
+            </div>
         </div>
-    </div>
+    </main>
+    
+    {{module=footer.html}}
 </body>
 </html>
 ```
 
-## Advanced Techniques
+## Advanced Features
 
-### Nested Conditionals
-
-```html
-{{if themeOptions.showSidebar}}
-    <aside class="sidebar">
-        {{if menu.sidebar}}
-            <nav>
-                {{foreach menu.sidebar}}
-                    <div class="menu-item">
-                        <a href="/{{url}}">{{title}}</a>
-                        {{if children}}
-                            <ul>
-                                {{foreach children}}
-                                    <li><a href="/{{url}}">{{title}}</a></li>
-                                {{endforeach}}
-                            </ul>
-                        {{endif}}
-                    </div>
-                {{endforeach}}
-            </nav>
-        {{endif}}
-    </aside>
-{{endif}}
-```
-
-### Dynamic Classes
+### Custom CSS Classes
 
 ```html
-<div class="page {{if parent}}has-parent{{endif}} {{if children}}has-children{{endif}}">
+<div class="page {{#if parent}}has-parent{{/if}} {{#if children}}has-children{{/if}}">
     <!-- Content -->
 </div>
 ```
 
-### Conditional Attributes
+### Dynamic Attributes
 
 ```html
-<a href="/{{url}}" 
-   {{if target}}target="{{target}}"{{endif}}
-   {{if rel}}rel="{{rel}}"{{endif}}>
+<a href="{{url}}" 
+   {{#if target}}target="{{target}}"{{/if}}
+   {{#if rel}}rel="{{rel}}"{{/if}}>
     {{title}}
 </a>
 ```
 
+### Nested Conditionals
+
+```html
+{{#if themeOptions.showSidebar}}
+    {{#if menu.sidebar}}
+        <aside class="sidebar">
+            <nav class="sidebar-navigation">
+                <ul class="sidebar-menu">
+                    {{#each menu.sidebar}}
+                        <li class="sidebar-item">
+                            <a href="/{{url}}" class="sidebar-link">{{title}}</a>
+                        </li>
+                    {{/each}}
+                </ul>
+            </nav>
+        </aside>
+    {{/if}}
+{{/if}}
+```
+
+### Helper Functions
+
+Some themes may include custom helper functions. Check your theme's documentation for available helpers.
+
 ## Best Practices
 
-1. **Always check if variables exist** before using them
-2. **Use semantic HTML** elements
-3. **Keep templates DRY** - reuse common elements
-4. **Test with different content** scenarios
-5. **Use meaningful variable names** in theme options
-6. **Include proper meta tags** for SEO
-7. **Make templates accessible** with proper ARIA labels
+1. **Use Semantic HTML**: Always use proper HTML5 semantic elements
+2. **Content Rendering**: Use `{{content}}` for content (HTML is automatically rendered)
+3. **Check for Existence**: Always check if variables exist before using them
+4. **Modular Design**: Break templates into reusable modules
+5. **Responsive Design**: Ensure templates work on all screen sizes
+6. **Accessibility**: Follow WCAG guidelines for accessibility
+7. **Performance**: Minimize template complexity for better performance
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Variable not showing**: Check if the variable exists in the data
-2. **Conditional not working**: Verify the condition syntax
-3. **Loop not iterating**: Ensure the array is not empty
-4. **Template not loading**: Check file paths and names
+1. **Variables Not Showing**: Check if the variable name is correct and exists
+2. **Conditionals Not Working**: Ensure proper Handlebars syntax (`{{#if}}`, `{{/if}}`)
+3. **Loops Not Iterating**: Verify array structure and use `{{#each}}` correctly
+4. **Content Not Rendering**: Use `{{content}}` for content (HTML is automatically processed)
 
-### Debug Tips
+### Debugging
 
-- Use `{{debug}}` to output all available variables
-- Check the browser console for JavaScript errors
-- Verify template file permissions
-- Test with simple content first 
+Add debug output to check variable values:
+
+```html
+<!-- Debug output -->
+<div style="display: none;">
+    <p>Title: {{title}}</p>
+    <p>Children count: {{children.length}}</p>
+    <p>Theme options: {{themeOptions}}</p>
+</div>
+```
+
+This reference covers all the essential template features in FearlessCMS. For more advanced usage, refer to the Handlebars documentation and your theme's specific documentation. 

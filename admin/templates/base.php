@@ -1,6 +1,9 @@
 <?php
 error_log("Base template - Current session: " . print_r($_SESSION, true));
 require_once dirname(dirname(__DIR__)) . '/version.php';
+
+// Get CMS mode manager instance
+global $cmsModeManager;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -33,12 +36,31 @@ require_once dirname(dirname(__DIR__)) . '/version.php';
                 <a href="/<?php echo $adminPath; ?>?action=manage_menus" class="hover:text-green-200">Menus</a>
                 <a href="/<?php echo $adminPath; ?>?action=manage_widgets" class="hover:text-green-200">Widgets</a>
                 <?php 
+                // Set plugins menu label based on CMS mode
+                $plugins_menu_label = $cmsModeManager->canManagePlugins() ? 'Plugins' : 'Additional Features';
+                
                 // Add admin sections to navigation
                 $admin_sections = fcms_get_admin_sections();
                 error_log("Rendering admin sections: " . print_r($admin_sections, true));
                 
                 foreach ($admin_sections as $id => $section) {
                     error_log("Processing section: " . $id . " - " . print_r($section, true));
+                    
+                    // Check if section should be shown based on CMS mode
+                    $showSection = true;
+                    if ($id === 'store' && !$cmsModeManager->canAccessStore()) {
+                        $showSection = false;
+                    }
+                    
+                    // For plugins section, always show but potentially rename it
+                    if ($id === 'manage_plugins') {
+                        $section['label'] = $plugins_menu_label;
+                    }
+                    
+                    if (!$showSection) {
+                        continue;
+                    }
+                    
                     if (isset($section['children'])) {
                         // This is a parent section with children
                         echo '<div class="relative inline-block group">';

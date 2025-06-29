@@ -13,8 +13,14 @@ class ThemeManager {
         $this->configPath = $root . '/config/config.json';
         $this->loadActiveTheme();
         
-        // Validate active theme
-        $this->validateTheme($this->activeTheme);
+        // Validate active theme, fallback to default if missing/invalid
+        if (!$this->validateTheme($this->activeTheme)) {
+            // Try fallback to default
+            $this->activeTheme = 'default';
+            if (!$this->validateTheme('default')) {
+                throw new Exception("No valid theme found: both '{$this->activeTheme}' and 'default' are missing or invalid.");
+            }
+        }
     }
 
     private function loadActiveTheme() {
@@ -31,20 +37,21 @@ class ThemeManager {
         $templatesPath = $themePath . '/templates';
         
         if (!is_dir($themePath)) {
-            throw new Exception("Theme directory not found: $themePath");
+            return false;
         }
         
         if (!is_dir($templatesPath)) {
-            throw new Exception("Theme '$themeName' is invalid: missing templates directory");
+            return false;
         }
         
         // Check for required templates
         $requiredTemplates = ['page.html', '404.html'];
         foreach ($requiredTemplates as $template) {
             if (!file_exists($templatesPath . '/' . $template)) {
-                throw new Exception("Theme '$themeName' is invalid: missing required template '$template'");
+                return false;
             }
         }
+        return true;
     }
 
     public function getActiveTheme() {

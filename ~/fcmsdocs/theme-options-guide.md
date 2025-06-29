@@ -1,108 +1,137 @@
 # Theme Options Guide
 
-This guide explains how to implement and use theme options in FearlessCMS, allowing users to customize themes through the admin panel.
+This guide explains how to create and use theme options in FearlessCMS themes. Theme options allow users to customize your theme without editing code.
+
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Defining Theme Options](#defining-theme-options)
+3. [Option Types](#option-types)
+4. [Using Options in Templates](#using-options-in-templates)
+5. [Advanced Features](#advanced-features)
+6. [Best Practices](#best-practices)
+7. [Examples](#examples)
 
 ## Overview
 
-Theme options allow you to make your themes configurable without requiring users to edit code. Users can customize colors, upload images, toggle features, and more through a user-friendly interface.
+Theme options provide a user-friendly way to customize themes through the admin panel. They can control colors, fonts, layouts, and other visual elements without requiring code changes.
 
-## Creating Theme Options
+### Benefits
 
-### 1. Define Options in config.json
+- **User-friendly**: No coding required for customization
+- **Flexible**: Support various data types (colors, text, images, etc.)
+- **Maintainable**: Changes are stored in configuration, not code
+- **Reusable**: Options can be used across multiple templates
 
-Create a `config.json` file in your theme directory to define available options:
+### Basic Structure
+
+Theme options are defined in the `config.json` file within an `options` section:
 
 ```json
 {
+    "name": "Your Theme Name",
+    "version": "1.0.0",
+    "author": "Your Name",
+    "description": "A brief description of your theme",
     "options": {
         "logo": {
             "type": "image",
-            "label": "Logo Image",
-            "description": "Upload your site logo (recommended: 200x60px)"
+            "label": "Logo"
         },
         "herobanner": {
             "type": "image",
-            "label": "Hero Banner",
-            "description": "Hero banner image for homepage"
-        },
-        "primaryColor": {
-            "type": "select",
-            "label": "Primary Color",
-            "description": "Choose your theme's primary color",
-            "options": [
-                {"value": "blue", "label": "Blue"},
-                {"value": "green", "label": "Green"},
-                {"value": "purple", "label": "Purple"},
-                {"value": "orange", "label": "Orange"}
-            ],
-            "default": "blue"
-        },
-        "showSidebar": {
-            "type": "checkbox",
-            "label": "Show Sidebar",
-            "description": "Display sidebar on all pages",
-            "default": true
-        },
-        "footerText": {
-            "type": "text",
-            "label": "Footer Text",
-            "description": "Custom text to display in footer",
-            "default": "© 2024 My Site"
-        },
-        "socialLinks": {
-            "type": "array",
-            "label": "Social Links",
-            "description": "Add social media links",
-            "fields": {
-                "name": {"type": "text", "label": "Name"},
-                "url": {"type": "text", "label": "URL"},
-                "icon": {"type": "text", "label": "Icon Class"}
-            }
+            "label": "Hero Banner"
         }
     }
 }
 ```
 
-### 2. Option Types
+## Defining Theme Options
 
-FearlessCMS supports several option types:
+Create a `config.json` file in your theme directory with an `options` section:
 
-#### Image Upload
 ```json
 {
-    "logo": {
-        "type": "image",
-        "label": "Logo",
-        "description": "Upload your logo"
+    "name": "Your Theme Name",
+    "version": "1.0.0",
+    "author": "Your Name",
+    "description": "A brief description of your theme",
+    "options": {
+        "logo": {
+            "type": "image",
+            "label": "Logo"
+        },
+        "herobanner": {
+            "type": "image",
+            "label": "Hero Banner"
+        },
+        "primaryColor": {
+            "type": "color",
+            "label": "Primary Color",
+            "default": "#007cba"
+        },
+        "fontFamily": {
+            "type": "select",
+            "label": "Font Family",
+            "options": [
+                {"value": "sans-serif", "label": "Sans Serif"},
+                {"value": "serif", "label": "Serif"},
+                {"value": "monospace", "label": "Monospace"}
+            ],
+            "default": "sans-serif"
+        },
+        "showSidebar": {
+            "type": "boolean",
+            "label": "Show Sidebar",
+            "default": true
+        }
     }
 }
 ```
 
-#### Text Input
+## Option Types
+
+### Color Picker
+
 ```json
 {
-    "siteTitle": {
+    "primaryColor": {
+        "type": "color",
+        "label": "Primary Color",
+        "default": "#007cba",
+        "description": "Main brand color"
+    }
+}
+```
+
+### Text Input
+
+```json
+{
+    "siteTagline": {
         "type": "text",
-        "label": "Site Title",
-        "description": "Your site title",
-        "default": "My Site"
+        "label": "Site Tagline",
+        "default": "Welcome to our site",
+        "description": "Displayed below the site title"
     }
 }
 ```
 
-#### Textarea
+### Textarea
+
 ```json
 {
     "customCSS": {
         "type": "textarea",
         "label": "Custom CSS",
         "description": "Add custom CSS styles",
-        "rows": 10
+        "placeholder": "Enter your custom CSS here..."
     }
 }
 ```
 
-#### Select Dropdown
+### Select Dropdown
+
 ```json
 {
     "layout": {
@@ -111,423 +140,128 @@ FearlessCMS supports several option types:
         "options": [
             {"value": "wide", "label": "Wide Layout"},
             {"value": "narrow", "label": "Narrow Layout"},
-            {"value": "sidebar", "label": "With Sidebar"}
+            {"value": "full", "label": "Full Width"}
         ],
-        "default": "wide"
+        "default": "wide",
+        "description": "Choose the main layout style"
     }
 }
 ```
 
-#### Checkbox
+### Boolean (Checkbox)
+
 ```json
 {
     "showSearch": {
-        "type": "checkbox",
+        "type": "boolean",
         "label": "Show Search",
-        "description": "Display search box in header",
-        "default": true
+        "default": true,
+        "description": "Display search functionality"
     }
 }
 ```
 
-#### Color Picker
+### Image Upload
+
 ```json
 {
-    "accentColor": {
-        "type": "color",
-        "label": "Accent Color",
-        "description": "Choose accent color",
-        "default": "#007bff"
+    "heroImage": {
+        "type": "image",
+        "label": "Hero Image"
     }
 }
 ```
 
-#### Array/Repeater
-```json
-{
-    "socialLinks": {
-        "type": "array",
-        "label": "Social Links",
-        "fields": {
-            "platform": {
-                "type": "select",
-                "label": "Platform",
-                "options": [
-                    {"value": "facebook", "label": "Facebook"},
-                    {"value": "twitter", "label": "Twitter"},
-                    {"value": "instagram", "label": "Instagram"}
-                ]
-            },
-            "url": {
-                "type": "text",
-                "label": "URL"
-            },
-            "icon": {
-                "type": "text",
-                "label": "Icon Class"
-            }
-        }
-    }
-}
-```
+## Using Options in Templates
 
-## Using Theme Options in Templates
+You can access theme options in two ways:
 
-### Basic Usage
-
-Access theme options using the `{{themeOptions.key}}` syntax:
+### Direct Variable Access
 
 ```html
-{{if themeOptions.logo}}
-    <img src="/{{themeOptions.logo}}" alt="Logo" class="logo">
-{{endif}}
+{{#if logo}}
+    <img src="/{{logo}}" alt="{{siteName}}" class="logo">
+{{else}}
+    <h1 class="site-title">{{siteName}}</h1>
+{{/if}}
 
-<div class="theme-{{themeOptions.primaryColor}}">
-    <!-- Content with theme color -->
-</div>
-
-{{if themeOptions.showSidebar}}
-    <aside class="sidebar">
-        <!-- Sidebar content -->
-    </aside>
-{{endif}}
-```
-
-### Using Theme Options with Modular Templates
-
-When using modular templates, theme options work seamlessly across all modules:
-
-**Main template (page.html):**
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    {{module=head.html}}
-</head>
-<body>
-    {{module=header.html}}
-    <main>
-        {{module=hero-banner.html}}
-        <div class="content">
-            {{module=sidebar.html}}
-        </div>
-    </main>
-    {{module=footer.html}}
-</body>
-</html>
-```
-
-**Header module (header.html):**
-```html
-<header class="theme-{{themeOptions.primaryColor}}">
-    {{if themeOptions.logo}}
-        <img src="/{{themeOptions.logo}}" alt="Logo" class="logo">
-    {{else}}
-        <h1>{{siteName}}</h1>
-    {{/if}}
-    
-    {{if themeOptions.showSearch}}
-        <div class="search-box">
-            <!-- Search functionality -->
-        </div>
-    {{/if}}
-</header>
-```
-
-**Sidebar module (sidebar.html):**
-```html
-{{if themeOptions.showSidebar}}
-    <aside class="sidebar">
-        {{if themeOptions.socialLinks}}
-            <div class="social-links">
-                {{#each themeOptions.socialLinks}}
-                    <a href="{{url}}" target="_blank">
-                        <i class="{{icon}}"></i>
-                        {{name}}
-                    </a>
-                {{/each}}
-            </div>
-        {{/if}}
-    </aside>
+{{#if heroBanner}}
+    <div class="hero-banner">
+        <img src="/{{heroBanner}}" alt="{{title}}">
+    </div>
 {{/if}}
 ```
 
-**Footer module (footer.html):**
-```html
-<footer>
-    {{if themeOptions.footerText}}
-        <p>{{themeOptions.footerText}}</p>
-    {{else}}
-        <p>&copy; {{currentYear}} {{siteName}}</p>
-    {{/if}}
-</footer>
-```
-
-This approach allows you to:
-- **Organize theme options** by component (header options in header.html)
-- **Maintain consistency** across all templates
-- **Simplify maintenance** by keeping related code together
-- **Reuse components** with different theme option configurations
-
-## CSS Integration
-
-### Using CSS Custom Properties
-
-```css
-:root {
-    --primary-color: #007bff;
-    --secondary-color: #6c757d;
-    --accent-color: #28a745;
-}
-
-/* Override with theme options */
-.theme-blue {
-    --primary-color: #007bff;
-    --accent-color: #0056b3;
-}
-
-.theme-green {
-    --primary-color: #28a745;
-    --accent-color: #1e7e34;
-}
-
-.theme-purple {
-    --primary-color: #6f42c1;
-    --accent-color: #5a2d91;
-}
-```
-
-### Dynamic CSS with Theme Options
+### Theme Options Object Access
 
 ```html
-<style>
-    .hero-banner {
-        background-image: url('/{{themeOptions.herobanner}}');
-    }
+{{#if themeOptions.logo}}
+    <img src="/{{themeOptions.logo}}" alt="{{siteName}}" class="logo">
+{{else}}
+    <h1 class="site-title">{{siteName}}</h1>
+{{/if}}
+
+<div class="content {{#if themeOptions.showSidebar}}with-sidebar{{/if}}">
+    <div class="main-content">
+        {{content}}
+    </div>
     
-    .custom-css {
-        {{themeOptions.customCSS}}
-    }
-</style>
+    {{#if themeOptions.showSidebar}}
+        <aside class="sidebar">
+            <!-- Sidebar content -->
+        </aside>
+    {{/if}}
+</div>
 ```
 
-## Complete Example: Blog Theme
+**Note**: Both methods work the same way. Use whichever style you prefer for consistency in your theme.
 
-### config.json
+## Advanced Features
 
-```json
-{
-    "options": {
-        "logo": {
-            "type": "image",
-            "label": "Logo",
-            "description": "Upload your site logo"
-        },
-        "herobanner": {
-            "type": "image",
-            "label": "Hero Banner",
-            "description": "Hero banner for homepage"
-        },
-        "colorScheme": {
-            "type": "select",
-            "label": "Color Scheme",
-            "options": [
-                {"value": "light", "label": "Light"},
-                {"value": "dark", "label": "Dark"},
-                {"value": "auto", "label": "Auto (follows system)"}
-            ],
-            "default": "light"
-        },
-        "primaryColor": {
-            "type": "color",
-            "label": "Primary Color",
-            "default": "#007bff"
-        },
-        "showSidebar": {
-            "type": "checkbox",
-            "label": "Show Sidebar",
-            "default": true
-        },
-        "sidebarPosition": {
-            "type": "select",
-            "label": "Sidebar Position",
-            "options": [
-                {"value": "left", "label": "Left"},
-                {"value": "right", "label": "Right"}
-            ],
-            "default": "right"
-        },
-        "showSearch": {
-            "type": "checkbox",
-            "label": "Show Search",
-            "default": true
-        },
-        "footerText": {
-            "type": "text",
-            "label": "Footer Text",
-            "default": "© 2024 My Blog"
-        },
-        "socialLinks": {
-            "type": "array",
-            "label": "Social Links",
-            "fields": {
-                "name": {"type": "text", "label": "Name"},
-                "url": {"type": "text", "label": "URL"},
-                "icon": {"type": "text", "label": "Icon Class"}
-            }
-        },
-        "customCSS": {
-            "type": "textarea",
-            "label": "Custom CSS",
-            "description": "Add custom CSS styles",
-            "rows": 8
-        }
-    }
-}
-```
-
-### Template Usage
+### Conditional CSS Classes
 
 ```html
-<!DOCTYPE html>
-<html lang="en" class="theme-{{themeOptions.colorScheme}}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{title}} - {{siteName}}</title>
-    <link rel="stylesheet" href="/themes/{{theme}}/assets/style.css">
-    {{if themeOptions.customCSS}}
-        <style>{{themeOptions.customCSS}}</style>
-    {{endif}}
-</head>
-<body>
-    <header class="header">
-        <div class="container">
-            {{if themeOptions.logo}}
-                <img src="/{{themeOptions.logo}}" alt="{{siteName}}" class="logo">
-            {{else}}
-                <h1>{{siteName}}</h1>
-            {{endif}}
-            
-            <nav class="nav">
-                {{if menu.main}}
-                    <ul>
-                        {{foreach menu.main}}
-                            <li><a href="/{{url}}">{{title}}</a></li>
-                        {{endforeach}}
-                    </ul>
-                {{endif}}
-            </nav>
-            
-            {{if themeOptions.showSearch}}
-                <div class="search">
-                    <input type="search" placeholder="Search...">
-                </div>
-            {{endif}}
-        </div>
-    </header>
-
-    <main class="main">
-        <div class="container">
-            <div class="layout {{if themeOptions.showSidebar}}with-sidebar sidebar-{{themeOptions.sidebarPosition}}{{endif}}">
-                <div class="content">
-                    {{if themeOptions.herobanner && url == 'home'}}
-                        <div class="hero-banner" style="background-image: url('/{{themeOptions.herobanner}}')">
-                            <h2>{{title}}</h2>
-                        </div>
-                    {{endif}}
-                    
-                    <article>
-                        {{content}}
-                    </article>
-                </div>
-                
-                {{if themeOptions.showSidebar}}
-                    <aside class="sidebar">
-                        {{if menu.sidebar}}
-                            <nav class="sidebar-nav">
-                                <h3>Categories</h3>
-                                <ul>
-                                    {{foreach menu.sidebar}}
-                                        <li><a href="/{{url}}">{{title}}</a></li>
-                                    {{endforeach}}
-                                </ul>
-                            </nav>
-                        {{endif}}
-                    </aside>
-                {{endif}}
-            </div>
-        </div>
-    </main>
-
-    <footer class="footer">
-        <div class="container">
-            <p>{{themeOptions.footerText}}</p>
-            
-            {{if themeOptions.socialLinks}}
-                <div class="social-links">
-                    {{foreach themeOptions.socialLinks}}
-                        <a href="{{url}}" target="_blank" rel="noopener">
-                            {{if icon}}
-                                <i class="{{icon}}"></i>
-                            {{endif}}
-                            {{name}}
-                        </a>
-                    {{endforeach}}
-                </div>
-            {{endif}}
-        </div>
-    </footer>
-</body>
-</html>
+<body class="theme-{{themeOptions.fontFamily}} {{#if themeOptions.showSidebar}}with-sidebar{{/if}} {{#if themeOptions.darkMode}}dark-mode{{/if}}">
 ```
 
-### CSS with Theme Options
+### Dynamic Attributes
 
-```css
-:root {
-    --primary-color: #007bff;
-    --text-color: #333;
-    --bg-color: #fff;
-    --border-color: #e9ecef;
-}
+```html
+<a href="{{url}}" 
+   {{#if themeOptions.openInNewTab}}target="_blank"{{/if}}
+   {{#if themeOptions.noFollow}}rel="nofollow"{{/if}}>
+    {{title}}
+</a>
+```
 
-/* Dark theme */
-.theme-dark {
-    --text-color: #fff;
-    --bg-color: #1a1a1a;
-    --border-color: #333;
-}
+### Nested Conditionals
 
-/* Layout variations */
-.layout.with-sidebar {
-    display: grid;
-    gap: 2rem;
-}
+```html
+{{#if themeOptions.showSidebar}}
+    {{#if menu.sidebar}}
+        <aside class="sidebar">
+            <nav class="sidebar-navigation">
+                <ul class="sidebar-menu">
+                    {{#each menu.sidebar}}
+                        <li class="sidebar-item">
+                            <a href="/{{url}}" class="sidebar-link">{{title}}</a>
+                        </li>
+                    {{/each}}
+                </ul>
+            </nav>
+        </aside>
+    {{/if}}
+{{/if}}
+```
 
-.layout.with-sidebar.sidebar-left {
-    grid-template-columns: 300px 1fr;
-}
+### Custom CSS Injection
 
-.layout.with-sidebar.sidebar-right {
-    grid-template-columns: 1fr 300px;
-}
-
-/* Hero banner */
-.hero-banner {
-    background-size: cover;
-    background-position: center;
-    padding: 4rem 0;
-    color: white;
-    text-align: center;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .layout.with-sidebar {
-        grid-template-columns: 1fr;
-    }
-}
+```html
+{{#if themeOptions.customCSS}}
+    <style>
+        {{themeOptions.customCSS}}
+    </style>
+{{/if}}
 ```
 
 ## Best Practices
@@ -541,7 +275,7 @@ Always provide default values for your options:
     "primaryColor": {
         "type": "color",
         "label": "Primary Color",
-        "default": "#007bff"
+        "default": "#007cba"
     }
 }
 ```
@@ -553,64 +287,342 @@ Make option labels clear and user-friendly:
 ```json
 {
     "showSidebar": {
-        "type": "checkbox",
-        "label": "Display Sidebar on All Pages",
-        "description": "Show the sidebar navigation on every page"
+        "type": "boolean",
+        "label": "Display Sidebar on Pages",
+        "description": "Show a sidebar with navigation and widgets"
     }
 }
 ```
 
 ### 3. Group Related Options
 
-Organize related options together in your config:
+Organize related options together:
 
 ```json
 {
     "options": {
-        "header": {
-            "logo": { "type": "image", "label": "Logo" },
-            "showSearch": { "type": "checkbox", "label": "Show Search" }
+        "colors": {
+            "primaryColor": { "type": "color", "label": "Primary Color" },
+            "secondaryColor": { "type": "color", "label": "Secondary Color" }
         },
         "layout": {
-            "showSidebar": { "type": "checkbox", "label": "Show Sidebar" },
+            "showSidebar": { "type": "boolean", "label": "Show Sidebar" },
             "sidebarPosition": { "type": "select", "label": "Sidebar Position" }
         }
     }
 }
 ```
 
-### 4. Validate User Input
+### 4. Validate Input
 
-Always check if options exist before using them:
+Consider validation for user input:
 
-```html
-{{if themeOptions.logo}}
-    <img src="/{{themeOptions.logo}}" alt="Logo">
-{{endif}}
+```json
+{
+    "customCSS": {
+        "type": "textarea",
+        "label": "Custom CSS",
+        "description": "Add custom CSS (be careful with syntax)",
+        "placeholder": "/* Enter your custom CSS here */"
+    }
+}
 ```
 
-### 5. Provide Fallbacks
+### 5. Use Semantic Names
 
-Use fallback values when options aren't set:
+Choose option names that clearly indicate their purpose:
 
-```html
-<div class="theme-{{themeOptions.colorScheme || 'light'}}">
-    <!-- Content -->
-</div>
+```json
+{
+    "headerStyle": { "type": "select", "label": "Header Style" },
+    "footerText": { "type": "text", "label": "Footer Text" },
+    "enableAnimations": { "type": "boolean", "label": "Enable Animations" }
+}
 ```
 
-## Troubleshooting
+## Examples
 
-### Common Issues
+### Complete Theme Configuration
 
-1. **Option not showing**: Check if the option is defined in `config.json`
-2. **Value not updating**: Clear browser cache and refresh
-3. **Image not displaying**: Check file permissions and path
-4. **CSS not applying**: Verify CSS custom properties are defined
+```json
+{
+    "options": {
+        "branding": {
+            "logo": {
+                "type": "image",
+                "label": "Site Logo",
+                "description": "Upload your site logo"
+            },
+            "primaryColor": {
+                "type": "color",
+                "label": "Primary Color",
+                "default": "#007cba",
+                "description": "Main brand color"
+            },
+            "secondaryColor": {
+                "type": "color",
+                "label": "Secondary Color",
+                "default": "#6c757d",
+                "description": "Secondary brand color"
+            }
+        },
+        "typography": {
+            "fontFamily": {
+                "type": "select",
+                "label": "Font Family",
+                "options": [
+                    {"value": "sans-serif", "label": "Sans Serif"},
+                    {"value": "serif", "label": "Serif"},
+                    {"value": "monospace", "label": "Monospace"}
+                ],
+                "default": "sans-serif",
+                "description": "Choose the main font"
+            },
+            "fontSize": {
+                "type": "select",
+                "label": "Font Size",
+                "options": [
+                    {"value": "small", "label": "Small"},
+                    {"value": "medium", "label": "Medium"},
+                    {"value": "large", "label": "Large"}
+                ],
+                "default": "medium",
+                "description": "Choose the base font size"
+            }
+        },
+        "layout": {
+            "showSidebar": {
+                "type": "boolean",
+                "label": "Show Sidebar",
+                "default": true,
+                "description": "Display sidebar on pages"
+            },
+            "sidebarPosition": {
+                "type": "select",
+                "label": "Sidebar Position",
+                "options": [
+                    {"value": "left", "label": "Left"},
+                    {"value": "right", "label": "Right"}
+                ],
+                "default": "right",
+                "description": "Choose sidebar position"
+            },
+            "containerWidth": {
+                "type": "select",
+                "label": "Container Width",
+                "options": [
+                    {"value": "narrow", "label": "Narrow"},
+                    {"value": "standard", "label": "Standard"},
+                    {"value": "wide", "label": "Wide"}
+                ],
+                "default": "standard",
+                "description": "Choose the main container width"
+            }
+        },
+        "content": {
+            "showExcerpts": {
+                "type": "boolean",
+                "label": "Show Excerpts",
+                "default": true,
+                "description": "Display page excerpts"
+            },
+            "excerptLength": {
+                "type": "number",
+                "label": "Excerpt Length",
+                "default": 150,
+                "description": "Number of characters in excerpts"
+            },
+            "showDates": {
+                "type": "boolean",
+                "label": "Show Dates",
+                "default": true,
+                "description": "Display page dates"
+            }
+        },
+        "social": {
+            "socialLinks": {
+                "type": "array",
+                "label": "Social Media Links",
+                "description": "Add social media links",
+                "fields": {
+                    "platform": {
+                        "type": "select",
+                        "label": "Platform",
+                        "options": [
+                            {"value": "facebook", "label": "Facebook"},
+                            {"value": "twitter", "label": "Twitter"},
+                            {"value": "instagram", "label": "Instagram"},
+                            {"value": "linkedin", "label": "LinkedIn"}
+                        ]
+                    },
+                    "url": {
+                        "type": "text",
+                        "label": "Profile URL"
+                    }
+                }
+            }
+        },
+        "advanced": {
+            "customCSS": {
+                "type": "textarea",
+                "label": "Custom CSS",
+                "description": "Add custom CSS styles",
+                "placeholder": "/* Enter your custom CSS here */"
+            },
+            "customJS": {
+                "type": "textarea",
+                "label": "Custom JavaScript",
+                "description": "Add custom JavaScript",
+                "placeholder": "// Enter your custom JavaScript here"
+            },
+            "analyticsCode": {
+                "type": "textarea",
+                "label": "Analytics Code",
+                "description": "Add Google Analytics or other tracking code"
+            }
+        }
+    }
+}
+```
 
-### Debug Tips
+### Template Usage Example
 
-- Use browser developer tools to inspect theme option values
-- Check the `config/theme_options.json` file for saved values
-- Test with different option combinations
-- Verify template syntax is correct 
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{#if title}}{{title}} - {{/if}}{{siteName}}</title>
+    
+    <style>
+        :root {
+            --primary-color: {{themeOptions.primaryColor}};
+            --secondary-color: {{themeOptions.secondaryColor}};
+            --font-family: {{themeOptions.fontFamily}};
+            --font-size: {{themeOptions.fontSize}};
+        }
+        
+        {{#if themeOptions.customCSS}}
+            {{themeOptions.customCSS}}
+        {{/if}}
+    </style>
+    
+    <link rel="stylesheet" href="/themes/{{theme}}/assets/style.css">
+</head>
+<body class="theme-{{themeOptions.fontFamily}} {{#if themeOptions.showSidebar}}with-sidebar sidebar-{{themeOptions.sidebarPosition}}{{/if}}">
+    <header class="site-header">
+        <div class="container container-{{themeOptions.containerWidth}}">
+            {{#if themeOptions.logo}}
+                <img src="/{{themeOptions.logo}}" alt="{{siteName}}" class="logo">
+            {{else}}
+                <h1 class="site-title">{{siteName}}</h1>
+            {{/if}}
+            
+            {{#if menu.main}}
+                <nav class="main-navigation">
+                    <ul class="nav-menu">
+                        {{menu=main}}
+                    </ul>
+                </nav>
+            {{/if}}
+        </div>
+    </header>
+    
+    <main class="site-main">
+        <div class="container container-{{themeOptions.containerWidth}}">
+            <div class="content-layout">
+                <div class="main-content">
+                    <article class="content">
+                        {{#if title}}
+                            <header class="content-header">
+                                <h1 class="content-title">{{title}}</h1>
+                                {{#if themeOptions.showDates}}
+                                    {{#if date}}
+                                        <time class="content-date">{{date}}</time>
+                                    {{/if}}
+                                {{/if}}
+                            </header>
+                        {{/if}}
+                        
+                        {{#if themeOptions.showExcerpts}}
+                            {{#if excerpt}}
+                                <div class="content-excerpt">
+                                    <p>{{excerpt}}</p>
+                                </div>
+                            {{/if}}
+                        {{/if}}
+                        
+                        <div class="content-body">
+                            {{content}}
+                        </div>
+                    </article>
+                </div>
+                
+                {{#if themeOptions.showSidebar}}
+                    <aside class="sidebar">
+                        {{#if children}}
+                            <div class="sidebar-widget">
+                                <h3>Related Pages</h3>
+                                <ul class="related-pages">
+                                    {{#each children}}
+                                        <li class="related-page">
+                                            <a href="/{{url}}" class="related-link">{{title}}</a>
+                                        </li>
+                                    {{/each}}
+                                </ul>
+                            </div>
+                        {{/if}}
+                        
+                        {{#if menu.sidebar}}
+                            <div class="sidebar-widget">
+                                <h3>Quick Links</h3>
+                                <ul class="sidebar-menu">
+                                    {{#each menu.sidebar}}
+                                        <li class="sidebar-item">
+                                            <a href="/{{url}}" class="sidebar-link">{{title}}</a>
+                                        </li>
+                                    {{/each}}
+                                </ul>
+                            </div>
+                        {{/if}}
+                    </aside>
+                {{/if}}
+            </div>
+        </div>
+    </main>
+    
+    <footer class="site-footer">
+        <div class="container container-{{themeOptions.containerWidth}}">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <p>&copy; {{currentYear}} {{siteName}}. All rights reserved.</p>
+                </div>
+                
+                {{#if themeOptions.socialLinks}}
+                    <div class="social-links">
+                        {{#each themeOptions.socialLinks}}
+                            <a href="{{url}}" target="_blank" rel="noopener" class="social-link social-{{platform}}">
+                                {{platform}}
+                            </a>
+                        {{/each}}
+                    </div>
+                {{/if}}
+            </div>
+        </div>
+    </footer>
+    
+    {{#if themeOptions.customJS}}
+        <script>
+            {{themeOptions.customJS}}
+        </script>
+    {{/if}}
+    
+    {{#if themeOptions.analyticsCode}}
+        {{themeOptions.analyticsCode}}
+    {{/if}}
+</body>
+</html>
+```
+
+This comprehensive guide covers all aspects of theme options in FearlessCMS. Use these examples and best practices to create flexible, user-friendly themes that can be easily customized without code changes. 
