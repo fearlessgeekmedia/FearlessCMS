@@ -45,10 +45,85 @@ function blog_create_slug($text) {
     return $text;
 }
 
+// Function to generate RSS feed
+function blog_generate_rss() {
+    $posts = blog_load_posts();
+    $published = array_filter($posts, fn($p) => $p['status'] === 'published');
+    usort($published, fn($a, $b) => strcmp($b['date'], $a['date']));
+    
+    // Get site configuration
+    $configFile = CONFIG_DIR . '/config.json';
+    $siteName = 'FearlessCMS';
+    $siteDescription = '';
+    $siteUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]";
+    
+    if (file_exists($configFile)) {
+        $config = json_decode(file_get_contents($configFile), true);
+        $siteName = $config['site_name'] ?? $siteName;
+        $siteDescription = $config['site_description'] ?? $siteDescription;
+    }
+    
+    // Generate RSS XML
+    $rss = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+    $rss .= '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">' . "\n";
+    $rss .= '  <channel>' . "\n";
+    $rss .= '    <title>' . htmlspecialchars($siteName) . ' - Blog</title>' . "\n";
+    $rss .= '    <link>' . htmlspecialchars($siteUrl) . '/blog</link>' . "\n";
+    $rss .= '    <description>' . htmlspecialchars($siteDescription) . '</description>' . "\n";
+    $rss .= '    <language>en-us</language>' . "\n";
+    $rss .= '    <lastBuildDate>' . date(DATE_RSS) . '</lastBuildDate>' . "\n";
+    $rss .= '    <atom:link href="' . htmlspecialchars($siteUrl) . '/blog/rss" rel="self" type="application/rss+xml" />' . "\n";
+    
+    foreach ($published as $post) {
+        $postUrl = $siteUrl . '/blog/' . urlencode($post['slug']);
+        $pubDate = date(DATE_RSS, strtotime($post['date']));
+        
+        // Convert markdown to plain text for better RSS readability
+        $content = $post['content'];
+        
+        // Remove markdown headers
+        $content = preg_replace('/^#{1,6}\s+/m', '', $content);
+        
+        // Remove markdown links but keep the text
+        $content = preg_replace('/\[([^\]]+)\]\([^)]+\)/', '$1', $content);
+        
+        // Remove markdown formatting
+        $content = preg_replace('/\*\*([^*]+)\*\*/', '$1', $content);
+        $content = preg_replace('/\*([^*]+)\*/', '$1', $content);
+        $content = preg_replace('/`([^`]+)`/', '$1', $content);
+        
+        // Remove code blocks
+        $content = preg_replace('/```[\s\S]*?```/', '', $content);
+        
+        // Clean up whitespace
+        $content = preg_replace('/\n\s*\n/', "\n\n", $content);
+        $content = trim($content);
+        
+        // Create description (first 300 characters)
+        $description = substr($content, 0, 300);
+        if (strlen($content) > 300) {
+            $description .= '...';
+        }
+        
+        $rss .= '    <item>' . "\n";
+        $rss .= '      <title>' . htmlspecialchars($post['title']) . '</title>' . "\n";
+        $rss .= '      <link>' . htmlspecialchars($postUrl) . '</link>' . "\n";
+        $rss .= '      <guid>' . htmlspecialchars($postUrl) . '</guid>' . "\n";
+        $rss .= '      <pubDate>' . $pubDate . '</pubDate>' . "\n";
+        $rss .= '      <description>' . htmlspecialchars($description) . '</description>' . "\n";
+        $rss .= '    </item>' . "\n";
+    }
+    
+    $rss .= '  </channel>' . "\n";
+    $rss .= '</rss>';
+    
+    return $rss;
+}
+
 fcms_register_admin_section('blog', [
     'label' => 'Blog',
     'menu_order' => 40,
-    'parent' => 'plugins',
+    'parent' => 'manage_plugins',
     'render_callback' => function() {
         ob_start();
         $posts = blog_load_posts();
@@ -266,6 +341,14 @@ fcms_register_admin_section('blog', [
 
 // Public route: /blog and /blog/{slug}
 fcms_add_hook('route', function (&$handled, &$title, &$content, $path) {
+    // Handle RSS feed route
+    if ($path === 'blog/rss') {
+        header('Content-Type: application/rss+xml; charset=UTF-8');
+        echo blog_generate_rss();
+        $handled = true;
+        exit; // Exit immediately to prevent any additional processing
+    }
+    
     if (preg_match('#^blog(?:/([^/]+))?$#', $path, $m)) {
         $posts = blog_load_posts();
         
@@ -298,6 +381,8 @@ fcms_add_hook('route', function (&$handled, &$title, &$content, $path) {
             $title = 'Blog';
             $content = '<div class="max-w-4xl mx-auto px-4 py-8">';
             $content .= '<h1 class="text-3xl font-bold mb-8">Blog Posts</h1>';
+            // Add RSS feed link
+            $content .= '<div class="mb-4"><a href="/blog/rss" class="text-blue-600 hover:underline">📡 RSS Feed</a></div>';
             $content .= '<div class="space-y-8">';
             foreach ($published as $post) {
                 $content .= '<article class="border-b pb-8">';
@@ -328,5 +413,10 @@ fcms_add_hook('before_render', function(&$template, $path = null) {
         }
     } else if (preg_match('#^blog(?:/([^/]+))?$#', $path)) {
         $template = 'blog';
+    }
+    
+    // Don't use template for RSS feed
+    if ($path === 'blog/rss' || (isset($_SERVER['REQUEST_URI']) && trim($_SERVER['REQUEST_URI'], '/') === 'blog/rss')) {
+        $template = null;
     }
 });

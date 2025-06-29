@@ -8,6 +8,7 @@ if (!defined('PROJECT_ROOT')) {
 require_once dirname(__DIR__) . '/includes/config.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
 require_once dirname(__DIR__) . '/includes/plugins.php';
+require_once dirname(__DIR__) . '/includes/CMSModeManager.php';
 
 // Register store admin section
 fcms_register_admin_section('store', [
@@ -643,6 +644,15 @@ if (isset($_POST['action']) && $_POST['action'] === 'delete_plugin') {
  * Render the store admin page
  */
 function store_admin_page() {
+    // Check CMS mode permissions
+    $cmsModeManager = new CMSModeManager();
+    
+    if (!$cmsModeManager->canAccessStore()) {
+        // Redirect to plugins page with error message
+        header('Location: ?action=plugins&error=store_disabled');
+        exit;
+    }
+    
     // Load store configuration
     $config_file = dirname(__DIR__) . '/config/config.json';
     $config = file_exists($config_file) ? json_decode(file_get_contents($config_file), true) : [];

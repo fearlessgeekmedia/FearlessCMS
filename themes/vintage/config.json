@@ -1,0 +1,31 @@
+{
+    "name": "Vintage",
+    "version": "1.0.0",
+    "author": "FearlessCMS",
+    "description": "A classic vintage theme with warm colors and retro aesthetics",
+    "options": {
+        "logo": {
+            "type": "image",
+            "label": "Logo"
+        },
+        "herobanner": {
+            "type": "image",
+            "label": "Hero Banner"
+        },
+        "primaryColor": {
+            "type": "color",
+            "label": "Primary Color",
+            "default": "#8B4513"
+        },
+        "accentColor": {
+            "type": "color",
+            "label": "Accent Color",
+            "default": "#D2691E"
+        },
+        "vintageMode": {
+            "type": "boolean",
+            "label": "Vintage Effects",
+            "default": true
+        }
+    }
+} 

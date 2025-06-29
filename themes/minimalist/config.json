@@ -1,0 +1,38 @@
+{
+    "name": "Minimalist",
+    "version": "1.0.0",
+    "author": "FearlessCMS",
+    "description": "A clean, minimalist theme focused on typography and whitespace",
+    "options": {
+        "logo": {
+            "type": "image",
+            "label": "Logo"
+        },
+        "primaryColor": {
+            "type": "color",
+            "label": "Primary Color",
+            "default": "#2c3e50"
+        },
+        "accentColor": {
+            "type": "color",
+            "label": "Accent Color",
+            "default": "#3498db"
+        },
+        "fontFamily": {
+            "type": "select",
+            "label": "Font Family",
+            "options": [
+                {"value": "Inter", "label": "Inter"},
+                {"value": "Roboto", "label": "Roboto"},
+                {"value": "Open Sans", "label": "Open Sans"},
+                {"value": "Lato", "label": "Lato"}
+            ],
+            "default": "Inter"
+        },
+        "showSidebar": {
+            "type": "boolean",
+            "label": "Show Sidebar",
+            "default": false
+        }
+    }
+} 

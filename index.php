@@ -46,7 +46,7 @@ if (strpos($requestPath, '_preview/') === 0) {
         if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $contentData, $matches)) {
             $metadata = json_decode($matches[1], true);
             $content = substr($contentData, strlen($matches[0]));
-            error_log("Preview metadata: " . json_encode($metadata));
+            // error_log("Preview metadata: " . json_encode($metadata));
         } else {
             error_log("No metadata found in preview file");
             $content = $contentData;
@@ -57,8 +57,8 @@ if (strpos($requestPath, '_preview/') === 0) {
         
         // Convert markdown to HTML
         require_once PROJECT_ROOT . '/includes/Parsedown.php';
-        $parsedown = new Parsedown();
-        $pageContentHtml = $parsedown->text($content);
+        $Parsedown = new Parsedown();
+        $pageContentHtml = $Parsedown->text($content);
         
         // Get site name from config
         $configFile = CONFIG_DIR . '/config.json';
@@ -118,7 +118,23 @@ if (strpos($requestPath, '_preview/') === 0) {
             'custom_js' => $custom_js
         ];
         
-        error_log("Template data prepared: " . json_encode($templateData));
+        // Add custom variables from JSON frontmatter
+        if (isset($metadata) && is_array($metadata)) {
+            foreach ($metadata as $key => $value) {
+                $templateData[$key] = $value;
+            }
+        }
+        
+        // Process template variables in the content
+        $pageContentHtml = $templateRenderer->replaceVariables($pageContentHtml, $templateData);
+        
+        // Update the content in template data
+        $templateData['content'] = $pageContentHtml;
+        
+        // Debug: Check if content has curly braces
+        if (strpos($pageContentHtml, '{') !== false || strpos($pageContentHtml, '}') !== false) {
+            error_log("CONTENT HAS CURLY BRACES: " . substr($pageContentHtml, 0, 200));
+        }
         
         // Render template
         $templateName = $metadata['template'] ?? 'page';
@@ -225,6 +241,16 @@ if ($handled) {
         'custom_css' => $custom_css,
         'custom_js' => $custom_js
     ];
+    
+    // Add custom variables from JSON frontmatter
+    if (isset($metadata) && is_array($metadata)) {
+        foreach ($metadata as $key => $value) {
+            $templateData[$key] = $value;
+        }
+    }
+    
+    // Debug: Log the template data
+    error_log("TEMPLATE DATA: " . json_encode($templateData));
     
     // Render template
     echo $templateRenderer->render($template, $templateData);
@@ -358,6 +384,11 @@ if (!class_exists('Parsedown')) {
 $Parsedown = new Parsedown();
 $pageContentHtml = $Parsedown->text($pageContent);
 
+// Debug: Check if content has curly braces
+if (strpos($pageContentHtml, '{') !== false || strpos($pageContentHtml, '}') !== false) {
+    error_log("CONTENT HAS CURLY BRACES: " . substr($pageContentHtml, 0, 200));
+}
+
 // Apply content filters
 $pageContentHtml = fcms_apply_filter('content', $pageContentHtml);
 
@@ -416,6 +447,16 @@ $templateData = [
     'custom_css' => $custom_css,
     'custom_js' => $custom_js
 ];
+
+// Add custom variables from JSON frontmatter
+if (isset($metadata) && is_array($metadata)) {
+    foreach ($metadata as $key => $value) {
+        $templateData[$key] = $value;
+    }
+}
+
+// Debug: Log the template data
+error_log("TEMPLATE DATA: " . json_encode($templateData));
 
 // --- Render template ---
 $templateName = $metadata['template'] ?? 'page';

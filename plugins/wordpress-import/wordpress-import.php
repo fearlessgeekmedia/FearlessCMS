@@ -9,8 +9,8 @@ Author: Fearless Geek
 // Register admin section
 fcms_register_admin_section('wordpress_import', [
     'label' => 'WordPress Import',
-    'menu_order' => 1,
-    'parent' => 'plugins',
+    'menu_order' => 60,
+    'parent' => 'manage_plugins',
     'render_callback' => 'wordpress_import_admin_page'
 ]);
 

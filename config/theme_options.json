@@ -9,5 +9,7 @@
     "hostname": "localhost",
     "footer_html": "",
     "color_scheme": "blue",
-    "social_links": []
+    "social_links": [],
+    "primaryColor": "#6366f1",
+    "fontFamily": "Inter"
 }

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{module=head.html}}
+</head>
+<body class="modern-cards-theme">
+    {{module=header.html}}
+    
+    <main class="modern-main">
+        <div class="container">
+            <div class="content-grid">
+                <div class="main-content">
+                    <article class="content-card">
+                        <div class="card-header">
+                            <h1 class="card-title">{{title}}</h1>
+                        </div>
+                        
+                        <div class="card-body">
+                            {{content}}
+                        </div>
+                        
+                        <div class="card-footer">
+                            <div class="card-meta">
+                                <span class="meta-item">
+                                    <i class="icon-calendar"></i>
+                                    {{currentYear}}
+                                </span>
+                                <span class="meta-item">
+                                    <i class="icon-author"></i>
+                                    {{siteName}}
+                                </span>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+                
+                <aside class="sidebar-content">
+                    {{sidebar=main}}
+                </aside>
+            </div>
+        </div>
+    </main>
+    
+    {{module=footer.html}}
+    {{module=custom_js.html}}
+</body>
+</html> 

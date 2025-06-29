@@ -40,7 +40,7 @@ function formsPluginInit() {
     fcms_register_admin_section('forms', [
         'label' => 'Forms',
         'menu_order' => 50,
-        'parent' => 'plugins',
+        'parent' => 'manage_plugins',
         'render_callback' => 'forms_admin_page'
     ]);
 

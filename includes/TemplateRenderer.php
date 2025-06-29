@@ -33,8 +33,8 @@ class TemplateRenderer {
             $normalizedOptions[strtolower($key)] = $value;
         }
 
-        error_log("Theme options: " . print_r($this->themeOptions, true));
-        error_log("Normalized options: " . print_r($normalizedOptions, true));
+        // error_log("Theme options: " . print_r($this->themeOptions, true));
+        // error_log("Normalized options: " . print_r($normalizedOptions, true));
 
         // Prepare template data with both camelCase and snake_case versions
         $templateData = [
@@ -55,6 +55,12 @@ class TemplateRenderer {
             'theme_options' => $this->themeOptions
         ];
 
+        // Add theme options as both original and lowercased keys
+        foreach ($this->themeOptions as $key => $value) {
+            $templateData[$key] = $value;
+            $templateData[strtolower($key)] = $value;
+        }
+
         // Merge with any additional data
         $templateData = array_merge($templateData, $data);
 
@@ -63,16 +69,14 @@ class TemplateRenderer {
             $templateData['sidebar'] = (bool)$data['sidebar'];
         }
 
-        error_log("Template data: " . print_r($templateData, true));
-
         // Replace template variables
         $content = $this->replaceVariables($content, $templateData);
 
         return $content;
     }
 
-    private function replaceVariables($content, $data) {
-        error_log("Template content before processing: " . $content);
+    public function replaceVariables($content, $data) {
+        // error_log("Template content before processing: " . $content);
         
         // Handle module includes first ({{module=filename.html}})
         $content = preg_replace_callback('/{{module=([^}]+)}}/', function($matches) use ($data) {
@@ -165,11 +169,11 @@ class TemplateRenderer {
         // Remove any stray {{/if}} tags
         $content = str_replace('{{/if}}', '', $content);
         
-        error_log("Template content after processing: " . $content);
+        // error_log("Template content after processing: " . $content);
 
         // Then handle simple variables (but not special tags)
         foreach ($data as $key => $value) {
-            if (is_string($value) || is_numeric($value)) {
+            if (is_string($value) || is_numeric($value) || is_bool($value)) {
                 // Skip if this is a special tag
                 if (in_array($key, ['sidebar', 'menu'])) {
                     continue;
@@ -178,9 +182,19 @@ class TemplateRenderer {
                 if (in_array($key, ['logo', 'heroBanner', 'hero_banner']) && is_string($value)) {
                     $value = str_replace('\\/', '/', $value);
                 }
+                // Convert boolean to string
+                if (is_bool($value)) {
+                    $value = $value ? 'true' : 'false';
+                }
                 // Handle both camelCase and snake_case versions
                 $content = str_replace('{{' . $key . '}}', $value, $content);
                 $content = str_replace('{{{' . $key . '}}}', $value, $content);
+                
+                // Debug: Check if content variable is being processed
+                if ($key === 'content') {
+                    error_log("PROCESSING CONTENT VARIABLE: " . substr($value, 0, 100));
+                    error_log("TEMPLATE BEFORE: " . substr($content, 0, 200));
+                }
             }
         }
 

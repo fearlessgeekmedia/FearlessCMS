@@ -1,0 +1,934 @@
+2025-06-29 03:06:09 - Admin index started
+2025-06-29 03:06:09 - Action: plugins, Method: GET
+2025-06-29 03:06:09 - POST: Array
+(
+)
+
+2025-06-29 03:06:09 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:06:12 - Admin index started
+2025-06-29 03:07:58 - Admin index started
+2025-06-29 03:07:58 - Action: plugins, Method: GET
+2025-06-29 03:07:58 - POST: Array
+(
+)
+
+2025-06-29 03:07:58 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:08:00 - Admin index started
+2025-06-29 03:08:36 - Admin index started
+2025-06-29 03:08:36 - Action: plugins, Method: GET
+2025-06-29 03:08:36 - POST: Array
+(
+)
+
+2025-06-29 03:08:36 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:08:40 - Admin index started
+2025-06-29 03:09:30 - Admin index started
+2025-06-29 03:09:30 - Action: plugins, Method: GET
+2025-06-29 03:09:30 - POST: Array
+(
+)
+
+2025-06-29 03:09:30 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:09:33 - Admin index started
+2025-06-29 03:10:38 - Admin index started
+2025-06-29 03:10:38 - Action: plugins, Method: GET
+2025-06-29 03:10:38 - POST: Array
+(
+)
+
+2025-06-29 03:10:38 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:10:43 - Admin index started
+2025-06-29 03:11:28 - Admin index started
+2025-06-29 03:11:28 - Action: plugins, Method: GET
+2025-06-29 03:11:28 - POST: Array
+(
+)
+
+2025-06-29 03:11:28 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:11:31 - Admin index started
+2025-06-29 03:12:06 - Admin index started
+2025-06-29 03:12:06 - Action: plugins, Method: GET
+2025-06-29 03:12:06 - POST: Array
+(
+)
+
+2025-06-29 03:12:06 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:12:12 - Admin index started
+2025-06-29 03:13:05 - Admin index started
+2025-06-29 03:13:05 - Action: plugins, Method: GET
+2025-06-29 03:13:05 - POST: Array
+(
+)
+
+2025-06-29 03:13:05 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:13:08 - Admin index started
+2025-06-29 03:13:43 - Admin index started
+2025-06-29 03:13:43 - Action: plugins, Method: GET
+2025-06-29 03:13:43 - POST: Array
+(
+)
+
+2025-06-29 03:13:43 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:13:47 - Admin index started
+2025-06-29 03:14:36 - Admin index started
+2025-06-29 03:14:36 - Action: plugins, Method: GET
+2025-06-29 03:14:36 - POST: Array
+(
+)
+
+2025-06-29 03:14:36 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:14:40 - Admin index started
+2025-06-29 03:15:46 - Admin index started
+2025-06-29 03:15:46 - Action: plugins, Method: GET
+2025-06-29 03:15:46 - POST: Array
+(
+)
+
+2025-06-29 03:15:46 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:15:50 - Admin index started
+2025-06-29 03:15:53 - Admin index started
+2025-06-29 03:15:53 - Action: plugins, Method: GET
+2025-06-29 03:15:53 - POST: Array
+(
+)
+
+2025-06-29 03:15:53 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:16:11 - Admin index started
+2025-06-29 03:16:11 - Action: plugins, Method: GET
+2025-06-29 03:16:11 - POST: Array
+(
+)
+
+2025-06-29 03:16:11 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:16:24 - Admin index started
+2025-06-29 03:16:24 - Action: plugins, Method: GET
+2025-06-29 03:16:24 - POST: Array
+(
+)
+
+2025-06-29 03:16:24 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:17:13 - Admin index started
+2025-06-29 03:17:13 - Action: plugins, Method: GET
+2025-06-29 03:17:13 - POST: Array
+(
+)
+
+2025-06-29 03:17:13 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:17:25 - Admin index started
+2025-06-29 03:17:25 - Action: plugins, Method: GET
+2025-06-29 03:17:25 - POST: Array
+(
+)
+
+2025-06-29 03:17:25 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:17:31 - Admin index started
+2025-06-29 03:17:31 - Action: dashboard, Method: GET
+2025-06-29 03:17:31 - POST: Array
+(
+)
+
+2025-06-29 03:17:31 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:17:33 - Admin index started
+2025-06-29 03:17:33 - Action: dashboard, Method: GET
+2025-06-29 03:17:33 - POST: Array
+(
+)
+
+2025-06-29 03:17:33 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:17:51 - Admin index started
+2025-06-29 03:17:51 - Action: dashboard, Method: GET
+2025-06-29 03:17:51 - POST: Array
+(
+)
+
+2025-06-29 03:17:51 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:17:54 - Admin index started
+2025-06-29 03:17:54 - Action: plugins, Method: GET
+2025-06-29 03:17:54 - POST: Array
+(
+)
+
+2025-06-29 03:17:54 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:18:04 - Admin index started
+2025-06-29 03:18:04 - Action: dashboard, Method: GET
+2025-06-29 03:18:04 - POST: Array
+(
+)
+
+2025-06-29 03:18:04 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:19:27 - Admin index started
+2025-06-29 03:19:27 - Action: manage_plugins, Method: GET
+2025-06-29 03:19:27 - POST: Array
+(
+)
+
+2025-06-29 03:19:27 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:19:39 - Admin index started
+2025-06-29 03:19:40 - Action: manage_plugins, Method: GET
+2025-06-29 03:19:40 - POST: Array
+(
+)
+
+2025-06-29 03:19:40 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:19:41 - Admin index started
+2025-06-29 03:19:41 - Action: dashboard, Method: GET
+2025-06-29 03:19:41 - POST: Array
+(
+)
+
+2025-06-29 03:19:41 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:19:43 - Admin index started
+2025-06-29 03:19:43 - Action: dashboard, Method: GET
+2025-06-29 03:19:43 - POST: Array
+(
+)
+
+2025-06-29 03:19:43 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:20:04 - Admin index started
+2025-06-29 03:20:04 - Action: manage_users, Method: GET
+2025-06-29 03:20:04 - POST: Array
+(
+)
+
+2025-06-29 03:20:04 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:20:09 - Admin index started
+2025-06-29 03:20:09 - Action: dashboard, Method: GET
+2025-06-29 03:20:09 - POST: Array
+(
+)
+
+2025-06-29 03:20:09 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:20:13 - Admin index started
+2025-06-29 03:20:13 - Action: dashboard, Method: GET
+2025-06-29 03:20:13 - POST: Array
+(
+)
+
+2025-06-29 03:20:13 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:23:11 - Admin index started
+2025-06-29 03:23:11 - Action: dashboard, Method: GET
+2025-06-29 03:23:11 - POST: Array
+(
+)
+
+2025-06-29 03:23:11 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:23:15 - Admin index started
+2025-06-29 03:23:15 - Action: manage_plugins, Method: GET
+2025-06-29 03:23:15 - POST: Array
+(
+)
+
+2025-06-29 03:23:15 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:25:25 - Admin index started
+2025-06-29 03:25:25 - Action: manage_users, Method: GET
+2025-06-29 03:25:25 - POST: Array
+(
+)
+
+2025-06-29 03:25:25 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:26:03 - Admin index started
+2025-06-29 03:26:03 - Action: manage_users, Method: GET
+2025-06-29 03:26:03 - POST: Array
+(
+)
+
+2025-06-29 03:26:03 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:26:06 - Admin index started
+2025-06-29 03:26:06 - Action: manage_plugins, Method: GET
+2025-06-29 03:26:06 - POST: Array
+(
+)
+
+2025-06-29 03:26:06 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:27:09 - Admin index started
+2025-06-29 03:27:09 - Action: manage_plugins, Method: GET
+2025-06-29 03:27:09 - POST: Array
+(
+)
+
+2025-06-29 03:27:09 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:27:13 - Admin index started
+2025-06-29 03:27:15 - Admin index started
+2025-06-29 03:27:15 - Action: manage_plugins, Method: GET
+2025-06-29 03:27:15 - POST: Array
+(
+)
+
+2025-06-29 03:27:15 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:27:19 - Admin index started
+2025-06-29 03:27:21 - Admin index started
+2025-06-29 03:27:21 - Action: manage_plugins, Method: GET
+2025-06-29 03:27:21 - POST: Array
+(
+)
+
+2025-06-29 03:27:21 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:27:22 - Admin index started
+2025-06-29 03:27:24 - Admin index started
+2025-06-29 03:27:24 - Action: manage_plugins, Method: GET
+2025-06-29 03:27:24 - POST: Array
+(
+)
+
+2025-06-29 03:27:24 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:27:44 - Admin index started
+2025-06-29 03:27:44 - Action: manage_plugins, Method: GET
+2025-06-29 03:27:44 - POST: Array
+(
+)
+
+2025-06-29 03:27:44 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:27:47 - Admin index started
+2025-06-29 03:27:47 - Action: manage_plugins, Method: GET
+2025-06-29 03:27:47 - POST: Array
+(
+)
+
+2025-06-29 03:27:47 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:28:26 - Admin index started
+2025-06-29 03:28:26 - Action: manage_plugins, Method: GET
+2025-06-29 03:28:26 - POST: Array
+(
+)
+
+2025-06-29 03:28:26 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:28:26 - Admin index started
+2025-06-29 03:28:26 - Action: dashboard, Method: GET
+2025-06-29 03:28:26 - POST: Array
+(
+)
+
+2025-06-29 03:28:26 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:28:32 - Admin index started
+2025-06-29 03:28:32 - Action: manage_plugins, Method: GET
+2025-06-29 03:28:32 - POST: Array
+(
+)
+
+2025-06-29 03:28:32 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:28:32 - Admin index started
+2025-06-29 03:28:32 - Action: dashboard, Method: GET
+2025-06-29 03:28:32 - POST: Array
+(
+)
+
+2025-06-29 03:28:32 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:28:34 - Admin index started
+2025-06-29 03:28:34 - Action: seo, Method: GET
+2025-06-29 03:28:34 - POST: Array
+(
+)
+
+2025-06-29 03:28:34 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:28:37 - Admin index started
+2025-06-29 03:28:37 - Action: blog, Method: GET
+2025-06-29 03:28:37 - POST: Array
+(
+)
+
+2025-06-29 03:28:37 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+
+2025-06-29 03:29:17 - Admin index started
+2025-06-29 03:29:17 - Action: blog, Method: GET
+2025-06-29 03:29:17 - POST: Array
+(
+)
+
+2025-06-29 03:29:17 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_content
+            [1] => manage_plugins
+            [2] => manage_themes
+            [3] => manage_menus
+            [4] => manage_settings
+        )
+
+)
+

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{module=head.html}}
+</head>
+<body class="elegant-dark-theme">
+    {{module=header.html}}
+    
+    <main class="elegant-main">
+        <div class="elegant-container">
+            <div class="content-layout">
+                <article class="elegant-article">
+                    <div class="article-header">
+                        <h1 class="elegant-title">{{title}}</h1>
+                        <div class="title-decoration"></div>
+                    </div>
+                    
+                    <div class="elegant-content">
+                        {{content}}
+                    </div>
+                    
+                    <div class="article-footer">
+                        <div class="elegant-meta">
+                            <span class="meta-item">
+                                <i class="icon-time"></i>
+                                {{currentYear}}
+                            </span>
+                            <span class="meta-item">
+                                <i class="icon-user"></i>
+                                {{siteName}}
+                            </span>
+                        </div>
+                    </div>
+                </article>
+                
+                <aside class="elegant-sidebar">
+                    {{sidebar=main}}
+                </aside>
+            </div>
+        </div>
+    </main>
+    
+    {{module=footer.html}}
+    {{module=custom_js.html}}
+</body>
+</html> 

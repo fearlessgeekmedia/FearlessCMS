@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{module=head.html}}
+</head>
+<body class="minimalist-theme">
+    {{module=header.html}}
+    
+    <main class="minimalist-main">
+        <div class="container">
+            <article class="minimalist-article">
+                <header class="article-header">
+                    <h1 class="article-title">{{title}}</h1>
+                </header>
+                
+                <div class="article-content">
+                    {{content}}
+                </div>
+            </article>
+            
+            {{#if showSidebar}}
+                <aside class="minimalist-sidebar">
+                    {{sidebar=main}}
+                </aside>
+            {{/if}}
+        </div>
+    </main>
+    
+    {{module=footer.html}}
+    {{module=custom_js.html}}
+</body>
+</html> 

@@ -91,7 +91,7 @@ function fcms_register_permission_hook($hook, $callback) {
 $GLOBALS['fcms_admin_sections'] = [];
 
 // Register the Plugins section
-fcms_register_admin_section('plugins', [
+fcms_register_admin_section('manage_plugins', [
     'label' => 'Plugins',
     'menu_order' => 45,
     'render_callback' => function() {
