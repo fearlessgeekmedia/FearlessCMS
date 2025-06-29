@@ -1,2 +1,9 @@
 admin/config/users.json
 serve-log.tmp
+themes/whisperwind
+themes/punk_rock
+themes/nightfall
+plugins/advanced-seo
+
+# External documentation directory (outside project)
+~/fcmsdocs/
