@@ -1,7 +1,7 @@
 {
     "admin": {
         "label": "Administrator",
-        "permissions": ["manage_content", "manage_plugins", "manage_themes", "manage_menus", "manage_settings"]
+        "permissions": ["manage_users", "manage_content", "manage_plugins", "manage_themes", "manage_menus", "manage_settings"]
     },
     "editor": {
         "label": "Editor",

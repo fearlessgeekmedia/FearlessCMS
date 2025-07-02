@@ -26,22 +26,31 @@ function login($username, $password) {
         return false;
     }
     
-    if (isset($users[$username])) {
-        error_log("Found user: " . print_r($users[$username], true));
-        if (password_verify($password, $users[$username]['password'])) {
+    // Find user in the numeric array
+    $user = null;
+    foreach ($users as $u) {
+        if ($u['username'] === $username) {
+            $user = $u;
+            break;
+        }
+    }
+    
+    if ($user) {
+        error_log("Found user: " . print_r($user, true));
+        if (password_verify($password, $user['password'])) {
             error_log("Password verified for user: " . $username);
             
             // Set session variables
             $_SESSION['username'] = $username;
             
             // Set permissions based on role
-            if (isset($users[$username]['role'])) {
+            if (isset($user['role'])) {
                 $rolesFile = CONFIG_DIR . '/roles.json';
                 if (file_exists($rolesFile)) {
                     $roles = json_decode(file_get_contents($rolesFile), true);
-                    if (isset($roles[$users[$username]['role']])) {
-                        $_SESSION['permissions'] = $roles[$users[$username]['role']]['permissions'];
-                        error_log("Set permissions for user: " . print_r($roles[$users[$username]['role']]['permissions'], true));
+                    if (isset($roles[$user['role']])) {
+                        $_SESSION['permissions'] = $roles[$user['role']]['permissions'];
+                        error_log("Set permissions for user: " . print_r($roles[$user['role']]['permissions'], true));
                     }
                 }
             }
@@ -81,19 +90,28 @@ function fcms_check_permission($username, $permission) {
         return false;
     }
     
-    if (isset($users[$username])) {
+    // Find user in the numeric array
+    $user = null;
+    foreach ($users as $u) {
+        if ($u['username'] === $username) {
+            $user = $u;
+            break;
+        }
+    }
+    
+    if ($user) {
         // Check if user has a role defined
-        if (isset($users[$username]['role'])) {
+        if (isset($user['role'])) {
             $rolesFile = CONFIG_DIR . '/roles.json';
             if (file_exists($rolesFile)) {
                 $roles = json_decode(file_get_contents($rolesFile), true);
-                if (isset($roles[$users[$username]['role']]) && in_array($permission, $roles[$users[$username]['role']]['permissions'])) {
+                if (isset($roles[$user['role']]) && in_array($permission, $roles[$user['role']]['permissions'])) {
                     return true;
                 }
             }
         }
         // Fallback to direct permissions
-        return isset($users[$username]['permissions']) && in_array($permission, $users[$username]['permissions']);
+        return isset($user['permissions']) && in_array($permission, $user['permissions']);
     }
     
     error_log("Permission check failed: user not found");
@@ -106,7 +124,7 @@ function createDefaultAdminUser() {
         error_log("Creating default admin user");
         $default_password = 'changeme123'; // Default password
         $users = [
-            'admin' => [
+            [
                 'id' => 'admin',
                 'username' => 'admin',
                 'password' => password_hash($default_password, PASSWORD_DEFAULT),

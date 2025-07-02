@@ -76,6 +76,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
 // Handle widget operations
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    // Only handle widget-related actions
+    $widgetActions = ['add_sidebar', 'add_widget', 'save_widget', 'update_widget', 'delete_widget', 'reorder_widgets', 'delete_sidebar'];
+    
+    if (!in_array($_POST['action'], $widgetActions)) {
+        // Not a widget action, let other handlers deal with it
+        return;
+    }
+    
     // Debug logging
     error_log("Widgets handler - POST data: " . print_r($_POST, true));
     
@@ -260,9 +268,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             break;
 
         default:
-            // Log the action for debugging
-            error_log("Widgets handler - Unrecognized action: " . ($_POST['action'] ?? 'none'));
-            returnJsonResponse(['success' => false, 'error' => 'Invalid action: ' . ($_POST['action'] ?? 'none')]);
+            // This should never be reached since we filter actions above
+            error_log("Widgets handler - Unexpected action: " . ($_POST['action'] ?? 'none'));
+            returnJsonResponse(['success' => false, 'error' => 'Unexpected widget action']);
             break;
     }
 }
