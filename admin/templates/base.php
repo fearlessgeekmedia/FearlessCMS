@@ -31,7 +31,9 @@ global $cmsModeManager;
             </div>
             <div class="flex items-center space-x-4">
                 <a href="/<?php echo $adminPath; ?>?action=manage_users" class="hover:text-green-200">Users</a>
+                <?php if ($cmsModeManager->canManageFiles()): ?>
                 <a href="/<?php echo $adminPath; ?>?action=files" class="hover:text-green-200">Files</a>
+                <?php endif; ?>
                 <a href="/<?php echo $adminPath; ?>?action=manage_themes" class="hover:text-green-200">Themes</a>
                 <a href="/<?php echo $adminPath; ?>?action=manage_menus" class="hover:text-green-200">Menus</a>
                 <a href="/<?php echo $adminPath; ?>?action=manage_widgets" class="hover:text-green-200">Widgets</a>

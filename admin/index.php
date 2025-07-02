@@ -34,6 +34,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && in_array
     exit;
 }
 
+// Handle image uploads for ToastUI editor
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'upload_image') {
+    require_once __DIR__ . '/toastui-upload-handler.php';
+    exit;
+}
+
 require_once __DIR__ . '/widget-handler.php';
 require_once __DIR__ . '/theme-handler.php';
 require_once __DIR__ . '/store-handler.php';
@@ -217,12 +223,16 @@ $pageTitle = ucfirst($action);
 $themeManager = new ThemeManager();
 $cmsModeManager = new CMSModeManager();
 
+// Make CMS mode manager globally available for plugins
+$GLOBALS['cmsModeManager'] = $cmsModeManager;
+
 // Check CMS mode access restrictions AFTER $cmsModeManager is created
 if (isLoggedIn()) {
     // Check if user is trying to access a restricted page
     $restrictedActions = [
         'manage_plugins' => 'canManagePlugins',
-        'store' => 'canAccessStore'
+        'store' => 'canAccessStore',
+        'files' => 'canManageFiles'
     ];
     
     if (isset($restrictedActions[$action])) {

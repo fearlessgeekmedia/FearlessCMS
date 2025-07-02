@@ -48,7 +48,7 @@ FearlessCMS is a lightweight, file-based content management system built in PHP.
 - **Purpose**: CMS operational mode configuration
 - **Modes**:
   - `full-featured`: Complete access to all features
-  - `hosting-service-plugin`: Plugins available, no store access
+  - `hosting-service-plugins`: Plugins available, no store access
   - `hosting-service-no-plugins`: No plugin management, pre-installed only
 
 #### `config/config.json`

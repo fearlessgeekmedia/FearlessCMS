@@ -1,4 +1,7 @@
 <?php
+// Get CMS mode manager
+global $cmsModeManager;
+
 // Get available templates
 $templates = [];
 $templateDir = PROJECT_ROOT . '/themes/' . ($themeManager->getActiveTheme() ?? 'punk_rock') . '/templates';
@@ -122,9 +125,35 @@ document.addEventListener('DOMContentLoaded', function() {
             ['heading', 'bold', 'italic', 'strike'],
             ['hr', 'quote'],
             ['ul', 'ol', 'task', 'indent', 'outdent'],
-            ['table', 'link'],
+            ['table', 'link'<?php if ($cmsModeManager->canUploadContentImages()): ?>, 'image'<?php endif; ?>],
             ['code', 'codeblock']
-        ]
+        ]<?php if ($cmsModeManager->canUploadContentImages()): ?>,
+        hooks: {
+            addImageBlobHook: function(blob, callback) {
+                // Create form data
+                const formData = new FormData();
+                formData.append('file', blob);
+                formData.append('action', 'upload_image');
+
+                // Upload image
+                fetch('?action=upload_image', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        callback(data.url);
+                    } else {
+                        alert('Failed to upload image: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to upload image');
+                });
+            }
+        }<?php endif; ?>
     });
 
     // Generate slug from title

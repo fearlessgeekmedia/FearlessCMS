@@ -197,27 +197,29 @@ fcms_register_admin_section('blog', [
         echo '<h2 class="text-2xl font-bold mb-6 fira-code">Blog Posts</h2>';
         echo '<a href="?action=blog&new=1" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">New Post</a><br><br>';
         
-        // Add file manager script
-        echo '<script>
-        function openFileManager() {
-            window.open("/admin?action=files", "filemanager", "width=800,height=600");
-            window.addEventListener("message", function(event) {
-                if (event.data.type === "file_selected") {
-                    document.querySelector("input[name=\'featured_image\']").value = event.data.url;
-                    // Update preview if it exists
-                    const previewContainer = document.querySelector("input[name=\'featured_image\']").closest("div").nextElementSibling;
-                    if (previewContainer) {
-                        previewContainer.innerHTML = `<img src="${event.data.url}" alt="Featured image preview" class="max-w-xs h-auto">`;
-                    } else {
-                        const newPreview = document.createElement("div");
-                        newPreview.className = "mt-2";
-                        newPreview.innerHTML = `<img src="${event.data.url}" alt="Featured image preview" class="max-w-xs h-auto">`;
-                        document.querySelector("input[name=\'featured_image\']").closest("div").after(newPreview);
+        // Add file manager script only if file management is allowed
+        if (isset($GLOBALS['cmsModeManager']) && $GLOBALS['cmsModeManager']->canManageFiles()) {
+            echo '<script>
+            function openFileManager() {
+                window.open("/admin?action=files", "filemanager", "width=800,height=600");
+                window.addEventListener("message", function(event) {
+                    if (event.data.type === "file_selected") {
+                        document.querySelector("input[name=\'featured_image\']").value = event.data.url;
+                        // Update preview if it exists
+                        const previewContainer = document.querySelector("input[name=\'featured_image\']").closest("div").nextElementSibling;
+                        if (previewContainer) {
+                            previewContainer.innerHTML = `<img src="${event.data.url}" alt="Featured image preview" class="max-w-xs h-auto">`;
+                        } else {
+                            const newPreview = document.createElement("div");
+                            newPreview.className = "mt-2";
+                            newPreview.innerHTML = `<img src="${event.data.url}" alt="Featured image preview" class="max-w-xs h-auto">`;
+                            document.querySelector("input[name=\'featured_image\']").closest("div").after(newPreview);
+                        }
                     }
-                }
-            });
+                });
+            }
+            </script>';
         }
-        </script>';
 
         if (isset($_GET['edit'])) {
             $edit = null;
@@ -237,7 +239,9 @@ fcms_register_admin_section('blog', [
                 echo '<div><label>Featured Image:</label>';
                 echo '<div class="flex items-center space-x-4">';
                 echo '<input type="text" name="featured_image" value="' . htmlspecialchars($edit['featured_image'] ?? '') . '" class="border rounded px-2 py-1 flex-grow" placeholder="Image URL or path">';
-                echo '<button type="button" onclick="openFileManager()" class="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600">Select Image</button>';
+                if (isset($GLOBALS['cmsModeManager']) && $GLOBALS['cmsModeManager']->canManageFiles()) {
+                    echo '<button type="button" onclick="openFileManager()" class="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600">Select Image</button>';
+                }
                 echo '</div>';
                 if (!empty($edit['featured_image'])) {
                     echo '<div class="mt-2"><img src="' . htmlspecialchars($edit['featured_image']) . '" alt="Featured image preview" class="max-w-xs h-auto"></div>';
@@ -284,7 +288,9 @@ fcms_register_admin_section('blog', [
             echo '<div><label>Featured Image:</label>';
             echo '<div class="flex items-center space-x-4">';
             echo '<input type="text" name="featured_image" class="border rounded px-2 py-1 flex-grow" placeholder="Image URL or path">';
-            echo '<button type="button" onclick="openFileManager()" class="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600">Select Image</button>';
+            if (isset($GLOBALS['cmsModeManager']) && $GLOBALS['cmsModeManager']->canManageFiles()) {
+                echo '<button type="button" onclick="openFileManager()" class="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600">Select Image</button>';
+            }
             echo '</div>';
             echo '</div>';
             echo '<div><label>Content:</label></div>';
