@@ -26,44 +26,6 @@ if (($queryPos = strpos($requestPath, '?')) !== false) {
 }
 
 // Remove any subdomain prefix if present
-
-// Load configuration for admin routing
-$configFile = CONFIG_DIR . "/config.json";
-$config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
-$adminPath = $config["admin_path"] ?? "admin";
-
-// Handle admin routes
-if (strpos($requestPath, $adminPath) === 0) {
-    error_log("Admin route detected: " . $requestPath);
-    require_once PROJECT_ROOT . "/includes/auth.php";
-    
-    // Route /admin/login directly
-    if ($requestPath === $adminPath . "/login") {
-        error_log("Routing to login page");
-        require PROJECT_ROOT . "/admin/login.php";
-        exit;
-    }
-    
-    // Route /admin or /admin/ to login if not logged in
-    if ($requestPath === $adminPath || $requestPath === $adminPath . "/") {
-        error_log("Checking login status for /" . $adminPath);
-        if (!isLoggedIn()) {
-            error_log("Not logged in, redirecting to login");
-            header("Location: /" . $adminPath . "/login");
-            exit;
-        }
-        error_log("Logged in, loading admin index");
-        require PROJECT_ROOT . "/admin/index.php";
-        exit;
-    }
-    
-    // Route /admin/anything else to /admin/index.php
-    if (strpos($requestPath, $adminPath . "/") === 0) {
-        error_log("Routing admin subpath to index.php");
-        require PROJECT_ROOT . "/admin/index.php";
-        exit;
-    }
-}
 if (strpos($requestPath, 'fearlesscms.hstn.me/') === 0) {
     $requestPath = substr($requestPath, strlen('fearlesscms.hstn.me/'));
 }
