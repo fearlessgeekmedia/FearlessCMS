@@ -22,9 +22,9 @@ function mariadb_connector_init() {
     if (!file_exists(MARIADB_CONFIG_FILE)) {
         $default_config = [
             'host' => 'localhost',
-            'database' => 'fearlesscms_test',
-            'username' => 'fearlesscms',
-            'password' => 'fearlesscms123',
+            'database' => '',
+            'username' => '',
+            'password' => '',
             'charset' => 'utf8mb4',
             'options' => [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
