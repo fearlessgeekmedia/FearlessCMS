@@ -163,6 +163,32 @@ plugins/
     └── blog.php
 ```
 
+### 9. Database Plugin Architecture: MariaDB Connector Example
+
+FearlessCMS supports database-backed plugins to extend the flat-file architecture. The MariaDB Connector plugin is the reference implementation, providing PDO-based MariaDB/MySQL connectivity for other plugins.
+
+#### MariaDB Connector Plugin
+- **Location:** `plugins/mariadb-connector/`
+- **Purpose:** Allows plugins to use a shared PDO connection to a MariaDB/MySQL database, enabling advanced features (e.g., dynamic blogs, e-commerce, analytics).
+- **Configuration:** Stores DB credentials in `content/mariadb-connector/config.json` via an admin UI.
+- **Hooks Provided:**
+  - `database_connect`: Returns a PDO connection (or null on failure).
+  - `database_query`: Executes a query with parameters and returns a PDOStatement or false.
+- **Admin Integration:** Registers a settings page under Plugins for DB config and connection testing.
+- **Best Practice:** Other plugins should use `fcms_do_hook('database_connect')` and `fcms_do_hook('database_query', $query, $params)` for DB access, not direct connection code.
+
+#### Plugin System Improvements
+- **Hook System:**
+  - `fcms_do_hook($hook, ...$args)`: By-value, returns first non-null result (for most plugin hooks).
+  - `fcms_do_hook_ref($hook, &...$args)`: By-reference, for core hooks that require reference arguments (e.g., `route`, `before_render`).
+  - `fcms_apply_filter($hook, $value, ...$args)`: For value filters.
+- **Plugin Loader:** Only loads plugins listed in `admin/config/plugins.json`.
+- **Admin Sections:** Plugins can register admin pages with `fcms_register_admin_section()`.
+
+#### Extending the CMS
+- Database plugins can provide new hooks for other plugins to use.
+- Flat-file and database-backed plugins can coexist, allowing gradual migration or hybrid content models.
+
 ### 7. CMS Mode Management
 
 #### `includes/CMSModeManager.php`
@@ -210,16 +236,6 @@ admin/
 - **Menu Management**: Navigation menu configuration
 - **Widget Management**: Sidebar widget configuration
 - **User Management**: User account administration
-
-### 9. File Management
-
-#### `admin/includes/filemanager.php`
-- **Purpose**: File upload and management
-- **Functionality**:
-  - File upload handling
-  - Directory browsing
-  - File deletion and organization
-  - Image processing and optimization
 
 ### 10. Widget System
 
