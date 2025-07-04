@@ -41,8 +41,21 @@ function fcms_add_hook($hook, $callback) {
     $GLOBALS['fcms_hooks'][$hook][] = $callback;
 }
 
-// Run all callbacks for a hook
-function fcms_do_hook($hook, &...$args) {
+// Run all callbacks for a hook (by-value, for most plugin hooks)
+function fcms_do_hook($hook, ...$args) {
+    if (!empty($GLOBALS['fcms_hooks'][$hook])) {
+        foreach ($GLOBALS['fcms_hooks'][$hook] as $cb) {
+            $result = call_user_func_array($cb, $args);
+            if ($result !== null) {
+                return $result;
+            }
+        }
+    }
+    return null;
+}
+
+// Run all callbacks for a hook (by-reference, for core hooks that require it)
+function fcms_do_hook_ref($hook, &...$args) {
     if (!empty($GLOBALS['fcms_hooks'][$hook])) {
         foreach ($GLOBALS['fcms_hooks'][$hook] as $cb) {
             call_user_func_array($cb, $args);

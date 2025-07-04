@@ -210,7 +210,7 @@ class TemplateRenderer {
     /**
      * Include a module template file
      * 
-     * @param string $moduleFile The module file name (e.g., "header.html")
+     * @param string $moduleFile The module file name (e.g., "header.html" or "header.html.mod")
      * @param array $data The template data to pass to the module
      * @return string The rendered module content
      */
@@ -218,9 +218,23 @@ class TemplateRenderer {
         // Look for the module file in the current theme's templates directory
         $modulePath = PROJECT_ROOT . '/themes/' . $this->theme . '/templates/' . $moduleFile;
         
-        // If the file doesn't have an extension, try adding .html
-        if (!file_exists($modulePath) && !pathinfo($moduleFile, PATHINFO_EXTENSION)) {
-            $modulePath .= '.html';
+        // If the file doesn't have an extension, try adding .html.mod first, then .html
+        if (!file_exists($modulePath)) {
+            if (!pathinfo($moduleFile, PATHINFO_EXTENSION)) {
+                // No extension provided, try .html.mod first, then .html
+                $modulePathMod = PROJECT_ROOT . '/themes/' . $this->theme . '/templates/' . $moduleFile . '.html.mod';
+                if (file_exists($modulePathMod)) {
+                    $modulePath = $modulePathMod;
+                } else {
+                    $modulePath = PROJECT_ROOT . '/themes/' . $this->theme . '/templates/' . $moduleFile . '.html';
+                }
+            } elseif (pathinfo($moduleFile, PATHINFO_EXTENSION) === 'html') {
+                // .html extension provided, try .html.mod version
+                $modulePathMod = PROJECT_ROOT . '/themes/' . $this->theme . '/templates/' . $moduleFile . '.mod';
+                if (file_exists($modulePathMod)) {
+                    $modulePath = $modulePathMod;
+                }
+            }
         }
         
         if (!file_exists($modulePath)) {

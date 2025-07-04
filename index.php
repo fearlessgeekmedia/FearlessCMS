@@ -176,7 +176,7 @@ if (strpos($requestPath, '_preview/') === 0) {
         
         // Render template
         $templateName = $metadata['template'] ?? 'page';
-        fcms_do_hook('before_render', $templateName);
+        fcms_do_hook_ref('before_render', $templateName);
         $template = $templateRenderer->render($templateName, $templateData);
         
         // Output the preview
@@ -214,7 +214,7 @@ $title = '';
 $content = '';
 
 // Let plugins handle the route first
-fcms_do_hook('route', $handled, $title, $content, $path);
+fcms_do_hook_ref('route', $handled, $title, $content, $path);
 
 // If a plugin handled the route, render its content
 if ($handled) {
@@ -264,7 +264,7 @@ if ($handled) {
     
     // Let plugins determine the template
     $template = 'page';
-    fcms_do_hook('before_render', $template, $path);
+    fcms_do_hook_ref('before_render', $template, $path);
     
     // Prepare template data
     $templateData = [
@@ -498,7 +498,7 @@ error_log("TEMPLATE DATA: " . json_encode($templateData));
 
 // --- Render template ---
 $templateName = $metadata['template'] ?? 'page';
-fcms_do_hook('before_render', $templateName);
+fcms_do_hook_ref('before_render', $templateName);
 $template = $templateRenderer->render($templateName, $templateData);
 
 // --- Output ---

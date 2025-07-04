@@ -3,5 +3,6 @@
     "advanced-seo",
     "wordpress-import",
     "forms",
-    "blog"
+    "blog",
+    "mariadb-connector"
 ]
