@@ -2662,3 +2662,262 @@
 
 )
 
+2025-07-04 03:52:13 - Admin index started
+2025-07-04 03:52:13 - Action: dashboard, Method: GET
+2025-07-04 03:52:13 - POST: Array
+(
+)
+
+2025-07-04 03:52:13 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_users
+            [1] => manage_content
+            [2] => manage_plugins
+            [3] => manage_themes
+            [4] => manage_menus
+            [5] => manage_settings
+        )
+
+)
+
+2025-07-04 03:52:15 - Admin index started
+2025-07-04 03:52:15 - Action: new_content, Method: GET
+2025-07-04 03:52:15 - POST: Array
+(
+)
+
+2025-07-04 03:52:15 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_users
+            [1] => manage_content
+            [2] => manage_plugins
+            [3] => manage_themes
+            [4] => manage_menus
+            [5] => manage_settings
+        )
+
+)
+
+2025-07-04 04:30:19 - Admin index started
+2025-07-04 04:30:19 - Action: mariadb_connector, Method: GET
+2025-07-04 04:30:19 - POST: Array
+(
+)
+
+2025-07-04 04:30:19 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_users
+            [1] => manage_content
+            [2] => manage_plugins
+            [3] => manage_themes
+            [4] => manage_menus
+            [5] => manage_settings
+        )
+
+)
+
+2025-07-04 04:30:59 - Admin index started
+2025-07-04 04:30:59 - Action: manage_plugins, Method: GET
+2025-07-04 04:30:59 - POST: Array
+(
+)
+
+2025-07-04 04:30:59 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_users
+            [1] => manage_content
+            [2] => manage_plugins
+            [3] => manage_themes
+            [4] => manage_menus
+            [5] => manage_settings
+        )
+
+)
+
+2025-07-04 04:31:05 - Admin index started
+2025-07-04 04:31:07 - Admin index started
+2025-07-04 04:31:07 - Action: manage_plugins, Method: GET
+2025-07-04 04:31:07 - POST: Array
+(
+)
+
+2025-07-04 04:31:07 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_users
+            [1] => manage_content
+            [2] => manage_plugins
+            [3] => manage_themes
+            [4] => manage_menus
+            [5] => manage_settings
+        )
+
+)
+
+2025-07-04 04:31:13 - Admin index started
+2025-07-04 04:31:13 - Action: manage_users, Method: GET
+2025-07-04 04:31:13 - POST: Array
+(
+)
+
+2025-07-04 04:31:13 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_users
+            [1] => manage_content
+            [2] => manage_plugins
+            [3] => manage_themes
+            [4] => manage_menus
+            [5] => manage_settings
+        )
+
+)
+
+2025-07-04 04:31:16 - Admin index started
+2025-07-04 04:31:16 - Action: files, Method: GET
+2025-07-04 04:31:16 - POST: Array
+(
+)
+
+2025-07-04 04:31:16 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_users
+            [1] => manage_content
+            [2] => manage_plugins
+            [3] => manage_themes
+            [4] => manage_menus
+            [5] => manage_settings
+        )
+
+)
+
+2025-07-04 04:31:25 - Admin index started
+2025-07-04 04:31:25 - Action: files, Method: POST
+2025-07-04 04:31:25 - POST: Array
+(
+    [action] => delete_file
+    [filename] => theme
+)
+
+2025-07-04 04:31:25 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_users
+            [1] => manage_content
+            [2] => manage_plugins
+            [3] => manage_themes
+            [4] => manage_menus
+            [5] => manage_settings
+        )
+
+)
+
+2025-07-04 04:31:33 - Admin index started
+2025-07-04 04:31:33 - Action: files, Method: POST
+2025-07-04 04:31:33 - POST: Array
+(
+    [action] => delete_file
+    [filename] => look-ma-i-created-ai-slop.png
+)
+
+2025-07-04 04:31:33 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_users
+            [1] => manage_content
+            [2] => manage_plugins
+            [3] => manage_themes
+            [4] => manage_menus
+            [5] => manage_settings
+        )
+
+)
+
+2025-07-04 04:31:37 - Admin index started
+2025-07-04 04:31:37 - Action: files, Method: POST
+2025-07-04 04:31:37 - POST: Array
+(
+    [action] => delete_file
+    [filename] => herobanner_1750210656.png
+)
+
+2025-07-04 04:31:37 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_users
+            [1] => manage_content
+            [2] => manage_plugins
+            [3] => manage_themes
+            [4] => manage_menus
+            [5] => manage_settings
+        )
+
+)
+
+2025-07-04 04:31:52 - Admin index started
+2025-07-04 04:31:52 - Action: dashboard, Method: GET
+2025-07-04 04:31:52 - POST: Array
+(
+)
+
+2025-07-04 04:31:52 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_users
+            [1] => manage_content
+            [2] => manage_plugins
+            [3] => manage_themes
+            [4] => manage_menus
+            [5] => manage_settings
+        )
+
+)
+
+2025-07-04 04:32:03 - Admin index started
+2025-07-04 04:32:03 - Action: dashboard, Method: GET
+2025-07-04 04:32:03 - POST: Array
+(
+)
+
+2025-07-04 04:32:03 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_users
+            [1] => manage_content
+            [2] => manage_plugins
+            [3] => manage_themes
+            [4] => manage_menus
+            [5] => manage_settings
+        )
+
+)
+

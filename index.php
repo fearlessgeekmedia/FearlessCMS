@@ -93,10 +93,19 @@ if (strpos($requestPath, '_preview/') === 0) {
         // Set page title
         $pageTitle = $metadata['title'] ?? 'Preview';
         
-        // Convert markdown to HTML
-        require_once PROJECT_ROOT . '/includes/Parsedown.php';
-        $Parsedown = new Parsedown();
-        $pageContentHtml = $Parsedown->text($content);
+        // Check editor mode to determine content processing
+        $editorMode = $metadata['editor_mode'] ?? 'markdown';
+        
+        // Convert markdown to HTML or use HTML directly
+        if ($editorMode === 'easy' || $editorMode === 'html') {
+            // Use content as-is for HTML mode
+            $pageContentHtml = $content;
+        } else {
+            // Convert markdown to HTML
+            require_once PROJECT_ROOT . '/includes/Parsedown.php';
+            $Parsedown = new Parsedown();
+            $pageContentHtml = $Parsedown->text($content);
+        }
         
         // Get site name from config
         $configFile = CONFIG_DIR . '/config.json';
@@ -415,12 +424,21 @@ if (!$pageTitle) {
     $pageTitle = ucwords(str_replace(['-', '_'], ' ', basename($path)));
 }
 
-// --- Markdown rendering ---
-if (!class_exists('Parsedown')) {
-    require_once PROJECT_ROOT . '/includes/Parsedown.php';
+// --- Content rendering ---
+// Check editor mode to determine content processing
+$editorMode = $metadata['editor_mode'] ?? 'markdown';
+
+if ($editorMode === 'easy' || $editorMode === 'html') {
+    // Use content as-is for HTML mode
+    $pageContentHtml = $pageContent;
+} else {
+    // Convert markdown to HTML
+    if (!class_exists('Parsedown')) {
+        require_once PROJECT_ROOT . '/includes/Parsedown.php';
+    }
+    $Parsedown = new Parsedown();
+    $pageContentHtml = $Parsedown->text($pageContent);
 }
-$Parsedown = new Parsedown();
-$pageContentHtml = $Parsedown->text($pageContent);
 
 // Debug: Check if content has curly braces
 if (strpos($pageContentHtml, '{') !== false || strpos($pageContentHtml, '}') !== false) {

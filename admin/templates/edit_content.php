@@ -5,8 +5,7 @@ $templateDir = PROJECT_ROOT . '/themes/' . $themeManager->getActiveTheme() . '/t
 if (is_dir($templateDir)) {
     foreach (glob($templateDir . '/*.html') as $template) {
         $templateName = basename($template, '.html');
-        // Exclude 404 template and module files (files ending with .mod)
-        if ($templateName !== '404' && !str_ends_with($template, '.html.mod')) {
+        if ($templateName !== '404') { // Exclude 404 template
             $templates[] = $templateName;
         }
     }
