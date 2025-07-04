@@ -65,7 +65,7 @@ You can break it into modular components:
 </html>
 ```
 
-**head.html:**
+**head.html.mod:**
 ```html
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -73,7 +73,7 @@ You can break it into modular components:
 <link rel="stylesheet" href="/themes/my-theme/css/style.css">
 ```
 
-**header.html:**
+**header.html.mod:**
 ```html
 <header>
     <div class="logo">{{siteName}}</div>
@@ -83,7 +83,7 @@ You can break it into modular components:
 </header>
 ```
 
-**footer.html:**
+**footer.html.mod:**
 ```html
 <footer>
     &copy; {{currentYear}} {{siteName}}
@@ -92,18 +92,20 @@ You can break it into modular components:
 
 ## Module File Locations
 
-Module files should be placed in your theme's `templates/` directory:
+Module files should be placed in your theme's `templates/` directory and use the `.html.mod` extension:
 
 ```
 themes/
 └── my-theme/
     └── templates/
-        ├── page.html          # Main template
-        ├── header.html        # Header module
-        ├── footer.html        # Footer module
-        ├── navigation.html    # Navigation module
-        └── head.html          # Head module
+        ├── page.html              # Main template (page template)
+        ├── header.html.mod        # Header module
+        ├── footer.html.mod        # Footer module
+        ├── navigation.html.mod    # Navigation module
+        └── head.html.mod          # Head module
 ```
+
+**Important**: Use the `.html.mod` extension for all module files to prevent them from appearing as page template options in the admin interface.
 
 ## Module Features
 
@@ -159,12 +161,14 @@ Modules can include other modules:
 
 ## File Extensions
 
-You can include modules with or without the `.html` extension:
+Module files use the `.html.mod` extension, but you reference them without the `.mod` part:
 
 ```html
-{{module=header.html}}  <!-- With extension -->
-{{module=header}}       <!-- Without extension (auto-adds .html) -->
+{{module=header.html}}  <!-- References header.html.mod -->
+{{module=header}}       <!-- References header.html.mod (auto-adds .html) -->
 ```
+
+The system automatically looks for `.html.mod` files first, then falls back to `.html` files for backward compatibility.
 
 ## Error Handling
 
@@ -179,11 +183,11 @@ If a module file is not found, the system will log an error and insert a comment
 ### 1. Keep Modules Focused
 Each module should have a single responsibility:
 
-- `header.html` - Site header
-- `footer.html` - Site footer  
-- `navigation.html` - Navigation menus
-- `sidebar.html` - Sidebar content
-- `hero-banner.html` - Hero banner section
+- `header.html.mod` - Site header
+- `footer.html.mod` - Site footer  
+- `navigation.html.mod` - Navigation menus
+- `sidebar.html.mod` - Sidebar content
+- `hero-banner.html.mod` - Hero banner section
 
 ### 2. Use Descriptive Names
 Name your modules clearly:

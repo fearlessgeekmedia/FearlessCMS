@@ -22,17 +22,20 @@ A FearlessCMS theme consists of the following directory structure:
 themes/
 └── your-theme-name/
     ├── templates/
-    │   ├── home.html
-    │   ├── page.html
-    │   ├── blog.html
-    │   └── 404.html
+    │   ├── home.html              # Page template
+    │   ├── page.html              # Page template
+    │   ├── blog.html              # Page template
+    │   ├── 404.html               # Page template
+    │   ├── header.html.mod        # Module file
+    │   ├── footer.html.mod        # Module file
+    │   ├── head.html.mod          # Module file
+    │   └── sidebar.html.mod       # Module file
     ├── assets/
     │   ├── style.css
     │   ├── images/
     │   └── js/
-    ├── theme.json
-    ├── config.json (optional)
-    └── README.md (optional)
+    ├── config.json                # Theme configuration
+    └── README.md                  # Documentation
 ```
 
 ## Required Files
@@ -59,12 +62,26 @@ This is the main theme configuration file that defines your theme's metadata:
 
 ### 2. Templates
 
-You need at least these template files in the `templates/` directory:
+You need at least these **page template** files in the `templates/` directory:
 
-- **home.html** - Homepage template
-- **page.html** - Individual page template
-- **blog.html** - Blog listing template
-- **404.html** - Error page template
+- **page.html** - Individual page template (required)
+- **404.html** - Error page template (required)
+- **home.html** - Homepage template (optional)
+- **blog.html** - Blog listing template (optional)
+
+**Note**: Page templates use the `.html` extension and will appear as template options in the admin interface when creating or editing content.
+
+### Page Templates vs Modules
+
+**Page Templates** (`.html` extension):
+- Used as full page layouts
+- Appear in admin template selection dropdown
+- Examples: `page.html`, `home.html`, `404.html`, `blog.html`
+
+**Module Files** (`.html.mod` extension):
+- Reusable components included in page templates
+- Do not appear in admin template selection
+- Examples: `header.html.mod`, `footer.html.mod`, `sidebar.html.mod`
 
 ## Template System
 
@@ -191,9 +208,9 @@ Instead of having everything in one large template file, you can break it into s
 
 ### Creating Module Files
 
-Create separate files for each component in your theme's `templates/` directory:
+Create separate files for each component in your theme's `templates/` directory. **Important**: Module files should use the `.html.mod` extension to prevent them from appearing as page template options in the admin interface.
 
-**head.html:**
+**head.html.mod:**
 ```html
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -201,7 +218,7 @@ Create separate files for each component in your theme's `templates/` directory:
 <link rel="stylesheet" href="/themes/{{theme}}/assets/style.css">
 ```
 
-**header.html:**
+**header.html.mod:**
 ```html
 <header>
     <div class="logo">{{siteName}}</div>
@@ -214,12 +231,18 @@ Create separate files for each component in your theme's `templates/` directory:
 </header>
 ```
 
-**footer.html:**
+**footer.html.mod:**
 ```html
 <footer>
     &copy; {{currentYear}} {{siteName}}
 </footer>
 ```
+
+### Module File Naming Convention
+
+- **Use `.html.mod` extension** for all module files (e.g., `header.html.mod`, `footer.html.mod`)
+- **Page templates** use `.html` extension (e.g., `page.html`, `home.html`, `404.html`)
+- **Module syntax** remains the same: `{{module=header.html}}` (without the `.mod` extension)
 
 ### Module Features
 
@@ -227,7 +250,8 @@ Create separate files for each component in your theme's `templates/` directory:
 - **Conditional Logic**: Support for all template conditionals
 - **Loops**: Support for foreach loops
 - **Nested Modules**: Modules can include other modules
-- **File Extensions**: Works with or without `.html` extension
+- **Backward Compatibility**: Works with both `.html` and `.html.mod` extensions
+- **Admin Integration**: `.html.mod` files are excluded from page template selection
 
 ### Benefits of Modular Templates
 
