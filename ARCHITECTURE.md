@@ -11,6 +11,7 @@ FearlessCMS is a lightweight, file-based content management system built in PHP.
 #### `index.php` (Root)
 - **Purpose**: Main frontend entry point
 - **Functionality**: 
+  - Initializes session management via `includes/session.php`
   - Routes requests to appropriate handlers
   - Loads themes and renders content
   - Processes markdown files with JSON frontmatter
@@ -27,6 +28,7 @@ FearlessCMS is a lightweight, file-based content management system built in PHP.
 #### `admin/index.php`
 - **Purpose**: Main admin interface entry point
 - **Functionality**:
+  - Initializes session management via `includes/session.php`
   - Handles authentication and session management
   - Routes admin actions to appropriate handlers
   - Manages CMS mode restrictions
@@ -55,7 +57,20 @@ FearlessCMS is a lightweight, file-based content management system built in PHP.
 - **Purpose**: Site-wide configuration
 - **Contains**: Site name, description, custom CSS/JS, admin path
 
-### 3. Authentication System
+### 3. Authentication & Session System
+
+#### `includes/session.php`
+- **Purpose**: Centralized session management and configuration
+- **Functionality**:
+  - Configures session settings before any session starts
+  - Sets session save path to `/sessions` directory
+  - Configures secure session cookies with proper path settings
+  - Ensures session consistency across admin and frontend
+- **Key Settings**:
+  - Session save path: `/sessions` directory
+  - Cookie path: `/` (available for all paths including `/admin`)
+  - Cookie security: HttpOnly, SameSite=Lax
+  - Session lifetime: 1 hour
 
 #### `includes/auth.php`
 - **Purpose**: User authentication and session management
@@ -64,10 +79,12 @@ FearlessCMS is a lightweight, file-based content management system built in PHP.
   - `login()`: Authenticate user
   - `logout()`: End user session
   - Permission checking for admin actions
+  - `createDefaultAdminUser()`: Creates default admin user if none exists
 
-#### `config/admin/users.json`
+#### `config/users.json`
 - **Purpose**: User account storage
 - **Format**: JSON array of user objects with hashed passwords and permissions
+- **Default Credentials**: Username: `admin`, Password: `admin`
 
 ### 4. Content Management
 
@@ -311,10 +328,13 @@ Plugin Load → Hook Registration → Admin Section Registration → Feature Int
 
 ## Security Features
 
-### 1. Authentication
-- Session-based authentication
+### 1. Authentication & Session Management
+- Session-based authentication with centralized configuration
 - Password hashing with bcrypt
 - Permission-based access control
+- Secure session cookies with HttpOnly and SameSite attributes
+- Unified session storage across admin and frontend
+- Session path configuration to prevent redirect loops
 
 ### 2. Input Validation
 - File upload validation

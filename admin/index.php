@@ -2,12 +2,22 @@
 // Simple test to see if this file is being executed
 file_put_contents(__DIR__ . '/test.log', date('Y-m-d H:i:s') . " - Admin index executed\n", FILE_APPEND);
 
+// VERY OBVIOUS DEBUG
+error_log("ADMIN INDEX.PHP IS BEING EXECUTED - " . date('Y-m-d H:i:s'));
+
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 // Start output buffering at the very beginning
 ob_start();
+
+// Set session save path BEFORE starting session (same as main index.php)
+$sessionDir = dirname(__DIR__) . '/sessions';
+if (!is_dir($sessionDir)) {
+    mkdir($sessionDir, 0755, true);
+}
+ini_set('session.save_path', $sessionDir);
 
 // Start session if not already started
 if (session_status() === PHP_SESSION_NONE) {
@@ -53,6 +63,7 @@ require_once __DIR__ . '/deluser-handler.php';
 
 // Get action from GET or POST, default to dashboard
 $action = $_GET['action'] ?? $_POST['action'] ?? 'dashboard';
+error_log("DEBUG: Action is " . $action);
 
 // Debug logging for action determination
 error_log("DEBUG: Action determination - GET action: " . ($_GET['action'] ?? 'none') . ", POST action: " . ($_POST['action'] ?? 'none') . ", Final action: " . $action);
@@ -199,15 +210,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'load_menu') {
     exit;
 }
 
-// If not logged in and not on login page, redirect to login
-if (!isLoggedIn() && $action !== 'login') {
-    header('Location: /' . $adminPath . '/login');
-    exit;
-}
+// Load admin path from config
+$configFile = CONFIG_DIR . '/config.json';
+$config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
+$adminPath = $config['admin_path'] ?? 'admin';
 
-// If logged in and trying to access login page, redirect to dashboard
-if (isLoggedIn() && $action === 'login') {
-    header('Location: /' . $adminPath . '?action=dashboard');
+// Debug session information
+error_log("Admin index - Session ID: " . session_id());
+error_log("Admin index - Session data: " . print_r($_SESSION, true));
+error_log("Admin index - Cookies: " . print_r($_COOKIE, true));
+
+// If not logged in, redirect to login (handled by main index.php routing)
+if (!isLoggedIn()) {
+    error_log("Admin index - Not logged in, redirecting to: /" . $adminPath . "/login");
+    header('Location: /' . $adminPath . '/login');
     exit;
 }
 
@@ -393,27 +409,40 @@ $plugin_nav_items = '';
 // Load content data for edit_content action
 if ($action === 'edit_content' && isset($_GET['path'])) {
     $path = $_GET['path'];
-                        $contentFile = CONTENT_DIR . '/' . $path . '.md';
-                        if (file_exists($contentFile)) {
-                        $contentData = file_get_contents($contentFile);
-                        $title = '';
-                        if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $contentData, $matches)) {
-                            $metadata = json_decode($matches[1], true);
-                            if ($metadata && isset($metadata['title'])) {
-                                $title = $metadata['title'];
-                            }
-                        }
-                        if (!$title) {
-                            $title = ucwords(str_replace(['-', '_'], ' ', $path));
-                        }
+    $contentFile = CONTENT_DIR . '/' . $path . '.md';
+    if (file_exists($contentFile)) {
+        $contentData = file_get_contents($contentFile);
+        $title = '';
+        $editorMode = 'markdown'; // Default to markdown
+        if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $contentData, $matches)) {
+            $metadata = json_decode($matches[1], true);
+            if ($metadata) {
+                if (isset($metadata['title'])) {
+                    $title = $metadata['title'];
+                }
+                if (isset($metadata['editor_mode'])) {
+                    $editorMode = $metadata['editor_mode'];
+                }
+            }
+        }
+        error_log("DEBUG: editorMode is " . $editorMode);
+        if (!$title) {
+            $title = ucwords(str_replace(['-', '_'], ' ', $path));
+        }
+        // Make $editorMode global for the template
+        $GLOBALS['editorMode'] = $editorMode;
     } else {
         $error = 'Content file not found';
         $contentData = '';
         $title = '';
+        $editorMode = 'markdown';
+        $GLOBALS['editorMode'] = $editorMode;
     }
 } else {
     $contentData = '';
     $title = '';
+    $editorMode = 'markdown';
+    $GLOBALS['editorMode'] = $editorMode;
 }
 
 // Handle POST requests for admin sections
@@ -635,11 +664,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
 // Handle POST requests for saving content
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_content') {
+    error_log("DEBUG: save_content action triggered");
+    error_log("DEBUG: POST data: " . print_r($_POST, true));
+    error_log("DEBUG: Content length: " . (isset($_POST['content']) ? strlen($_POST['content']) : 'NOT SET'));
+    error_log("DEBUG: Text content length: " . (isset($_POST['text_content']) ? strlen($_POST['text_content']) : 'NOT SET'));
+    error_log("DEBUG: Editor content length: " . (isset($_POST['editor_content']) ? strlen($_POST['editor_content']) : 'NOT SET'));
+    error_log("DEBUG: Path: " . (isset($_POST['path']) ? $_POST['path'] : 'NOT SET'));
+    
     if (!isLoggedIn()) {
         $error = 'You must be logged in to edit files';
     } else {
         $fileName = $_POST['path'] ?? '';
-        $content = $_POST['content'] ?? '';
+        // Check for content from either text mode or editor mode
+        $content = $_POST['text_content'] ?? $_POST['editor_content'] ?? $_POST['content'] ?? '';
         $pageTitle = $_POST['title'] ?? '';
         $parentPage = $_POST['parent'] ?? '';
         $template = $_POST['template'] ?? 'page';
@@ -680,9 +717,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $newFrontmatter = '<!-- json ' . json_encode($metadata, JSON_PRETTY_PRINT) . ' -->';
                 $content = $newFrontmatter . "\n\n" . $content;
             }
+            error_log("DEBUG: Attempting to save file: " . $filePath);
+            error_log("DEBUG: Content length: " . strlen($content));
             if (file_put_contents($filePath, $content) !== false) {
+                error_log("DEBUG: File saved successfully");
                 $success = 'File saved successfully';
             } else {
+                error_log("DEBUG: Failed to save file");
                 $error = 'Failed to save file';
             }
         }

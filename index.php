@@ -3,10 +3,11 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Start session if not already started
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+// Initialize session first
+require_once __DIR__ . '/includes/session.php';
+error_log("Main index - Session ID: " . session_id());
+error_log("Main index - Session data: " . print_r($_SESSION, true));
+error_log("Main index - Cookies: " . print_r($_COOKIE, true));
 
 require_once __DIR__ . '/includes/config.php';
 require_once PROJECT_ROOT . '/includes/ThemeManager.php';
@@ -18,6 +19,7 @@ require_once PROJECT_ROOT . '/includes/plugins.php';
 // --- Routing: get the requested path ---
 $requestPath = trim($_SERVER['REQUEST_URI'], '/');
 error_log("Request path: " . $requestPath);
+error_log("Raw REQUEST_URI: " . $_SERVER['REQUEST_URI']);
 
 // Remove query parameters from the path
 if (($queryPos = strpos($requestPath, '?')) !== false) {
@@ -35,6 +37,12 @@ $adminPath = $config["admin_path"] ?? "admin";
 // Handle admin routes
 if (strpos($requestPath, $adminPath) === 0) {
     error_log("Admin route detected: " . $requestPath);
+    error_log("Admin path from config: " . $adminPath);
+    error_log("Request URI: " . $_SERVER['REQUEST_URI']);
+    error_log("Session status: " . session_status());
+    error_log("Session ID: " . session_id());
+    error_log("Session data: " . print_r($_SESSION, true));
+    error_log("Cookies: " . print_r($_COOKIE, true));
     require_once PROJECT_ROOT . "/includes/auth.php";
     
     // Route /admin/login directly
@@ -44,22 +52,26 @@ if (strpos($requestPath, $adminPath) === 0) {
         exit;
     }
     
-    // Route /admin or /admin/ to login if not logged in
-    if ($requestPath === $adminPath || $requestPath === $adminPath . "/") {
-        error_log("Checking login status for /" . $adminPath);
-        if (!isLoggedIn()) {
-            error_log("Not logged in, redirecting to login");
-            header("Location: /" . $adminPath . "/login");
-            exit;
-        }
-        error_log("Logged in, loading admin index");
+    // Route /admin/anything else to /admin/index.php (but not /admin/login)
+    if (strpos($requestPath, $adminPath . "/") === 0 && $requestPath !== $adminPath . "/login") {
+        error_log("Routing admin subpath to index.php");
         require PROJECT_ROOT . "/admin/index.php";
         exit;
     }
     
-    // Route /admin/anything else to /admin/index.php
-    if (strpos($requestPath, $adminPath . "/") === 0) {
-        error_log("Routing admin subpath to index.php");
+    // Route /admin or /admin/ to login if not logged in
+    if ($requestPath === $adminPath || $requestPath === $adminPath . "/") {
+        error_log("Checking login status for /" . $adminPath);
+        error_log("Request path: " . $requestPath . ", Admin path: " . $adminPath);
+        error_log("Is logged in: " . (isLoggedIn() ? "YES" : "NO"));
+        if (!isLoggedIn()) {
+            error_log("Not logged in, redirecting to login");
+            $redirectUrl = "/" . $adminPath . "/login";
+            error_log("Redirect URL: " . $redirectUrl);
+            header("Location: " . $redirectUrl);
+            exit;
+        }
+        error_log("Logged in, loading admin index");
         require PROJECT_ROOT . "/admin/index.php";
         exit;
     }
