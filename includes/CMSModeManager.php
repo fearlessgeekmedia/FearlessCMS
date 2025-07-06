@@ -3,7 +3,7 @@
  * CMS Mode Manager
  * Handles three different modes for the CMS:
  * 1. full-featured: Full access to plugins and store
- * 2. hosting-service-plugin: Plugins available but no store access
+ * 2. hosting-service-plugins: Plugins available but no store access
  * 3. hosting-service-no-plugins: No plugin management, only pre-installed plugins
  */
 class CMSModeManager {
@@ -18,9 +18,12 @@ class CMSModeManager {
             'can_install_plugins' => true,
             'can_activate_plugins' => true,
             'can_deactivate_plugins' => true,
-            'can_delete_plugins' => true
+            'can_delete_plugins' => true,
+            'can_manage_files' => true,
+            'can_upload_files' => true,
+            'can_upload_content_images' => true
         ],
-        'hosting-service-plugin' => [
+        'hosting-service-plugins' => [
             'name' => 'Hosting Service (Plugin Mode)',
             'description' => 'Plugins available but no access to the store. Users can activate/deactivate installed plugins.',
             'can_manage_plugins' => true,
@@ -28,7 +31,10 @@ class CMSModeManager {
             'can_install_plugins' => false,
             'can_activate_plugins' => true,
             'can_deactivate_plugins' => true,
-            'can_delete_plugins' => false
+            'can_delete_plugins' => false,
+            'can_manage_files' => true,
+            'can_upload_files' => true,
+            'can_upload_content_images' => true
         ],
         'hosting-service-no-plugins' => [
             'name' => 'Hosting Service (No Plugin Management)',
@@ -38,7 +44,10 @@ class CMSModeManager {
             'can_install_plugins' => false,
             'can_activate_plugins' => false,
             'can_deactivate_plugins' => false,
-            'can_delete_plugins' => false
+            'can_delete_plugins' => false,
+            'can_manage_files' => false,
+            'can_upload_files' => false,
+            'can_upload_content_images' => false
         ]
     ];
 
@@ -151,6 +160,27 @@ class CMSModeManager {
      */
     public function canDeletePlugins() {
         return $this->can('can_delete_plugins');
+    }
+
+    /**
+     * Check if file management is allowed
+     */
+    public function canManageFiles() {
+        return $this->can('can_manage_files');
+    }
+
+    /**
+     * Check if file uploads are allowed
+     */
+    public function canUploadFiles() {
+        return $this->can('can_upload_files');
+    }
+
+    /**
+     * Check if content image uploads are allowed
+     */
+    public function canUploadContentImages() {
+        return $this->can('can_upload_content_images');
     }
 
     /**

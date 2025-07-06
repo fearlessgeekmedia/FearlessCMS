@@ -3,10 +3,11 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Start session if not already started
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+// Initialize session first
+require_once __DIR__ . '/includes/session.php';
+error_log("Main index - Session ID: " . session_id());
+error_log("Main index - Session data: " . print_r($_SESSION, true));
+error_log("Main index - Cookies: " . print_r($_COOKIE, true));
 
 require_once __DIR__ . '/includes/config.php';
 require_once PROJECT_ROOT . '/includes/ThemeManager.php';
@@ -18,6 +19,7 @@ require_once PROJECT_ROOT . '/includes/plugins.php';
 // --- Routing: get the requested path ---
 $requestPath = trim($_SERVER['REQUEST_URI'], '/');
 error_log("Request path: " . $requestPath);
+error_log("Raw REQUEST_URI: " . $_SERVER['REQUEST_URI']);
 
 // Remove query parameters from the path
 if (($queryPos = strpos($requestPath, '?')) !== false) {
@@ -26,6 +28,54 @@ if (($queryPos = strpos($requestPath, '?')) !== false) {
 }
 
 // Remove any subdomain prefix if present
+
+// Load configuration for admin routing
+$configFile = CONFIG_DIR . "/config.json";
+$config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
+$adminPath = $config["admin_path"] ?? "admin";
+
+// Handle admin routes
+if (strpos($requestPath, $adminPath) === 0) {
+    error_log("Admin route detected: " . $requestPath);
+    error_log("Admin path from config: " . $adminPath);
+    error_log("Request URI: " . $_SERVER['REQUEST_URI']);
+    error_log("Session status: " . session_status());
+    error_log("Session ID: " . session_id());
+    error_log("Session data: " . print_r($_SESSION, true));
+    error_log("Cookies: " . print_r($_COOKIE, true));
+    require_once PROJECT_ROOT . "/includes/auth.php";
+    
+    // Route /admin/login directly
+    if ($requestPath === $adminPath . "/login") {
+        error_log("Routing to login page");
+        require PROJECT_ROOT . "/admin/login.php";
+        exit;
+    }
+    
+    // Route /admin/anything else to /admin/index.php (but not /admin/login)
+    if (strpos($requestPath, $adminPath . "/") === 0 && $requestPath !== $adminPath . "/login") {
+        error_log("Routing admin subpath to index.php");
+        require PROJECT_ROOT . "/admin/index.php";
+        exit;
+    }
+    
+    // Route /admin or /admin/ to login if not logged in
+    if ($requestPath === $adminPath || $requestPath === $adminPath . "/") {
+        error_log("Checking login status for /" . $adminPath);
+        error_log("Request path: " . $requestPath . ", Admin path: " . $adminPath);
+        error_log("Is logged in: " . (isLoggedIn() ? "YES" : "NO"));
+        if (!isLoggedIn()) {
+            error_log("Not logged in, redirecting to login");
+            $redirectUrl = "/" . $adminPath . "/login";
+            error_log("Redirect URL: " . $redirectUrl);
+            header("Location: " . $redirectUrl);
+            exit;
+        }
+        error_log("Logged in, loading admin index");
+        require PROJECT_ROOT . "/admin/index.php";
+        exit;
+    }
+}
 if (strpos($requestPath, 'fearlesscms.hstn.me/') === 0) {
     $requestPath = substr($requestPath, strlen('fearlesscms.hstn.me/'));
 }
@@ -55,17 +105,24 @@ if (strpos($requestPath, '_preview/') === 0) {
         // Set page title
         $pageTitle = $metadata['title'] ?? 'Preview';
         
-        // Convert markdown to HTML
-        require_once PROJECT_ROOT . '/includes/Parsedown.php';
-        $Parsedown = new Parsedown();
-        $pageContentHtml = $Parsedown->text($content);
+        // Check editor mode to determine content processing
+        $editorMode = $metadata['editor_mode'] ?? 'markdown';
+        
+        // Convert markdown to HTML or use HTML directly
+        if ($editorMode === 'easy' || $editorMode === 'html') {
+            // Use content as-is for HTML mode
+            $pageContentHtml = $content;
+        } else {
+            // Convert markdown to HTML
+            require_once PROJECT_ROOT . '/includes/Parsedown.php';
+            $Parsedown = new Parsedown();
+            $pageContentHtml = $Parsedown->text($content);
+        }
         
         // Get site name from config
         $configFile = CONFIG_DIR . '/config.json';
         $siteName = 'FearlessCMS';
         $siteDescription = '';
-        $custom_css = '';
-        $custom_js = '';
         if (file_exists($configFile)) {
             $config = json_decode(file_get_contents($configFile), true);
             if (isset($config['site_name'])) {
@@ -73,12 +130,6 @@ if (strpos($requestPath, '_preview/') === 0) {
             }
             if (isset($config['site_description'])) {
                 $siteDescription = $config['site_description'];
-            }
-            if (isset($config['custom_css'])) {
-                $custom_css = $config['custom_css'];
-            }
-            if (isset($config['custom_js'])) {
-                $custom_js = $config['custom_js'];
             }
         }
         
@@ -114,8 +165,7 @@ if (strpos($requestPath, '_preview/') === 0) {
             'logo' => $themeOptions['logo'] ?? null,
             'heroBanner' => $themeOptions['herobanner'] ?? null,
             'mainMenu' => $menuManager->renderMenu('main'),
-            'custom_css' => $custom_css,
-            'custom_js' => $custom_js
+
         ];
         
         // Add custom variables from JSON frontmatter
@@ -138,7 +188,7 @@ if (strpos($requestPath, '_preview/') === 0) {
         
         // Render template
         $templateName = $metadata['template'] ?? 'page';
-        fcms_do_hook('before_render', $templateName);
+        fcms_do_hook_ref('before_render', $templateName);
         $template = $templateRenderer->render($templateName, $templateData);
         
         // Output the preview
@@ -176,7 +226,7 @@ $title = '';
 $content = '';
 
 // Let plugins handle the route first
-fcms_do_hook('route', $handled, $title, $content, $path);
+fcms_do_hook_ref('route', $handled, $title, $content, $path);
 
 // If a plugin handled the route, render its content
 if ($handled) {
@@ -184,8 +234,6 @@ if ($handled) {
     $configFile = CONFIG_DIR . '/config.json';
     $siteName = 'FearlessCMS';
     $siteDescription = '';
-    $custom_css = '';
-    $custom_js = '';
     if (file_exists($configFile)) {
         $config = json_decode(file_get_contents($configFile), true);
         if (isset($config['site_name'])) {
@@ -193,12 +241,6 @@ if ($handled) {
         }
         if (isset($config['site_description'])) {
             $siteDescription = $config['site_description'];
-        }
-        if (isset($config['custom_css'])) {
-            $custom_css = $config['custom_css'];
-        }
-        if (isset($config['custom_js'])) {
-            $custom_js = $config['custom_js'];
         }
     }
     
@@ -226,7 +268,7 @@ if ($handled) {
     
     // Let plugins determine the template
     $template = 'page';
-    fcms_do_hook('before_render', $template, $path);
+    fcms_do_hook_ref('before_render', $template, $path);
     
     // Prepare template data
     $templateData = [
@@ -238,8 +280,7 @@ if ($handled) {
         'logo' => $themeOptions['logo'] ?? null,
         'heroBanner' => $themeOptions['herobanner'] ?? null,
         'mainMenu' => $menuManager->renderMenu('main'),
-        'custom_css' => $custom_css,
-        'custom_js' => $custom_js
+
     ];
     
     // Add custom variables from JSON frontmatter
@@ -345,8 +386,7 @@ if (!file_exists($contentFile)) {
             'logo' => $themeOptions['logo'] ?? null,
             'heroBanner' => $themeOptions['herobanner'] ?? null,
             'mainMenu' => $menuManager->renderMenu('main'),
-            'custom_css' => '',
-            'custom_js' => ''
+
         ];
         
         // Render template
@@ -377,12 +417,21 @@ if (!$pageTitle) {
     $pageTitle = ucwords(str_replace(['-', '_'], ' ', basename($path)));
 }
 
-// --- Markdown rendering ---
-if (!class_exists('Parsedown')) {
-    require_once PROJECT_ROOT . '/includes/Parsedown.php';
+// --- Content rendering ---
+// Check editor mode to determine content processing
+$editorMode = $metadata['editor_mode'] ?? 'markdown';
+
+if ($editorMode === 'easy' || $editorMode === 'html') {
+    // Use content as-is for HTML mode
+    $pageContentHtml = $pageContent;
+} else {
+    // Convert markdown to HTML
+    if (!class_exists('Parsedown')) {
+        require_once PROJECT_ROOT . '/includes/Parsedown.php';
+    }
+    $Parsedown = new Parsedown();
+    $pageContentHtml = $Parsedown->text($pageContent);
 }
-$Parsedown = new Parsedown();
-$pageContentHtml = $Parsedown->text($pageContent);
 
 // Debug: Check if content has curly braces
 if (strpos($pageContentHtml, '{') !== false || strpos($pageContentHtml, '}') !== false) {
@@ -399,8 +448,6 @@ $themeManager = new ThemeManager();
 $configFile = CONFIG_DIR . '/config.json';
 $siteName = 'FearlessCMS';
 $siteDescription = '';
-$custom_css = '';
-$custom_js = '';
 if (file_exists($configFile)) {
     $config = json_decode(file_get_contents($configFile), true);
     if (isset($config['site_name'])) {
@@ -408,12 +455,6 @@ if (file_exists($configFile)) {
     }
     if (isset($config['site_description'])) {
         $siteDescription = $config['site_description'];
-    }
-    if (isset($config['custom_css'])) {
-        $custom_css = $config['custom_css'];
-    }
-    if (isset($config['custom_js'])) {
-        $custom_js = $config['custom_js'];
     }
 }
 
@@ -444,8 +485,7 @@ $templateData = [
     'logo' => $themeOptions['logo'] ?? null,
     'heroBanner' => $themeOptions['herobanner'] ?? null,
     'mainMenu' => $menuManager->renderMenu('main'),
-    'custom_css' => $custom_css,
-    'custom_js' => $custom_js
+
 ];
 
 // Add custom variables from JSON frontmatter
@@ -460,7 +500,7 @@ error_log("TEMPLATE DATA: " . json_encode($templateData));
 
 // --- Render template ---
 $templateName = $metadata['template'] ?? 'page';
-fcms_do_hook('before_render', $templateName);
+fcms_do_hook_ref('before_render', $templateName);
 $template = $templateRenderer->render($templateName, $templateData);
 
 // --- Output ---

@@ -1,4 +1,7 @@
 <?php
+// Get CMS mode manager
+global $cmsModeManager;
+
 // Extract content without metadata
 $contentWithoutMetadata = $contentData;
 $metadata = [];
@@ -103,9 +106,9 @@ document.addEventListener('DOMContentLoaded', function() {
             ['heading', 'bold', 'italic', 'strike'],
             ['hr', 'quote'],
             ['ul', 'ol', 'task', 'indent', 'outdent'],
-            ['table', 'link', 'image'],
+            ['table', 'link'<?php if ($cmsModeManager->canUploadContentImages()): ?>, 'image'<?php endif; ?>],
             ['code', 'codeblock']
-        ],
+        ]<?php if ($cmsModeManager->canUploadContentImages()): ?>,
         hooks: {
             addImageBlobHook: function(blob, callback) {
                 // Create form data
@@ -131,7 +134,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     alert('Failed to upload image');
                 });
             }
-        }
+        }<?php endif; ?>
     });
 
     // Update hidden input before form submission

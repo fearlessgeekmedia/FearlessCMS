@@ -28,8 +28,7 @@ $pageContentHtml = $Parsedown->text($pageContent);
 $configFile = CONFIG_DIR . '/config.json';
 $siteName = 'FearlessCMS';
 $siteDescription = '';
-$custom_css = '';
-$custom_js = '';
+    // Custom CSS and JS functionality removed
 if (file_exists($configFile)) {
     $config = json_decode(file_get_contents($configFile), true);
     if (isset($config['site_name'])) {
@@ -64,8 +63,7 @@ $templateData = [
     'logo' => $themeOptions['logo'] ?? null,
     'heroBanner' => $themeOptions['herobanner'] ?? null,
     'mainMenu' => $menuManager->renderMenu('main'),
-    'custom_css' => $custom_css,
-    'custom_js' => $custom_js
+    
 ];
 
 echo "=== TEMPLATE DATA ===\n";

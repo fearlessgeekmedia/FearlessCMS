@@ -7,3 +7,7 @@ plugins/advanced-seo
 
 # External documentation directory (outside project)
 ~/fcmsdocs/
+
+# Database configuration files (contain credentials)
+content/mariadb-connector/
+content/*/config.json

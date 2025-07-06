@@ -1,10 +1,13 @@
 <?php
 // Load users from config file
-$usersFile = ADMIN_CONFIG_DIR . '/users.json';
+$usersFile = CONFIG_DIR . '/users.json';
 $users = [];
 if (file_exists($usersFile)) {
     $users = json_decode(file_get_contents($usersFile), true) ?? [];
 }
+
+// Debug output
+error_log("DEBUG: users.php template loaded - Found " . count($users) . " users");
 
 if (!isset($_GET['edit'])): ?>
 <div class="mb-8">
@@ -83,6 +86,10 @@ if (!isset($_GET['edit'])): ?>
                 <input type="text" value="<?= htmlspecialchars($_GET['edit']) ?>" class="w-full px-3 py-2 border border-gray-300 rounded bg-gray-100" readonly>
             </div>
             <div>
+                <label class="block mb-2">New Username (leave blank to keep current):</label>
+                <input type="text" name="new_username" class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="Leave blank to keep current">
+            </div>
+            <div>
                 <label class="block mb-2">New Password (leave blank to keep current):</label>
                 <input type="password" name="new_password" class="w-full px-3 py-2 border border-gray-300 rounded">
             </div>
@@ -104,7 +111,7 @@ if (!isset($_GET['edit'])): ?>
             </div>
             <div>
                 <label class="block mb-2">Role:</label>
-                <select name="role" class="w-full px-3 py-2 border border-gray-300 rounded">
+                <select name="user_role" class="w-full px-3 py-2 border border-gray-300 rounded">
                     <?php
                     $rolesFile = PROJECT_ROOT . '/config/roles.json';
                     if (file_exists($rolesFile)) {
@@ -146,7 +153,7 @@ if (!isset($_GET['edit'])): ?>
                 </td>
                 <td class="py-2 px-4 border-b">
                     <a href="?action=users&edit=<?= urlencode($user['username']) ?>" class="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 mr-2">Edit</a>
-                    <form method="POST" style="display:inline">
+                    <form method="POST" style="display:inline" onsubmit="console.log('Delete form submitted for user: <?= htmlspecialchars($user['username']) ?>');">
                         <input type="hidden" name="action" value="delete_user">
                         <input type="hidden" name="username" value="<?= htmlspecialchars($user['username']) ?>">
                         <button type="submit" onclick="return confirm('Are you sure you want to delete this user?')" class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">Delete</button>

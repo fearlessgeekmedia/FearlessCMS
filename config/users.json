@@ -1,20 +1,19 @@
-{
-    "admin": {
+[
+    {
         "id": "admin",
         "username": "admin",
-        "password": "$2y$12$/aPzbfsm72qy15s0EC2UB.MIPVb8Xb80JOlwoglb2TPT3nzMtTaYy",
-        "role": "admin"
+        "password": "$2y$12$8WRyMNqzhsS9hkMvb5yHYuw1toNj6Mlpq2pb9r125RsFfxp9JRzp.",
+        "role": "admin",
+        "permissions": []
     },
-    "bob": {
+    {
         "id": "bob",
-        "username": "bob",
-        "password": "$2y$12$PpKjWstfd4XzsJXcn/FQ0OYdKmVAlUVgFPtZ7ows8NGOWuMq7u0eu",
-        "role": "author"
-    },
-    "susan": {
-        "id": "susan",
-        "username": "susan",
-        "password": "$2y$12$6LpCraIpZyuykwYyLwzIP.HBa7Cybwh/ZQB91l0PYlhxttTlOeiz.",
-        "role": "editor"
+        "username": "bob_updated",
+        "password": "$2y$12$ZtzsnnW7CqaacbhqJTe2w.QcD8h0IeskSeooN5XCJa4Ql0tE8gWUK",
+        "role": "editor",
+        "permissions": [
+            "manage_content",
+            "manage_themes"
+        ]
     }
-}
+]

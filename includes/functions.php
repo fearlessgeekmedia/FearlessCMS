@@ -5,13 +5,7 @@
 
 require_once __DIR__ . '/config.php';
 
-/**
- * Check if a user is currently logged in
- * @return bool True if user is logged in, false otherwise
- */
-function isLoggedIn() {
-    return isset($_SESSION['user_id']);
-}
+// Note: isLoggedIn() function is defined in auth.php
 
 /**
  * Get the currently logged in user's data
