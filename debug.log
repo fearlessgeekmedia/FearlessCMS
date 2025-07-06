@@ -7776,3 +7776,24 @@
 
 )
 
+2025-07-06 20:24:59 - Admin index started
+2025-07-06 20:24:59 - Action: dashboard, Method: GET
+2025-07-06 20:24:59 - POST: Array
+(
+)
+
+2025-07-06 20:24:59 - Session: Array
+(
+    [username] => admin
+    [permissions] => Array
+        (
+            [0] => manage_users
+            [1] => manage_content
+            [2] => manage_plugins
+            [3] => manage_themes
+            [4] => manage_menus
+            [5] => manage_settings
+        )
+
+)
+

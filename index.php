@@ -123,8 +123,6 @@ if (strpos($requestPath, '_preview/') === 0) {
         $configFile = CONFIG_DIR . '/config.json';
         $siteName = 'FearlessCMS';
         $siteDescription = '';
-        $custom_css = '';
-        $custom_js = '';
         if (file_exists($configFile)) {
             $config = json_decode(file_get_contents($configFile), true);
             if (isset($config['site_name'])) {
@@ -132,12 +130,6 @@ if (strpos($requestPath, '_preview/') === 0) {
             }
             if (isset($config['site_description'])) {
                 $siteDescription = $config['site_description'];
-            }
-            if (isset($config['custom_css'])) {
-                $custom_css = $config['custom_css'];
-            }
-            if (isset($config['custom_js'])) {
-                $custom_js = $config['custom_js'];
             }
         }
         
@@ -173,8 +165,7 @@ if (strpos($requestPath, '_preview/') === 0) {
             'logo' => $themeOptions['logo'] ?? null,
             'heroBanner' => $themeOptions['herobanner'] ?? null,
             'mainMenu' => $menuManager->renderMenu('main'),
-            'custom_css' => $custom_css,
-            'custom_js' => $custom_js
+
         ];
         
         // Add custom variables from JSON frontmatter
@@ -243,8 +234,6 @@ if ($handled) {
     $configFile = CONFIG_DIR . '/config.json';
     $siteName = 'FearlessCMS';
     $siteDescription = '';
-    $custom_css = '';
-    $custom_js = '';
     if (file_exists($configFile)) {
         $config = json_decode(file_get_contents($configFile), true);
         if (isset($config['site_name'])) {
@@ -252,12 +241,6 @@ if ($handled) {
         }
         if (isset($config['site_description'])) {
             $siteDescription = $config['site_description'];
-        }
-        if (isset($config['custom_css'])) {
-            $custom_css = $config['custom_css'];
-        }
-        if (isset($config['custom_js'])) {
-            $custom_js = $config['custom_js'];
         }
     }
     
@@ -297,8 +280,7 @@ if ($handled) {
         'logo' => $themeOptions['logo'] ?? null,
         'heroBanner' => $themeOptions['herobanner'] ?? null,
         'mainMenu' => $menuManager->renderMenu('main'),
-        'custom_css' => $custom_css,
-        'custom_js' => $custom_js
+
     ];
     
     // Add custom variables from JSON frontmatter
@@ -404,8 +386,7 @@ if (!file_exists($contentFile)) {
             'logo' => $themeOptions['logo'] ?? null,
             'heroBanner' => $themeOptions['herobanner'] ?? null,
             'mainMenu' => $menuManager->renderMenu('main'),
-            'custom_css' => '',
-            'custom_js' => ''
+
         ];
         
         // Render template
@@ -467,8 +448,6 @@ $themeManager = new ThemeManager();
 $configFile = CONFIG_DIR . '/config.json';
 $siteName = 'FearlessCMS';
 $siteDescription = '';
-$custom_css = '';
-$custom_js = '';
 if (file_exists($configFile)) {
     $config = json_decode(file_get_contents($configFile), true);
     if (isset($config['site_name'])) {
@@ -476,12 +455,6 @@ if (file_exists($configFile)) {
     }
     if (isset($config['site_description'])) {
         $siteDescription = $config['site_description'];
-    }
-    if (isset($config['custom_css'])) {
-        $custom_css = $config['custom_css'];
-    }
-    if (isset($config['custom_js'])) {
-        $custom_js = $config['custom_js'];
     }
 }
 
@@ -512,8 +485,7 @@ $templateData = [
     'logo' => $themeOptions['logo'] ?? null,
     'heroBanner' => $themeOptions['herobanner'] ?? null,
     'mainMenu' => $menuManager->renderMenu('main'),
-    'custom_css' => $custom_css,
-    'custom_js' => $custom_js
+
 ];
 
 // Add custom variables from JSON frontmatter

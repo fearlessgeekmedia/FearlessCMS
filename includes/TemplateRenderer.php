@@ -49,8 +49,7 @@ class TemplateRenderer {
             'currentYear' => date('Y'),
             'current_year' => date('Y'),
             'mainMenu' => $this->menuManager->renderMenu('main'),
-            'custom_css' => $data['custom_css'] ?? '',
-            'custom_js' => $data['custom_js'] ?? '',
+
             'themeOptions' => $this->themeOptions,
             'theme_options' => $this->themeOptions
         ];

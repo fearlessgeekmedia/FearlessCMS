@@ -15,7 +15,6 @@ require_once dirname(dirname(__DIR__)) . '/version.php';
     <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
     <style>
         .fira-code { font-family: 'Fira Code', monospace; }
-        <?php if (!empty($custom_css)) echo $custom_css; ?>
     </style>
 </head>
 <body class="bg-gray-100">
@@ -168,8 +167,6 @@ require_once dirname(dirname(__DIR__)) . '/version.php';
         });
     });
     </script>
-
-    <?php if (!empty($custom_js)) echo $custom_js; ?>
     
     <!-- Version Bar -->
     <div class="fixed bottom-0 left-0 right-0 bg-gray-800 text-white text-sm py-1 px-4 text-center">

@@ -280,8 +280,7 @@ if (file_exists($configFile)) {
         $siteDescription = $config['site_description'];
     }
     // Load custom code
-    $custom_css = $config['custom_css'] ?? '';
-    $custom_js = $config['custom_js'] ?? '';
+    // Custom CSS and JS functionality removed
 }
 
 // Load menu options for menu management
