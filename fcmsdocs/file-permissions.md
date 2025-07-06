@@ -1,153 +1,205 @@
 # FearlessCMS File Permissions Guide
 
 ## Overview
-This document outlines the recommended file permissions for FearlessCMS to function properly without permission errors.
+This document outlines the recommended file permissions for FearlessCMS to function properly without permission errors. The recommended approach is to use proper ownership with standard permissions rather than overly permissive 777/666 permissions.
 
-## Permission Requirements
+## Recommended Approach: Proper Ownership
 
-### Directories
-All directories should have **777** permissions to allow:
-- File creation and deletion
-- Directory traversal
-- Plugin operations (creating forms, uploads, etc.)
-
+### Web Server User Identification
+First, identify your web server user:
 ```bash
-find /path/to/fearlesscms -type d -exec chmod 777 {} \;
+# For Apache
+ps aux | grep apache
+# For Nginx with PHP-FPM
+ps aux | grep php-fpm
+# For other setups
+ps aux | grep -E "(apache|nginx|httpd)"
 ```
 
-### Files
-All files should have **666** permissions to allow:
-- Reading and writing by web server
-- Log file creation and updates
-- Configuration file modifications
-- Content file editing
+Common web server users:
+- `www-data` (Ubuntu/Debian)
+- `apache` (CentOS/RHEL)
+- `http` (Arch Linux)
+- `nginx` (some setups)
+
+### Setting Proper Ownership
+Set ownership to your web server user (replace `http` with your actual web server user):
 
 ```bash
-find /path/to/fearlesscms -type f -exec chmod 666 {} \;
+# Set ownership for all critical directories and files
+sudo chown -R http:http /path/to/fearlesscms/sessions/
+sudo chown -R http:http /path/to/fearlesscms/content/forms/
+sudo chown -R http:http /path/to/fearlesscms/content/form_submissions/
+sudo chown -R http:http /path/to/fearlesscms/config/
+sudo chown -R http:http /path/to/fearlesscms/uploads/
+sudo chown -R http:http /path/to/fearlesscms/admin/uploads/
+sudo chown http:http /path/to/fearlesscms/sitemap.xml
+sudo chown http:http /path/to/fearlesscms/robots.txt
+sudo chown http:http /path/to/fearlesscms/debug.log
+```
+
+### Setting Proper Permissions
+Use standard permissions with proper ownership:
+
+```bash
+# Set directories to 755
+sudo chmod 755 /path/to/fearlesscms/sessions/
+sudo chmod 755 /path/to/fearlesscms/content/forms/
+sudo chmod 755 /path/to/fearlesscms/content/form_submissions/
+sudo chmod 755 /path/to/fearlesscms/config/
+sudo chmod 755 /path/to/fearlesscms/uploads/
+sudo chmod 755 /path/to/fearlesscms/admin/uploads/
+
+# Set files to 644
+sudo chmod 644 /path/to/fearlesscms/sitemap.xml
+sudo chmod 644 /path/to/fearlesscms/robots.txt
+sudo chmod 644 /path/to/fearlesscms/debug.log
 ```
 
 ## Critical Files and Directories
 
-### Log Files
-- `debug.log` - 666
-- `content/forms/forms.log` - 666
-- `error.log` - 666
+### Session Management
+- `sessions/` - 755 (directory, owned by web server user)
+- All session files in `sessions/` - 644 (owned by web server user)
+
+### Forms Plugin
+- `content/forms/` - 755 (directory, owned by web server user)
+- `content/form_submissions/` - 755 (directory, owned by web server user)
+- `content/forms/forms.log` - 644 (owned by web server user)
 
 ### Configuration Files
-- `config/users.json` - 666
-- `config/roles.json` - 666
-- `config/config.json` - 666
-- `config/menus.json` - 666
-- `config/widgets.json` - 666
-- `config/plugins.json` - 666
-- `config/active_plugins.json` - 666
+- `config/` - 755 (directory, owned by web server user)
+- All `.json` files in `config/` - 644 (owned by web server user)
 
 ### SEO Files
-- `sitemap.xml` - 666
-- `robots.txt` - 666
-
-### Content Directory
-- `content/` - 777 (directory)
-- `content/_preview/` - 777 (directory)
-- `content/forms/` - 777 (directory)
-- All `.md` files in content - 666
+- `sitemap.xml` - 644 (owned by web server user)
+- `robots.txt` - 644 (owned by web server user)
 
 ### Upload Directories
-- `uploads/` - 777 (directory)
-- `admin/uploads/` - 777 (directory)
+- `uploads/` - 755 (directory, owned by web server user)
+- `admin/uploads/` - 755 (directory, owned by web server user)
 
-### Plugin Directories
-- `plugins/` - 777 (directory)
-- All plugin subdirectories - 777
-
-### Theme Directories
-- `themes/` - 777 (directory)
-- All theme subdirectories - 777
+### Debug and Log Files
+- `debug.log` - 644 (owned by web server user)
+- `error.log` - 644 (owned by web server user)
 
 ## Quick Fix Commands
 
-### For Development/Testing (Very Permissive)
+### Complete Permission Fix (Recommended)
 ```bash
-# Set all directories to 777
+# Replace 'http' with your actual web server user
+WEB_USER="http"
+
+# Set ownership for all writable locations
+sudo chown -R $WEB_USER:$WEB_USER /path/to/fearlesscms/sessions/
+sudo chown -R $WEB_USER:$WEB_USER /path/to/fearlesscms/content/forms/
+sudo chown -R $WEB_USER:$WEB_USER /path/to/fearlesscms/content/form_submissions/
+sudo chown -R $WEB_USER:$WEB_USER /path/to/fearlesscms/config/
+sudo chown -R $WEB_USER:$WEB_USER /path/to/fearlesscms/uploads/
+sudo chown -R $WEB_USER:$WEB_USER /path/to/fearlesscms/admin/uploads/
+sudo chown $WEB_USER:$WEB_USER /path/to/fearlesscms/sitemap.xml
+sudo chown $WEB_USER:$WEB_USER /path/to/fearlesscms/robots.txt
+sudo chown $WEB_USER:$WEB_USER /path/to/fearlesscms/debug.log
+
+# Set proper permissions
+sudo chmod 755 /path/to/fearlesscms/sessions/
+sudo chmod 755 /path/to/fearlesscms/content/forms/
+sudo chmod 755 /path/to/fearlesscms/content/form_submissions/
+sudo chmod 755 /path/to/fearlesscms/config/
+sudo chmod 755 /path/to/fearlesscms/uploads/
+sudo chmod 755 /path/to/fearlesscms/admin/uploads/
+sudo chmod 644 /path/to/fearlesscms/sitemap.xml
+sudo chmod 644 /path/to/fearlesscms/robots.txt
+sudo chmod 644 /path/to/fearlesscms/debug.log
+```
+
+### Legacy Approach (Not Recommended)
+If you must use overly permissive permissions for development:
+
+```bash
+# Set all directories to 777 (NOT recommended for production)
 find /path/to/fearlesscms -type d -exec chmod 777 {} \;
 
-# Set all files to 666
+# Set all files to 666 (NOT recommended for production)
 find /path/to/fearlesscms -type f -exec chmod 666 {} \;
 ```
 
-### For Production (More Secure)
-```bash
-# Set ownership to web server user
-chown -R www-data:www-data /path/to/fearlesscms
+## Common Permission Errors and Solutions
 
-# Set directories to 755
-find /path/to/fearlesscms -type d -exec chmod 755 {} \;
+### Session Errors
+- **Error**: `session_start(): open(...) failed: Permission denied`
+- **Solution**: Set `sessions/` directory ownership to web server user with 755 permissions
 
-# Set files to 644
-find /path/to/fearlesscms -type f -exec chmod 644 {} \;
-
-# Set specific writable files to 664
-chmod 664 /path/to/fearlesscms/debug.log
-chmod 664 /path/to/fearlesscms/sitemap.xml
-chmod 664 /path/to/fearlesscms/robots.txt
-chmod 664 /path/to/fearlesscms/config/users.json
-chmod 664 /path/to/fearlesscms/content/forms/forms.log
-```
-
-## Common Permission Errors
-
-### File Creation Errors
-- **Error**: `mkdir(): Permission denied`
-- **Solution**: Set directory permissions to 777 or ensure web server user owns the directory
+### Forms Plugin Errors
+- **Error**: `mkdir(): Permission denied in plugins/forms/forms.php`
+- **Solution**: Create `content/form_submissions/` directory and set ownership to web server user
 
 ### File Writing Errors
 - **Error**: `file_put_contents(): Failed to open stream: Permission denied`
-- **Solution**: Set file permissions to 666 or ensure web server user owns the file
+- **Solution**: Set file ownership to web server user with 644 permissions
 
-### Directory Traversal Errors
-- **Error**: `RecursiveDirectoryIterator::__construct(): Failed to open directory: Permission denied`
-- **Solution**: Set directory permissions to 777 or ensure web server user can read the directory
+### Configuration Errors
+- **Error**: `Failed to save configuration`
+- **Solution**: Set `config/` directory ownership to web server user with 755 permissions
 
-## Security Considerations
+## Security Best Practices
 
 ### Development Environment
-- Using 777/666 permissions is acceptable for development
-- Allows maximum flexibility for testing and debugging
+- Use proper ownership (web server user) with standard permissions (755/644)
+- Avoid overly permissive 777/666 permissions
+- Test with the actual web server user
 
 ### Production Environment
-- Use more restrictive permissions (755/644) when possible
-- Set ownership to web server user (www-data, apache, nginx, etc.)
-- Only set 664 permissions on files that need to be writable
-- Consider using ACLs for more granular permission control
+- Always use proper ownership with standard permissions
+- Never use 777/666 permissions
+- Consider using ACLs for more granular control
+- Regularly audit file permissions
+
+### Verification Commands
+```bash
+# Check current permissions
+ls -la /path/to/fearlesscms/sessions/
+ls -la /path/to/fearlesscms/content/forms/
+ls -la /path/to/fearlesscms/config/
+ls -la /path/to/fearlesscms/uploads/
+
+# Test web server write access
+sudo -u $WEB_USER touch /path/to/fearlesscms/test.txt
+sudo -u $WEB_USER rm /path/to/fearlesscms/test.txt
+```
 
 ## Troubleshooting
-
-### Check Current Permissions
-```bash
-ls -la /path/to/fearlesscms
-find /path/to/fearlesscms -type d -ls
-find /path/to/fearlesscms -type f -ls
-```
 
 ### Check Web Server User
 ```bash
 # For Apache
 ps aux | grep apache
-# For Nginx
-ps aux | grep nginx
-# For PHP-FPM
+# For Nginx with PHP-FPM
 ps aux | grep php-fpm
+# For other setups
+ps aux | grep -E "(apache|nginx|httpd|http)"
 ```
 
-### Test File Writing
+### Verify Permissions
 ```bash
-# Test if web server can write to a file
-sudo -u www-data touch /path/to/fearlesscms/test.txt
-sudo -u www-data rm /path/to/fearlesscms/test.txt
+# Check ownership and permissions
+ls -la /path/to/fearlesscms/sessions/ content/forms/ config/ uploads/ sitemap.xml robots.txt debug.log
+```
+
+### Test File Operations
+```bash
+# Test if web server can write to critical locations
+sudo -u $WEB_USER touch /path/to/fearlesscms/sessions/test.txt
+sudo -u $WEB_USER touch /path/to/fearlesscms/content/forms/test.txt
+sudo -u $WEB_USER touch /path/to/fearlesscms/config/test.txt
+sudo -u $WEB_USER rm /path/to/fearlesscms/sessions/test.txt
+sudo -u $WEB_USER rm /path/to/fearlesscms/content/forms/test.txt
+sudo -u $WEB_USER rm /path/to/fearlesscms/config/test.txt
 ```
 
 ## Notes
-- These permissions are based on a root-owned web server setup
-- Adjust ownership and permissions based on your specific web server configuration
+- This approach is more secure than using 777/666 permissions
 - Always backup before changing permissions on production systems
-- Consider using a deployment script to set correct permissions automatically
+- The web server user must have read/write access to specific directories
+- Consider using deployment scripts to automate permission setup
+- Regular permission audits help maintain security

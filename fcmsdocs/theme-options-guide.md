@@ -93,11 +93,11 @@ FearlessCMS supports several option types:
 #### Textarea
 ```json
 {
-    "customCSS": {
+    "footerText": {
         "type": "textarea",
-        "label": "Custom CSS",
-        "description": "Add custom CSS styles",
-        "rows": 10
+        "label": "Footer Text",
+        "description": "Custom text to display in the footer",
+        "rows": 3
     }
 }
 ```
@@ -305,9 +305,9 @@ This approach allows you to:
         background-image: url('/{{themeOptions.herobanner}}');
     }
     
-    .custom-css {
-        {{themeOptions.customCSS}}
-    }
+    .footer-text {
+    {{themeOptions.footerText}}
+}
 </style>
 ```
 
@@ -376,11 +376,11 @@ This approach allows you to:
                 "icon": {"type": "text", "label": "Icon Class"}
             }
         },
-        "customCSS": {
+        "footerText": {
             "type": "textarea",
-            "label": "Custom CSS",
-            "description": "Add custom CSS styles",
-            "rows": 8
+            "label": "Footer Text",
+            "description": "Custom text to display in the footer",
+            "rows": 3
         }
     }
 }
@@ -396,9 +396,7 @@ This approach allows you to:
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{title}} - {{siteName}}</title>
     <link rel="stylesheet" href="/themes/{{theme}}/assets/style.css">
-    {{#if themeOptions.customCSS}}
-        <style>{{themeOptions.customCSS}}</style>
-    {{/if}}
+    <!-- Theme options are applied via CSS classes and inline styles -->
 </head>
 <body>
     <header class="header">

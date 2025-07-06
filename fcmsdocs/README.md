@@ -5,6 +5,7 @@ Welcome to the FearlessCMS theme development documentation! This collection of g
 ## 📚 Documentation Index
 
 ### Getting Started
+- **[Customization Overview](customization-overview.md)** - Complete guide to all customization options
 - **[Creating Themes in FearlessCMS](creating-themes.md)** - Complete guide to creating themes from scratch
 - **[Theme Development Workflow](theme-development-workflow.md)** - Step-by-step development process and best practices
 
@@ -15,6 +16,7 @@ Welcome to the FearlessCMS theme development documentation! This collection of g
 
 ### System Administration
 - **[CMS Modes Guide](cms-modes.md)** - How to configure and manage CMS operational modes
+- **[File Permissions Guide](file-permissions.md)** - Setting up proper file permissions and ownership
 
 ### Examples and Tutorials
 - **[Nightfall Theme Example](../themes/nightfall/)** - Real-world example of a complete theme
@@ -38,6 +40,7 @@ Welcome to the FearlessCMS theme development documentation! This collection of g
 - Best practices for theme development
 - Testing and deployment strategies
 - **CMS modes and system administration**
+- **File permissions and security best practices**
 
 ## 📁 Theme Structure
 
@@ -95,6 +98,7 @@ Found an issue or have a suggestion? Contributions are welcome! Please:
 - [Admin Panel Guide](../admin/README.md)
 - [Plugin Development Guide](../plugins/README.md)
 - [CMS Modes Guide](cms-modes.md) - System administration and deployment modes
+- [File Permissions Guide](file-permissions.md) - Security and permission setup
 - [API Reference](../docs/api.md)
 
 ## 🆘 Getting Help
@@ -110,4 +114,4 @@ If you need help with theme development:
 
 **Happy theme development!** 🎨
 
-*This documentation is maintained by the FearlessCMS community. Last updated: June 2025* 
+*This documentation is maintained by the FearlessCMS community. Last updated: January 2025* 
