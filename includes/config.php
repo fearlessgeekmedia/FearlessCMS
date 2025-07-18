@@ -13,10 +13,13 @@ $project_root = dirname(dirname(__FILE__));
 // Define root paths
 define('PROJECT_ROOT', $project_root);
 define('CONTENT_DIR', PROJECT_ROOT . '/content');
-define('CONFIG_DIR', PROJECT_ROOT . '/config');
+// Allow config override via environment variable
+$env_config_dir = getenv('FCMS_CONFIG_DIR');
+define('CONFIG_DIR', $env_config_dir ? $env_config_dir : PROJECT_ROOT . '/config');
 define('THEMES_DIR', PROJECT_ROOT . '/themes');
 define('PLUGINS_DIR', PROJECT_ROOT . '/plugins');
-define('ADMIN_CONFIG_DIR', PROJECT_ROOT . '/admin/config');
+$env_admin_config_dir = getenv('FCMS_ADMIN_CONFIG_DIR');
+define('ADMIN_CONFIG_DIR', $env_admin_config_dir ? $env_admin_config_dir : PROJECT_ROOT . '/admin/config');
 define('ADMIN_TEMPLATE_DIR', PROJECT_ROOT . '/admin/templates');
 define('ADMIN_INCLUDES_DIR', PROJECT_ROOT . '/admin/includes');
 

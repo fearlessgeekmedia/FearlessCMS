@@ -49,7 +49,7 @@ if (!isset($_GET['edit'])): ?>
             <label class="block mb-2">Role:</label>
             <select name="role" class="w-full px-3 py-2 border border-gray-300 rounded">
                 <?php
-                $rolesFile = PROJECT_ROOT . '/config/roles.json';
+                $rolesFile = CONFIG_DIR . '/roles.json';
                 if (file_exists($rolesFile)) {
                     $roles = json_decode(file_get_contents($rolesFile), true);
                     foreach ($roles as $roleKey => $role) {
@@ -113,7 +113,7 @@ if (!isset($_GET['edit'])): ?>
                 <label class="block mb-2">Role:</label>
                 <select name="user_role" class="w-full px-3 py-2 border border-gray-300 rounded">
                     <?php
-                    $rolesFile = PROJECT_ROOT . '/config/roles.json';
+                    $rolesFile = CONFIG_DIR . '/roles.json';
                     if (file_exists($rolesFile)) {
                         $roles = json_decode(file_get_contents($rolesFile), true);
                         foreach ($roles as $roleKey => $role) {

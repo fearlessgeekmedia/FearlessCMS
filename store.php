@@ -2,7 +2,7 @@
 $page_title = 'Store';
 
 // Load store configuration
-$config_file = dirname(__DIR__) . '/../config/config.json';
+$config_file = CONFIG_DIR . '/config.json';
 $config = file_exists($config_file) ? json_decode(file_get_contents($config_file), true) : [];
 $store_repo = $config['store_url'] ?? 'https://github.com/fearlessgeekmedia/FearlessCMS-Store.git';
 

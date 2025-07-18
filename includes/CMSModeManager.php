@@ -56,7 +56,7 @@ class CMSModeManager {
             throw new Exception("PROJECT_ROOT is not defined!");
         }
         
-        $this->configFile = PROJECT_ROOT . '/config/cms_mode.json';
+        $this->configFile = CONFIG_DIR . '/cms_mode.json';
         $this->loadMode();
     }
 

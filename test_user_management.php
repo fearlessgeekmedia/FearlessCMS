@@ -5,7 +5,7 @@ echo "Testing User Management\n";
 echo "======================\n\n";
 
 // Test 1: Load users
-echo "1. Loading users from config/users.json:\n";
+echo "1. Loading users from " . CONFIG_DIR . "/users.json:\n";
 $users = json_decode(file_get_contents(CONFIG_DIR . '/users.json'), true);
 echo "   Found " . count($users) . " users:\n";
 foreach ($users as $user) {

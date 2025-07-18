@@ -110,6 +110,10 @@ If you need help with theme development:
 3. **Search issues** - Check if your question has been asked before
 4. **Ask the community** - Join discussions in the project forums
 
+## 🔒 Security Note: Config Directory Location
+
+FearlessCMS supports storing your configuration files outside the webroot for enhanced security. Set the `FCMS_CONFIG_DIR` environment variable to point to a secure directory. See [File Permissions Guide](file-permissions.md) for details.
+
 ---
 
 **Happy theme development!** 🎨

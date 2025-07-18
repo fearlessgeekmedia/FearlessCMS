@@ -83,6 +83,34 @@ sudo chmod 644 /path/to/fearlesscms/debug.log
 - `debug.log` - 644 (owned by web server user)
 - `error.log` - 644 (owned by web server user)
 
+## Storing Configuration Files Outside Webroot (Recommended)
+
+For enhanced security, you can store your configuration files outside the web-accessible directory. FearlessCMS supports this via the `FCMS_CONFIG_DIR` environment variable.
+
+**How to use:**
+
+1. Move your `config/` directory to a secure location outside your webroot, e.g. `/etc/fearlesscms-config`.
+2. Set the environment variable in your web server or shell:
+   - **Apache:**
+     ```
+     SetEnv FCMS_CONFIG_DIR /etc/fearlesscms-config
+     ```
+   - **Nginx + PHP-FPM:**
+     ```
+     env[FCMS_CONFIG_DIR] = /etc/fearlesscms-config
+     ```
+   - **CLI/testing:**
+     ```
+     export FCMS_CONFIG_DIR=/etc/fearlesscms-config
+     ```
+3. FearlessCMS will automatically use this directory for all configuration files.
+
+**Benefits:**
+- Prevents direct web access to sensitive config files
+- Allows for centralized config management in multi-site setups
+
+**Note:** You can also set `FCMS_ADMIN_CONFIG_DIR` for admin-specific config files if needed.
+
 ## Quick Fix Commands
 
 ### Complete Permission Fix (Recommended)
@@ -154,6 +182,7 @@ find /path/to/fearlesscms -type f -exec chmod 666 {} \;
 - Never use 777/666 permissions
 - Consider using ACLs for more granular control
 - Regularly audit file permissions
+- Store config files outside the webroot using `FCMS_CONFIG_DIR` when possible
 
 ### Verification Commands
 ```bash
