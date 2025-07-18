@@ -31,7 +31,6 @@
             <?php
             // Debug output
             echo "<!-- Debug: Current URL: " . $_SERVER['REQUEST_URI'] . " -->\n";
-            echo "<!-- Debug: POST data: " . print_r($_POST, true) . " -->\n";
             echo "<!-- Debug: Session: " . print_r($_SESSION, true) . " -->\n";
             ?>
 

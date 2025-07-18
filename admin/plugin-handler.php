@@ -90,6 +90,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     throw new Exception('Plugin slug is required');
                 }
                 $plugin_slug = $_POST['plugin_slug'];
+                // Mitigation: Only allow safe plugin slugs
+                if (!preg_match('/^[a-zA-Z0-9_\-]+$/', $plugin_slug)) {
+                    throw new Exception('Invalid plugin slug');
+                }
                 error_log("DEBUG: Plugin handler - Deleting plugin: " . $plugin_slug);
                 
                 // Check if plugin is active before deletion
@@ -99,10 +103,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     throw new Exception('Cannot delete an active plugin. Please deactivate it first.');
                 }
                 
-                // Delete plugin directory
+                // Delete plugin directory with realpath check
                 $pluginDir = PLUGIN_DIR . '/' . $plugin_slug;
-                if (is_dir($pluginDir)) {
-                    if (!deleteDirectory($pluginDir)) {
+                $resolvedPluginDir = realpath($pluginDir);
+                $resolvedPluginBase = realpath(PLUGIN_DIR);
+                if (!$resolvedPluginDir || strpos($resolvedPluginDir, $resolvedPluginBase) !== 0) {
+                    throw new Exception('Access denied: Invalid plugin directory');
+                }
+                if (is_dir($resolvedPluginDir)) {
+                    if (!deleteDirectory($resolvedPluginDir)) {
                         throw new Exception('Failed to delete plugin directory');
                     }
                 }

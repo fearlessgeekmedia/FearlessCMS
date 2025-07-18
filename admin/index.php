@@ -406,11 +406,21 @@ if (isset($_GET['error']) && $_GET['error'] === 'access_denied') {
 $plugin_nav_items = '';
 
 // Load content data for edit_content action
-if ($action === 'edit_content' && isset($_GET['path'])) {
+if (
+    $action === 'edit_content' && isset($_GET['path'])
+) {
     $path = $_GET['path'];
+    // Mitigation: Only allow safe characters in path
+    if (!preg_match('/^[a-zA-Z0-9_\-\/]+$/', $path)) {
+        die('Invalid path');
+    }
     $contentFile = CONTENT_DIR . '/' . $path . '.md';
-    if (file_exists($contentFile)) {
-        $contentData = file_get_contents($contentFile);
+    $resolved = realpath($contentFile);
+    if (!$resolved || strpos($resolved, realpath(CONTENT_DIR)) !== 0) {
+        die('Access denied');
+    }
+    if (file_exists($resolved)) {
+        $contentData = file_get_contents($resolved);
         $title = '';
         $editorMode = 'markdown'; // Default to markdown
         if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $contentData, $matches)) {
