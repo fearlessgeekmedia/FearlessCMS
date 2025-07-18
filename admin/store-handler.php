@@ -311,7 +311,7 @@ if (isset($_GET['action'])) {
                 error_log("Successfully validated store.json");
                 
                 // Update the store URL in the configuration
-                $config_file = dirname(__DIR__) . '/config/config.json';
+                $config_file = CONFIG_DIR . '/config.json';
                 error_log("Updating config file: " . $config_file);
                 
                 if (file_exists($config_file)) {
@@ -654,7 +654,7 @@ function store_admin_page() {
     }
     
     // Load store configuration
-    $config_file = dirname(__DIR__) . '/config/config.json';
+    $config_file = CONFIG_DIR . '/config.json';
     $config = file_exists($config_file) ? json_decode(file_get_contents($config_file), true) : [];
     $store_repo = $config['store_url'] ?? 'https://github.com/fearlessgeekmedia/FearlessCMS-Store.git';
     

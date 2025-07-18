@@ -2,12 +2,22 @@
 // Simple test to see if this file is being executed
 file_put_contents(__DIR__ . '/test.log', date('Y-m-d H:i:s') . " - Admin index executed\n", FILE_APPEND);
 
+// VERY OBVIOUS DEBUG
+error_log("ADMIN INDEX.PHP IS BEING EXECUTED - " . date('Y-m-d H:i:s'));
+
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 // Start output buffering at the very beginning
 ob_start();
+
+// Set session save path BEFORE starting session (same as main index.php)
+$sessionDir = dirname(__DIR__) . '/sessions';
+if (!is_dir($sessionDir)) {
+    mkdir($sessionDir, 0755, true);
+}
+ini_set('session.save_path', $sessionDir);
 
 // Start session if not already started
 if (session_status() === PHP_SESSION_NONE) {
@@ -22,6 +32,7 @@ error_log("Admin index.php - Initial session state: " . print_r($_SESSION, true)
 
 require_once dirname(__DIR__) . '/includes/config.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
+require_once dirname(__DIR__) . '/includes/functions.php';
 require_once dirname(__DIR__) . '/includes/ThemeManager.php';
 require_once dirname(__DIR__) . '/includes/plugins.php';
 require_once dirname(__DIR__) . '/includes/CMSModeManager.php';
@@ -33,15 +44,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && in_array
     exit;
 }
 
+// Handle image uploads for ToastUI editor
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'upload_image') {
+    require_once __DIR__ . '/toastui-upload-handler.php';
+    exit;
+}
+
 require_once __DIR__ . '/widget-handler.php';
 require_once __DIR__ . '/theme-handler.php';
 require_once __DIR__ . '/store-handler.php';
 require_once __DIR__ . '/newpage-handler.php';
 require_once __DIR__ . '/filedel-handler.php';
 require_once __DIR__ . '/widgets-handler.php';
+require_once __DIR__ . '/user-handler.php';
+require_once __DIR__ . '/newuser-handler.php';
+require_once __DIR__ . '/edituser-handler.php';
+require_once __DIR__ . '/deluser-handler.php';
 
 // Get action from GET or POST, default to dashboard
 $action = $_GET['action'] ?? $_POST['action'] ?? 'dashboard';
+error_log("DEBUG: Action is " . $action);
+
+// Debug logging for action determination
+error_log("DEBUG: Action determination - GET action: " . ($_GET['action'] ?? 'none') . ", POST action: " . ($_POST['action'] ?? 'none') . ", Final action: " . $action);
+error_log("DEBUG: Request URI: " . $_SERVER['REQUEST_URI']);
+error_log("DEBUG: Script name: " . $_SERVER['SCRIPT_NAME']);
 
 // Debug logging
 file_put_contents(__DIR__ . '/../debug.log', date('Y-m-d H:i:s') . " - Action: " . $action . ", Method: " . $_SERVER['REQUEST_METHOD'] . "\n", FILE_APPEND);
@@ -183,15 +210,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'load_menu') {
     exit;
 }
 
-// If not logged in and not on login page, redirect to login
-if (!isLoggedIn() && $action !== 'login') {
-    header('Location: /' . $adminPath . '/login');
-    exit;
-}
+// Load admin path from config
+$configFile = CONFIG_DIR . '/config.json';
+$config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
+$adminPath = $config['admin_path'] ?? 'admin';
 
-// If logged in and trying to access login page, redirect to dashboard
-if (isLoggedIn() && $action === 'login') {
-    header('Location: /' . $adminPath . '?action=dashboard');
+// Debug session information
+error_log("Admin index - Session ID: " . session_id());
+error_log("Admin index - Session data: " . print_r($_SESSION, true));
+error_log("Admin index - Cookies: " . print_r($_COOKIE, true));
+
+// If not logged in, redirect to login (handled by main index.php routing)
+if (!isLoggedIn()) {
+    error_log("Admin index - Not logged in, redirecting to: /" . $adminPath . "/login");
+    header('Location: /' . $adminPath . '/login');
     exit;
 }
 
@@ -207,12 +239,16 @@ $pageTitle = ucfirst($action);
 $themeManager = new ThemeManager();
 $cmsModeManager = new CMSModeManager();
 
+// Make CMS mode manager globally available for plugins
+$GLOBALS['cmsModeManager'] = $cmsModeManager;
+
 // Check CMS mode access restrictions AFTER $cmsModeManager is created
 if (isLoggedIn()) {
     // Check if user is trying to access a restricted page
     $restrictedActions = [
         'manage_plugins' => 'canManagePlugins',
-        'store' => 'canAccessStore'
+        'store' => 'canAccessStore',
+        'files' => 'canManageFiles'
     ];
     
     if (isset($restrictedActions[$action])) {
@@ -225,7 +261,7 @@ if (isLoggedIn()) {
     }
 }
 
-$usersFile = ADMIN_CONFIG_DIR . '/users.json';
+$usersFile = CONFIG_DIR . '/users.json';
 $themes = $themeManager->getThemes();
 $menusFile = CONFIG_DIR . '/menus.json';
 $pluginsFile = PLUGIN_CONFIG;
@@ -244,8 +280,7 @@ if (file_exists($configFile)) {
         $siteDescription = $config['site_description'];
     }
     // Load custom code
-    $custom_css = $config['custom_css'] ?? '';
-    $custom_js = $config['custom_js'] ?? '';
+    // Custom CSS and JS functionality removed
 }
 
 // Load menu options for menu management
@@ -371,34 +406,64 @@ if (isset($_GET['error']) && $_GET['error'] === 'access_denied') {
 $plugin_nav_items = '';
 
 // Load content data for edit_content action
-if ($action === 'edit_content' && isset($_GET['path'])) {
+if (
+    $action === 'edit_content' && isset($_GET['path'])
+) {
     $path = $_GET['path'];
-                        $contentFile = CONTENT_DIR . '/' . $path . '.md';
-                        if (file_exists($contentFile)) {
-                        $contentData = file_get_contents($contentFile);
-                        $title = '';
-                        if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $contentData, $matches)) {
-                            $metadata = json_decode($matches[1], true);
-                            if ($metadata && isset($metadata['title'])) {
-                                $title = $metadata['title'];
-                            }
-                        }
-                        if (!$title) {
-                            $title = ucwords(str_replace(['-', '_'], ' ', $path));
-                        }
+    // Mitigation: Only allow safe characters in path
+    if (!preg_match('/^[a-zA-Z0-9_\-\/]+$/', $path)) {
+        die('Invalid path');
+    }
+    $contentFile = CONTENT_DIR . '/' . $path . '.md';
+    $resolved = realpath($contentFile);
+    if (!$resolved || strpos($resolved, realpath(CONTENT_DIR)) !== 0) {
+        die('Access denied');
+    }
+    if (file_exists($resolved)) {
+        $contentData = file_get_contents($resolved);
+        $title = '';
+        $editorMode = 'markdown'; // Default to markdown
+        if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $contentData, $matches)) {
+            $metadata = json_decode($matches[1], true);
+            if ($metadata) {
+                if (isset($metadata['title'])) {
+                    $title = $metadata['title'];
+                }
+                if (isset($metadata['editor_mode'])) {
+                    $editorMode = $metadata['editor_mode'];
+                }
+            }
+        }
+        error_log("DEBUG: editorMode is " . $editorMode);
+        if (!$title) {
+            $title = ucwords(str_replace(['-', '_'], ' ', $path));
+        }
+        // Make $editorMode global for the template
+        $GLOBALS['editorMode'] = $editorMode;
     } else {
         $error = 'Content file not found';
         $contentData = '';
         $title = '';
+        $editorMode = 'markdown';
+        $GLOBALS['editorMode'] = $editorMode;
     }
 } else {
     $contentData = '';
     $title = '';
+    $editorMode = 'markdown';
+    $GLOBALS['editorMode'] = $editorMode;
 }
 
 // Handle POST requests for admin sections
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $postAction = $_POST['action'];
+    
+    // Handle logout action
+    if ($postAction === 'logout') {
+        session_destroy();
+        header('Location: /' . $adminPath . '/login');
+        exit;
+    }
     
     // Check if this is a file manager action
     if (in_array($postAction, ['upload_file', 'delete_file'])) {
@@ -417,6 +482,174 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     else if (in_array($postAction, ['activate_plugin', 'deactivate_plugin', 'delete_plugin'])) {
         error_log("Admin index.php - Plugin action detected: " . $postAction);
         $action = 'manage_plugins'; // Set the action to 'manage_plugins' to use the plugin handler
+    }
+    // Check if this is a user management action
+    else if (in_array($postAction, ['add_user', 'edit_user', 'delete_user'])) {
+        error_log("Admin index.php - User action detected: " . $postAction);
+        error_log("DEBUG: User management handler - POST action: " . $postAction . ", Current action: " . $action);
+        error_log("DEBUG: User management handler - Processing " . $postAction . " action");
+        
+        // Handle user management actions directly
+        if (!isLoggedIn()) {
+            $error = 'You must be logged in to perform this action';
+        } else {
+            switch ($postAction) {
+                case 'add_user':
+                    if (!fcms_check_permission($_SESSION['username'], 'manage_users')) {
+                        $error = 'You do not have permission to manage users';
+                        break;
+                    }
+                    if (empty($_POST['new_username']) || empty($_POST['new_user_password'])) {
+                        $error = 'Username and password are required';
+                        break;
+                    }
+                    $username = $_POST['new_username'] ?? '';
+                    $password = $_POST['new_user_password'] ?? '';
+                    $role = $_POST['role'] ?? 'author';
+                    
+                    $users = json_decode(file_get_contents($usersFile), true);
+                    if (array_search($username, array_column($users, 'username')) !== false) {
+                        $error = 'Username already exists';
+                    } else {
+                        $users[] = [
+                            'id' => uniqid(),
+                            'username' => $username,
+                            'password' => password_hash($password, PASSWORD_DEFAULT),
+                            'role' => $role
+                        ];
+                        if (file_put_contents($usersFile, json_encode($users, JSON_PRETTY_PRINT))) {
+                            $success = 'User added successfully';
+                        } else {
+                            $error = 'Failed to add user';
+                        }
+                    }
+                    break;
+                    
+                case 'edit_user':
+                    error_log("DEBUG: Edit user action - Session username: " . ($_SESSION['username'] ?? 'none'));
+                    
+                    // First, try to find the current user in the database
+                    $users = json_decode(file_get_contents($usersFile), true);
+                    $currentUser = null;
+                    foreach ($users as $user) {
+                        if ($user['username'] === $_SESSION['username']) {
+                            $currentUser = $user;
+                            break;
+                        }
+                    }
+                    
+                    // If session username not found, try to find admin user
+                    if (!$currentUser) {
+                        foreach ($users as $user) {
+                            if ($user['role'] === 'admin') {
+                                $currentUser = $user;
+                                $_SESSION['username'] = $user['username']; // Fix session
+                                error_log("DEBUG: Fixed session username to: " . $user['username']);
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (!$currentUser) {
+                        $error = 'User not found in database';
+                        $action = 'manage_users';
+                        break;
+                    }
+                    
+                    error_log("DEBUG: Edit user action - Permission check result: " . (fcms_check_permission($_SESSION['username'], 'manage_users') ? 'true' : 'false'));
+                    
+                    if (!fcms_check_permission($_SESSION['username'], 'manage_users')) {
+                        $error = 'You do not have permission to manage users';
+                        $action = 'manage_users'; // Set the action to 'manage_users' to show the users page
+                        break;
+                    }
+                    if (empty($_POST['username'])) {
+                        $error = 'Username is required';
+                        break;
+                    }
+                    $username = $_POST['username'] ?? '';
+                    $newUsername = $_POST['new_username'] ?? '';
+                    $newPassword = $_POST['new_password'] ?? '';
+                    $newRole = $_POST['user_role'] ?? 'author';
+                    
+                    $users = json_decode(file_get_contents($usersFile), true);
+                    $userIndex = array_search($username, array_column($users, 'username'));
+                    
+                    if ($userIndex === false) {
+                        $error = 'User not found';
+                        break;
+                    } else {
+                        // Don't allow editing the last admin user
+                        $adminCount = count(array_filter($users, fn($u) => $u['role'] === 'administrator'));
+                        if ($users[$userIndex]['role'] === 'administrator' && $adminCount <= 1 && $newRole !== 'administrator') {
+                            $error = 'Cannot modify the last admin user';
+                        } else {
+                            if (!empty($newUsername)) {
+                                $users[$userIndex]['username'] = $newUsername;
+                                
+                                // If user is editing their own username, update the session
+                                if ($_SESSION['username'] === $username) {
+                                    $_SESSION['username'] = $newUsername;
+                                    error_log("DEBUG: Updated session username from '$username' to '$newUsername'");
+                                }
+                            }
+                            if (!empty($newPassword)) {
+                                $users[$userIndex]['password'] = password_hash($newPassword, PASSWORD_DEFAULT);
+                            }
+                            $users[$userIndex]['role'] = $newRole;
+                            
+                            // Handle permissions
+                            if (isset($_POST['permissions']) && is_array($_POST['permissions'])) {
+                                $users[$userIndex]['permissions'] = $_POST['permissions'];
+                            } else {
+                                $users[$userIndex]['permissions'] = [];
+                            }
+                            
+                            if (file_put_contents($usersFile, json_encode($users, JSON_PRETTY_PRINT))) {
+                                $success = 'User updated successfully';
+                            } else {
+                                $error = 'Failed to update user';
+                            }
+                        }
+                    }
+                    break;
+                    
+                case 'delete_user':
+                    if (!fcms_check_permission($_SESSION['username'], 'manage_users')) {
+                        $error = 'You do not have permission to manage users';
+                        break;
+                    }
+                    if (empty($_POST['username'])) {
+                        $error = 'Username is required';
+                        break;
+                    }
+                    $username = $_POST['username'] ?? '';
+                    
+                    $users = json_decode(file_get_contents($usersFile), true);
+                    $userIndex = array_search($username, array_column($users, 'username'));
+                    
+                    if ($userIndex === false) {
+                        $error = 'User not found';
+                        break;
+                    } else {
+                        // Don't allow deleting the last admin user
+                        $adminCount = count(array_filter($users, fn($u) => $u['role'] === 'administrator'));
+                        if ($users[$userIndex]['role'] === 'administrator' && $adminCount <= 1) {
+                            $error = 'Cannot delete the last admin user';
+                        } else {
+                            array_splice($users, $userIndex, 1);
+                            if (file_put_contents($usersFile, json_encode($users, JSON_PRETTY_PRINT))) {
+                                $success = 'User deleted successfully';
+                            } else {
+                                $error = 'Failed to delete user';
+                            }
+                        }
+                    }
+                    break;
+            }
+        }
+        
+        $action = 'manage_users'; // Set the action to 'manage_users' to show the users page
     }
     // Add other section-specific actions here as needed
 }
@@ -440,11 +673,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
 // Handle POST requests for saving content
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_content') {
+    error_log("DEBUG: save_content action triggered");
+    error_log("DEBUG: POST data: " . print_r($_POST, true));
+    error_log("DEBUG: Content length: " . (isset($_POST['content']) ? strlen($_POST['content']) : 'NOT SET'));
+    error_log("DEBUG: Text content length: " . (isset($_POST['text_content']) ? strlen($_POST['text_content']) : 'NOT SET'));
+    error_log("DEBUG: Editor content length: " . (isset($_POST['editor_content']) ? strlen($_POST['editor_content']) : 'NOT SET'));
+    error_log("DEBUG: Path: " . (isset($_POST['path']) ? $_POST['path'] : 'NOT SET'));
+    
     if (!isLoggedIn()) {
         $error = 'You must be logged in to edit files';
     } else {
         $fileName = $_POST['path'] ?? '';
-        $content = $_POST['content'] ?? '';
+        // Check for content from either text mode or editor mode
+        $content = $_POST['text_content'] ?? $_POST['editor_content'] ?? $_POST['content'] ?? '';
         $pageTitle = $_POST['title'] ?? '';
         $parentPage = $_POST['parent'] ?? '';
         $template = $_POST['template'] ?? 'page';
@@ -485,9 +726,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $newFrontmatter = '<!-- json ' . json_encode($metadata, JSON_PRETTY_PRINT) . ' -->';
                 $content = $newFrontmatter . "\n\n" . $content;
             }
+            error_log("DEBUG: Attempting to save file: " . $filePath);
+            error_log("DEBUG: Content length: " . strlen($content));
             if (file_put_contents($filePath, $content) !== false) {
+                error_log("DEBUG: File saved successfully");
                 $success = 'File saved successfully';
             } else {
+                error_log("DEBUG: Failed to save file");
                 $error = 'Failed to save file';
             }
         }

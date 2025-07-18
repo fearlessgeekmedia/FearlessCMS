@@ -10,7 +10,7 @@ class ThemeManager {
         }
         $root = PROJECT_ROOT;
         $this->themesPath = $root . '/themes';
-        $this->configPath = $root . '/config/config.json';
+        $this->configPath = CONFIG_DIR . '/config.json';
         $this->loadActiveTheme();
         
         // Validate active theme, fallback to default if missing/invalid

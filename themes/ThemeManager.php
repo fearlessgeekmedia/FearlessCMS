@@ -9,7 +9,7 @@ class ThemeManager {
     }
 
     private function loadActiveTheme() {
-        $configFile = dirname(__DIR__) . '/config/config.json';
+        $configFile = CONFIG_DIR . '/config.json';
         if (file_exists($configFile)) {
             $config = json_decode(file_get_contents($configFile), true);
             $this->activeTheme = $config['active_theme'] ?? 'default';
@@ -50,7 +50,7 @@ class ThemeManager {
         }
 
         $config = ['active_theme' => $themeName];
-        file_put_contents(dirname(__DIR__) . '/config/config.json', json_encode($config, JSON_PRETTY_PRINT));
+        file_put_contents(CONFIG_DIR . '/config.json', json_encode($config, JSON_PRETTY_PRINT));
         $this->activeTheme = $themeName;
     }
 }

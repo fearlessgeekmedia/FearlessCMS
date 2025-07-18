@@ -11,7 +11,7 @@ then
 fi
 
 # set default port or use ENV variable
-port=${PORT:-8080}
+port=${PORT:-8000}
 
 if [ "$1" == "--port" ]; then
     port=$2

@@ -1,3 +1,4 @@
+<?php echo "<div style='color:red'>DEBUG: editorMode is " . (isset($editorMode) ? $editorMode : 'NOT SET') . "</div>"; ?>
 <?php
 // Get available templates
 $templates = [];
@@ -47,8 +48,7 @@ if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $contentData, $matches)) {
 
         <div class="mb-4">
             <label class="block mb-1">Content</label>
-            <div id="editor" style="height: 600px;"></div>
-            <textarea name="content" id="content" style="display: none;"></textarea>
+            <textarea name="content" id="content" style="width: 100%; height: 600px; font-family: monospace;"><?php echo htmlspecialchars($contentWithoutMetadata); ?></textarea>
         </div>
 
         <div class="flex justify-between">
@@ -56,36 +56,4 @@ if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $contentData, $matches)) {
             <a href="?action=dashboard" class="text-gray-600 hover:text-gray-800">Cancel</a>
         </div>
     </form>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const editor = new toastui.Editor({
-        el: document.querySelector('#editor'),
-        height: '600px',
-        initialEditType: 'wysiwyg',
-        previewStyle: 'vertical',
-        initialValue: <?php echo json_encode($contentWithoutMetadata); ?>,
-        toolbarItems: [
-            ['heading', 'bold', 'italic', 'strike'],
-            ['hr', 'quote'],
-            ['ul', 'ol', 'task', 'indent', 'outdent'],
-            ['table', 'link', 'image'],
-            ['code', 'codeblock']
-        ]
-    });
-
-    // Update hidden input before form submission
-    document.getElementById('content-form').addEventListener('submit', function(e) {
-        e.preventDefault(); // Prevent default form submission
-        const markdownContent = editor.getMarkdown();
-        console.log('Content length:', markdownContent.length);
-        console.log('Content preview:', markdownContent.substring(0, 100));
-        document.getElementById('content').value = markdownContent;
-        // Add a small delay to ensure the value is set before submitting
-        setTimeout(() => {
-            this.submit();
-        }, 100);
-    });
-});
-</script> 
+</div> 

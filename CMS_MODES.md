@@ -19,6 +19,8 @@ FearlessCMS now supports three different operational modes to accommodate variou
 
 **Permissions**:
 - ✅ Plugin management (activate, deactivate existing plugins)
+- ✅ File management and uploads
+- ✅ Content image uploads
 - ❌ Plugin store access
 - ❌ Plugin installation
 - ❌ Plugin deletion
@@ -35,10 +37,13 @@ FearlessCMS now supports three different operational modes to accommodate variou
 - ❌ Plugin installation
 - ❌ Plugin activation/deactivation
 - ❌ Plugin deletion
+- ❌ File management
+- ❌ File uploads
+- ❌ Content image uploads
 
 **Use Case**: Hosting services where the owner pre-installs and activates specific plugins before activating this mode.
 
-**Note**: In this mode, the "Plugins" menu item is renamed to "Additional Features" and shows only currently active plugins without management options.
+**Note**: In this mode, the "Plugins" menu item is renamed to "Additional Features" and shows only currently active plugins without management options. The "Files" menu item is hidden, and image uploads are disabled in the content editor. Users can still use external image URLs or upload theme-specific assets (logo, hero banner) through theme settings.
 
 ## How to Use
 
@@ -49,14 +54,14 @@ To change the CMS mode, edit the configuration file directly:
 1. Open `config/cms_mode.json` in your text editor
 2. Change the mode value to one of the following:
    - `"full-featured"` (default)
-   - `"hosting-service-plugin"`
+   - `"hosting-service-plugins"`
    - `"hosting-service-no-plugins"`
 3. Save the file
 
 Example:
 ```json
 {
-    "mode": "hosting-service-plugin"
+    "mode": "hosting-service-plugins"
 }
 ```
 
@@ -130,7 +135,7 @@ The CMS mode is stored in `config/cms_mode.json`:
 1. Install desired plugins before activating restricted modes
 2. Activate required plugins
 3. Edit `config/cms_mode.json` to set appropriate mode:
-   - Use `"hosting-service-plugin"` if users should manage existing plugins
+   - Use `"hosting-service-plugins"` if users should manage existing plugins
    - Use `"hosting-service-no-plugins"` for maximum restriction
 
 ## Troubleshooting

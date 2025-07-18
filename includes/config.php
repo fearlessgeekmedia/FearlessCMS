@@ -13,10 +13,13 @@ $project_root = dirname(dirname(__FILE__));
 // Define root paths
 define('PROJECT_ROOT', $project_root);
 define('CONTENT_DIR', PROJECT_ROOT . '/content');
-define('CONFIG_DIR', PROJECT_ROOT . '/config');
+// Allow config override via environment variable
+$env_config_dir = getenv('FCMS_CONFIG_DIR');
+define('CONFIG_DIR', $env_config_dir ? $env_config_dir : PROJECT_ROOT . '/config');
 define('THEMES_DIR', PROJECT_ROOT . '/themes');
 define('PLUGINS_DIR', PROJECT_ROOT . '/plugins');
-define('ADMIN_CONFIG_DIR', PROJECT_ROOT . '/admin/config');
+$env_admin_config_dir = getenv('FCMS_ADMIN_CONFIG_DIR');
+define('ADMIN_CONFIG_DIR', $env_admin_config_dir ? $env_admin_config_dir : PROJECT_ROOT . '/admin/config');
 define('ADMIN_TEMPLATE_DIR', PROJECT_ROOT . '/admin/templates');
 define('ADMIN_INCLUDES_DIR', PROJECT_ROOT . '/admin/includes');
 
@@ -154,7 +157,19 @@ if (!file_exists($configFile)) {
         'site_description' => 'A fearless content management system',
         'site_keywords' => 'cms, content management, fearless',
         'site_author' => 'FearlessGeek',
-        'site_version' => '1.0.0'
+        'site_version' => '1.0.0',
+        'admin_path' => 'admin'
     ];
     file_put_contents($configFile, json_encode($defaultConfig, JSON_PRETTY_PRINT));
+}
+
+// Configure session settings BEFORE any session starts
+if (session_status() === PHP_SESSION_NONE) {
+    ini_set('session.cookie_httponly', 1);
+    ini_set('session.use_only_cookies', 1);
+    ini_set('session.cookie_secure', 0); // Set to 1 if using HTTPS
+    ini_set('session.cookie_samesite', 'Lax');
+    ini_set('session.gc_maxlifetime', 3600); // 1 hour
+    ini_set('session.cookie_lifetime', 0); // Session cookie
+    ini_set('session.cookie_path', '/'); // Ensure cookie is available for all paths
 } 
