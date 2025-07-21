@@ -57,6 +57,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             // Save the file
             if (file_put_contents($filePath, $content) !== false) {
                 $success = 'File saved successfully';
+                // Clear page cache after content update
+                $cacheDir = dirname(__DIR__) . '/cache';
+                if (is_dir($cacheDir)) {
+                    foreach (glob($cacheDir . '/*.html') as $cacheFile) {
+                        @unlink($cacheFile);
+                    }
+                }
             } else {
                 $error = 'Failed to save file';
             }

@@ -212,6 +212,41 @@ if (strpos($requestPath, '_preview/') === 0) {
     }
 }
 
+error_log("DEBUG: Reached top of index.php");
+// --- File-based page cache for public pages ---
+// Only cache GET requests, non-admin, non-logged-in
+$cacheEnabled = false;
+$cacheDir = __DIR__ . '/cache';
+$cacheLifetime = 300; // 5 minutes
+
+// Ensure session and config are loaded before checking login status
+require_once __DIR__ . '/includes/session.php';
+require_once __DIR__ . '/includes/config.php';
+require_once PROJECT_ROOT . '/includes/auth.php';
+
+// Determine if this is a public page (not admin, not logged in, GET request)
+$requestPath = trim($_SERVER['REQUEST_URI'], '/');
+$configFile = CONFIG_DIR . "/config.json";
+$config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
+$adminPath = $config["admin_path"] ?? "admin";
+$isAdminRoute = (strpos($requestPath, $adminPath) === 0);
+$isLoggedIn = function_exists('isLoggedIn') ? isLoggedIn() : false;
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && !$isAdminRoute && !$isLoggedIn) {
+    $cacheEnabled = true;
+    if (!is_dir($cacheDir)) {
+        mkdir($cacheDir, 0755, true);
+    }
+    $cacheKey = md5($_SERVER['REQUEST_URI']);
+    $cacheFile = "$cacheDir/page_$cacheKey.html";
+    if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < $cacheLifetime)) {
+        // Serve cached file
+        readfile($cacheFile);
+        exit;
+    }
+    // Start output buffering to capture output
+    ob_start();
+}
+
 // Default to home if root
 if ($requestPath === '') {
     $path = 'home';
@@ -505,3 +540,8 @@ $template = $templateRenderer->render($templateName, $templateData);
 
 // --- Output ---
 echo $template;
+// --- Save to cache if enabled ---
+if (isset($cacheEnabled) && $cacheEnabled) {
+    file_put_contents($cacheFile, ob_get_contents());
+    ob_end_flush();
+}
