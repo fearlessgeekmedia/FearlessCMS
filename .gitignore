@@ -11,3 +11,4 @@ plugins/advanced-seo
 # Database configuration files (contain credentials)
 content/mariadb-connector/
 content/*/config.json
+cache/

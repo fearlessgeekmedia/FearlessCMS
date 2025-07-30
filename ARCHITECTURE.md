@@ -105,6 +105,7 @@ FearlessCMS is a lightweight, file-based content management system built in PHP.
 
 ## 11. Performance Considerations
 
+- **File-based page caching:** Public (non-logged-in) pages are cached as static HTML files in the `cache/` directory for 5 minutes by default. This reduces server load and improves response times. Cache is automatically cleared when content is updated via the admin interface.
 - **Caching:** Template caching, plugin hook caching, file system caching, session file optimization.
 - **Optimization:** Lazy loading of plugins/themes, efficient file ops, minimal DB dependencies, optimized template rendering.
 - **Asset management:** Theme asset organization, static file serving, image optimization, JS/CSS minification.

@@ -273,6 +273,9 @@ Deploy customizations to production:
 - **Database Optimization**: Optimize database queries
 - **CDN Usage**: Use content delivery networks for assets
 
+#### Built-in Page Caching
+FearlessCMS includes a built-in file-based page caching system for public (non-logged-in) pages. When a public page is requested, the generated HTML is saved as a static file in the `cache/` directory and served for subsequent requests for up to 5 minutes. This greatly improves performance and reduces server load. The cache is automatically cleared whenever content is updated via the admin interface, ensuring visitors always see the latest version of your site.
+
 ### Maintainability
 - **Code Organization**: Use modular templates and clear structure
 - **Documentation**: Document custom code and configurations
