@@ -24,4 +24,3 @@ if (session_status() === PHP_SESSION_NONE) {
     // Start session
     session_start();
 }
-?> 

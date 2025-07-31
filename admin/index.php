@@ -307,23 +307,31 @@ if (is_dir($contentDir)) {
 // Load recent content for dashboard
 $recentContent = [];
 if (is_dir($contentDir)) {
+    error_log("DEBUG: CONTENT_DIR is: " . CONTENT_DIR); // Log CONTENT_DIR
     // Recursively get all .md files
     $files = new RecursiveIteratorIterator(
         new RecursiveDirectoryIterator($contentDir, RecursiveDirectoryIterator::SKIP_DOTS)
     );
-    $files = new RegexIterator($files, '/\.md$/');
-    
-    // Convert to array and sort by modification time
+    $files = new RegexIterator($files, '/\\.md$/');
+
     $fileArray = iterator_to_array($files);
+    
+    error_log("DEBUG: Files found by iterator before sorting and filtering:");
+    foreach ($fileArray as $f) {
+        error_log("DEBUG:   - " . $f->getPathname());
+    }
+
     usort($fileArray, function($a, $b) {
         return $b->getMTime() - $a->getMTime();
     });
-    
+
     // Get 5 most recent files, excluding preview directory
     $count = 0;
     foreach ($fileArray as $file) {
-        // Skip files in preview directory or with preview in the path
-        if (strpos($file->getPathname(), '/preview/') !== false || strpos($file->getPathname(), 'preview') !== false) {
+        error_log("DEBUG: Processing file: " . $file->getPathname());
+        // Skip files in _preview directory
+        if (strpos($file->getPathname(), '/content/_preview/') !== false) {
+            error_log("DEBUG: Skipping file in _preview directory: " . $file->getPathname());
             continue;
         }
         
@@ -338,20 +346,22 @@ if (is_dir($contentDir)) {
         if (!$title) {
             $title = ucwords(str_replace(['-', '_'], ' ', $file->getBasename('.md')));
         }
-        
+
         // Get relative path from content directory
         $relativePath = str_replace($contentDir . '/', '', $file->getPathname());
         $path = substr($relativePath, 0, -3); // Remove .md extension
-        
+
         $recentContent[] = [
             'title' => $title,
             'path' => $path,
             'modified' => $file->getMTime()
         ];
-        
+        error_log("DEBUG: Added to recentContent: Title='" . $title . "', Path='" . $path . "'");
+
         $count++;
         if ($count >= 5) break;
     }
+    error_log("DEBUG: Final recentContent array count: " . count($recentContent));
 }
 
 // Load content list for content management
@@ -361,11 +371,11 @@ if (is_dir($contentDir)) {
     $files = new RecursiveIteratorIterator(
         new RecursiveDirectoryIterator($contentDir, RecursiveDirectoryIterator::SKIP_DOTS)
     );
-    $files = new RegexIterator($files, '/\.md$/');
+    $files = new RegexIterator($files, '/\\.md$/');
     
     foreach ($files as $file) {
-        // Skip files in preview directory or with preview in the path
-        if (strpos($file->getPathname(), '/preview/') !== false || strpos($file->getPathname(), 'preview') !== false) {
+        // Skip files in _preview directory
+        if (strpos($file->getPathname(), '/content/_preview/') !== false) {
             continue;
         }
         
@@ -411,7 +421,7 @@ if (
 ) {
     $path = $_GET['path'];
     // Mitigation: Only allow safe characters in path
-    if (!preg_match('/^[a-zA-Z0-9_\-\/]+$/', $path)) {
+    if (!preg_match('/^[a-zA-Z0-9_\\-\/]+$/', $path)) {
         die('Invalid path');
     }
     $contentFile = CONTENT_DIR . '/' . $path . '.md';
@@ -692,7 +702,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $editorMode = $_POST['editor_mode'] ?? 'easy';
 
         // Validate filename: allow slashes for subfolders
-        if (empty($fileName) || !preg_match('/^[a-zA-Z0-9_\/-]+$/', $fileName)) {
+        if (empty($fileName) || !preg_match('/^[a-zA-Z0-9_\\-\/]+$/', $fileName)) {
             $error = 'Invalid filename';
         } else {
             $filePath = CONTENT_DIR . '/' . $fileName . '.md';

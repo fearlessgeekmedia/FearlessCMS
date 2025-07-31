@@ -12,3 +12,4 @@ plugins/advanced-seo
 content/mariadb-connector/
 content/*/config.json
 cache/
+.crush/

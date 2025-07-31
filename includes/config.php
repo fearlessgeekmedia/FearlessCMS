@@ -167,7 +167,7 @@ if (!file_exists($configFile)) {
 if (session_status() === PHP_SESSION_NONE) {
     ini_set('session.cookie_httponly', 1);
     ini_set('session.use_only_cookies', 1);
-    ini_set('session.cookie_secure', 0); // Set to 1 if using HTTPS
+    ini_set('session.cookie_secure', isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 1 : 0);
     ini_set('session.cookie_samesite', 'Lax');
     ini_set('session.gc_maxlifetime', 3600); // 1 hour
     ini_set('session.cookie_lifetime', 0); // Session cookie

@@ -18,7 +18,7 @@ if (!defined('PLUGIN_DIR')) {
 
 // Define PLUGIN_CONFIG if not already defined
 if (!defined('PLUGIN_CONFIG')) {
-    define('PLUGIN_CONFIG', ADMIN_CONFIG_DIR . '/plugins.json');
+    define('PLUGIN_CONFIG', CONFIG_DIR . '/plugins.json');
 }
 
 // --- Hook system ---
@@ -103,14 +103,127 @@ function fcms_register_permission_hook($hook, $callback) {
 // --- Admin section registration ---
 $GLOBALS['fcms_admin_sections'] = [];
 
-// Register the Plugins section
-fcms_register_admin_section('manage_plugins', [
-    'label' => 'Plugins',
-    'menu_order' => 45,
-    'render_callback' => function() {
-        include PROJECT_ROOT . '/admin/templates/plugins.php';
-    }
-]);
+    fcms_register_admin_section('dashboard', [
+        'label' => 'Dashboard',
+        'menu_order' => 5,
+        'render_callback' => function() {
+            include PROJECT_ROOT . '/admin/templates/dashboard.php';
+        }
+    ]);
+
+    fcms_register_admin_section('manage_content', [
+        'label' => 'Content',
+        'menu_order' => 10,
+        'render_callback' => function() {
+            include PROJECT_ROOT . '/admin/templates/manage_content.php';
+        }
+    ]);
+
+    fcms_register_admin_section('manage_users', [
+        'label' => 'Users',
+        'menu_order' => 20,
+        'render_callback' => function() {
+            include PROJECT_ROOT . '/admin/templates/users.php';
+        }
+    ]);
+
+    fcms_register_admin_section('files', [
+        'label' => 'Files',
+        'menu_order' => 30,
+        'render_callback' => function() {
+            include PROJECT_ROOT . '/admin/templates/file_manager.php';
+        }
+    ]);
+
+    fcms_register_admin_section('manage_themes', [
+        'label' => 'Themes',
+        'menu_order' => 40,
+        'render_callback' => function() {
+            include PROJECT_ROOT . '/admin/templates/themes.php';
+        }
+    ]);
+
+    fcms_register_admin_section('manage_plugins', [
+        'label' => 'Plugins',
+        'menu_order' => 45,
+        'render_callback' => function() {
+            include PROJECT_ROOT . '/admin/templates/plugins.php';
+        }
+    ]);
+
+    fcms_register_admin_section('manage_menus', [
+        'label' => 'Menus',
+        'menu_order' => 50,
+        'render_callback' => function() {
+            include PROJECT_ROOT . '/admin/templates/menus.php';
+        }
+    ]);
+
+    fcms_register_admin_section('manage_widgets', [
+        'label' => 'Widgets',
+        'menu_order' => 60,
+        'render_callback' => function() {
+            include PROJECT_ROOT . '/admin/templates/widgets.php';
+        }
+    ]);
+
+    // Register core admin sections dynamically
+    fcms_register_admin_section('dashboard', [
+        'label' => 'Dashboard',
+        'menu_order' => 5,
+        'render_callback' => function() {
+            include PROJECT_ROOT . '/admin/templates/dashboard.php';
+        }
+    ]);
+
+    fcms_register_admin_section('manage_content', [
+        'label' => 'Content',
+        'menu_order' => 10,
+        'render_callback' => function() {
+            include PROJECT_ROOT . '/admin/templates/manage_content.php';
+        }
+    ]);
+
+    fcms_register_admin_section('manage_users', [
+        'label' => 'Users',
+        'menu_order' => 20,
+        'render_callback' => function() {
+            include PROJECT_ROOT . '/admin/templates/users.php';
+        }
+    ]);
+
+    fcms_register_admin_section('files', [
+        'label' => 'Files',
+        'menu_order' => 30,
+        'render_callback' => function() {
+            include PROJECT_ROOT . '/admin/templates/file_manager.php';
+        }
+    ]);
+
+    fcms_register_admin_section('manage_themes', [
+        'label' => 'Themes',
+        'menu_order' => 40,
+        'render_callback' => function() {
+            include PROJECT_ROOT . '/admin/templates/themes.php';
+        }
+    ]);
+
+    fcms_register_admin_section('manage_menus', [
+        'label' => 'Menus',
+        'menu_order' => 50,
+        'render_callback' => function() {
+            include PROJECT_ROOT . '/admin/templates/menus.php';
+        }
+    ]);
+
+    fcms_register_admin_section('manage_widgets', [
+        'label' => 'Widgets',
+        'menu_order' => 60,
+        'render_callback' => function() {
+            include PROJECT_ROOT . '/admin/templates/widgets.php';
+        }
+    ]);
+
 
 /**
  * Register an admin section.

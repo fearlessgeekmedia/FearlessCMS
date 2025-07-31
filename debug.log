@@ -7797,3 +7797,722 @@
 
 )
 
+2025-07-30 17:44:39 - Admin index started
+2025-07-30 17:44:39 - Action: dashboard, Method: GET
+2025-07-30 17:44:39 - POST: Array
+(
+)
+
+2025-07-30 17:44:39 - Session: Array
+(
+)
+
+2025-07-30 17:45:46 - Admin index started
+2025-07-30 17:45:46 - Action: dashboard, Method: GET
+2025-07-30 17:45:46 - POST: Array
+(
+)
+
+2025-07-30 17:45:46 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-30 17:46:31 - Admin index started
+2025-07-30 17:46:31 - Action: dashboard, Method: GET
+2025-07-30 17:46:31 - POST: Array
+(
+)
+
+2025-07-30 17:46:31 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-30 17:56:43 - Admin index started
+2025-07-30 17:56:43 - Action: new_content, Method: GET
+2025-07-30 17:56:43 - POST: Array
+(
+)
+
+2025-07-30 17:56:43 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-30 17:56:48 - Admin index started
+2025-07-30 17:56:48 - Action: files, Method: GET
+2025-07-30 17:56:48 - POST: Array
+(
+)
+
+2025-07-30 17:56:48 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-30 17:56:50 - Admin index started
+2025-07-30 17:56:50 - Action: manage_themes, Method: GET
+2025-07-30 17:56:50 - POST: Array
+(
+)
+
+2025-07-30 17:56:50 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-30 17:56:56 - Admin index started
+2025-07-30 17:56:56 - Action: manage_widgets, Method: GET
+2025-07-30 17:56:56 - POST: Array
+(
+)
+
+2025-07-30 17:56:56 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-30 17:57:05 - Admin index started
+2025-07-30 17:57:05 - Action: manage_plugins, Method: GET
+2025-07-30 17:57:05 - POST: Array
+(
+)
+
+2025-07-30 17:57:05 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-30 17:57:06 - Admin index started
+2025-07-30 17:57:06 - Action: manage_plugins, Method: GET
+2025-07-30 17:57:06 - POST: Array
+(
+)
+
+2025-07-30 17:57:06 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-30 17:57:16 - Admin index started
+2025-07-30 17:57:18 - Admin index started
+2025-07-30 17:57:18 - Action: manage_plugins, Method: GET
+2025-07-30 17:57:18 - POST: Array
+(
+)
+
+2025-07-30 17:57:18 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-30 17:57:22 - Admin index started
+2025-07-30 17:57:22 - Action: manage_plugins, Method: GET
+2025-07-30 17:57:22 - POST: Array
+(
+)
+
+2025-07-30 17:57:22 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-30 17:57:25 - Admin index started
+2025-07-30 17:57:27 - Admin index started
+2025-07-30 17:57:27 - Action: manage_plugins, Method: GET
+2025-07-30 17:57:27 - POST: Array
+(
+)
+
+2025-07-30 17:57:27 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-30 17:57:29 - Admin index started
+2025-07-30 17:57:32 - Admin index started
+2025-07-30 17:57:32 - Action: manage_plugins, Method: GET
+2025-07-30 17:57:32 - POST: Array
+(
+)
+
+2025-07-30 17:57:32 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-30 17:57:34 - Admin index started
+2025-07-30 17:57:34 - Action: manage_plugins, Method: GET
+2025-07-30 17:57:34 - POST: Array
+(
+)
+
+2025-07-30 17:57:34 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-30 17:57:46 - Admin index started
+2025-07-30 17:57:46 - Action: manage_plugins, Method: GET
+2025-07-30 17:57:46 - POST: Array
+(
+)
+
+2025-07-30 17:57:46 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-30 17:57:47 - Admin index started
+2025-07-30 17:57:47 - Action: manage_plugins, Method: GET
+2025-07-30 17:57:47 - POST: Array
+(
+)
+
+2025-07-30 17:57:47 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-30 17:57:49 - Admin index started
+2025-07-30 17:57:49 - Action: manage_widgets, Method: GET
+2025-07-30 17:57:49 - POST: Array
+(
+)
+
+2025-07-30 17:57:49 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-30 17:57:51 - Admin index started
+2025-07-30 17:57:51 - Action: manage_plugins, Method: GET
+2025-07-30 17:57:51 - POST: Array
+(
+)
+
+2025-07-30 17:57:51 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-30 18:19:38 - Admin index started
+2025-07-30 18:19:39 - Admin index started
+2025-07-30 18:19:39 - Action: manage_plugins, Method: GET
+2025-07-30 18:19:39 - POST: Array
+(
+)
+
+2025-07-30 18:19:39 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-30 18:19:45 - Admin index started
+2025-07-30 18:19:47 - Admin index started
+2025-07-30 18:19:47 - Action: manage_plugins, Method: GET
+2025-07-30 18:19:47 - POST: Array
+(
+)
+
+2025-07-30 18:19:47 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-30 18:20:11 - Admin index started
+2025-07-30 18:20:13 - Admin index started
+2025-07-30 18:20:13 - Action: manage_plugins, Method: GET
+2025-07-30 18:20:13 - POST: Array
+(
+)
+
+2025-07-30 18:20:13 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-30 18:20:19 - Admin index started
+2025-07-30 18:20:21 - Admin index started
+2025-07-30 18:20:21 - Action: manage_plugins, Method: GET
+2025-07-30 18:20:21 - POST: Array
+(
+)
+
+2025-07-30 18:20:21 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:35:14 - Admin index started
+2025-07-31 03:35:14 - Action: dashboard, Method: GET
+2025-07-31 03:35:14 - POST: Array
+(
+)
+
+2025-07-31 03:35:14 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:35:18 - Admin index started
+2025-07-31 03:35:18 - Action: manage_plugins, Method: GET
+2025-07-31 03:35:18 - POST: Array
+(
+)
+
+2025-07-31 03:35:18 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:35:26 - Admin index started
+2025-07-31 03:35:27 - Admin index started
+2025-07-31 03:35:27 - Action: manage_plugins, Method: GET
+2025-07-31 03:35:27 - POST: Array
+(
+)
+
+2025-07-31 03:35:27 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:35:33 - Admin index started
+2025-07-31 03:35:33 - Action: manage_plugins, Method: GET
+2025-07-31 03:35:33 - POST: Array
+(
+)
+
+2025-07-31 03:35:33 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:35:47 - Admin index started
+2025-07-31 03:35:47 - Action: dashboard, Method: GET
+2025-07-31 03:35:47 - POST: Array
+(
+)
+
+2025-07-31 03:35:47 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:36:39 - Admin index started
+2025-07-31 03:36:39 - Action: dashboard, Method: GET
+2025-07-31 03:36:39 - POST: Array
+(
+)
+
+2025-07-31 03:36:39 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:38:18 - Admin index started
+2025-07-31 03:38:18 - Action: dashboard, Method: GET
+2025-07-31 03:38:18 - POST: Array
+(
+)
+
+2025-07-31 03:38:18 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:38:49 - Admin index started
+2025-07-31 03:38:49 - Action: dashboard, Method: GET
+2025-07-31 03:38:49 - POST: Array
+(
+)
+
+2025-07-31 03:38:49 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:38:58 - Admin index started
+2025-07-31 03:38:58 - Action: dashboard, Method: GET
+2025-07-31 03:38:58 - POST: Array
+(
+)
+
+2025-07-31 03:38:58 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:40:58 - Admin index started
+2025-07-31 03:40:58 - Action: dashboard, Method: GET
+2025-07-31 03:40:58 - POST: Array
+(
+)
+
+2025-07-31 03:40:58 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:41:54 - Admin index started
+2025-07-31 03:41:54 - Action: dashboard, Method: GET
+2025-07-31 03:41:54 - POST: Array
+(
+)
+
+2025-07-31 03:41:54 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:42:00 - Admin index started
+2025-07-31 03:42:00 - Action: manage_content, Method: GET
+2025-07-31 03:42:00 - POST: Array
+(
+)
+
+2025-07-31 03:42:00 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:42:04 - Admin index started
+2025-07-31 03:42:04 - Action: manage_users, Method: GET
+2025-07-31 03:42:04 - POST: Array
+(
+)
+
+2025-07-31 03:42:04 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:42:06 - Admin index started
+2025-07-31 03:42:06 - Action: files, Method: GET
+2025-07-31 03:42:06 - POST: Array
+(
+)
+
+2025-07-31 03:42:06 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:42:07 - Admin index started
+2025-07-31 03:42:07 - Action: manage_plugins, Method: GET
+2025-07-31 03:42:07 - POST: Array
+(
+)
+
+2025-07-31 03:42:07 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:42:09 - Admin index started
+2025-07-31 03:42:09 - Action: dashboard, Method: GET
+2025-07-31 03:42:09 - POST: Array
+(
+)
+
+2025-07-31 03:42:09 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:42:14 - Admin index started
+2025-07-31 03:42:14 - Action: manage_plugins, Method: GET
+2025-07-31 03:42:14 - POST: Array
+(
+)
+
+2025-07-31 03:42:14 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:42:43 - Admin index started
+2025-07-31 03:42:45 - Admin index started
+2025-07-31 03:42:45 - Action: manage_plugins, Method: GET
+2025-07-31 03:42:45 - POST: Array
+(
+)
+
+2025-07-31 03:42:45 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:43:50 - Admin index started
+2025-07-31 03:43:50 - Action: manage_plugins, Method: GET
+2025-07-31 03:43:50 - POST: Array
+(
+)
+
+2025-07-31 03:43:50 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:44:05 - Admin index started
+2025-07-31 03:44:05 - Action: ecommerce_products, Method: GET
+2025-07-31 03:44:05 - POST: Array
+(
+)
+
+2025-07-31 03:44:05 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:44:19 - Admin index started
+2025-07-31 03:44:19 - Action: dashboard, Method: GET
+2025-07-31 03:44:19 - POST: Array
+(
+)
+
+2025-07-31 03:44:19 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:44:29 - Admin index started
+2025-07-31 03:44:29 - Action: dashboard, Method: GET
+2025-07-31 03:44:29 - POST: Array
+(
+)
+
+2025-07-31 03:44:29 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:45:11 - Admin index started
+2025-07-31 03:45:11 - Action: dashboard, Method: GET
+2025-07-31 03:45:11 - POST: Array
+(
+)
+
+2025-07-31 03:45:11 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:45:13 - Admin index started
+2025-07-31 03:45:13 - Action: manage_content, Method: GET
+2025-07-31 03:45:13 - POST: Array
+(
+)
+
+2025-07-31 03:45:13 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:46:22 - Admin index started
+2025-07-31 03:46:22 - Action: dashboard, Method: GET
+2025-07-31 03:46:22 - POST: Array
+(
+)
+
+2025-07-31 03:46:22 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:46:25 - Admin index started
+2025-07-31 03:46:25 - Action: manage_content, Method: GET
+2025-07-31 03:46:25 - POST: Array
+(
+)
+
+2025-07-31 03:46:25 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:46:33 - Admin index started
+2025-07-31 03:46:33 - Action: dashboard, Method: GET
+2025-07-31 03:46:33 - POST: Array
+(
+)
+
+2025-07-31 03:46:33 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:48:08 - Admin index started
+2025-07-31 03:48:08 - Action: dashboard, Method: GET
+2025-07-31 03:48:08 - POST: Array
+(
+)
+
+2025-07-31 03:48:08 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:48:18 - Admin index started
+2025-07-31 03:48:18 - Action: dashboard, Method: GET
+2025-07-31 03:48:18 - POST: Array
+(
+)
+
+2025-07-31 03:48:18 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:50:53 - Admin index started
+2025-07-31 03:50:53 - Action: dashboard, Method: GET
+2025-07-31 03:50:53 - POST: Array
+(
+)
+
+2025-07-31 03:50:53 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:50:56 - Admin index started
+2025-07-31 03:50:56 - Action: dashboard, Method: GET
+2025-07-31 03:50:56 - POST: Array
+(
+)
+
+2025-07-31 03:50:56 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:55:17 - Admin index started\n2025-07-31 03:55:17 - Action: dashboard, Method: GET\n2025-07-31 03:55:17 - POST: Array
+(
+)
+\n2025-07-31 03:55:17 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+\n2025-07-31 03:55:21 - Admin index started\n2025-07-31 03:55:21 - Action: dashboard, Method: GET\n2025-07-31 03:55:21 - POST: Array
+(
+)
+\n2025-07-31 03:55:21 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+\n2025-07-31 03:55:39 - Admin index started\n2025-07-31 03:55:39 - Action: dashboard, Method: GET\n2025-07-31 03:55:39 - POST: Array
+(
+)
+\n2025-07-31 03:55:39 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+\n2025-07-31 03:55:42 - Admin index started\n2025-07-31 03:55:42 - Action: dashboard, Method: GET\n2025-07-31 03:55:42 - POST: Array
+(
+)
+\n2025-07-31 03:55:42 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+\n2025-07-31 03:55:43 - Admin index started\n2025-07-31 03:55:43 - Action: manage_content, Method: GET\n2025-07-31 03:55:43 - POST: Array
+(
+)
+\n2025-07-31 03:55:43 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+\n2025-07-31 03:55:59 - Admin index started
+2025-07-31 03:55:59 - Action: dashboard, Method: GET
+2025-07-31 03:55:59 - POST: Array
+(
+)
+
+2025-07-31 03:55:59 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:56:03 - Admin index started
+2025-07-31 03:56:03 - Action: dashboard, Method: GET
+2025-07-31 03:56:03 - POST: Array
+(
+)
+
+2025-07-31 03:56:03 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+
+2025-07-31 03:57:26 - Admin index started
+2025-07-31 03:57:26 - Action: dashboard, Method: GET
+2025-07-31 03:57:26 - POST: Array
+(
+)
+
+2025-07-31 03:57:26 - Session: Array
+(
+    [username] => admin
+    [permissions] => 
+)
+

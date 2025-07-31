@@ -178,7 +178,7 @@ function getPlugins() {
  * @return bool True if the plugin is active
  */
 function isPluginActive($pluginId) {
-    $activePluginsFile = CONFIG_DIR . '/active_plugins.json';
+    $activePluginsFile = PLUGIN_CONFIG;
     if (!file_exists($activePluginsFile)) {
         return false;
     }

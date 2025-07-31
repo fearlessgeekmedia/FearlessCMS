@@ -49,7 +49,7 @@ function login($username, $password) {
                 if (file_exists($rolesFile)) {
                     $roles = json_decode(file_get_contents($rolesFile), true);
                     if (isset($roles[$user['role']])) {
-                        $_SESSION['permissions'] = $roles[$user['role']]['permissions'];
+                        $_SESSION['permissions'] = $roles[$user['role']]['capabilities'];
                         error_log("Set permissions for user: " . print_r($roles[$user['role']]['permissions'], true));
                     }
                 }
@@ -105,7 +105,7 @@ function fcms_check_permission($username, $permission) {
             $rolesFile = CONFIG_DIR . '/roles.json';
             if (file_exists($rolesFile)) {
                 $roles = json_decode(file_get_contents($rolesFile), true);
-                if (isset($roles[$user['role']]) && in_array($permission, $roles[$user['role']]['permissions'])) {
+                if (isset($roles[$user['role']]) && in_array($permission, $roles[$user['role']]['capabilities'])) {
                     return true;
                 }
             }

@@ -29,17 +29,23 @@ global $cmsModeManager;
                 <a href="/" target="_blank">Your site</a>
             </div>
             <div class="flex items-center space-x-4">
-                <a href="<?php echo BASE_URL; ?>?action=manage_users" class="hover:text-green-200">Users</a>
-                <a href="<?php echo BASE_URL; ?>?action=files" class="hover:text-green-200">Files</a>
-                <a href="<?php echo BASE_URL; ?>?action=manage_themes" class="hover:text-green-200">Themes</a>
-                <a href="<?php echo BASE_URL; ?>?action=manage_menus" class="hover:text-green-200">Menus</a>
-                <a href="<?php echo BASE_URL; ?>?action=manage_widgets" class="hover:text-green-200">Widgets</a>
-                <a href="<?php echo BASE_URL; ?>?action=manage_plugins" class="hover:text-green-200"><?php echo $plugins_menu_label ?? 'Plugins'; ?></a>
                 <?php 
-                // Add admin sections to navigation
                 $admin_sections = fcms_get_admin_sections();
                 foreach ($admin_sections as $id => $section) {
-                    echo '<a href="' . BASE_URL . '?action=' . htmlspecialchars($id) . '" class="hover:text-green-200">' . htmlspecialchars($section['label']) . '</a>';
+                    $hasChildren = isset($section['children']) && !empty($section['children']);
+                    
+                    if ($hasChildren) {
+                        echo '<div class="relative group">';
+                        echo '<a href="' . BASE_URL . '?action=' . htmlspecialchars($id) . '" class="hover:text-green-200">' . htmlspecialchars($section['label']) . '</a>';
+                        echo '<div class="absolute hidden group-hover:block bg-green-700 text-white shadow-lg rounded-md mt-2 py-2 w-48 z-10">';
+                        foreach ($section['children'] as $child_id => $child_section) {
+                            echo '<a href="' . BASE_URL . '?action=' . htmlspecialchars($child_id) . '" class="block px-4 py-2 hover:bg-green-800">' . htmlspecialchars($child_section['label']) . '</a>';
+                        }
+                        echo '</div>';
+                        echo '</div>';
+                    } else if (!isset($section['parent'])) { // Only display top-level items that are not children of other sections
+                        echo '<a href="' . BASE_URL . '?action=' . htmlspecialchars($id) . '" class="hover:text-green-200">' . htmlspecialchars($section['label']) . '</a>';
+                    }
                 }
                 if (!empty($plugin_nav_items)) echo $plugin_nav_items; 
                 ?>
@@ -172,8 +178,9 @@ global $cmsModeManager;
     </script>
     
     <!-- Version Bar -->
-    <div class="fixed bottom-0 left-0 right-0 bg-gray-800 text-white text-sm py-1 px-4 text-center">
-        FearlessCMS v<?php echo APP_VERSION; ?>
+    <div class="fixed bottom-0 left-0 right-0 bg-gray-800 text-white text-sm py-1 px-4 text-center flex justify-between items-center">
+        <span>FearlessCMS v<?php echo APP_VERSION; ?></span>
+        <a href="https://ko-fi.com/fearlessgeekmedia" target="_blank" class="text-blue-300 hover:text-blue-100">Support FearlessCMS on Ko-fi!</a>
     </div>
 </body>
 </html>

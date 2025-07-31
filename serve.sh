@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+# Change to the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR" || {
+    echo "Error: Could not change to script directory: $SCRIPT_DIR"
+    exit 1
+}
+
 # clear previous logs if any
 rm -f serve-log.tmp
 

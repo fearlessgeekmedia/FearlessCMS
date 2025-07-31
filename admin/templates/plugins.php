@@ -8,7 +8,7 @@ $plugins = [];
 
 // Get list of active plugins
 $active_plugins = [];
-$active_plugins_file = CONFIG_DIR . '/active_plugins.json';
+    $active_plugins_file = PLUGIN_CONFIG;
 if (file_exists($active_plugins_file)) {
     $active_plugins = json_decode(file_get_contents($active_plugins_file), true);
     if (!is_array($active_plugins)) {
