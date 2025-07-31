@@ -7,7 +7,7 @@ More at <a href="https://ko-fi.com/post/Funding-Required-For-FearelessCMS-Develo
 
 Welcome to FearlessCMS, a new content management system centered around simplicity and respect for the open source community. The project is currently in alpha testing stages, so don't expect it to be fully functional just yet. But you can make a simple website.
 
-View documentation at <a href="https://fearlesscms.42web.io/documentation" target="_blank">https://fearlesscms.42web.io/documentation</a> to get started.
+View documentation at <a href="https://fearlesscms.online/documentation/" target="_blank">https://fearlesscms.online/documentation/</a> to get started.
 
 # FearlessCMS Manifesto
 
