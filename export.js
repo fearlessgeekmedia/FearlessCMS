@@ -16,6 +16,92 @@ const exportDir = 'export';
 // Content directory
 const contentDir = 'content';
 
+// Helper function to process modules
+function processModules(content) {
+    let modifiedContent = content;
+    let match;
+    const moduleRegex = /{{module=([^}]+)}}/g;
+    while ((match = moduleRegex.exec(modifiedContent)) !== null) {
+        const moduleFileName = match[1];
+        const modulePath = path.join('themes', theme, 'templates', moduleFileName);
+        let moduleContent = '';
+        if (fs.existsSync(modulePath)) {
+            moduleContent = fs.readFileSync(modulePath, 'utf8');
+            moduleContent = processModules(moduleContent); // Recursively process nested modules
+        } else if (fs.existsSync(`${modulePath}.mod`)) { // Check for .mod extension if not found
+            moduleContent = fs.readFileSync(`${modulePath}.mod`, 'utf8');
+            moduleContent = processModules(moduleContent); // Recursively process nested modules
+        } else {
+            console.warn(`Warning: Module file not found: ${moduleFileName}`);
+        }
+        modifiedContent = modifiedContent.replace(match[0], moduleContent);
+        // Reset regex lastIndex to avoid infinite loops with global regex in while loop
+        moduleRegex.lastIndex = 0;
+    }
+    return modifiedContent;
+}
+
+// Helper function to build meta tags
+function buildMetaTags({ title, description, socialImage, siteTitle, titleSeparator, appendSiteTitle }) {
+    // Build full title
+    let fullTitle = title;
+    if (appendSiteTitle && title && siteTitle) {
+        fullTitle += ` ${titleSeparator} ${siteTitle}`;
+    } else if (!title && siteTitle) {
+        fullTitle = siteTitle;
+    }
+    
+    let metaTags = '';
+    
+    // Basic meta tags
+    if (description) {
+        metaTags += `<meta name="description" content="${description}">\n`;
+    }
+    
+    // Open Graph meta tags
+    metaTags += '<meta property="og:type" content="website">\n';
+    if (fullTitle) {
+        metaTags += `<meta property="og:title" content="${fullTitle}">\n`;
+    }
+    if (description) {
+        metaTags += `<meta property="og:description" content="${description}">\n`;
+    }
+    if (socialImage) {
+        metaTags += `<meta property="og:image" content="${socialImage}">\n`;
+    }
+    
+    // Twitter Card meta tags
+    metaTags += '<meta name="twitter:card" content="summary_large_image">\n';
+    if (fullTitle) {
+        metaTags += `<meta name="twitter:title" content="${fullTitle}">\n`;
+    }
+    if (description) {
+        metaTags += `<meta name="twitter:description" content="${description}">\n`;
+    }
+    if (socialImage) {
+        metaTags += `<meta name="twitter:image" content="${socialImage}">\n`;
+    }
+    
+    return metaTags;
+}
+
+// Helper function to convert absolute paths to relative paths
+function makeRelativePath(absolutePath, currentDepth = 0) {
+    if (!absolutePath.startsWith('/')) {
+        return absolutePath;
+    }
+    
+    const relativePath = '../'.repeat(currentDepth) + absolutePath.substring(1);
+    return relativePath;
+}
+
+// Helper function to calculate page depth
+function calculatePageDepth(exportPath) {
+    const relativePath = path.relative(exportDir, exportPath);
+    const depth = relativePath.split(path.sep).length - 1;
+    return depth;
+}
+
 // Ensure export directory exists and is clean
 if (fs.existsSync(exportDir)) {
     fs.removeSync(exportDir);
@@ -81,7 +167,7 @@ if (fs.existsSync(configFile)) {
 }
 
 // Generate main menu
-function generateMenu(currentPage = '') {
+function generateMenu(pageDepth = 0) {
     let menusJson;
     try {
         menusJson = JSON.parse(fs.readFileSync('config/menus.json', 'utf8'));
@@ -99,7 +185,7 @@ function generateMenu(currentPage = '') {
     let menuHtml = `<ul class="${mainMenu.menu_class || 'main-nav'}">`;
     mainMenu.items.forEach(item => {
         const label = item.label || '';
-        const url = item.url || '#';
+        const url = item.url ? makeRelativePath(item.url, pageDepth) : '#';
         const className = item.class || '';
         const target = item.target ? ` target="${item.target}"` : '';
         
@@ -111,7 +197,7 @@ function generateMenu(currentPage = '') {
             menuHtml += '<ul class="submenu">';
             item.children.forEach(child => {
                 const childLabel = child.label || '';
-                const childUrl = child.url || '#';
+                const childUrl = child.url ? makeRelativePath(child.url, pageDepth) : '#';
                 const childClassName = child.class || '';
                 const childTarget = child.target ? ` target="${child.target}"` : '';
                 
@@ -164,6 +250,50 @@ function generateSidebar(sidebarName) {
     return sidebarHtml;
 }
 
+// Generate RSS feed
+function generateRssFeed(posts) {
+    let rss = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    rss += '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">\n';
+    rss += '  <channel>\n';
+    rss += `    <title>${siteName} - Blog</title>\n`;
+    rss += `    <link>https://fearlesscms.com/blog</link>\n`;
+    rss += `    <description>${siteConfig.site_description || ''}</description>\n`;
+    rss += '    <language>en-us</language>\n';
+    rss += `    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>\n`;
+    rss += `    <atom:link href="https://fearlesscms.com/blog/rss.xml" rel="self" type="application/rss+xml" />\n`;
+
+    posts.forEach(post => {
+        const postUrl = `https://fearlesscms.com/blog/${post.slug}`;
+        const pubDate = new Date(post.date).toUTCString();
+
+        rss += '    <item>\n';
+        rss += `      <title>${post.title}</title>\n`;
+        rss += `      <link>${postUrl}</link>\n`;
+        rss += `      <guid>${postUrl}</guid>\n`;
+        rss += `      <pubDate>${pubDate}</pubDate>\n`;
+        rss += `      <description><![CDATA[${marked(post.content.substring(0, 300) + '...')}]]></description>\n`;
+        rss += '    </item>\n';
+    });
+
+    rss += '  </channel>\n';
+    rss += '</rss>\n';
+
+    return rss;
+}
+
+// Generate HTML version of RSS feed
+function generateRssHtml(posts) {
+    let html = '<div class="max-w-4xl mx-auto px-4 py-8">';
+    html += '<h1 class="text-3xl font-bold mb-8">RSS Feed</h1>';
+    html += '<div class="space-y-8">';
+    posts.forEach(post => {
+        const postUrl = `blog/${post.slug}/`; // Relative path for static site
+        html += `<article class="border-b pb-8"><h2 class="text-2xl font-bold mb-2"><a href="${postUrl}" class="text-blue-600 hover:underline">${post.title}</a></h2><div class="text-gray-600 mb-4">${post.date}</div><div class="prose">${marked(post.content.substring(0, 300) + '...')}</div><a href="${postUrl}" class="text-blue-600 hover:underline mt-4 inline-block">Read more →</a></article>`;
+    });
+    html += '</div></div>';
+    return html;
+}
+
 // Process markdown files recursively
 function processContentDirectory(dir, basePath = '') {
     // First, read all markdown files to build the page hierarchy
@@ -195,6 +325,66 @@ function processContentDirectory(dir, basePath = '') {
             };
         }
     });
+
+    // Process blog posts
+    const blogPostsFile = path.join(contentDir, 'blog_posts.json');
+    if (fs.existsSync(blogPostsFile)) {
+        const posts = JSON.parse(fs.readFileSync(blogPostsFile, 'utf8'));
+        const publishedPosts = posts.filter(post => post.status === 'published');
+        
+        // Sort posts by date (newest first)
+        publishedPosts.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        // Create blog directory if it doesn't exist
+        const blogDir = path.join(exportDir, 'blog');
+        if (!fs.existsSync(blogDir)) {
+            fs.mkdirSync(blogDir, { recursive: true });
+        }
+
+        // Generate RSS feed
+        const rssFeed = generateRssFeed(publishedPosts);
+        fs.writeFileSync(path.join(blogDir, 'rss.xml'), rssFeed);
+
+        // Generate and save RSS HTML page
+        const rssHtmlContent = generateRssHtml(publishedPosts);
+        const rssHtmlExportPath = path.join(blogDir, 'rss.html');
+        fs.writeFileSync(rssHtmlExportPath, rssHtmlContent);
+
+        // Add blog index page
+        let blogIndexContent = '<div class="max-w-4xl mx-auto px-4 py-8">';
+        blogIndexContent += '<h1 class="text-3xl font-bold mb-8">Blog Posts</h1>';
+        blogIndexContent += '<div class="mb-4"><a href="rss.xml" class="text-blue-600 hover:underline">📡 RSS Feed</a> | <a href="rss.html" class="text-blue-600 hover:underline">HTML RSS Feed</a></div>';
+        blogIndexContent += '<div class="space-y-8">';
+        publishedPosts.forEach(post => {
+            blogIndexContent += `<article class="border-b pb-8"><h2 class="text-2xl font-bold mb-2"><a href="${post.slug}/" class="text-blue-600 hover:underline">${post.title}</a></h2><div class="text-gray-600 mb-4">${post.date}</div><div class="prose">${marked(post.content.substring(0, 300) + '...')}</div><a href="${post.slug}/" class="text-blue-600 hover:underline mt-4 inline-block">Read more →</a></article>`;
+        });
+        blogIndexContent += '</div></div>';
+
+        pages['blog'] = {
+            metadata: { title: 'Blog', template: 'page' },
+            childPages: publishedPosts.map(p => p.slug),
+            content: blogIndexContent,
+            fullPath: path.join(contentDir, 'blog.html')
+        };
+
+        // Add individual blog posts
+        publishedPosts.forEach(post => {
+            let postContent = '<article class="max-w-4xl mx-auto px-4 py-8">';
+            if (post.featured_image) {
+                postContent += `<div class="mb-8"><img src="../${post.featured_image}" alt="${post.title}" class="w-full h-96 object-cover rounded-lg shadow-lg"></div>`;
+            }
+            postContent += `<div class="text-gray-600 mb-8">${post.date}</div>`;
+            postContent += `<div class="prose max-w-none">${marked(post.content)}</div>`;
+            postContent += '</article>';
+
+            pages[`blog/${post.slug}`] = {
+                metadata: { title: post.title, template: 'post' },
+                childPages: [],
+                content: postContent,
+                fullPath: path.join(contentDir, 'blog', `${post.slug}.html`)
+            };
+        });
+    }
     
     // Now process each page
     Object.entries(pages).forEach(([filename, page]) => {
@@ -208,6 +398,9 @@ function processContentDirectory(dir, basePath = '') {
         // Get template
         const templatePath = path.join('themes', theme, 'templates', `${template}.html`);
         let templateContent = fs.readFileSync(templatePath, 'utf8');
+
+        // Process modules
+        templateContent = processModules(templateContent);
 
         // Extract sidebar name from template
         const sidebarMatch = templateContent.match(/{{sidebar=([^}]+)}}/);
@@ -223,8 +416,28 @@ function processContentDirectory(dir, basePath = '') {
         // Compile template
         const compiledTemplate = handlebars.compile(templateContent);
 
+        // Determine export path based on parent-child relationships
+        let exportFilePath;
+        if (filename === 'home' && basePath === '') {
+            // For the home page, create it in the root export directory
+            exportFilePath = path.join(exportDir, 'index.html');
+        } else {
+            // Check if this page is a child of another page
+            const parentPage = Object.entries(pages).find(([_, p]) => p.childPages.includes(filename));
+            if (parentPage) {
+                // Create the page under its parent's directory
+                exportFilePath = path.join(exportDir, parentPage[0], filename, 'index.html');
+            } else {
+                // Create the page in its own directory
+                exportFilePath = path.join(exportDir, filename, 'index.html');
+            }
+        }
+
+        // Calculate page depth for relative paths
+        const pageDepth = calculatePageDepth(exportFilePath);
+
         // Generate menu and sidebar
-        const mainMenu = generateMenu(basePath ? `${basePath}/${filename}` : filename);
+        const mainMenu = generateMenu(pageDepth);
         const sidebarContent = sidebarName ? generateSidebar(sidebarName) : '';
         const hasSidebar = sidebarContent && sidebarContent.trim() !== '';
 
@@ -255,26 +468,6 @@ function processContentDirectory(dir, basePath = '') {
             titleSeparator: seoSettings.title_separator || '-',
             appendSiteTitle: seoSettings.append_site_title !== false
         });
-
-        // Determine export path based on parent-child relationships
-        let exportFilePath;
-        if (filename === 'home' && basePath === '') {
-            // For the home page, create it in the root export directory
-            exportFilePath = path.join(exportDir, 'index.html');
-        } else {
-            // Check if this page is a child of another page
-            const parentPage = Object.entries(pages).find(([_, p]) => p.childPages.includes(filename));
-            if (parentPage) {
-                // Create the page under its parent's directory
-                exportFilePath = path.join(exportDir, parentPage[0], filename, 'index.html');
-            } else {
-                // Create the page in its own directory
-                exportFilePath = path.join(exportDir, filename, 'index.html');
-            }
-        }
-
-        // Calculate page depth for relative paths
-        const pageDepth = calculatePageDepth(exportFilePath);
         
         // Render template
         let renderedHtml = compiledTemplate({
@@ -310,202 +503,5 @@ function processContentDirectory(dir, basePath = '') {
 // Start processing content directory
 processContentDirectory(contentDir);
 
-// Process blog posts
-const blogPostsFile = path.join(contentDir, 'blog_posts.json');
-if (fs.existsSync(blogPostsFile)) {
-    const posts = JSON.parse(fs.readFileSync(blogPostsFile, 'utf8'));
-    const publishedPosts = posts.filter(post => post.status === 'published');
-    
-    // Sort posts by date (newest first)
-    publishedPosts.sort((a, b) => new Date(b.date) - new Date(a.date));
-    
-    // Create blog index page
-    const blogTemplatePath = path.join('themes', theme, 'templates', 'blog.html');
-    if (fs.existsSync(blogTemplatePath)) {
-        let templateContent = fs.readFileSync(blogTemplatePath, 'utf8');
-        
-        // Replace custom syntax with Handlebars syntax
-        templateContent = templateContent.replace(/{{sidebar=([^}]+)}}/g, '{{{sidebar}}}');
-        templateContent = templateContent.replace(/{{menu=([^}]+)}}/g, '{{{mainMenu}}}');
-        templateContent = templateContent.replace(/{{content}}/g, '{{{content}}}');
-
-        const compiledTemplate = handlebars.compile(templateContent);
-        
-        // Generate blog index content - let the theme template handle styling
-        let blogIndexContent = '';
-        publishedPosts.forEach(post => {
-            blogIndexContent += `<article><h2><a href="/blog/${post.slug}/">${post.title}</a></h2>`;
-            blogIndexContent += `<div>${post.date}</div>`;
-            blogIndexContent += `<div>${marked(post.content.substring(0, 300) + '...')}</div>`;
-            blogIndexContent += `<a href="/blog/${post.slug}/">Read more →</a></article>`;
-        });
-        
-        // Generate menu and sidebar
-        const mainMenu = generateMenu('blog');
-        const sidebarContent = generateSidebar('blog') || '';
-        
-        // Get SEO settings
-        const seoSettingsFile = path.join('config', 'seo_settings.json');
-        let seoSettings = {};
-        if (fs.existsSync(seoSettingsFile)) {
-            seoSettings = JSON.parse(fs.readFileSync(seoSettingsFile, 'utf8'));
-        }
-        
-        // Build meta tags for blog index
-        const metaTags = buildMetaTags({
-            title: 'Blog',
-            description: seoSettings.site_description || 'Blog posts',
-            socialImage: seoSettings.social_image || '',
-            siteTitle: seoSettings.site_title || siteName,
-            titleSeparator: seoSettings.title_separator || '-',
-            appendSiteTitle: seoSettings.append_site_title !== false
-        });
-        
-        // Render blog index template
-        const renderedHtml = compiledTemplate({
-            title: 'Blog',
-            siteName,
-            siteDescription: siteConfig.site_description || '',
-            theme,
-            currentYear: new Date().getFullYear(),
-            custom_css: customCss,
-            custom_js: customJs,
-            mainMenu,
-            sidebar: sidebarContent,
-            content: blogIndexContent,
-            heroBanner: themeOptions.herobanner || '',
-            logo: themeOptions.logo || '',
-            metaTags
-        });
-
-        // Convert absolute paths to relative paths for blog index
-        const blogIndexDepth = 1; // blog/index.html is one level deep
-        let processedBlogHtml = renderedHtml;
-        processedBlogHtml = processedBlogHtml.replace(/href="\/themes\/([^"]+)"/g, `href="${makeRelativePath('/themes/$1', blogIndexDepth)}"`);
-        processedBlogHtml = processedBlogHtml.replace(/src="\/themes\/([^"]+)"/g, `src="${makeRelativePath('/themes/$1', blogIndexDepth)}"`);
-        processedBlogHtml = processedBlogHtml.replace(/href="\/uploads\/([^"]+)"/g, `href="${makeRelativePath('/uploads/$1', blogIndexDepth)}"`);
-        processedBlogHtml = processedBlogHtml.replace(/src="\/uploads\/([^"]+)"/g, `src="${makeRelativePath('/uploads/$1', blogIndexDepth)}"`);
-        processedBlogHtml = processedBlogHtml.replace(/href="\/assets\/([^"]+)"/g, `href="${makeRelativePath('/assets/$1', blogIndexDepth)}"`);
-        processedBlogHtml = processedBlogHtml.replace(/src="\/assets\/([^"]+)"/g, `src="${makeRelativePath('/assets/$1', blogIndexDepth)}"`);
-        
-        // Write blog index
-        const blogIndexPath = path.join(exportDir, 'blog', 'index.html');
-        fs.mkdirSync(path.dirname(blogIndexPath), { recursive: true });
-        fs.writeFileSync(blogIndexPath, processedBlogHtml);
-        console.log('Created blog index page');
-        
-        // Create individual blog post pages
-        publishedPosts.forEach(post => {
-            const postContent = marked(post.content);
-            
-            // Build meta tags for blog post
-            const postMetaTags = buildMetaTags({
-                title: post.title,
-                description: post.content.substring(0, 160).replace(/[^\w\s]/g, ''), // Clean description
-                socialImage: seoSettings.social_image || '',
-                siteTitle: seoSettings.site_title || siteName,
-                titleSeparator: seoSettings.title_separator || '-',
-                appendSiteTitle: seoSettings.append_site_title !== false
-            });
-            
-            // Render blog post template
-            const postHtml = compiledTemplate({
-                title: post.title,
-                siteName,
-                siteDescription: siteConfig.site_description || '',
-                theme,
-                currentYear: new Date().getFullYear(),
-                custom_css: customCss,
-                custom_js: customJs,
-                mainMenu,
-                sidebar: sidebarContent,
-                content: postContent,
-                heroBanner: themeOptions.herobanner || '',
-                logo: themeOptions.logo || '',
-                metaTags: postMetaTags
-            });
-            
-            // Convert absolute paths to relative paths for blog posts
-            const blogPostDepth = 2; // blog/post-slug/index.html is two levels deep
-            let processedPostHtml = postHtml;
-            processedPostHtml = processedPostHtml.replace(/href="\/themes\/([^"]+)"/g, `href="${makeRelativePath('/themes/$1', blogPostDepth)}"`);
-            processedPostHtml = processedPostHtml.replace(/src="\/themes\/([^"]+)"/g, `src="${makeRelativePath('/themes/$1', blogPostDepth)}"`);
-            processedPostHtml = processedPostHtml.replace(/href="\/uploads\/([^"]+)"/g, `href="${makeRelativePath('/uploads/$1', blogPostDepth)}"`);
-            processedPostHtml = processedPostHtml.replace(/src="\/uploads\/([^"]+)"/g, `src="${makeRelativePath('/uploads/$1', blogPostDepth)}"`);
-            processedPostHtml = processedPostHtml.replace(/href="\/assets\/([^"]+)"/g, `href="${makeRelativePath('/assets/$1', blogPostDepth)}"`);
-            processedPostHtml = processedPostHtml.replace(/src="\/assets\/([^"]+)"/g, `src="${makeRelativePath('/assets/$1', blogPostDepth)}"`);
-            
-            // Write blog post
-            const postPath = path.join(exportDir, 'blog', post.slug, 'index.html');
-            fs.mkdirSync(path.dirname(postPath), { recursive: true });
-            fs.writeFileSync(postPath, processedPostHtml);
-            console.log(`Created blog post: ${post.slug}`);
-        });
-    } else {
-        console.warn('Warning: blog.html template not found, skipping blog export');
-    }
-}
-
 console.log('Export completed successfully!');
 console.log(`Static site is available in the '${exportDir}' directory`);
-
-// Helper function to build meta tags
-function buildMetaTags({ title, description, socialImage, siteTitle, titleSeparator, appendSiteTitle }) {
-    // Build full title
-    let fullTitle = title;
-    if (appendSiteTitle && title && siteTitle) {
-        fullTitle += ` ${titleSeparator} ${siteTitle}`;
-    } else if (!title && siteTitle) {
-        fullTitle = siteTitle;
-    }
-    
-    let metaTags = '';
-    
-    // Basic meta tags
-    if (description) {
-        metaTags += `<meta name="description" content="${description}">\n`;
-    }
-    
-    // Open Graph meta tags
-    metaTags += '<meta property="og:type" content="website">\n';
-    if (fullTitle) {
-        metaTags += `<meta property="og:title" content="${fullTitle}">\n`;
-    }
-    if (description) {
-        metaTags += `<meta property="og:description" content="${description}">\n`;
-    }
-    if (socialImage) {
-        metaTags += `<meta property="og:image" content="${socialImage}">\n`;
-    }
-    
-    // Twitter Card meta tags
-    metaTags += '<meta name="twitter:card" content="summary_large_image">\n';
-    if (fullTitle) {
-        metaTags += `<meta name="twitter:title" content="${fullTitle}">\n`;
-    }
-    if (description) {
-        metaTags += `<meta name="twitter:description" content="${description}">\n`;
-    }
-    if (socialImage) {
-        metaTags += `<meta name="twitter:image" content="${socialImage}">\n`;
-    }
-    
-    return metaTags;
-}
-
-// Helper function to convert absolute paths to relative paths
-function makeRelativePath(absolutePath, currentDepth = 0) {
-    if (!absolutePath.startsWith('/')) {
-        return absolutePath;
-    }
-    
-    const relativePath = '../'.repeat(currentDepth) + absolutePath.substring(1);
-    return relativePath;
-}
-
-// Helper function to calculate page depth
-function calculatePageDepth(exportPath) {
-    const relativePath = path.relative(exportDir, exportPath);
-    const depth = relativePath.split(path.sep).length - 1;
-    return depth;
-}
