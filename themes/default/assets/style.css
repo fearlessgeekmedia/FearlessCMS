@@ -1,75 +1,185 @@
-body {
-  font-family: 'Segoe UI', Arial, sans-serif;
-  background: #f8fafc;
-  color: #222;
-  margin: 0;
-  padding: 0;
-}
-header {
-  background: #222;
-  color: #fff;
-  padding: 1.5em 0 1em 0;
-  text-align: center;
-}
-nav ul {
-  list-style: none;
-  padding: 0;
-  margin: 1em 0 0 0;
-  display: flex;
-  justify-content: center;
-  gap: 2em;
-}
-nav ul ul {
-  display: none;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  background: #222;
-  min-width: 200px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  z-index: 100;
-}
-nav li {
-  position: relative;
-}
-nav li:hover > ul {
-  display: block;
-}
-nav ul ul li {
-  margin: 0;
-  width: 100%;
-}
-nav ul ul a {
-  padding: 0.5em 1em;
-  display: block;
-  white-space: nowrap;
-}
-nav a {
-  color: #fff;
-  text-decoration: none;
-  font-weight: 500;
-}
-nav a:hover {
-  text-decoration: underline;
-}
-main {
-  max-width: 800px;
-  margin: 2em auto;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px #0001;
-  padding: 2em;
-}
-footer {
-  background: #222;
-  color: #fff;
-  text-align: center;
-  padding: 1.5em 0 1em 0;
-  margin-top: 3em;
-  font-size: 0.95em;
-}
-@media (max-width: 600px) {
-  nav ul { flex-direction: column; gap: 1em; }
-  main { padding: 1em; }
+/*
+  Default Theme — Elegant Refresh
+  Palette, typography, layout and navigation refinements
+*/
+
+/* Design tokens */
+:root {
+  --color-bg: #f5f7fb;
+  --color-surface: #ffffff;
+  --color-text: #1a1f36;
+  --color-muted: #5b6475;
+  --color-border: #e3e8f2;
+  --color-accent: #6c63ff; /* indigo */
+  --color-accent-700: #564df5;
+  --color-header-start: #0f172a; /* slate-900 */
+  --color-header-end: #111827;   /* gray-900 */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 6px 16px rgba(17, 24, 39, 0.08);
+  --radius-md: 14px;
 }
 
+/* Global base */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  padding: 0;
+  color: var(--color-text);
+  background: radial-gradient(1200px 600px at 50% -200px, #dfe6ff66, transparent 60%), var(--color-bg);
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, Helvetica, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+}
+
+.container {
+  width: min(1100px, 92vw);
+  margin-inline: auto;
+}
+
+/* Header */
+header {
+  background: linear-gradient(180deg, var(--color-header-start), var(--color-header-end));
+  color: #fff;
+  padding: 1.1rem 0;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+}
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.brand {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  font-size: clamp(1.1rem, 0.9rem + 1vw, 1.5rem);
+}
+
+/* Navigation: support both bare <nav><ul>… and classed .main-nav */
+nav ul,
+.main-nav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  gap: 1.4rem;
+  align-items: center;
+}
+nav li { position: relative; }
+nav a,
+.main-nav a {
+  color: #e8eaf0;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.5rem 0.2rem;
+  display: inline-block;
+  transition: color .2s ease;
+  /* chic underline */
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 0% 2px;
+}
+nav a:hover,
+.main-nav a:hover { color: #fff; background-size: 100% 2px; }
+
+/* Dropdowns: support either nested <ul> or .submenu */
+nav ul ul,
+.submenu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  background: #0f172a;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  min-width: 220px;
+  padding: 0.4rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  z-index: 20;
+}
+nav li:hover > ul,
+nav li:hover > .submenu { display: block; }
+nav ul ul li,
+.submenu li { width: 100%; }
+nav ul ul a,
+.submenu a {
+  display: block;
+  white-space: nowrap;
+  padding: 0.55rem 0.8rem;
+  border-radius: 8px;
+}
+nav ul ul a:hover,
+.submenu a:hover { background: rgba(255,255,255,0.06); }
+
+/* Main content card */
+main {
+  width: min(960px, 92vw);
+  margin: 2.2rem auto 2.6rem auto;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: clamp(1rem, 1rem + 1vw, 2rem);
+}
+
+/* Typography */
+h1, h2, h3 { line-height: 1.25; color: #0b1020; }
+h1 { font-size: clamp(1.6rem, 1.1rem + 2vw, 2.2rem); margin: 0 0 .6rem 0; }
+h2 { font-size: clamp(1.25rem, 1rem + 1vw, 1.6rem); margin: 1.4rem 0 .6rem; }
+h3 { font-size: 1.1rem; margin: 1rem 0 .5rem; }
+p { color: var(--color-text); margin: 0 0 1rem; }
+a { color: var(--color-accent); text-underline-offset: 3px; }
+a:hover { color: var(--color-accent-700); }
+
+blockquote {
+  margin: 1.2rem 0;
+  padding: 0.9rem 1.1rem;
+  border-left: 4px solid var(--color-accent);
+  background: #f3f5ff;
+  border-radius: 8px;
+}
+code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+pre {
+  background: #0b1220;
+  color: #e5e7eb;
+  border-radius: 10px;
+  padding: 1rem;
+  overflow: auto;
+}
+
+/* Generic button if themes use it */
+.button, .btn {
+  display: inline-block;
+  background: var(--color-accent);
+  color: #fff;
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: transform .05s ease, background-color .2s ease, box-shadow .2s ease;
+  box-shadow: 0 8px 20px rgba(108, 99, 255, 0.25);
+}
+.button:hover, .btn:hover { background: var(--color-accent-700); }
+.button:active, .btn:active { transform: translateY(1px); }
+
+/* Footer */
+footer {
+  background: #0f172a;
+  color: #d0d6e4;
+  text-align: center;
+  padding: 1.4rem 0 1.2rem 0;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  font-size: 0.95rem;
+}
+
+/* Responsive tweaks */
+@media (max-width: 720px) {
+  nav ul, .main-nav { gap: 0.8rem; flex-wrap: wrap; }
+  main { padding: 1rem; }
+}
