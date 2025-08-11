@@ -34,6 +34,7 @@ require_once dirname(__DIR__) . '/includes/config.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
 require_once dirname(__DIR__) . '/includes/functions.php';
 require_once dirname(__DIR__) . '/includes/ThemeManager.php';
+$themeManager = new ThemeManager(THEMES_DIR);
 require_once dirname(__DIR__) . '/includes/plugins.php';
 require_once dirname(__DIR__) . '/includes/CMSModeManager.php';
 
@@ -60,6 +61,7 @@ require_once __DIR__ . '/user-handler.php';
 require_once __DIR__ . '/newuser-handler.php';
 require_once __DIR__ . '/edituser-handler.php';
 require_once __DIR__ . '/deluser-handler.php';
+require_once __DIR__ . '/updater-handler.php';
 
 // Get action from GET or POST, default to dashboard
 $action = $_GET['action'] ?? $_POST['action'] ?? 'dashboard';
@@ -862,15 +864,10 @@ if (isset($admin_sections[$action])) {
 
 // If no admin section was found, try to load the template file
 if (!$section_found) {
-    if (file_exists($templateFile)) {
-        error_log("Admin index.php - Loading template: " . $templateFile);
-        ob_start();
-        include $templateFile;
-        $content = ob_get_clean();
-        $section_found = true;
-    } else {
+    if (!file_exists($templateFile)) {
         error_log("Admin index.php - Invalid action: " . $action . " (Template file not found: " . $templateFile . ")");
         $content = '<div class="alert alert-danger">Invalid action specified.</div>';
+        $templateFile = null; // Unset template file if not found
     }
 }
 

@@ -261,7 +261,7 @@ Create separate files for each component in your theme's `templates/` directory.
 4. **Organization**: Cleaner, more organized code structure
 5. **Testing**: Easier to test individual components
 
-For detailed information about modular templates, see the [Modular Templates Guide](modular-templates.md).
+For detailed information about modular templates, see the [Modular Templates Guide](modular-templates).
 
 ## Theme Options
 

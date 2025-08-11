@@ -8,6 +8,8 @@ $activeTheme = $themeManager->getActiveTheme();
 $activeThemeConfigFile = THEMES_DIR . "/$activeTheme/config.json";
 $activeThemeConfig = file_exists($activeThemeConfigFile) ? json_decode(file_get_contents($activeThemeConfigFile), true) : [];
 $themeOptionFields = isset($activeThemeConfig['options']) ? $activeThemeConfig['options'] : [];
+
+$themes = $themeManager->getThemes();
 ?>
 
 <!-- Theme Management -->

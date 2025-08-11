@@ -148,7 +148,6 @@ $siteName = $config['site_name'] ?? 'FearlessCMS';
 
 $customCodeFile = CONFIG_DIR . '/custom_code.json';
 $customCss = '';
-$customJs = '';
 if (file_exists($customCodeFile)) {
     $customCode = json_decode(file_get_contents($customCodeFile), true);
     $customCss = $customCode['css'] ?? '';
@@ -176,10 +175,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $error = 'You must be logged in to update custom code';
     } else {
         $customCss = $_POST['custom_css'] ?? '';
-        $customJs = $_POST['custom_js'] ?? '';
         $customCode = [
-            'css' => $customCss,
-            'js' => $customJs
+            'css' => $customCss
         ];
         file_put_contents($customCodeFile, json_encode($customCode, JSON_PRETTY_PRINT));
         $success = 'Custom code updated successfully';
@@ -1180,7 +1177,7 @@ if (!isLoggedIn()) {
         }
         $template = str_replace('{{site_name}}', htmlspecialchars($siteName), $template);
         $template = str_replace('{{custom_css}}', htmlspecialchars($customCss), $template);
-        $template = str_replace('{{custom_js}}', htmlspecialchars($customJs), $template);
+
         $template = str_replace('{{username}}', htmlspecialchars($_SESSION['username']), $template);
         // Build parent page options for the New Page modal
         $pageData = get_page_hierarchy();

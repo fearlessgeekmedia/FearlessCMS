@@ -312,10 +312,10 @@ echo "- Can Delete Plugins: " . ($cmsModeManager->canDeletePlugins() ? 'Yes' : '
 
 ## 📚 Related Documentation
 
-- [Admin Panel Guide](../admin/README.md) - General admin functionality
-- [Plugin Development Guide](../plugins/README.md) - Creating plugins
-- [Theme Development Guide](creating-themes.md) - Creating themes
-- [Configuration Guide](../config/README.md) - System configuration
+- [Admin Panel Guide](../admin/README) - General admin functionality
+- [Plugin Development Guide](../plugins/README) - Creating plugins
+- [Theme Development Guide](creating-themes) - Creating themes
+- [Configuration Guide](../config/README) - System configuration
 
 ## 🆘 Getting Help
 

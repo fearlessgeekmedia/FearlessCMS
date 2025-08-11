@@ -251,7 +251,7 @@ As your theme grows, break it into reusable components using the modular templat
 - `sidebar.html` - Sidebar content
 - `hero-banner.html` - Hero banner sections
 
-For detailed information, see the [Modular Templates Guide](modular-templates.md).
+For detailed information, see the [Modular Templates Guide](modular-templates).
 
 ### 3. Use Semantic HTML
 

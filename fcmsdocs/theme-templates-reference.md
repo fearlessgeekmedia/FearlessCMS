@@ -313,7 +313,7 @@ If a module file is not found, the system will log an error and insert a comment
 - `hero-banner.html` - Hero banner sections
 - `content-layout.html` - Content area layouts
 
-For more detailed information about modular templates, see the [Modular Templates Guide](modular-templates.md).
+For more detailed information about modular templates, see the [Modular Templates Guide](modular-templates).
 
 ## Template Examples
 

@@ -1,4 +1,6 @@
 <?php
+require_once PROJECT_ROOT . '/includes/ThemeManager.php';
+$themeManager = new ThemeManager();
 // includes/plugins.php
 
 // Make sure PROJECT_ROOT is defined
@@ -203,7 +205,7 @@ $GLOBALS['fcms_admin_sections'] = [];
     fcms_register_admin_section('manage_themes', [
         'label' => 'Themes',
         'menu_order' => 40,
-        'render_callback' => function() {
+        'render_callback' => function() use ($themeManager) {
             include PROJECT_ROOT . '/admin/templates/themes.php';
         }
     ]);

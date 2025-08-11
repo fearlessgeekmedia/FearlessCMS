@@ -232,7 +232,8 @@ $adminPath = $config["admin_path"] ?? "admin";
 $isAdminRoute = (strpos($requestPath, $adminPath) === 0);
 $isLoggedIn = function_exists('isLoggedIn') ? isLoggedIn() : false;
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !$isAdminRoute && !$isLoggedIn) {
-    $cacheEnabled = true;
+    $cacheEnabled = false; // Temporarily disabled for debugging
+
     if (!is_dir($cacheDir)) {
         mkdir($cacheDir, 0755, true);
     }
@@ -250,8 +251,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !$isAdminRoute && !$isLoggedIn) {
 // Default to home if root
 if ($requestPath === '') {
     $path = 'home';
+    $templateName = 'home'; // Set template to home for root path
 } else {
     $path = $requestPath;
+    $templateName = 'page'; // Default to page template for other paths
 }
 error_log("Processed path: " . $path);
 
@@ -382,10 +385,10 @@ if (!file_exists($contentFile)) {
 if (!file_exists($contentFile)) {
     error_log("No content file found, showing 404");
     http_response_code(404);
-    
+
     // Trigger 404 error hook for monitoring
     fcms_do_hook('404_error', $_SERVER['REQUEST_URI']);
-    
+
     $contentFile = CONTENT_DIR . '/404.md';
     error_log("Looking for 404 file: " . $contentFile);
     if (!file_exists($contentFile)) {
@@ -393,16 +396,16 @@ if (!file_exists($contentFile)) {
         // If no 404.md, show a default message
         $pageTitle = 'Page Not Found';
         $pageContent = '<p>The page you requested could not be found.</p>';
-        
+
         // Initialize managers
         $themeManager = new ThemeManager();
         $menuManager = new MenuManager();
         $widgetManager = new WidgetManager();
-        
+
         // Load theme options
         $themeOptionsFile = CONFIG_DIR . '/theme_options.json';
         $themeOptions = file_exists($themeOptionsFile) ? json_decode(file_get_contents($themeOptionsFile), true) : [];
-        
+
         // Initialize template renderer
         $templateRenderer = new TemplateRenderer(
             $themeManager->getActiveTheme(),
@@ -410,7 +413,7 @@ if (!file_exists($contentFile)) {
             $menuManager,
             $widgetManager
         );
-        
+
         // Prepare template data
         $templateData = [
             'title' => $pageTitle,
@@ -423,7 +426,7 @@ if (!file_exists($contentFile)) {
             'mainMenu' => $menuManager->renderMenu('main'),
 
         ];
-        
+
         // Render template
         echo $templateRenderer->render('404', $templateData);
         exit;

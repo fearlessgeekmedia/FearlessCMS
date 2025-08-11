@@ -81,6 +81,7 @@ if (!file_exists($rolesFile)) {
                 'manage_users',
                 'manage_themes',
                 'manage_plugins',
+                    'manage_updates',
                 'manage_menus',
                 'manage_widgets',
                 'edit_content',

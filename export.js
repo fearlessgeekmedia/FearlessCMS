@@ -8,7 +8,7 @@ const config = JSON.parse(fs.readFileSync('config/config.json', 'utf8'));
 const theme = config.active_theme;
 const siteName = config.site_name;
 const customCss = config.custom_css || '';
-const customJs = config.custom_js || '';
+
 
 // Export directory
 const exportDir = 'export';
@@ -115,11 +115,7 @@ if (customCss) {
     fs.writeFileSync(customCssPath, customCss);
 }
 
-if (customJs) {
-    const customJsPath = path.join(exportDir, 'assets', 'custom.js');
-    fs.mkdirSync(path.dirname(customJsPath), { recursive: true });
-    fs.writeFileSync(customJsPath, customJs);
-}
+
 
 // Copy the entire theme directory (css, js, assets, etc)
 const themeDir = path.join('themes', theme);
@@ -477,7 +473,7 @@ function processContentDirectory(dir, basePath = '') {
             theme,
             currentYear: new Date().getFullYear(),
             custom_css: customCss,
-            custom_js: customJs,
+            
             mainMenu,
             sidebar: hasSidebar ? sidebarContent : false,
             content: htmlContent,

@@ -65,11 +65,25 @@ With these policies in place, FearlessCMS seeks to create a platform that is lig
 - Default admin password: `changeme123`
 - Please change this password immediately after first login
 
+### Installation
+
+- Web installer: visit `install.php` in your browser and follow the prompts to verify directories, initialize defaults, and optionally install export tool dependencies.
+- CLI installer:
+
+```bash
+php install.php --check               # show environment and directory status
+php install.php --create-dirs         # create required directories and default configs
+php install.php --install-export-deps # install Node deps for export.js (fs-extra, handlebars, marked)
+php install.php --create-admin=<username> --password=<pwd>
+# or use a file for the password:
+php install.php --create-admin=<username> --password-file=/path/to/secret
+```
+
 ### Static Site Export
 
 Like the rest of the CMS, the export script is experimental, but even more so than the CMS. It may not work properly for every situation.
 
-To export your site to static HTML, you'll need to install the following Node.js dependencies:
+To export your site to static HTML, you'll need to install the following Node.js dependencies (or use the installer to do it for you):
 
 ```bash
 npm install fs-extra handlebars marked

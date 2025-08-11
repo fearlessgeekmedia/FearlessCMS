@@ -5,13 +5,16 @@
 </head>
 <body>
     {{module=header.html}}
+    
     <main>
-        {{module=hero-banner.html}}
         <div class="content">
-            {{module=sidebar.html}}
+            <div class="main-content">
+                <h1>{{title}}</h1>
+                {{content}}
+            </div>
         </div>
     </main>
+    
     {{module=footer.html}}
-    {{custom_js}}
 </body>
-</html> 
+</html>

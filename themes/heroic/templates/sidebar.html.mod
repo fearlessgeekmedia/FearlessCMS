@@ -69,7 +69,6 @@
         </footer>
     </div>
     <script>
-      {{custom_js}}
     </script>
 </body>
 </html> 

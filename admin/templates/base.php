@@ -77,7 +77,13 @@ global $cmsModeManager;
     <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div class="bg-white shadow rounded-lg p-6">
             <h2 class="text-2xl font-bold mb-6 fira-code"><?php echo htmlspecialchars($pageTitle ?? ''); ?></h2>
-            <?php echo $content ?? ''; ?>
+            <?php
+            if (isset($templateFile) && $templateFile && file_exists($templateFile)) {
+                include $templateFile;
+            } else {
+                echo $content ?? '';
+            }
+            ?>
         </div>
     </div>
 
