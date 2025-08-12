@@ -1,7 +1,7 @@
 {
-    "active_theme": "punk_rock",
-    "site_name": "A website",
-    "site_description": "",
+    "active_theme": "default",
+    "site_name": "FearlessCMS",
+    "site_description": "Fast and Fearless Content Managment",
     "admin_path": "admin",
     "custom_css": "",
     "store_url": "https:\/\/raw.githubusercontent.com\/fearlessgeekmedia\/FearlessCMS-Store\/main\/store.json"

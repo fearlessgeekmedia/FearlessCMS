@@ -251,6 +251,38 @@ function fcms_get_admin_sections() {
     
     error_log("Admin sections before sorting: " . print_r($sections, true));
     
+    // Apply CMS mode filtering
+    if (isset($GLOBALS['cmsModeManager'])) {
+        $cmsModeManager = $GLOBALS['cmsModeManager'];
+        
+        // Filter out sections based on CMS mode permissions
+        $filtered_sections = [];
+        foreach ($sections as $id => $section) {
+            $show_section = true;
+            
+            // Check specific permissions for restricted sections
+            switch ($id) {
+                case 'manage_plugins':
+                    $show_section = $cmsModeManager->canManagePlugins();
+                    break;
+                case 'store':
+                    $show_section = $cmsModeManager->canAccessStore();
+                    break;
+                case 'files':
+                    $show_section = $cmsModeManager->canManageFiles();
+                    break;
+            }
+            
+            if ($show_section) {
+                $filtered_sections[$id] = $section;
+            }
+        }
+        $sections = $filtered_sections;
+    }
+    
+    // Apply custom filters
+    $sections = fcms_apply_filter('filter_admin_sections', $sections);
+    
     // First, sort by menu_order
     uasort($sections, function($a, $b) {
         return ($a['menu_order'] ?? 100) <=> ($b['menu_order'] ?? 100);

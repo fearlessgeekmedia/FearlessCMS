@@ -34,9 +34,14 @@ require_once dirname(__DIR__) . '/includes/config.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
 require_once dirname(__DIR__) . '/includes/functions.php';
 require_once dirname(__DIR__) . '/includes/ThemeManager.php';
+require_once dirname(__DIR__) . '/includes/CMSModeManager.php';
+
+// Create CMS mode manager early so it's available for admin section filtering
+$cmsModeManager = new CMSModeManager();
+$GLOBALS['cmsModeManager'] = $cmsModeManager;
+
 $themeManager = new ThemeManager(THEMES_DIR);
 require_once dirname(__DIR__) . '/includes/plugins.php';
-require_once dirname(__DIR__) . '/includes/CMSModeManager.php';
 
 // Handle plugin actions BEFORE other handlers are included
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && in_array($_POST['action'], ['activate_plugin', 'deactivate_plugin', 'delete_plugin'])) {
@@ -239,10 +244,6 @@ error_log("Admin index.php - Available admin sections: " . print_r(array_keys($a
 
 $pageTitle = ucfirst($action);
 $themeManager = new ThemeManager();
-$cmsModeManager = new CMSModeManager();
-
-// Make CMS mode manager globally available for plugins
-$GLOBALS['cmsModeManager'] = $cmsModeManager;
 
 // Check CMS mode access restrictions AFTER $cmsModeManager is created
 if (isLoggedIn()) {

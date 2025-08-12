@@ -7,6 +7,9 @@
     {{module=header.html}}
     {{include=ad-area.html}}
 
+    {{module=hero-banner.html}}
+
+    {{#if themeOptions.showMarketing}}
     <section class="hero">
       <div class="container">
         <span class="eyebrow">Fast. File‑first. Fearless.</span>
@@ -63,6 +66,11 @@
         </div>
       </div>
     </section>
+
+    {{module=logos.html}}
+    {{module=quick-start.html}}
+    {{module=cta-strip.html}}
+    {{/if}}
 
     <main>
       {{content}}

@@ -4,5 +4,10 @@
 <meta name="color-scheme" content="light dark">
 <link rel="stylesheet" href="/themes/default/assets/style.css">
 <style>
+  {{#if themeOptions.accentColor}}
+  :root { --color-accent: {{themeOptions.accentColor}}; }
+  {{/if}}
+  /* ensure global UI toggles visible if injected */
+  .fcms-theme-toggle{display:inline-flex}
   {{custom_css}}
 </style>

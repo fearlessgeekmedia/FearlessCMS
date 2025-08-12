@@ -1,11 +1,11 @@
 {
     "admin": {
         "label": "Administrator",
-        "capabilities": ["manage_users", "manage_content", "manage_plugins", "manage_themes", "manage_menus", "manage_settings"]
+        "capabilities": ["manage_users", "manage_content", "manage_plugins", "manage_themes", "manage_menus", "manage_settings", "manage_updates"]
     },
     "editor": {
         "label": "Editor",
-        "capabilities": ["manage_content"]
+        "capabilities": ["manage_content", "manage_updates"]
     },
     "author": {
         "label": "Author",

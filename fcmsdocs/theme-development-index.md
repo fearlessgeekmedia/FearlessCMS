@@ -13,10 +13,12 @@ Welcome to the FearlessCMS theme development documentation! This collection of g
 - **[Template Reference](theme-templates-reference)** - Complete template syntax and variable reference
 - **[Theme Options Guide](theme-options-guide)** - How to implement and use theme options
 - **[Modular Templates](modular-templates)** - How to use the modular template system for better code organization
+- **Global UI Enhancements** - Optional hamburger and theme toggle controls
 
 ### System Administration
 - **[CMS Modes Guide](cms-modes)** - How to configure and manage CMS operational modes
 - **[File Permissions Guide](file-permissions)** - Setting up proper file permissions and ownership
+- **[Ad Area System](ad-area-system)** - Conditional advertising system for hosting service modes
 
 ### Examples and Tutorials
 - **[Nightfall Theme Example](../themes/nightfall/)** - Real-world example of a complete theme
@@ -41,6 +43,7 @@ Welcome to the FearlessCMS theme development documentation! This collection of g
 - Testing and deployment strategies
 - **CMS modes and system administration**
 - **File permissions and security best practices**
+- **Ad area system integration for hosting services**
 
 ## 📁 Theme Structure
 
@@ -73,6 +76,53 @@ themes/your-theme/
 - **Responsive Design**: Built-in support for mobile-first design
 - **Extensible**: Add custom functionality with JavaScript
 - **SEO-Friendly**: Semantic HTML and meta tag support
+- **Ad Area Integration**: Automatic conditional advertising for hosting service modes
+
+## Global UI Enhancements (Optional)
+
+FearlessCMS can optionally inject two small UI features across themes:
+
+- A responsive hamburger button that toggles the main `nav` under 900px
+- A theme mode toggle (System → Light → Dark) that stores preference in `localStorage` and applies it via `data-theme` on `<html>`
+
+### Enabling/Disabling
+
+Site-level flags in `config/config.json` (defaults shown):
+
+```json
+{
+  "global_ui_enhancements": true,
+  "enable_hamburger": true,
+  "enable_theme_toggle": true
+}
+```
+
+Theme-level flags in `themes/<theme>/config.json`:
+
+```json
+{
+  "disableGlobalEnhancements": false,
+  "disableHamburger": false,
+  "disableThemeToggle": false,
+  "supportsDarkMode": true
+}
+```
+
+To quickly disable on a page/theme without changing JSON, add in your head module:
+
+```html
+<meta name="fcms-disable-global-ui" content="1">
+```
+
+### Requirements
+
+- Your `header` should contain a `nav`. If `.header-inner` exists, controls appear before `nav` inside it; otherwise they appear before `nav` in `header`.
+- For themes without dark mode, set `supportsDarkMode: false` or `disableThemeToggle: true` to hide the toggle.
+
+### Accessibility
+
+- Buttons are keyboard-focusable and announce state (`aria-expanded` for hamburger).
+- Dark/light/system preference persists per browser via `localStorage` (`fcms-theme`).
 
 ## 💡 Tips for Success
 
@@ -99,6 +149,7 @@ Found an issue or have a suggestion? Contributions are welcome! Please:
 - [Plugin Development Guide](../plugins/README)
 - [CMS Modes Guide](cms-modes) - System administration and deployment modes
 - [File Permissions Guide](file-permissions) - Security and permission setup
+- [Ad Area System](ad-area-system) - Conditional advertising features
 - [API Reference](../docs/api)
 
 ## 🆘 Getting Help

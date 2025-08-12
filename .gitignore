@@ -13,3 +13,5 @@ content/mariadb-connector/
 content/*/config.json
 cache/
 .crush/
+content/
+uploads/

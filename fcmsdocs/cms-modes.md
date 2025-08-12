@@ -310,12 +310,57 @@ echo "- Can Delete Plugins: " . ($cmsModeManager->canDeletePlugins() ? 'Yes' : '
 - No external plugin sources in restricted modes
 - Controlled plugin ecosystem
 
+## 🎯 Ad Area System Integration
+
+### Conditional Advertising
+The CMS mode system integrates with the Ad Area System to provide conditional advertising:
+
+- **Full Featured Mode**: No advertising displayed (clean experience)
+- **Hosting Service Modes**: Professional ad area visible to showcase hosting services
+
+### Template Variables
+When in hosting service modes, templates automatically receive these variables:
+
+```php
+$templateData = [
+    'cmsMode' => $cmsModeManager->getCurrentMode(),
+    'isHostingServiceMode' => $cmsModeManager->isRestricted(),
+    'cmsModeName' => $cmsModeManager->getModeName(),
+];
+```
+
+### Automatic Integration
+All themes automatically include the ad area when in hosting service modes using:
+
+```html
+{{include=ad-area.html}}
+```
+
+The ad area uses conditional logic to only display when appropriate:
+
+```html
+{{#if isHostingServiceMode}}
+<div class="ad-area">
+    <!-- Hosting service advertising content -->
+</div>
+{{/if}}
+```
+
+### Benefits
+- **Professional Appearance**: Hosting providers can showcase their services
+- **User Experience**: Self-hosted users enjoy an ad-free experience
+- **Easy Management**: Single configuration controls ad visibility across all themes
+- **Consistent Branding**: Same ad appearance across all themes
+
+For detailed information about the Ad Area System, see the [Ad Area System Guide](ad-area-system.md).
+
 ## 📚 Related Documentation
 
 - [Admin Panel Guide](../admin/README) - General admin functionality
 - [Plugin Development Guide](../plugins/README) - Creating plugins
 - [Theme Development Guide](creating-themes) - Creating themes
 - [Configuration Guide](../config/README) - System configuration
+- [Ad Area System](ad-area-system.md) - Conditional advertising features
 
 ## 🆘 Getting Help
 

@@ -4,7 +4,7 @@
         "username": "admin",
         "password": "$2y$12$8WRyMNqzhsS9hkMvb5yHYuw1toNj6Mlpq2pb9r125RsFfxp9JRzp.",
         "role": "admin",
-        "capabilities": []
+        "capabilities": ["manage_users", "manage_content", "manage_plugins", "manage_themes", "manage_menus", "manage_settings", "manage_updates"]
     },
     {
         "id": "bob",

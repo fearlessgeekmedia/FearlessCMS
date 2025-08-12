@@ -8,6 +8,7 @@ Welcome to the FearlessCMS documentation. Here you will find guides and referenc
 - [Installation and Setup](gettingstarted.md)
 - [CMS Modes Guide](cms-modes.md)
 - [File Permissions Guide](file-permissions.md)
+- [Installation Script](install.md)
 
 ### Content Management
 - [Content Editing](content-editing.md)
@@ -18,6 +19,7 @@ Welcome to the FearlessCMS documentation. Here you will find guides and referenc
 - [Theme Development](theme-development-index.md)
 - [Plugin Development](plugin-development-guide.md)
 - [Parallax Sections Plugin](parallax-plugin.md)
+- [Ad Area System](ad-area-system.md)
 
 ### Other Resources
 - [Development Roadmap](devroadmap.md)

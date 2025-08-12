@@ -414,12 +414,26 @@ if (!file_exists($contentFile)) {
             $widgetManager
         );
 
+        // Get site name and description from config
+        $configFile = CONFIG_DIR . '/config.json';
+        $siteName = 'FearlessCMS';
+        $siteDescription = '';
+        if (file_exists($configFile)) {
+            $config = json_decode(file_get_contents($configFile), true);
+            if (isset($config['site_name'])) {
+                $siteName = $config['site_name'];
+            }
+            if (isset($config['site_description'])) {
+                $siteDescription = $config['site_description'];
+            }
+        }
+
         // Prepare template data
         $templateData = [
             'title' => $pageTitle,
             'content' => $pageContent,
-            'siteName' => 'FearlessCMS',
-            'siteDescription' => '',
+            'siteName' => $siteName,
+            'siteDescription' => $siteDescription,
             'currentYear' => date('Y'),
             'logo' => $themeOptions['logo'] ?? null,
             'heroBanner' => $themeOptions['herobanner'] ?? null,
@@ -503,9 +517,11 @@ $themeOptions = file_exists($themeOptionsFile) ? json_decode(file_get_contents($
 require_once PROJECT_ROOT . '/includes/MenuManager.php';
 require_once PROJECT_ROOT . '/includes/WidgetManager.php';
 require_once PROJECT_ROOT . '/includes/TemplateRenderer.php';
+require_once PROJECT_ROOT . '/includes/CMSModeManager.php';
 
 $menuManager = new MenuManager();
 $widgetManager = new WidgetManager();
+$cmsModeManager = new CMSModeManager();
 $templateRenderer = new TemplateRenderer(
     $themeManager->getActiveTheme(),
     $themeOptions,
@@ -523,7 +539,9 @@ $templateData = [
     'logo' => $themeOptions['logo'] ?? null,
     'heroBanner' => $themeOptions['herobanner'] ?? null,
     'mainMenu' => $menuManager->renderMenu('main'),
-
+    'cmsMode' => $cmsModeManager->getCurrentMode(),
+    'isHostingServiceMode' => $cmsModeManager->isRestricted(),
+    'cmsModeName' => $cmsModeManager->getModeName(),
 ];
 
 // Add custom variables from JSON frontmatter

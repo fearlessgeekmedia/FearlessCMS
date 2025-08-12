@@ -46,6 +46,14 @@ FearlessCMS uses a simple template system with double curly braces `{{}}` for va
 |----------|-------------|---------|
 | `{{themeOptions.key}}` | Custom theme option | Value depends on theme |
 
+### CMS Mode Variables
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `{{cmsMode}}` | Current CMS mode identifier | "full-featured", "hosting-service-plugins" |
+| `{{isHostingServiceMode}}` | Boolean indicating hosting service mode | true, false |
+| `{{cmsModeName}}` | Human-readable mode name | "Full Featured", "Hosting Service (Plugin Mode)" |
+
 ## Conditional Statements
 
 ### Basic If/Else
@@ -90,6 +98,20 @@ FearlessCMS uses a simple template system with double curly braces `{{}}` for va
     </article>
 {{else}}
     <p>No content available</p>
+{{/if}}
+
+<!-- CMS mode conditional -->
+{{#if isHostingServiceMode}}
+    <div class="hosting-service-notice">
+        <p>This site is hosted by our premium hosting service.</p>
+    </div>
+{{/if}}
+
+<!-- Check specific CMS mode -->
+{{#if cmsMode === "hosting-service-plugins"}}
+    <div class="plugin-mode-notice">
+        <p>Plugin management is available in this mode.</p>
+    </div>
 {{/if}}
 ```
 
@@ -178,6 +200,20 @@ Use the `{{module=filename.html}}` syntax to include other template files:
 {{module=footer.html}}
 {{module=navigation.html}}
 ```
+
+### File Include Syntax
+
+Use the `{{include=filename.html}}` syntax to include files from the themes directory (not theme-specific):
+
+```html
+{{include=ad-area.html}}
+{{include=shared-components.html}}
+{{include=common-ads.html}}
+```
+
+**Note**: The `{{include=}}` syntax is different from `{{module=}}`:
+- `{{module=}}` looks for files in the current theme's templates directory
+- `{{include=}}` looks for files in the main themes directory (shared across all themes)
 
 ### Module Features
 
