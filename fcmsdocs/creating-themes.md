@@ -9,10 +9,11 @@ FearlessCMS uses a simple but powerful theme system that allows you to create cu
 3. [Template System](#template-system)
 4. [Template Variables](#template-variables)
 5. [Theme Options](#theme-options)
-6. [CSS and Styling](#css-and-styling)
-7. [Example: Creating a Simple Theme](#example-creating-a-simple-theme)
-8. [Advanced Features](#advanced-features)
-9. [Best Practices](#best-practices)
+6. [Theme Thumbnails](#theme-thumbnails)
+7. [CSS and Styling](#css-and-styling)
+8. [Example: Creating a Simple Theme](#example-creating-a-simple-theme)
+9. [Advanced Features](#advanced-features)
+10. [Best Practices](#best-practices)
 
 ## Theme Structure
 
@@ -35,6 +36,7 @@ themes/
     │   ├── images/
     │   └── js/
     ├── config.json                # Theme configuration
+    ├── thumbnail.png              # Theme preview image (optional)
     └── README.md                  # Documentation
 ```
 
@@ -317,6 +319,145 @@ You can add custom theme options that users can configure through the admin pane
 {{/if}}
 ```
 
+## Theme Thumbnails
+
+Theme thumbnails provide visual previews of your theme in the admin panel, making it easier for users to identify and select themes before activation. This feature enhances the user experience by showing what each theme looks like.
+
+### Adding Thumbnails to Your Theme
+
+To add a thumbnail to your theme, simply place an image file in your theme's root directory with one of these filenames:
+
+- `thumbnail.png` (preferred)
+- `thumbnail.jpg`
+- `screenshot.png`
+- `screenshot.jpg`
+
+The system will automatically detect and display the first available thumbnail file.
+
+### Thumbnail Specifications
+
+#### File Requirements
+- **Filename**: One of the supported names above
+- **Dimensions**: 1200x675px (16:9 aspect ratio) - recommended
+- **File Size**: Keep under 500KB for optimal loading performance
+- **Format**: PNG (preferred), JPG, JPEG, GIF, or WebP
+- **Location**: Theme root directory (same level as `config.json`)
+
+#### Visual Guidelines
+- **Content**: Show the theme's homepage or most representative page
+- **Quality**: High-resolution, clear, and representative of the theme's design
+- **Viewport**: Capture the desktop view of the theme (1200px+ width)
+- **Content**: Use realistic sample content instead of placeholder text
+- **Clean**: Remove any development artifacts or debug information
+
+### Creating Effective Thumbnails
+
+#### Step-by-Step Process
+
+1. **Prepare Your Theme**
+   - Set up sample content that showcases the theme's features
+   - Ensure all styling is complete and polished
+   - Test the theme at desktop resolution (1200px+ width)
+
+2. **Capture the Screenshot**
+   - Open your theme in a browser at full desktop width
+   - Navigate to the homepage or most representative page
+   - Take a screenshot of the entire viewport
+   - Use browser developer tools to set exact dimensions if needed
+
+3. **Edit the Image**
+   - Crop to exactly 1200x675px (16:9 ratio)
+   - Ensure the image is sharp and clear
+   - Optimize for web to reduce file size
+   - Save in PNG format for best quality
+
+4. **Add to Theme**
+   - Save as `thumbnail.png` in your theme's root directory
+   - Test in the admin panel to ensure it displays correctly
+
+### Best Practices for Thumbnails
+
+#### Photography Tips
+- **Lighting**: Ensure good contrast and readability
+- **Focus**: Highlight the theme's unique design elements
+- **Navigation**: Include the main menu and key UI components
+- **Content**: Show how actual content looks in the theme
+- **Branding**: Demonstrate the theme's visual identity
+
+#### Technical Considerations
+- **Resolution**: Start with 2400x1350px and scale down for crisp results
+- **Compression**: Use tools like TinyPNG or ImageOptim to reduce file size
+- **Format**: PNG for themes with sharp edges, JPG for photographic content
+- **Fallback**: Always test how the theme looks without a thumbnail
+
+### Thumbnail Display Features
+
+The admin panel provides several features for thumbnail display:
+
+#### Visual Layout
+- **Grid Display**: Thumbnails are shown in a responsive grid layout
+- **Aspect Ratio**: All thumbnails maintain 16:9 aspect ratio
+- **Hover Effects**: Subtle zoom effect on hover for better user interaction
+- **Modal View**: Click thumbnails to view larger versions
+
+#### Fallback Display
+When no thumbnail is available, the system shows:
+- A placeholder icon with "No Preview" text
+- Consistent sizing with thumbnail areas
+- All other theme information (name, description, version, author)
+
+### Theme Examples by Type
+
+#### Modern/Minimal Themes
+- Clean homepage with clear typography hierarchy
+- Show navigation, hero section, and content preview
+- Emphasize whitespace and clean design principles
+
+#### Dark Themes
+- Capture in dark mode to show the theme's character
+- Ensure text remains readable in the thumbnail
+- Highlight color accents and unique dark theme elements
+
+#### Portfolio Themes
+- Include sample portfolio items or image galleries
+- Show the theme's layout for showcasing creative work
+- Demonstrate the visual hierarchy and spacing
+
+#### Blog Themes
+- Display blog post layout with sample articles
+- Include sidebar if present in the design
+- Show the theme's reading experience and typography
+
+### Troubleshooting Thumbnails
+
+#### Thumbnail Not Displaying
+1. **Check Filename**: Ensure exact spelling of supported filenames
+2. **Verify Location**: File must be in theme root directory
+3. **File Permissions**: Ensure web server can read the file (644 or 755)
+4. **Clear Cache**: Refresh browser cache and admin panel
+5. **File Format**: Verify the image is in a supported format
+
+#### Quality Issues
+1. **Check Resolution**: Original should be at least 1200x675px
+2. **Reduce Compression**: If image appears blurry, use less compression
+3. **Try PNG**: Use PNG format for better quality with sharp edges
+4. **Aspect Ratio**: Ensure exactly 16:9 ratio (1200x675px)
+
+#### File Size Problems
+1. **Compress Image**: Use online tools like TinyPNG or ImageOptim
+2. **Reduce Dimensions**: Scale down if extremely large source image
+3. **Change Format**: Convert to JPG if using PNG without transparency
+4. **Remove Metadata**: Strip EXIF data and other metadata
+
+### Integration with Admin Panel
+
+The thumbnail system integrates seamlessly with the existing admin interface:
+
+- **Automatic Detection**: No configuration required, just add the file
+- **Responsive Design**: Thumbnails adapt to different screen sizes
+- **Accessibility**: Proper alt text and keyboard navigation support
+- **Performance**: Optimized loading and caching of thumbnail images
+
 ## CSS and Styling
 
 Create your CSS file in the `assets/` directory. You can use any CSS features including:
@@ -539,7 +680,16 @@ mkdir -p themes/simpleblog/assets
 </html>
 ```
 
-### 5. Create CSS
+### 5. Add a Thumbnail
+
+Create a thumbnail image showing your theme's appearance:
+
+1. Open your theme in a browser at 1200px+ width
+2. Take a screenshot of the homepage
+3. Crop to 1200x675px (16:9 ratio)
+4. Save as `thumbnail.png` in the theme root directory
+
+### 6. Create CSS
 
 **assets/style.css:**
 ```css
@@ -644,7 +794,8 @@ Templates automatically include meta tags and structured data for better SEO.
 4. **Accessibility**: Follow WCAG guidelines for accessibility
 5. **Performance**: Optimize images and minimize CSS/JS
 6. **Documentation**: Include a README.md with installation and customization instructions
-7. **Testing**: Test your theme with different content types and screen sizes
+7. **Thumbnails**: Always include a high-quality thumbnail for better user experience
+8. **Testing**: Test your theme with different content types and screen sizes
 
 ### File Naming Conventions
 
@@ -664,9 +815,10 @@ Templates automatically include meta tags and structured data for better SEO.
 Once you've created your theme:
 
 1. Test it thoroughly with different content
-2. Add it to your FearlessCMS installation
-3. Activate it in the admin panel
-4. Customize theme options
-5. Share it with the community!
+2. Add a high-quality thumbnail image
+3. Add it to your FearlessCMS installation
+4. Activate it in the admin panel
+5. Customize theme options
+6. Share it with the community!
 
 For more advanced theme development, check out the existing themes in the `themes/` directory for examples and inspiration. 

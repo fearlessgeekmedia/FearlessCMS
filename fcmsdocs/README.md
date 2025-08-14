@@ -17,6 +17,12 @@ Welcome to the FearlessCMS documentation. Here you will find guides and referenc
 
 ### Development Guides
 - [Theme Development](theme-development-index.md)
+- [Creating Themes](creating-themes.md)
+- [Theme Development Workflow](theme-development-workflow.md)
+- [Theme Thumbnails Guide](theme-thumbnails-guide.md)
+- [Theme Options Guide](theme-options-guide.md)
+- [Theme Templates Reference](theme-templates-reference.md)
+- [Modular Templates](modular-templates.md)
 - [Plugin Development](plugin-development-guide.md)
 - [Parallax Sections Plugin](parallax-plugin.md)
 - [Ad Area System](ad-area-system.md)

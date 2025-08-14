@@ -48,6 +48,9 @@ touch templates/404.html
 
 # Create assets
 touch assets/style.css
+
+# Placeholder for thumbnail (add actual image later)
+# thumbnail.png or screenshot.png will go here
 touch assets/theme.js
 ```
 
@@ -474,6 +477,53 @@ git add .
 git commit -m "Initial theme commit"
 ```
 
+## Creating Theme Thumbnails
+
+Before deploying your theme, create a thumbnail image for the admin panel preview:
+
+### 1. Prepare Your Theme for Screenshot
+
+```bash
+# Ensure theme is active and properly styled
+# Add sample content to showcase the theme
+# Test at desktop resolution (1200px+ width)
+```
+
+### 2. Capture the Thumbnail
+
+1. **Open your theme** in a browser at desktop resolution
+2. **Navigate to homepage** or most representative page
+3. **Take a screenshot** of the full viewport
+4. **Crop to 1200x675px** (16:9 aspect ratio)
+5. **Optimize the image** to keep under 500KB
+6. **Save as `thumbnail.png`** in your theme root directory
+
+### 3. Thumbnail Best Practices
+
+```bash
+# Good thumbnail characteristics:
+# - Shows homepage or main layout
+# - High resolution and clear quality
+# - Realistic sample content (not Lorem Ipsum)
+# - Proper lighting and contrast
+# - Highlights theme's unique features
+```
+
+### 4. Test Thumbnail Display
+
+1. **Refresh admin panel** to see the thumbnail
+2. **Check grid layout** - ensure it displays properly
+3. **Test modal view** - click to view larger version
+4. **Verify fallback** - temporarily rename file to test placeholder
+
+### 5. Thumbnail File Requirements
+
+- **Filename**: `thumbnail.png`, `thumbnail.jpg`, `screenshot.png`, or `screenshot.jpg`
+- **Dimensions**: 1200x675px (recommended)
+- **Format**: PNG (preferred), JPG, JPEG, GIF, or WebP
+- **Size**: Under 500KB for optimal performance
+- **Location**: Theme root directory (same level as config.json)
+
 ## Deployment
 
 ### 1. Package Your Theme
@@ -481,6 +531,9 @@ git commit -m "Initial theme commit"
 Create a clean distribution:
 
 ```bash
+# Verify thumbnail is present
+ls -la thumbnail.png  # or thumbnail.jpg, screenshot.png, etc.
+
 # Remove development files
 rm -rf .git
 rm -rf node_modules
@@ -489,7 +542,7 @@ rm -rf node_modules
 # rm -rf dist
 # rm -rf build
 
-# Create zip file
+# Create zip file (include thumbnail)
 zip -r my-theme-v1.0.0.zip . -x "*.git*" "node_modules/*"
 ```
 
@@ -497,9 +550,10 @@ zip -r my-theme-v1.0.0.zip . -x "*.git*" "node_modules/*"
 
 1. **Upload** the theme to your FearlessCMS installation
 2. **Extract** to the `themes/` directory
-3. **Activate** the theme in admin panel
-4. **Configure** theme options
-5. **Test** thoroughly
+3. **Verify thumbnail** appears in admin themes section
+4. **Activate** the theme in admin panel
+5. **Configure** theme options
+6. **Test** thoroughly
 
 ## Maintenance
 
