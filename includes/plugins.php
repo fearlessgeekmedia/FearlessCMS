@@ -238,7 +238,9 @@ $GLOBALS['fcms_admin_sections'] = [];
  * ]
  */
 function fcms_register_admin_section($id, $opts) {
-    error_log("Registering admin section: " . $id . " with options: " . print_r($opts, true));
+    if (getenv('FCMS_DEBUG') === 'true') {
+        error_log("Registering admin section: " . $id . " with options: " . print_r($opts, true));
+    }
     $GLOBALS['fcms_admin_sections'][$id] = $opts;
 }
 
@@ -248,18 +250,20 @@ function fcms_register_admin_section($id, $opts) {
  */
 function fcms_get_admin_sections() {
     $sections = $GLOBALS['fcms_admin_sections'];
-    
-    error_log("Admin sections before sorting: " . print_r($sections, true));
-    
+
+    if (getenv('FCMS_DEBUG') === 'true') {
+        error_log("Admin sections before sorting: " . print_r($sections, true));
+    }
+
     // Apply CMS mode filtering
     if (isset($GLOBALS['cmsModeManager'])) {
         $cmsModeManager = $GLOBALS['cmsModeManager'];
-        
+
         // Filter out sections based on CMS mode permissions
         $filtered_sections = [];
         foreach ($sections as $id => $section) {
             $show_section = true;
-            
+
             // Check specific permissions for restricted sections
             switch ($id) {
                 case 'manage_plugins':
@@ -272,24 +276,26 @@ function fcms_get_admin_sections() {
                     $show_section = $cmsModeManager->canManageFiles();
                     break;
             }
-            
+
             if ($show_section) {
                 $filtered_sections[$id] = $section;
             }
         }
         $sections = $filtered_sections;
     }
-    
+
     // Apply custom filters
     $sections = fcms_apply_filter('filter_admin_sections', $sections);
-    
+
     // First, sort by menu_order
     uasort($sections, function($a, $b) {
         return ($a['menu_order'] ?? 100) <=> ($b['menu_order'] ?? 100);
     });
-    
-    error_log("Admin sections after sorting: " . print_r($sections, true));
-    
+
+    if (getenv('FCMS_DEBUG') === 'true') {
+        error_log("Admin sections after sorting: " . print_r($sections, true));
+    }
+
     // Then, organize into parent/child structure
     $organized = [];
     foreach ($sections as $id => $section) {
@@ -321,9 +327,11 @@ function fcms_get_admin_sections() {
             }
         }
     }
-    
-    error_log("Admin sections after organization: " . print_r($organized, true));
-    
+
+    if (getenv('FCMS_DEBUG') === 'true') {
+        error_log("Admin sections after organization: " . print_r($organized, true));
+    }
+
     return $organized;
 }
 
@@ -350,4 +358,3 @@ function fcms_load_plugins() {
 }
 fcms_load_plugins();
 fcms_do_hook('init');
-?>

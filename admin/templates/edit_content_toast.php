@@ -42,7 +42,9 @@ foreach ($contentFiles as $file) {
     <form method="POST" id="editForm" class="space-y-6">
         <input type="hidden" name="action" value="save_content">
         <input type="hidden" name="path" value="<?php echo htmlspecialchars($path); ?>">
-        
+        <input type="hidden" name="editor_mode" value="easy">
+        <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
+
         <div class="grid grid-cols-2 gap-6">
             <div>
                 <label class="block mb-2">Title</label>
@@ -152,11 +154,11 @@ function previewContent() {
     const form = document.getElementById('editForm');
     const formData = new FormData(form);
     formData.append('action', 'preview_content');
-    
+
     // Get the current editor content
     const editorContent = editor.getMarkdown();
     formData.set('content', editorContent);
-    
+
     // Send to admin endpoint instead of root index.php
     fetch('?action=preview_content', {
         method: 'POST',
@@ -175,4 +177,4 @@ function previewContent() {
         alert('Failed to create preview. Please try again.');
     });
 }
-</script> 
+</script>

@@ -1,14 +1,16 @@
 <?php
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'create_page') {
     error_log("Received POST data: " . print_r($_POST, true));
-    
+
     if (!isLoggedIn()) {
         $error = 'You must be logged in to create pages';
+    } elseif (!validate_csrf_token()) {
+        $error = 'Invalid security token. Please refresh the page and try again.';
     } else {
-        $newPageFilename = $_POST['new_page_filename'] ?? '';
+        $newPageFilename = sanitize_input($_POST['new_page_filename'] ?? '', 'path');
         $newPageContent = $_POST['new_page_content'] ?? '';
-        $pageTitle = $_POST['page_title'] ?? '';
-        $parentPage = $_POST['parent_page'] ?? '';
+        $pageTitle = sanitize_input($_POST['page_title'] ?? '', 'string');
+        $parentPage = sanitize_input($_POST['parent_page'] ?? '', 'path');
 
         error_log("Processing page creation:");
         error_log("Filename: " . $newPageFilename);
@@ -29,6 +31,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         if (!preg_match('/^[a-zA-Z0-9_\/-]+\.md$/', $newPageFilename)) {
             $error = 'Invalid filename. Use only letters, numbers, dashes, underscores, and slashes, and end with .md';
             error_log("Invalid filename: " . $newPageFilename);
+        } elseif (strpos($newPageFilename, '../') !== false || strpos($newPageFilename, './') === 0) {
+            $error = 'Invalid file path - path traversal detected';
+            error_log("Path traversal attempt: " . $newPageFilename);
         } else {
             $filePath = CONTENT_DIR . '/' . $newPageFilename;
             if (file_exists($filePath)) {

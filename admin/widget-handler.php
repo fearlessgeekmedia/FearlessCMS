@@ -14,7 +14,7 @@ error_log("Widget Handler: Script started");
 function fcms_render_widget_manager() {
     $widgetsFile = ADMIN_CONFIG_DIR . '/widgets.json';
     $widgets = [];
-    
+
     // Load widgets from file if it exists
     if (file_exists($widgetsFile)) {
         $jsonContent = file_get_contents($widgetsFile);
@@ -23,11 +23,11 @@ function fcms_render_widget_manager() {
             error_log("Widget Handler: Loaded widgets: " . print_r($widgets, true));
         }
     }
-    
+
     // Generate sidebar selection
     $sidebar_selection = '<select name="sidebar" id="sidebar-select" class="form-select">';
     $sidebar_selection .= '<option value="">Select a sidebar...</option>';
-    
+
     if (!empty($widgets)) {
         foreach ($widgets as $id => $sidebar) {
             $selected = (!empty($_GET['sidebar']) && $_GET['sidebar'] === $id) ? 'selected' : '';
@@ -40,7 +40,7 @@ function fcms_render_widget_manager() {
         }
     }
     $sidebar_selection .= '</select>';
-    
+
     // Generate widget list
     $widget_list = '';
     $current_sidebar = '';
@@ -75,7 +75,7 @@ function fcms_render_widget_manager() {
             );
         }
     }
-    
+
     return [
         'sidebar_selection' => $sidebar_selection,
         'widget_list' => $widget_list,
@@ -87,13 +87,14 @@ function fcms_render_widget_manager() {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
     error_log("Widget Handler: Processing AJAX request");
     error_log("Widget Handler: POST data: " . print_r($_POST, true));
-    
+
     // Clear any previous output and set JSON header
     ob_clean();
     header('Content-Type: application/json');
 
     // Ensure user is logged in
     if (!isLoggedIn()) {
+        fcms_flush_output(); // Flush output buffer before setting headers
         http_response_code(403);
         echo json_encode(['success' => false, 'error' => 'Unauthorized access']);
         exit;
@@ -106,6 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
         $json = file_get_contents('php://input');
         $data = json_decode($json, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
+            fcms_flush_output(); // Flush output buffer before setting headers
             http_response_code(400);
             echo json_encode(['success' => false, 'error' => 'Invalid JSON input']);
             exit;
@@ -141,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                 // Format the ID (lowercase, replace spaces with hyphens)
                 $id = strtolower(preg_replace('/[^a-z0-9-]/', '-', $data['id']));
                 error_log("Widget Handler: Creating sidebar with ID: " . $id);
-                
+
                 // Ensure the ID is unique
                 $baseId = $id;
                 $counter = 1;
@@ -263,10 +265,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
         if (!is_dir(dirname($widgetsFile))) {
             mkdir(dirname($widgetsFile), 0755, true);
         }
-        
+
         $jsonData = json_encode($widgets, JSON_PRETTY_PRINT);
         error_log("Widget Handler: Saving widgets to admin config: " . $jsonData);
-        
+
         if (file_put_contents($widgetsFile, $jsonData) === false) {
             throw new Exception('Failed to save widgets file');
         }
@@ -276,7 +278,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
         if (!is_dir(dirname($publicWidgetsFile))) {
             mkdir(dirname($publicWidgetsFile), 0755, true);
         }
-        
+
         // Convert to array format for the WidgetManager
         $publicWidgets = [];
         foreach ($widgets as $sidebarId => $sidebar) {
@@ -286,10 +288,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
                 'widgets' => array_values($sidebar['widgets']) // Convert to array
             ];
         }
-        
+
         $publicJsonData = json_encode($publicWidgets, JSON_PRETTY_PRINT);
         error_log("Widget Handler: Saving widgets to public config: " . $publicJsonData);
-        
+
         if (file_put_contents($publicWidgetsFile, $publicJsonData) === false) {
             error_log("Widget Handler: Warning - Failed to save to public config, but admin config was saved");
         }
@@ -298,6 +300,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
 
     } catch (Exception $e) {
         error_log('Widget Handler Error: ' . $e->getMessage());
+        fcms_flush_output(); // Flush output buffer before setting headers
         http_response_code(500);
         echo json_encode([
             'success' => false,
@@ -305,4 +308,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WI
         ]);
     }
     exit;
-} 
+}

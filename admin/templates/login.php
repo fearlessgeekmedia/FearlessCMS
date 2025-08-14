@@ -21,22 +21,16 @@
                     Sign in to your account
                 </p>
             </div>
-            
+
             <?php if (!empty($error)): ?>
                 <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
                     <span class="block sm:inline"><?php echo htmlspecialchars($error); ?></span>
                 </div>
             <?php endif; ?>
 
-            <?php
-            // Debug output
-            echo "<!-- Debug: Current URL: " . $_SERVER['REQUEST_URI'] . " -->\n";
-            echo "<!-- Debug: POST data: " . print_r($_POST, true) . " -->\n";
-            echo "<!-- Debug: Session: " . print_r($_SESSION, true) . " -->\n";
-            ?>
-
             <form class="mt-8 space-y-6" method="POST" action="/<?php echo $adminPath; ?>/login">
                 <input type="hidden" name="action" value="login">
+                <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
                 <div class="rounded-md shadow-sm -space-y-px">
                     <div>
                         <label for="username" class="sr-only">Username</label>

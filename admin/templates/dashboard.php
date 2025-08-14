@@ -5,6 +5,7 @@
                 <h3 class="text-lg font-medium mb-4">Site Settings</h3>
                 <form method="POST" class="space-y-4">
                     <input type="hidden" name="action" value="update_site_name">
+                    <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
                     <div>
                         <label class="block mb-1">Site Name</label>
                         <input type="text" name="site_name" value="<?php echo htmlspecialchars($siteName ?? ''); ?>" class="w-full px-3 py-2 border border-gray-300 rounded">

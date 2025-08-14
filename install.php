@@ -1,7 +1,15 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+// Set appropriate error reporting for installation
+if (getenv('FCMS_DEBUG') === 'true') {
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
+} else {
+    ini_set('display_errors', 0);
+    ini_set('display_startup_errors', 0);
+    error_reporting(E_ERROR | E_WARNING | E_PARSE);
+}
+ini_set('log_errors', 1);
 
 // Start session for CSRF protection
 session_start();
@@ -23,19 +31,19 @@ function validate_csrf_token(): bool {
 function check_rate_limit(string $action, int $max_attempts = 3, int $time_window = 300): bool {
     $key = "rate_limit_{$action}";
     $now = time();
-    
+
     if (!isset($_SESSION[$key])) {
         $_SESSION[$key] = ['count' => 0, 'reset_time' => $now + $time_window];
     }
-    
+
     if ($now > $_SESSION[$key]['reset_time']) {
         $_SESSION[$key] = ['count' => 0, 'reset_time' => $now + $time_window];
     }
-    
+
     if ($_SESSION[$key]['count'] >= $max_attempts) {
         return false;
     }
-    
+
     $_SESSION[$key]['count']++;
     return true;
 }
@@ -73,45 +81,45 @@ function check_extension(string $ext): array {
 
 function run_cmd(array $cmd, ?string $cwd = null): array {
     global $ALLOWED_COMMANDS;
-    
+
     // Validate command against whitelist
     $cmd_key = implode('_', $cmd);
     $allowed = false;
-    
+
     foreach ($ALLOWED_COMMANDS as $pattern => $allowed_cmd) {
         if (array_slice($cmd, 0, count($allowed_cmd)) === $allowed_cmd) {
             $allowed = true;
             break;
         }
     }
-    
+
     if (!$allowed) {
         return ['code' => 1, 'out' => '', 'err' => 'Command not allowed for security reasons'];
     }
-    
+
     // Additional security: ensure cwd is within project root
     if ($cwd && strpos(realpath($cwd), realpath($GLOBALS['projectRoot'])) !== 0) {
         return ['code' => 1, 'out' => '', 'err' => 'Invalid working directory'];
     }
-    
+
     $descriptorspec = [
         0 => ['pipe', 'r'],
         1 => ['pipe', 'w'],
         2 => ['pipe', 'w']
     ];
-    
+
     $process = proc_open($cmd, $descriptorspec, $pipes, $cwd ?: null);
     if (!is_resource($process)) {
         return ['code' => 1, 'out' => '', 'err' => 'Failed to start process'];
     }
-    
+
     fclose($pipes[0]);
     $out = stream_get_contents($pipes[1]);
     fclose($pipes[1]);
     $err = stream_get_contents($pipes[2]);
     fclose($pipes[2]);
     $code = proc_close($process);
-    
+
     return ['code' => $code, 'out' => $out, 'err' => $err];
 }
 
@@ -245,11 +253,11 @@ if (PHP_SAPI === 'cli') {
     if (empty($options)) {
         echo "Usage: php install.php [--check] [--create-dirs] [--install-export-deps] [--create-admin=<username> --password=<pwd>|--password-file=<file>]\n";
     }
-    
+
     // Security warning for CLI users
     echo "\n⚠️  SECURITY WARNING: After installation, delete this file to prevent security vulnerabilities!\n";
     echo "   Run: rm install.php\n\n";
-    
+
     exit($exitCode);
 }
 

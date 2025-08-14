@@ -1,13 +1,13 @@
-@import url('https://fonts.googleapis.com/css2?family=Rubik+Mono+One&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Special+Elite&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Rock+Salt&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Rubik+Mono+One&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Special+Elite&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Rock+Salt&display=swap");
 
 body {
     margin: 0;
     background: #0b0b0b;
     color: #fefefe;
-    font-family: 'Special Elite', monospace;
-    background-image: url('https://www.transparenttextures.com/patterns/cardboard.png');
+    font-family: "Special Elite", monospace;
+    background-image: url("https://www.transparenttextures.com/patterns/cardboard.png");
     text-align: center;
     padding: 0;
 }
@@ -20,7 +20,7 @@ header {
 }
 
 .logo {
-    font-family: 'Rubik Mono One', sans-serif;
+    font-family: "Rubik Mono One", sans-serif;
     font-size: 3rem;
     color: #fffb00;
     background: #ff0055;
@@ -44,7 +44,7 @@ main {
     display: inline-block;
     padding: 0.5rem;
     border: 2px solid #ff66cc;
-    font-family: 'Special Elite', monospace;
+    font-family: "Special Elite", monospace;
     font-weight: bold;
 }
 
@@ -58,7 +58,7 @@ main {
     text-decoration: none;
     text-transform: uppercase;
     transition: all 0.2s ease-in-out;
-    font-family: 'Rock Salt', cursive;
+    font-family: "Rock Salt", cursive;
     font-size: 1.5rem;
     transform: rotate(-2deg);
     box-shadow: 4px 4px 0 #000;
@@ -75,7 +75,7 @@ footer {
     color: #888;
     border-top: 1px solid #444;
     padding: 1rem;
-    font-family: 'Special Elite', monospace;
+    font-family: "Special Elite", monospace;
 }
 
 /* Additional styles for CMS integration */
@@ -87,7 +87,7 @@ footer {
     margin-left: auto;
     margin-right: auto;
     position: relative;
-  }
+}
 
 .sidebar {
     background: #222;
@@ -102,7 +102,7 @@ footer {
 
 .widget-title {
     color: #ff66cc;
-    font-family: 'Rock Salt', cursive;
+    font-family: "Rock Salt", cursive;
     font-size: 1.2rem;
     margin-bottom: 1rem;
 }
@@ -130,7 +130,7 @@ footer {
 }
 
 .main-content h1 {
-    font-family: 'Rock Salt', cursive;
+    font-family: "Rock Salt", cursive;
     color: #fffb00;
     font-size: 2.5rem;
     margin-bottom: 2rem;
@@ -143,65 +143,65 @@ footer {
         font-size: 14px;
         padding: 0;
     }
-    
+
     /* Header mobile adjustments */
     header {
         padding: 1rem 0.5rem;
     }
-    
+
     .logo {
         font-size: 1.8rem;
         padding: 0.3rem 0.8rem;
         transform: rotate(-1deg);
     }
-    
+
     .slogan {
         font-size: 1.1rem;
         margin-bottom: 1rem;
         transform: rotate(1deg);
     }
-    
+
     /* Main content mobile adjustments */
     main {
         padding: 1rem;
     }
-    
+
     .content {
         padding: 2rem 1rem;
         margin-top: -4em;
     }
-    
+
     .main-content {
         padding: 1.5rem;
         max-width: 100%;
     }
-    
+
     .main-content h1 {
         font-size: 2rem;
         margin-bottom: 1.5rem;
     }
-    
+
     /* Layout mobile adjustments */
     .layout-with-sidebar {
         grid-template-columns: 1fr;
         gap: 1rem;
     }
-    
+
     .sidebar {
         margin-top: 1rem;
         order: 2;
     }
-    
+
     /* Menu mobile adjustments */
     .main-menu {
         margin: 1rem 0 0.5rem 0;
     }
-    
+
     .main-menu li {
         display: block;
         margin: 0.3rem 0;
     }
-    
+
     .main-menu li > a {
         font-size: 1rem;
         padding: 0.4rem 1rem;
@@ -209,7 +209,7 @@ footer {
         display: block;
         text-align: center;
     }
-    
+
     .main-menu ul ul {
         position: static;
         box-shadow: none;
@@ -217,45 +217,45 @@ footer {
         margin-top: 0;
         padding: 0;
     }
-    
+
     .main-menu ul ul a {
         padding-left: 2rem;
     }
-    
+
     /* Hero banner mobile adjustments */
     .hero-banner {
         margin: -1rem auto;
     }
-    
+
     .hero-banner img {
         max-width: 100%;
         height: auto;
     }
-    
+
     /* Iframe mobile adjustments */
     iframe {
         margin: 0.8rem 0;
         border-width: 1px;
         box-shadow: 2px 2px 2px #000;
     }
-    
+
     /* Widget mobile adjustments */
     .widget-title {
         font-size: 1rem;
     }
-    
+
     .sidebar .widget-content img {
         width: 80px;
         height: auto;
     }
-    
+
     /* Buttons mobile adjustments */
     .buttons a {
         font-size: 1.1rem;
         padding: 0.7rem 1.3rem;
         margin: 0.3rem;
     }
-    
+
     /* Footer mobile adjustments */
     footer {
         margin-top: 2rem;
@@ -270,32 +270,32 @@ footer {
         font-size: 1.5rem;
         padding: 0.2rem 0.6rem;
     }
-    
+
     .slogan {
         font-size: 1rem;
     }
-    
+
     .main-content h1 {
         font-size: 1.8rem;
     }
-    
+
     .main-menu li > a {
         font-size: 0.9rem;
         padding: 0.3rem 0.8rem;
     }
-    
+
     .content {
         padding: 1.5rem 0.5rem;
     }
-    
+
     .main-content {
         padding: 1rem;
     }
-    
+
     .sidebar .widget-content img {
         width: 70px;
     }
-    
+
     /* Iframe extra small mobile adjustments */
     iframe {
         margin: 0.5rem 0;
@@ -308,7 +308,7 @@ footer {
     text-align: center;
     z-index: 200;
     position: relative;
-  }
+}
 
 .main-menu ul {
     list-style: none;
@@ -323,7 +323,7 @@ footer {
 }
 
 .main-menu li > a {
-    font-family: 'Rock Salt', cursive;
+    font-family: "Rock Salt", cursive;
     color: #fff;
     background: #222;
     border: 2px dashed #000;
@@ -333,19 +333,23 @@ footer {
     text-transform: uppercase;
     font-size: 1.1rem;
     letter-spacing: 1px;
-    transition: background 0.2s, color 0.2s, border 0.2s;
+    transition:
+        background 0.2s,
+        color 0.2s,
+        border 0.2s;
     box-shadow: 2px 2px 0 #000;
     border-radius: 4px;
     transform: rotate(-3.5deg) !important;
     display: inline-block;
 }
 
-.main-menu li > a:hover, .main-menu li > a.active {
+.main-menu li > a:hover,
+.main-menu li > a.active {
     background: #fff;
     color: #241f1f;
     border-color: #fffb00;
     text-shadow: 1px 1px 0 #000;
-  }
+}
 
 /* Dropdown menu styles */
 .main-menu ul ul {
@@ -378,7 +382,8 @@ footer {
     transform: none;
 }
 
-.main-menu ul ul a:hover, .main-menu ul ul a.active {
+.main-menu ul ul a:hover,
+.main-menu ul ul a.active {
     background: #ff0055;
     color: #fff;
     border: none;
@@ -418,7 +423,7 @@ footer {
     align-items: center;
     margin: -2rem auto;
     max-width: 1200px;
-    z-index: 1
+    z-index: 1;
 }
 
 .hero-banner img {

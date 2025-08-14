@@ -39,7 +39,9 @@ function ecommerce_init() {
 function ecommerce_create_tables() {
     $pdo = fcms_do_hook('database_connect');
     if (!$pdo) {
-        error_log("E-commerce Plugin: Could not connect to database to create tables.");
+        if (getenv('FCMS_DEBUG') === 'true') {
+            error_log("E-commerce Plugin: Could not connect to database to create tables.");
+        }
         return false;
     }
 
@@ -73,7 +75,9 @@ function ecommerce_create_tables() {
     foreach ($queries as $query) {
         $stmt = fcms_do_hook('database_query', $query);
         if ($stmt === false) {
-            error_log("E-commerce Plugin: Failed to execute query: " . $query);
+            if (getenv('FCMS_DEBUG') === 'true') {
+                error_log("E-commerce Plugin: Failed to execute query: " . $query);
+            }
         }
     }
 }
@@ -150,7 +154,9 @@ function ecommerce_create_order($userId, $totalAmount, $items) {
         return $order_id;
     } catch (PDOException $e) {
         $pdo->rollBack();
-        error_log("E-commerce Plugin: Failed to create order - " . $e->getMessage());
+        if (getenv('FCMS_DEBUG') === 'true') {
+            error_log("E-commerce Plugin: Failed to create order - " . $e->getMessage());
+        }
         return false;
     }
 }

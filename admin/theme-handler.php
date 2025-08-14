@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $themeOptionsFile = CONFIG_DIR . '/theme_options.json';
                 $themeOptions = file_exists($themeOptionsFile) ? json_decode(file_get_contents($themeOptionsFile), true) : [];
                 $uploadsDir = PROJECT_ROOT . '/uploads';
-                
+
                 // Handle logo removal
                 if (isset($_POST['remove_logo']) && $_POST['remove_logo'] === '1') {
                     if (!empty($themeOptions['logo'])) {
@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         $themeOptions['herobanner'] = '';
                     }
                 }
-                
+
                 // Ensure uploads directory exists
                 if (!is_dir($uploadsDir)) {
                     mkdir($uploadsDir, 0755, true);
@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 if (isset($_FILES['herobanner'])) {
                     error_log('Hero banner upload attempt.');
                     error_log('herobanner _FILES: ' . print_r($_FILES['herobanner'], true));
-                    
+
                     if ($_FILES['herobanner']['error'] !== UPLOAD_ERR_OK) {
                         $errorMessages = [
                             UPLOAD_ERR_INI_SIZE   => 'The uploaded file exceeds the upload_max_filesize directive in php.ini.',
@@ -117,11 +117,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         $err = $_FILES['herobanner']['error'];
                         $msg = $errorMessages[$err] ?? 'Unknown upload error.';
                         error_log('Hero banner upload error: ' . $msg);
-                        
+
                         // Return detailed error to client
                         header('Content-Type: application/json');
                         echo json_encode([
-                            'success' => false, 
+                            'success' => false,
                             'error' => $msg,
                             'details' => [
                                 'error_code' => $err,
@@ -164,12 +164,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 if (isset($_FILES['logo']) || isset($_FILES['herobanner']) || isset($_POST['remove_logo']) || isset($_POST['remove_herobanner'])) {
                     // Save updated options
                     if (file_put_contents($themeOptionsFile, json_encode($themeOptions, JSON_PRETTY_PRINT))) {
-                        header('Content-Type: application/json');
-                        echo json_encode(['success' => true]);
+                        header('Location: /admin/?action=manage_themes&success=1');
                         exit;
                     } else {
-                        header('Content-Type: application/json');
-                        echo json_encode(['success' => false, 'error' => 'Failed to save theme options']);
+                        header('Location: /admin/?action=manage_themes&error=Failed+to+save+theme+options');
                         exit;
                     }
                 }
@@ -177,4 +175,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 break;
         }
     }
-} 
+}

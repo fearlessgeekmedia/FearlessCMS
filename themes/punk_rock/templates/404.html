@@ -1,21 +1,23 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    {{module=head.html}}
-</head>
-<body>
-    {{module=header.html}}
-    
-    <main>
-        <div class="content">
-            <div class="main-content">
-                <h1>404 - Page Not Found</h1>
-                <p>The page you're looking for doesn't exist.</p>
-                <p><a href="/">Go to Homepage</a></p>
+    <head>
+        {{module=head.html}}
+        <title>404 - Page Not Found | {{site_name}}</title>
+    </head>
+    <body>
+        {{module=header.html}}
+
+        <main>
+            <div class="content">
+                <div class="main-content">
+                    <h1>404</h1>
+                    <p>The page you're looking for doesn't exist.</p>
+                    <p>Maybe it got lost in the digital underground.</p>
+                    <p><a href="/">Go back to the noise</a></p>
+                </div>
             </div>
-        </div>
-    </main>
-    
-    {{module=footer.html}}
-</body>
+        </main>
+
+        {{module=footer.html}}
+    </body>
 </html>

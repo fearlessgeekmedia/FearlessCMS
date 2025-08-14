@@ -1,31 +1,31 @@
 {
-    "name": "Cyberpunk",
-    "version": "1.0.0",
-    "author": "FearlessCMS",
-    "description": "A futuristic cyberpunk theme with neon colors and high-tech aesthetics",
-    "options": {
-        "logo": {
-            "type": "image",
-            "label": "Logo"
-        },
-        "herobanner": {
-            "type": "image",
-            "label": "Hero Banner"
-        },
-        "accentColor": {
-            "type": "color",
-            "label": "Accent Color",
-            "default": "#00ff41"
-        },
-        "neonPink": {
-            "type": "color",
-            "label": "Neon Pink",
-            "default": "#ff0080"
-        },
-        "darkMode": {
-            "type": "boolean",
-            "label": "Dark Mode",
-            "default": true
-        }
+  "name": "Cyberpunk",
+  "version": "1.0.0",
+  "author": "FearlessCMS",
+  "description": "A futuristic cyberpunk theme with neon colors and high-tech aesthetics",
+  "options": {
+    "logo": {
+      "type": "image",
+      "label": "Logo"
+    },
+    "herobanner": {
+      "type": "image",
+      "label": "Hero Banner"
+    },
+    "accentColor": {
+      "type": "color",
+      "label": "Accent Color",
+      "default": "#00ff41"
+    },
+    "neonPink": {
+      "type": "color",
+      "label": "Neon Pink",
+      "default": "#ff0080"
+    },
+    "darkMode": {
+      "type": "boolean",
+      "label": "Dark Mode",
+      "default": true
     }
-} 
+  }
+}

@@ -28,12 +28,12 @@ $base_url = '';
 if (isset($_SERVER['HTTP_HOST'])) {
     $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
     $base_url = $protocol . $_SERVER['HTTP_HOST'];
-    
+
     // Load admin path from config
     $configFile = CONFIG_DIR . '/config.json';
     $config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
     $adminPath = $config['admin_path'] ?? 'admin';
-    
+
     if (strpos($script_filename, '/admin/') !== false) {
         $base_url .= '/' . $adminPath;
     }
@@ -57,19 +57,8 @@ foreach ($requiredDirs as $dir) {
     }
 }
 
-// Create default users.json if it doesn't exist
-$usersFile = CONFIG_DIR . '/users.json';
-if (!file_exists($usersFile)) {
-    $defaultUsers = [
-        [
-            'id' => 'admin',
-            'username' => 'admin',
-            'password' => password_hash('admin', PASSWORD_DEFAULT),
-            'role' => 'administrator'
-        ]
-    ];
-    file_put_contents($usersFile, json_encode($defaultUsers, JSON_PRETTY_PRINT));
-}
+// Default users.json creation removed for security
+// Use install.php to create the initial admin user
 
 // Create default roles.json if it doesn't exist
 $rolesFile = CONFIG_DIR . '/roles.json';
@@ -164,13 +153,4 @@ if (!file_exists($configFile)) {
     file_put_contents($configFile, json_encode($defaultConfig, JSON_PRETTY_PRINT));
 }
 
-// Configure session settings BEFORE any session starts
-if (session_status() === PHP_SESSION_NONE) {
-    ini_set('session.cookie_httponly', 1);
-    ini_set('session.use_only_cookies', 1);
-    ini_set('session.cookie_secure', isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 1 : 0);
-    ini_set('session.cookie_samesite', 'Lax');
-    ini_set('session.gc_maxlifetime', 3600); // 1 hour
-    ini_set('session.cookie_lifetime', 0); // Session cookie
-    ini_set('session.cookie_path', '/'); // Ensure cookie is available for all paths
-} 
+// Session configuration is now handled in session.php to prevent headers already sent errors

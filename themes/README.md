@@ -72,6 +72,7 @@ All themes follow a consistent structure:
 theme-name/
 ├── theme.json          # Theme metadata
 ├── config.json         # Theme options
+├── thumbnail.png       # Theme preview image (optional)
 ├── templates/
 │   ├── head.html       # Head section
 │   ├── header.html     # Site header
@@ -83,6 +84,15 @@ theme-name/
 └── assets/
     └── style.css       # Theme styles
 ```
+
+### Theme Thumbnails
+Themes can include preview thumbnails that will be displayed in the admin area:
+- **Filename**: `thumbnail.png`, `thumbnail.jpg`, `screenshot.png`, or `screenshot.jpg`
+- **Dimensions**: Recommended 1200x675px (16:9 aspect ratio)
+- **Format**: PNG, JPG, JPEG, GIF, or WebP
+- **Purpose**: Visual preview of the theme for easier selection
+
+If no thumbnail is provided, a placeholder will be shown instead.
 
 ## 🎯 Design Principles
 
@@ -120,13 +130,15 @@ theme-name/
 2. **Custom CSS** - Add custom styles through the admin panel
 3. **Custom JavaScript** - Add custom functionality as needed
 4. **Template Modifications** - Edit template files for advanced customization
+5. **Theme Thumbnails** - Add thumbnail.png or screenshot.png for visual preview
 
 ### Development
 For theme development:
 1. Create a new theme directory in `/themes/`
 2. Follow the template structure above
-3. Use the existing themes as reference
-4. Test thoroughly across different devices
+3. Add a thumbnail image (thumbnail.png or screenshot.png) for admin preview
+4. Use the existing themes as reference
+5. Test thoroughly across different devices
 
 ## 📱 Responsive Breakpoints
 

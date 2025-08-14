@@ -52,7 +52,8 @@ error_log("Available templates: " . print_r($templates, true));
 
     <form method="POST" action="?action=create_page" id="editForm" class="space-y-6">
         <input type="hidden" name="action" value="create_page">
-        
+        <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
+
         <div class="grid grid-cols-2 gap-6">
             <div>
                 <label class="block mb-2">Title</label>
@@ -185,4 +186,4 @@ document.addEventListener('DOMContentLoaded', function() {
         this.submit(); // Submit the form
     });
 });
-</script> 
+</script>

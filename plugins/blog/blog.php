@@ -1,4 +1,9 @@
-<?php error_log("Blog plugin - POST request received"); error_log("Blog plugin - POST data: " . print_r($_POST, true)); ?>
+<?php
+if (getenv('FCMS_DEBUG') === 'true') {
+    error_log("Blog plugin - POST request received");
+    error_log("Blog plugin - POST data: " . print_r($_POST, true));
+}
+?>
 <?php
 /*
 Plugin Name: Blog
@@ -16,16 +21,22 @@ function blog_load_posts() {
 }
 
 function blog_save_posts($posts) {
-    error_log("Blog plugin - blog_save_posts called");
-    error_log("Blog plugin - Saving to file: " . BLOG_POSTS_FILE);
-    error_log("Blog plugin - Posts to save: " . print_r($posts, true));
-    
+    if (getenv('FCMS_DEBUG') === 'true') {
+        error_log("Blog plugin - blog_save_posts called");
+        error_log("Blog plugin - Saving to file: " . BLOG_POSTS_FILE);
+        error_log("Blog plugin - Posts to save: " . print_r($posts, true));
+    }
+
     $json = json_encode($posts, JSON_PRETTY_PRINT);
-    error_log("Blog plugin - JSON to write: " . $json);
-    
+    if (getenv('FCMS_DEBUG') === 'true') {
+        error_log("Blog plugin - JSON to write: " . $json);
+    }
+
     $result = file_put_contents(BLOG_POSTS_FILE, $json);
-    error_log("Blog plugin - Save result: " . ($result !== false ? "success" : "failed"));
-    
+    if (getenv('FCMS_DEBUG') === 'true') {
+        error_log("Blog plugin - Save result: " . ($result !== false ? "success" : "failed"));
+    }
+
     return $result;
 }
 
@@ -41,7 +52,7 @@ function blog_create_slug($text) {
     $text = preg_replace('~-+~', '-', $text);
     // Lowercase
     $text = strtolower($text);
-    
+
     return $text;
 }
 
@@ -50,19 +61,19 @@ function blog_generate_rss() {
     $posts = blog_load_posts();
     $published = array_filter($posts, fn($p) => $p['status'] === 'published');
     usort($published, fn($a, $b) => strcmp($b['date'], $a['date']));
-    
+
     // Get site configuration
     $configFile = CONFIG_DIR . '/config.json';
     $siteName = 'FearlessCMS';
     $siteDescription = '';
     $siteUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]";
-    
+
     if (file_exists($configFile)) {
         $config = json_decode(file_get_contents($configFile), true);
         $siteName = $config['site_name'] ?? $siteName;
         $siteDescription = $config['site_description'] ?? $siteDescription;
     }
-    
+
     // Generate RSS XML
     $rss = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
     $rss .= '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">' . "\n";
@@ -73,38 +84,38 @@ function blog_generate_rss() {
     $rss .= '    <language>en-us</language>' . "\n";
     $rss .= '    <lastBuildDate>' . date(DATE_RSS) . '</lastBuildDate>' . "\n";
     $rss .= '    <atom:link href="' . htmlspecialchars($siteUrl) . '/blog/rss" rel="self" type="application/rss+xml" />' . "\n";
-    
+
     foreach ($published as $post) {
         $postUrl = $siteUrl . '/blog/' . urlencode($post['slug']);
         $pubDate = date(DATE_RSS, strtotime($post['date']));
-        
+
         // Convert markdown to plain text for better RSS readability
         $content = $post['content'];
-        
+
         // Remove markdown headers
         $content = preg_replace('/^#{1,6}\s+/m', '', $content);
-        
+
         // Remove markdown links but keep the text
         $content = preg_replace('/\[([^\]]+)\]\([^)]+\)/', '$1', $content);
-        
+
         // Remove markdown formatting
         $content = preg_replace('/\*\*([^*]+)\*\*/', '$1', $content);
         $content = preg_replace('/\*([^*]+)\*/', '$1', $content);
         $content = preg_replace('/`([^`]+)`/', '$1', $content);
-        
+
         // Remove code blocks
         $content = preg_replace('/```[\s\S]*?```/', '', $content);
-        
+
         // Clean up whitespace
         $content = preg_replace('/\n\s*\n/', "\n\n", $content);
         $content = trim($content);
-        
+
         // Create description (first 300 characters)
         $description = substr($content, 0, 300);
         if (strlen($content) > 300) {
             $description .= '...';
         }
-        
+
         $rss .= '    <item>' . "\n";
         $rss .= '      <title>' . htmlspecialchars($post['title']) . '</title>' . "\n";
         $rss .= '      <link>' . htmlspecialchars($postUrl) . '</link>' . "\n";
@@ -113,10 +124,10 @@ function blog_generate_rss() {
         $rss .= '      <description>' . htmlspecialchars($description) . '</description>' . "\n";
         $rss .= '    </item>' . "\n";
     }
-    
+
     $rss .= '  </channel>' . "\n";
     $rss .= '</rss>';
-    
+
     return $rss;
 }
 
@@ -129,35 +140,45 @@ fcms_register_admin_section('blog', [
         $posts = blog_load_posts();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (isset($_POST['action']) && $_POST['action'] === 'save_post') {
-                error_log("Blog plugin - Starting save_post action");
-                error_log("Blog plugin - POST data: " . print_r($_POST, true));
-                
+                if (getenv('FCMS_DEBUG') === 'true') {
+                    error_log("Blog plugin - Starting save_post action");
+                    error_log("Blog plugin - POST data: " . print_r($_POST, true));
+                }
+
                 $id = $_POST['id'] ?? null;
                 $title = trim($_POST['title'] ?? '');
                 $slug = trim($_POST['slug'] ?? '');
-                
-                error_log("Blog plugin - ID: " . $id);
-                error_log("Blog plugin - Title: " . $title);
-                error_log("Blog plugin - Slug: " . $slug);
-                
+
+                if (getenv('FCMS_DEBUG') === 'true') {
+                    error_log("Blog plugin - ID: " . $id);
+                    error_log("Blog plugin - Title: " . $title);
+                    error_log("Blog plugin - Slug: " . $slug);
+                }
+
                 // Auto-generate slug if empty
                 if (empty($slug) && !empty($title)) {
                     $slug = blog_create_slug($title);
-                    error_log("Blog plugin - Generated slug: " . $slug);
+                    if (getenv('FCMS_DEBUG') === 'true') {
+                        error_log("Blog plugin - Generated slug: " . $slug);
+                    }
                 } else {
                     // Ensure slug is URL-friendly
                     $slug = blog_create_slug($slug);
-                    error_log("Blog plugin - URL-friendly slug: " . $slug);
+                    if (getenv('FCMS_DEBUG') === 'true') {
+                        error_log("Blog plugin - URL-friendly slug: " . $slug);
+                    }
                 }
-                
+
                 $date = trim($_POST['date'] ?? date('Y-m-d'));
                 $content = $_POST['content'] ?? '';
                 $status = $_POST['status'] ?? 'draft';
-                
-                error_log("Blog plugin - Date: " . $date);
-                error_log("Blog plugin - Status: " . $status);
-                error_log("Blog plugin - Content length: " . strlen($content));
-                
+
+                if (getenv('FCMS_DEBUG') === 'true') {
+                    error_log("Blog plugin - Date: " . $date);
+                    error_log("Blog plugin - Status: " . $status);
+                    error_log("Blog plugin - Content length: " . strlen($content));
+                }
+
                 if ($title && $slug) {
                     if ($id) {
                         foreach ($posts as &$post) {
@@ -185,7 +206,9 @@ fcms_register_admin_section('blog', [
                     header('Location: ?action=blog');
                     exit;
                 } else {
-                    error_log("Blog plugin - Invalid title or slug, skipping save");
+                    if (getenv('FCMS_DEBUG') === 'true') {
+                        error_log("Blog plugin - Invalid title or slug, skipping save");
+                    }
                 }
             } elseif (isset($_POST['action']) && $_POST['action'] === 'delete_post' && isset($_POST['id'])) {
                 $posts = array_filter($posts, fn($p) => $p['id'] != $_POST['id']);
@@ -196,7 +219,7 @@ fcms_register_admin_section('blog', [
         }
         echo '<h2 class="text-2xl font-bold mb-6 fira-code">Blog Posts</h2>';
         echo '<a href="?action=blog&new=1" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">New Post</a><br><br>';
-        
+
         // Add file manager script only if file management is allowed
         if (isset($GLOBALS['cmsModeManager']) && $GLOBALS['cmsModeManager']->canManageFiles()) {
             echo '<script>
@@ -254,7 +277,7 @@ fcms_register_admin_section('blog', [
                 echo '</form>';
                 echo '<form method="POST" class="mt-4"><input type="hidden" name="action" value="delete_post"><input type="hidden" name="id" value="' . htmlspecialchars($edit['id']) . '"><button type="submit" onclick="return confirm(\'Delete this post?\')" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Delete</button></form>';
                 echo '<a href="?action=blog" class="inline-block mt-4 text-blue-600 hover:underline">Back to list</a>';
-                
+
                 // Toast UI Editor initialization
                 echo '<script>
                 document.addEventListener("DOMContentLoaded", function() {
@@ -267,7 +290,7 @@ fcms_register_admin_section('blog', [
                         initialValue: initialContent,
                         usageStatistics: false
                     });
-                    
+
                     document.getElementById("blog-post-form").addEventListener("submit", function(e) {
                         var content = editor.getMarkdown();
                         console.log("Editor content before save:", content);
@@ -299,7 +322,7 @@ fcms_register_admin_section('blog', [
             echo '<button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Save</button>';
             echo '</form>';
             echo '<a href="?action=blog" class="inline-block mt-4 text-blue-600 hover:underline">Back to list</a>';
-            
+
             // Toast UI Editor initialization for new post
             echo '<script>
             document.addEventListener("DOMContentLoaded", function() {
@@ -311,7 +334,7 @@ fcms_register_admin_section('blog', [
                     initialValue: "# New Blog Post\n\nStart writing your content here...",
                     usageStatistics: false
                 });
-                
+
                 document.getElementById("blog-post-form").addEventListener("submit", function(e) {
                     var content = editor.getMarkdown();
                     console.log("Editor content before save:", content);
@@ -354,13 +377,13 @@ fcms_add_hook('route', function (&$handled, &$title, &$content, $path) {
         $handled = true;
         exit; // Exit immediately to prevent any additional processing
     }
-    
+
     if (preg_match('#^blog(?:/([^/]+))?$#', $path, $m)) {
         $posts = blog_load_posts();
-        
+
         if (!empty($m[1])) {
             $slug = urldecode($m[1]);
-            
+
             foreach ($posts as $post) {
                 if ($post['slug'] === $slug && $post['status'] === 'published') {
                     $title = $post['title'];
@@ -377,7 +400,7 @@ fcms_add_hook('route', function (&$handled, &$title, &$content, $path) {
                     return;
                 }
             }
-            
+
             $title = 'Post Not Found';
             $content = '<p>Sorry, that blog post does not exist.</p>';
             $handled = true;
@@ -420,7 +443,7 @@ fcms_add_hook('before_render', function(&$template, $path = null) {
     } else if (preg_match('#^blog(?:/([^/]+))?$#', $path)) {
         $template = 'blog';
     }
-    
+
     // Don't use template for RSS feed
     if ($path === 'blog/rss' || (isset($_SERVER['REQUEST_URI']) && trim($_SERVER['REQUEST_URI'], '/') === 'blog/rss')) {
         $template = null;
