@@ -1,0 +1,15 @@
+{
+    "name": "SQLite Connector",
+    "description": "Provides SQLite database connectivity for FearlessCMS plugins",
+    "version": "1.0.0",
+    "author": "Fearless Geek",
+    "main": "sqlite-connector.php",
+    "features": [
+        "Database Connection Management",
+        "PDO Database Abstraction",
+        "Connection Pooling",
+        "Query Builder",
+        "Admin Interface",
+        "File-based Database"
+    ]
+} 

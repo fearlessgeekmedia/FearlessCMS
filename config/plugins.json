@@ -2,5 +2,6 @@
     "seo",
     "blog",
     "ecommerce",
-    "mariadb-connector"
+    "mariadb-connector",
+    "sqlite-connector"
 ]
