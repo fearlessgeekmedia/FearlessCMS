@@ -1,0 +1,42 @@
+0 verbose cli /nix/store/cx0r35l6bwqixfyycxnk36wvlwpdypzg-nodejs-24.5.0/bin/node /nix/store/cx0r35l6bwqixfyycxnk36wvlwpdypzg-nodejs-24.5.0/bin/npm
+1 info using npm@11.5.1
+2 info using node@v24.5.0
+3 silly config load:file:/nix/store/cx0r35l6bwqixfyycxnk36wvlwpdypzg-nodejs-24.5.0/lib/node_modules/npm/npmrc
+4 silly config load:file:/home/fearlessgeek/devel/FearlessCMS/sandbox_home/.cache/typescript/5.8/.npmrc
+5 silly config load:file:/home/fearlessgeek/devel/FearlessCMS/sandbox_home/.npmrc
+6 silly config load:file:/nix/store/cx0r35l6bwqixfyycxnk36wvlwpdypzg-nodejs-24.5.0/etc/npmrc
+7 verbose title npm install types-registry@latest
+8 verbose argv "install" "--ignore-scripts" "types-registry@latest"
+9 verbose logfile logs-max:10 dir:/home/fearlessgeek/devel/FearlessCMS/sandbox_home/.npm/_logs/2025-08-19T06_03_31_978Z-
+10 verbose logfile /home/fearlessgeek/devel/FearlessCMS/sandbox_home/.npm/_logs/2025-08-19T06_03_31_978Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:4496293888 maxSize:1124073472 maxEntrySize:562036736
+13 silly packumentCache corgi:https://registry.npmjs.org/types-registry cache-miss
+14 http fetch GET 200 https://registry.npmjs.org/npm 473ms
+15 http fetch GET 200 https://registry.npmjs.org/types-registry 400ms (cache miss)
+16 silly packumentCache corgi:https://registry.npmjs.org/types-registry set size:undefined disposed:false
+17 silly idealTree buildDeps
+18 silly fetch manifest types-registry@0.1.734
+19 silly packumentCache full:https://registry.npmjs.org/types-registry cache-miss
+20 http fetch GET 200 https://registry.npmjs.org/types-registry 245ms (cache miss)
+21 silly packumentCache full:https://registry.npmjs.org/types-registry set size:undefined disposed:false
+22 silly placeDep ROOT types-registry@0.1.734 OK for:  want: 0.1.734
+23 silly reify moves {}
+24 silly audit bulk request { 'types-registry': [ '0.1.734' ] }
+25 http cache types-registry@https://registry.npmjs.org/types-registry/-/types-registry-0.1.734.tgz 1ms (cache hit)
+26 silly tarball no local data for types-registry@https://registry.npmjs.org/types-registry/-/types-registry-0.1.734.tgz. Extracting by manifest.
+27 http fetch POST 200 https://registry.npmjs.org/-/npm/v1/security/advisories/bulk 258ms
+28 silly audit report {}
+29 http fetch GET 200 https://registry.npmjs.org/types-registry/-/types-registry-0.1.734.tgz 312ms (cache miss)
+30 silly ADD node_modules/types-registry
+31 verbose cwd /home/fearlessgeek/devel/FearlessCMS/sandbox_home/.cache/typescript/5.8
+32 verbose os Linux 6.16.0
+33 verbose node v24.5.0
+34 verbose npm  v11.5.1
+35 notice
+35 notice New patch version of npm available! 11.5.1 -> 11.5.2
+35 notice Changelog: https://github.com/npm/cli/releases/tag/v11.5.2
+35 notice To update run: npm install -g npm@11.5.2
+35 notice  { force: true, Symbol(proc-log.meta): true }
+36 verbose exit 0
+37 info ok

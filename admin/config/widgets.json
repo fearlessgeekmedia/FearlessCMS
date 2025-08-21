@@ -2,15 +2,7 @@
     "main": {
         "id": "main",
         "classes": "main-sidebar",
-        "widgets": {
-            "685874c9a61a9": {
-                "id": "685874c9a61a9",
-                "title": "Albums",
-                "type": "html",
-                "content": "<a href=\"https:\/\/ko-fi.com\/s\/0e629c3369\" target=\"_blank\"><img src=\"..\/uploads\/look-ma-i-created-ai-slop.png\"><\/a>",
-                "classes": ""
-            }
-        }
+        "widgets": []
     },
     "right-sidebar": {
         "id": "right-sidebar",

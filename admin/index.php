@@ -1,4 +1,8 @@
 <?php
+if ($_SERVER['REQUEST_URI'] === '/admin/serve-js.php') {
+    require_once __DIR__ . '/serve-js.php';
+    exit;
+}
 // Session is already started by main index.php, no need to start again
 // Just ensure we have access to the required functions
 

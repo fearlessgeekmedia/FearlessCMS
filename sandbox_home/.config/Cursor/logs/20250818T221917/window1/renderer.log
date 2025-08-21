@@ -1,0 +1,158 @@
+2025-08-18 22:19:21.460 [warning] Via 'product.json#extensionEnabledApiProposals' extension 'ms-toolsai.datawrangler' wants API proposal 'debugFocus' but that proposal DOES NOT EXIST. Likely, the proposal has been finalized (check 'vscode.d.ts') or was abandoned.
+2025-08-18 22:19:21.461 [warning] Via 'product.json#extensionEnabledApiProposals' extension 'ms-vscode.vscode-copilot-data-analysis' wants API proposal 'chatVariableResolver' but that proposal DOES NOT EXIST. Likely, the proposal has been finalized (check 'vscode.d.ts') or was abandoned.
+2025-08-18 22:19:21.462 [warning] Via 'product.json#extensionEnabledApiProposals' extension 'ms-python.python' wants API proposal 'terminalShellType' but that proposal DOES NOT EXIST. Likely, the proposal has been finalized (check 'vscode.d.ts') or was abandoned.
+2025-08-18 22:19:21.463 [warning] Via 'product.json#extensionEnabledApiProposals' extension 'ms-python.vscode-python-envs' wants API proposal 'terminalShellType' but that proposal DOES NOT EXIST. Likely, the proposal has been finalized (check 'vscode.d.ts') or was abandoned.
+2025-08-18 22:19:21.463 [warning] Via 'product.json#extensionEnabledApiProposals' extension 'github.copilot-chat' wants API proposal 'chatReadonlyPromptReference' but that proposal DOES NOT EXIST. Likely, the proposal has been finalized (check 'vscode.d.ts') or was abandoned.
+2025-08-18 22:19:21.463 [warning] Via 'product.json#extensionEnabledApiProposals' extension 'ms-azuretools.vscode-azure-github-copilot' wants API proposal 'lmTools' but that proposal DOES NOT EXIST. Likely, the proposal has been finalized (check 'vscode.d.ts') or was abandoned.
+2025-08-18 22:19:21.464 [warning] Via 'product.json#extensionEnabledApiProposals' extension 'vscjava.vscode-java-pack' wants API proposal 'lmTools' but that proposal DOES NOT EXIST. Likely, the proposal has been finalized (check 'vscode.d.ts') or was abandoned.
+2025-08-18 22:19:21.464 [warning] Via 'product.json#extensionEnabledApiProposals' extension 'apidev.azure-api-center' wants API proposal 'chatParticipant' but that proposal DOES NOT EXIST. Likely, the proposal has been finalized (check 'vscode.d.ts') or was abandoned.
+2025-08-18 22:19:21.464 [warning] Via 'product.json#extensionEnabledApiProposals' extension 'apidev.azure-api-center' wants API proposal 'languageModels' but that proposal DOES NOT EXIST. Likely, the proposal has been finalized (check 'vscode.d.ts') or was abandoned.
+2025-08-18 22:19:21.536 [warning] Missing property "composerState" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.537 [warning] Missing property "mcpServers" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.537 [warning] Missing property "mcpDisabledTools" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.538 [warning] Missing property "availableDefaultModels2" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.539 [warning] Missing property "notepadState" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.540 [warning] Missing property "bugbotState" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.541 [warning] Missing property "backgroundComposerState" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.542 [warning] Missing property "dialogDontAskAgainPreferences" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.543 [warning] Missing property "aiFeaturesCopyPasteState" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.543 [warning] Missing property "cursorIgnore" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.544 [warning] Missing property "teamAdminSettings" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.545 [warning] Missing property "shouldShowViewZoneWhenPreviewBoxIsClipped6" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.545 [warning] Missing property "syncDevModeColorTheme" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.546 [warning] Missing property "cppModelsState" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.546 [warning] Missing property "isLinterEnabled" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.547 [warning] Missing property "aiSettings" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.548 [warning] Missing property "authenticationSettings" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.549 [warning] Missing property "websiteUrl" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.549 [warning] Missing property "backendUrl" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.550 [warning] Missing property "authClientId" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.551 [warning] Missing property "authDomain" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.552 [warning] Missing property "repoBackendUrl" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.552 [warning] Missing property "contextBankUrl" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.553 [warning] Missing property "telemBackendUrl" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.553 [warning] Missing property "cmdkBackendUrl" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.554 [warning] Missing property "geoCppBackendUrl" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.555 [warning] Missing property "cppConfigBackendUrl" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.555 [warning] Missing property "bcProxyUrl" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.556 [warning] Missing property "credentialsDisplayName" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.556 [warning] Missing property "docState" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.557 [warning] Missing property "lastUpdateHiddenTimeInUnixSeconds" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.557 [warning] Missing property "lintRules" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.558 [warning] Missing property "bubbleTimesLeft" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.558 [warning] Missing property "showAgentActionDebugger" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.559 [warning] Missing property "cmdLineHookState" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.559 [warning] Missing property "showLinterDebugger" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.560 [warning] Missing property "linterDebuggerState" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.560 [warning] Missing property "cacheChatPrompts" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.561 [warning] Missing property "cmdkDiffHistoryEnabled" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.561 [warning] Missing property "shouldOnlyImportOnAccept" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.562 [warning] Missing property "cppAutoImportDecorationStyle" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.563 [warning] Missing property "lintSettings" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.563 [warning] Missing property "lastUpgradeToProNotificationTime" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.564 [warning] Missing property "haveNotSeen" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.565 [warning] Missing property "newUserData" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.566 [warning] Missing property "azureState" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.567 [warning] Missing property "interpreterModeSettings" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.568 [warning] Missing property "cppFireOnEveryCursorChange" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.568 [warning] Missing property "personalDocs" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.569 [warning] Missing property "cppInCmdF" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.569 [warning] Missing property "cppManualTriggerWithOpToken" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.570 [warning] Missing property "cppTriggerInComments" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.570 [warning] Missing property "cppShowWhitespaceOnlyChanges" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.571 [warning] Missing property "fastCppEnabled" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.572 [warning] Missing property "cppConfig" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.572 [warning] Missing property "indexRepository" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.573 [warning] Missing property "haveNotImportedFromVSC" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.573 [warning] Missing property "shouldAutoParseCmdKLinks" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.574 [warning] Missing property "aiPreviewsEnabled" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.574 [warning] Missing property "autoCreateNewChatAfterTimeout" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.575 [warning] Missing property "aiPreviewSettings" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.575 [warning] Missing property "chatFadeInAnimationEnabled" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.576 [warning] Missing property "isFileSyncClientEnabled" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.577 [warning] Missing property "membershipType" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.577 [warning] Missing property "useFastApplyModel" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.578 [warning] Missing property "fastApplyModelType" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.578 [warning] Missing property "explicitlyEnableSemanticSearch" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.579 [warning] Missing property "aiCursorHelpEnabled" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.580 [warning] Missing property "showAllCmdKContexts" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.581 [warning] Missing property "backgroundComposerEnv" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.582 [warning] Missing property "markdownTestString" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.583 [warning] Missing property "cppInPeek" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.584 [warning] Missing property "fastSemanticSearchEnabled" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.585 [warning] Missing property "preferredEmbeddingModel" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.585 [warning] Missing property "cursorPredictionUIExperiments" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.586 [warning] Missing property "oneTimeSettings" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.586 [warning] Missing property "indexingState" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.586 [warning] Missing property "internalAnalyticsDebugMode" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.587 [warning] Missing property "fullContextOptions" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.587 [warning] Missing property "eligibleForSnippetLearning" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.588 [warning] Missing property "goneThroughCodeSnippetOnboarding" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.588 [warning] Missing property "goneThroughCodeSnippetChangeManagement" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.588 [warning] Missing property "isRcpServerEnabled" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.589 [warning] Missing property "repositoryIndexingError" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.589 [warning] Missing property "repositoryIndexingStatus" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.589 [warning] Missing property "repositoryLastSyncedTime" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.589 [warning] Missing property "repositoryIndexingJobs" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.590 [warning] Missing property "mainLocalRepositoryProgress" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.590 [warning] Missing property "hasClickedSlackConnect" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.590 [warning] Missing property "shouldHideWarning" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.590 [warning] Missing property "persistentChatMetadata" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.591 [warning] Missing property "aiPanePosition" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.591 [warning] Missing property "shouldRerankByDefault" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.591 [warning] Missing property "indexingData" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.591 [warning] Missing property "composerState" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.591 [warning] Missing property "isCursorPredictionOutOfRangeIndicatorMinimized2" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.592 [warning] Missing property "needsComposerInitialOpening" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.592 [warning] Missing property "approvedProjectMcpServers" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.592 [warning] Missing property "disabledMcpServers" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.592 [warning] Missing property "eligibleForSnippetLearning" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.593 [warning] Missing property "solidJSLeakRecords" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:21.672 [warning] Creation of workbench contribution 'workbench.contrib.explorerViewletViews' took 32ms.
+2025-08-18 22:19:21.762 [warning] Creation of workbench contribution 'workbench.contrib.remoteStatusIndicator' took 86ms.
+2025-08-18 22:19:22.631 [info] Started local extension host with pid 227995.
+2025-08-18 22:19:22.714 [error] Failed to fetch: TypeError: Failed to fetch
+    at oVi.getDidUserLastPaymentFailed (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:491:57122) Failed to fetch
+2025-08-18 22:19:22.805 [info] Started initializing default profile extensions in extensions installation folder. file:///home/fearlessgeek/devel/FearlessCMS/sandbox_home/.cursor/extensions
+2025-08-18 22:19:23.491 [info] Completed initializing default profile extensions in extensions installation folder. file:///home/fearlessgeek/devel/FearlessCMS/sandbox_home/.cursor/extensions
+2025-08-18 22:19:25.191 [warning] Missing property "lastComposerOpenTime" in oldValue. Filling with value from initValue. Please add a migration if necessary.
+2025-08-18 22:19:28.273 [info] [perf] Render performance baseline is 44ms
+2025-08-18 22:19:31.219 [error] [unavailable] getaddrinfo ENOTFOUND api2.cursor.sh: ConnectError: [unavailable] getaddrinfo ENOTFOUND api2.cursor.sh
+    at t (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:4757:224502)
+    at async Object.cursorPredictionConfig (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:489:207939)
+    at async IZs._refreshConfig (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:7039:9332) [unavailable] getaddrinfo ENOTFOUND api2.cursor.sh
+2025-08-18 22:19:31.220 [error] [unavailable] getaddrinfo ENOTFOUND api2.cursor.sh: ConnectError: [unavailable] getaddrinfo ENOTFOUND api2.cursor.sh
+    at t (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:4757:224502)
+    at async Object.availableModels (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:489:207939)
+    at async kZs.keepCppModelStateUpdated (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:7017:11962)
+    at async kZs.loadCppConfigIncludingHandlingProAccess (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:7034:17224) [unavailable] getaddrinfo ENOTFOUND api2.cursor.sh
+2025-08-18 22:19:31.238 [error] [unavailable] getaddrinfo ENOTFOUND api2.cursor.sh: ConnectError: [unavailable] getaddrinfo ENOTFOUND api2.cursor.sh
+    at t (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:4757:224502)
+    at async Object.availableDocs (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:489:207939)
+    at async vin.availableDocs (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:1376:20242)
+    at async Object.fn (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:4235:106789) [unavailable] getaddrinfo ENOTFOUND api2.cursor.sh
+2025-08-18 22:19:31.244 [error] Error fetching user privacy mode: [unavailable] getaddrinfo ENOTFOUND api2.cursor.sh
+2025-08-18 22:19:31.250 [error] [unavailable] getaddrinfo ENOTFOUND api2.cursor.sh: ConnectError: [unavailable] getaddrinfo ENOTFOUND api2.cursor.sh
+    at t (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:4757:224502)
+    at async Object.availableDocs (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:489:207939)
+    at async vin.availableDocs (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:1376:20242)
+    at async dsn.C (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:4223:7538) [unavailable] getaddrinfo ENOTFOUND api2.cursor.sh
+2025-08-18 22:19:31.251 [error] [unavailable] getaddrinfo ENOTFOUND api2.cursor.sh: ConnectError: [unavailable] getaddrinfo ENOTFOUND api2.cursor.sh
+    at t (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:4757:224502)
+    at async Object.getDefaultModelNudgeData (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:489:207939)
+    at async vin.performDefaultModelRequest (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:1376:21871) [unavailable] getaddrinfo ENOTFOUND api2.cursor.sh
+2025-08-18 22:19:31.252 [error] [unavailable] getaddrinfo ENOTFOUND api2.cursor.sh: ConnectError: [unavailable] getaddrinfo ENOTFOUND api2.cursor.sh
+    at t (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:4757:224502)
+    at async Object.availableDocs (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:489:207939)
+    at async vin.availableDocs (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:1376:20242)
+    at async Object.fn (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:7061:54029) [unavailable] getaddrinfo ENOTFOUND api2.cursor.sh
+2025-08-18 22:19:31.253 [error] [unavailable] getaddrinfo ENOTFOUND api2.cursor.sh: ConnectError: [unavailable] getaddrinfo ENOTFOUND api2.cursor.sh
+    at t (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:4757:224502)
+    at async Object.getUserPrivacyMode (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:489:207939)
+    at async oVi.fetchUserPrivacyMode (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:491:49224)
+    at async oVi.refreshPrivacyMode (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:491:48964) [unavailable] getaddrinfo ENOTFOUND api2.cursor.sh
+2025-08-18 22:19:31.412 [error] An unknown error occurred. Please consult the log for more details. {}
+2025-08-18 22:19:31.625 [error] [unavailable] getaddrinfo ENOTFOUND api2.cursor.sh: ConnectError: [unavailable] getaddrinfo ENOTFOUND api2.cursor.sh
+    at t (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:4757:224502)
+    at async Object.getEmail (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:489:207939)
+    at async oVi.getEmailAndSignUpType (vscode-file://vscode-app/nix/store/0msd6zc28r0bcvrpf731r552lyl6jppy-cursor-1.2.2/lib/cursor/resources/app/out/vs/workbench/workbench.desktop.main.js:491:68116) [unavailable] getaddrinfo ENOTFOUND api2.cursor.sh

@@ -1,0 +1,69 @@
+0 verbose cli /nix/store/9x6rhv1spnj29hdb9m867xwn33k31wda-nodejs-20.19.4/bin/node /nix/store/9x6rhv1spnj29hdb9m867xwn33k31wda-nodejs-20.19.4/bin/npm
+1 info using npm@10.8.2
+2 info using node@v20.19.4
+3 silly config load:file:/nix/store/9x6rhv1spnj29hdb9m867xwn33k31wda-nodejs-20.19.4/lib/node_modules/npm/npmrc
+4 silly config load:file:/home/fearlessgeek/devel/FearlessCMS/.npmrc
+5 silly config load:file:/home/fearlessgeek/devel/FearlessCMS/sandbox_home/.npmrc
+6 silly config load:file:/nix/store/9x6rhv1spnj29hdb9m867xwn33k31wda-nodejs-20.19.4/etc/npmrc
+7 verbose title npm install
+8 verbose argv "install"
+9 verbose logfile logs-max:10 dir:/home/fearlessgeek/devel/FearlessCMS/sandbox_home/.npm/_logs/2025-08-21T04_37_09_460Z-
+10 verbose logfile /home/fearlessgeek/devel/FearlessCMS/sandbox_home/.npm/_logs/2025-08-21T04_37_09_460Z-debug-0.log
+11 silly packumentCache heap:2197815296 maxSize:549453824 maxEntrySize:274726912
+12 silly logfile done cleaning log files
+13 silly idealTree buildDeps
+14 silly reify moves {}
+15 silly audit bulk request {
+15 silly audit   'fs-extra': [ '11.3.0' ],
+15 silly audit   'graceful-fs': [ '4.2.11' ],
+15 silly audit   handlebars: [ '4.7.8' ],
+15 silly audit   jsonfile: [ '6.1.0' ],
+15 silly audit   marked: [ '15.0.11' ],
+15 silly audit   minimist: [ '1.2.8' ],
+15 silly audit   'neo-async': [ '2.6.2' ],
+15 silly audit   'source-map': [ '0.6.1' ],
+15 silly audit   'uglify-js': [ '3.19.3' ],
+15 silly audit   universalify: [ '2.0.1' ],
+15 silly audit   wordwrap: [ '1.0.0' ]
+15 silly audit }
+16 silly tarball no local data for wordwrap@https://registry.npmjs.org/wordwrap/-/wordwrap-1.0.0.tgz. Extracting by manifest.
+17 silly tarball no local data for uglify-js@https://registry.npmjs.org/uglify-js/-/uglify-js-3.19.3.tgz. Extracting by manifest.
+18 silly tarball no local data for source-map@https://registry.npmjs.org/source-map/-/source-map-0.6.1.tgz. Extracting by manifest.
+19 silly tarball no local data for universalify@https://registry.npmjs.org/universalify/-/universalify-2.0.1.tgz. Extracting by manifest.
+20 silly tarball no local data for neo-async@https://registry.npmjs.org/neo-async/-/neo-async-2.6.2.tgz. Extracting by manifest.
+21 silly tarball no local data for minimist@https://registry.npmjs.org/minimist/-/minimist-1.2.8.tgz. Extracting by manifest.
+22 silly tarball no local data for marked@https://registry.npmjs.org/marked/-/marked-15.0.11.tgz. Extracting by manifest.
+23 silly tarball no local data for jsonfile@https://registry.npmjs.org/jsonfile/-/jsonfile-6.1.0.tgz. Extracting by manifest.
+24 silly tarball no local data for handlebars@https://registry.npmjs.org/handlebars/-/handlebars-4.7.8.tgz. Extracting by manifest.
+25 silly tarball no local data for graceful-fs@https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.11.tgz. Extracting by manifest.
+26 silly tarball no local data for fs-extra@https://registry.npmjs.org/fs-extra/-/fs-extra-11.3.0.tgz. Extracting by manifest.
+27 http fetch POST 200 https://registry.npmjs.org/-/npm/v1/security/advisories/bulk 20470ms
+28 silly audit report {}
+29 http fetch GET 200 https://registry.npmjs.org/universalify/-/universalify-2.0.1.tgz 20475ms (cache miss)
+30 http fetch GET 200 https://registry.npmjs.org/wordwrap/-/wordwrap-1.0.0.tgz 20493ms (cache miss)
+31 http fetch GET 200 https://registry.npmjs.org/minimist/-/minimist-1.2.8.tgz 20608ms (cache miss)
+32 http fetch GET 200 https://registry.npmjs.org/jsonfile/-/jsonfile-6.1.0.tgz 20663ms (cache miss)
+33 http fetch GET 200 https://registry.npmjs.org/graceful-fs/-/graceful-fs-4.2.11.tgz 20723ms (cache miss)
+34 http fetch GET 200 https://registry.npmjs.org/source-map/-/source-map-0.6.1.tgz 20747ms (cache miss)
+35 http fetch GET 200 https://registry.npmjs.org/marked/-/marked-15.0.11.tgz 20794ms (cache miss)
+36 http fetch GET 200 https://registry.npmjs.org/uglify-js/-/uglify-js-3.19.3.tgz 20823ms (cache miss)
+37 http fetch GET 200 https://registry.npmjs.org/neo-async/-/neo-async-2.6.2.tgz 20826ms (cache miss)
+38 http fetch GET 200 https://registry.npmjs.org/fs-extra/-/fs-extra-11.3.0.tgz 20828ms (cache miss)
+39 http fetch GET 200 https://registry.npmjs.org/handlebars/-/handlebars-4.7.8.tgz 21339ms (cache miss)
+40 silly ADD node_modules/wordwrap
+41 silly ADD node_modules/universalify
+42 silly ADD node_modules/uglify-js
+43 silly ADD node_modules/source-map
+44 silly ADD node_modules/neo-async
+45 silly ADD node_modules/minimist
+46 silly ADD node_modules/marked
+47 silly ADD node_modules/jsonfile
+48 silly ADD node_modules/handlebars
+49 silly ADD node_modules/graceful-fs
+50 silly ADD node_modules/fs-extra
+51 verbose cwd /home/fearlessgeek/devel/FearlessCMS
+52 verbose os Linux 6.16.0
+53 verbose node v20.19.4
+54 verbose npm  v10.8.2
+55 verbose exit 0
+56 info ok

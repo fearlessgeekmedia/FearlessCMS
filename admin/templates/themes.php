@@ -169,7 +169,7 @@ $themes = $themeManager->getThemes();
             <div class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow <?php echo $theme['id'] === $themeManager->getActiveTheme() ? 'ring-2 ring-green-500' : ''; ?>">
                 <!-- Thumbnail Section -->
                 <?php if (!empty($theme['thumbnail'])): ?>
-                <div class="aspect-video bg-gray-100 overflow-hidden cursor-pointer" onclick="openThumbnailModal('<?php echo htmlspecialchars($theme['thumbnail']); ?>', '<?php echo htmlspecialchars($theme['name']); ?>')">
+                <div class="aspect-video bg-gray-100 overflow-hidden cursor-pointer" onmouseover="openThumbnailModal('<?php echo htmlspecialchars($theme['thumbnail']); ?>', '<?php echo htmlspecialchars($theme['name']); ?>')" onmouseout="closeThumbnailModal()">
                     <img src="/<?php echo htmlspecialchars($theme['thumbnail']); ?>"
                          alt="<?php echo htmlspecialchars($theme['name']); ?> preview"
                          class="w-full h-full object-cover hover:scale-105 transition-transform duration-200">
@@ -233,7 +233,10 @@ $themes = $themeManager->getThemes();
 
 <script>
 // Thumbnail modal functions
+let closeTimer;
+
 function openThumbnailModal(thumbnailPath, themeName) {
+    clearTimeout(closeTimer);
     const modal = document.getElementById('thumbnailModal');
     const modalThumbnail = document.getElementById('modalThumbnail');
     const modalCaption = document.getElementById('modalCaption');
@@ -243,13 +246,13 @@ function openThumbnailModal(thumbnailPath, themeName) {
     modalCaption.querySelector('h4').textContent = themeName + ' Theme Preview';
 
     modal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
 }
 
 function closeThumbnailModal() {
-    const modal = document.getElementById('thumbnailModal');
-    modal.classList.add('hidden');
-    document.body.style.overflow = 'auto';
+    closeTimer = setTimeout(() => {
+        const modal = document.getElementById('thumbnailModal');
+        modal.classList.add('hidden');
+    }, 300);
 }
 
 // Close modal when clicking outside or pressing Escape
