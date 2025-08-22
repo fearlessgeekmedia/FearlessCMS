@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Login</title>
+</head>
+<body>
+    <h1>Test Login Form</h1>
+    <p>This is a simple test to check if the session and CSRF token are working.</p>
+    
+    <form method="POST" action="test_login.php">
+        <input type="hidden" name="csrf_token" id="csrf_token" value="">
+        <div>
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+        <div>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <button type="submit">Test Login</button>
+    </form>
+    
+    <div id="debug-info">
+        <h3>Debug Information</h3>
+        <p>CSRF Token: <span id="token-display">Loading...</span></p>
+        <p>Session Cookie: <span id="cookie-display">Loading...</span></p>
+    </div>
+    
+    <script>
+        // Fetch the CSRF token and display debug info
+        fetch('test_login.php?action=get_token')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('csrf_token').value = data.token;
+                document.getElementById('token-display').textContent = data.token;
+                document.getElementById('cookie-display').textContent = document.cookie || 'No cookies found';
+            })
+            .catch(error => {
+                console.error('Error fetching token:', error);
+                document.getElementById('token-display').textContent = 'Error loading token';
+            });
+    </script>
+</body>
+</html> 

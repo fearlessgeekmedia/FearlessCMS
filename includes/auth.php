@@ -11,35 +11,80 @@ if (!extension_loaded('session') || !function_exists('session_start')) {
 }
 
 // CSRF Protection functions
-function generate_csrf_token() {
-    if (!isset($_SESSION['csrf_token'])) {
-        // Use random_bytes() if available (PHP 7.0+), otherwise fallback to openssl_random_pseudo_bytes()
-        if (function_exists('random_bytes')) {
-            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-        } elseif (function_exists('openssl_random_pseudo_bytes')) {
-            $_SESSION['csrf_token'] = bin2hex(openssl_random_pseudo_bytes(32));
-        } else {
-            // Last resort fallback (less secure)
-            $_SESSION['csrf_token'] = bin2hex(md5(uniqid(mt_rand(), true)));
-        }
-    }
-    return $_SESSION['csrf_token'];
+// Development mode fallback for when sessions fail
+function is_development_mode() {
+    return getenv('FCMS_DEBUG') === 'true' || getenv('FCMS_DEVELOPMENT') === 'true';
 }
 
+function get_development_csrf_token() {
+    // In development mode, if sessions fail, use a simple token based on time
+    if (is_development_mode() && (!isset($_SESSION) || empty($_SESSION))) {
+        // Generate a simple token for development
+        $time = floor(time() / 300); // Token changes every 5 minutes
+        $secret = 'dev_secret_key_' . (getenv('FCMS_DEV_SECRET') ?: 'default');
+        return hash('sha256', $time . $secret);
+    }
+    return null;
+}
+
+function validate_development_csrf_token($token) {
+    if (is_development_mode() && (!isset($_SESSION) || empty($_SESSION))) {
+        $expected = get_development_csrf_token();
+        return $token === $expected;
+    }
+    return false;
+}
+
+// Enhanced CSRF token generation with development fallback
+function generate_csrf_token() {
+    // Try normal session-based token first
+    if (isset($_SESSION) && !empty($_SESSION)) {
+        if (!isset($_SESSION['csrf_token'])) {
+            // Use random_bytes() if available (PHP 7.0+), otherwise fallback to openssl_random_pseudo_bytes()
+            if (function_exists('random_bytes')) {
+                $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+            } elseif (function_exists('openssl_random_pseudo_bytes')) {
+                $_SESSION['csrf_token'] = bin2hex(openssl_random_pseudo_bytes(32));
+            } else {
+                // Last resort fallback (less secure)
+                $_SESSION['csrf_token'] = bin2hex(md5(uniqid(mt_rand(), true)));
+            }
+        }
+        return $_SESSION['csrf_token'];
+    }
+    
+    // Fallback to development mode token
+    if (is_development_mode()) {
+        return get_development_csrf_token();
+    }
+    
+    // Last resort: generate a temporary token
+    return hash('sha256', uniqid(mt_rand(), true));
+}
+
+// Enhanced CSRF token validation with development fallback
 function validate_csrf_token() {
     error_log('CSRF Validation - Session token: ' . ($_SESSION['csrf_token'] ?? 'not set'));
     error_log('CSRF Validation - POST token: ' . ($_POST['csrf_token'] ?? 'not set'));
     error_log('CSRF Validation - Session ID: ' . (function_exists('session_id') ? session_id() : 'function_not_available'));
     error_log('CSRF Validation - Session status: ' . (function_exists('session_status') ? session_status() : 'function_not_available'));
     
-    if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token'])) {
-        error_log('CSRF Validation - Missing token: POST=' . (isset($_POST['csrf_token']) ? 'yes' : 'no') . ', SESSION=' . (isset($_SESSION['csrf_token']) ? 'yes' : 'no'));
-        return false;
+    // Try normal session-based validation first
+    if (isset($_POST['csrf_token']) && isset($_SESSION['csrf_token'])) {
+        $isValid = $_SESSION['csrf_token'] === $_POST['csrf_token'];
+        error_log('CSRF Validation - Token comparison result: ' . ($isValid ? 'MATCH' : 'MISMATCH'));
+        return $isValid;
     }
     
-    $isValid = $_SESSION['csrf_token'] === $_POST['csrf_token'];
-    error_log('CSRF Validation - Token comparison result: ' . ($isValid ? 'MATCH' : 'MISMATCH'));
-    return $isValid;
+    // Fallback to development mode validation
+    if (is_development_mode() && isset($_POST['csrf_token'])) {
+        $devValid = validate_development_csrf_token($_POST['csrf_token']);
+        error_log('CSRF Validation - Development mode validation: ' . ($devValid ? 'PASS' : 'FAIL'));
+        return $devValid;
+    }
+    
+    error_log('CSRF Validation - Missing token: POST=' . (isset($_POST['csrf_token']) ? 'yes' : 'no') . ', SESSION=' . (isset($_SESSION['csrf_token']) ? 'yes' : 'no'));
+    return false;
 }
 
 function csrf_token_field() {

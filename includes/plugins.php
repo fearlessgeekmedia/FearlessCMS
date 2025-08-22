@@ -356,5 +356,10 @@ function fcms_load_plugins() {
         }
     }
 }
-fcms_load_plugins();
-fcms_do_hook('init');
+
+// Defer plugin loading until after session is established
+// Only load plugins if we're not in a critical session initialization phase
+if (!isset($GLOBALS['FCMS_SESSION_INITIALIZING']) || !$GLOBALS['FCMS_SESSION_INITIALIZING']) {
+    fcms_load_plugins();
+    fcms_do_hook('init');
+}

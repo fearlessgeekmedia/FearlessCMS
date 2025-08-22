@@ -307,7 +307,6 @@ $stmt = fcms_do_hook('database_query', 'SELECT * FROM users WHERE id = ?', [1]);
             </div>
         </div>
     </div>
-    
     <?php
     return ob_get_clean();
 }

@@ -31,13 +31,23 @@ then
     exit
 fi
 
+# check if custom PHP config exists
+if [ ! -f "php-config/99-custom.ini" ]; then
+    echo "Warning: Custom PHP configuration not found. Sessions may not work properly."
+    echo "Consider creating php-config/99-custom.ini with proper session settings."
+    php_config=""
+else
+    php_config="-c php-config/99-custom.ini"
+    echo "Using custom PHP configuration for proper session handling"
+fi
+
 # run server and log output
-php -c php.ini -S localhost:$port router.php > serve-log.tmp 2>&1 &
+php $php_config -S localhost:$port router.php > serve-log.tmp 2>&1 &
 pid=$!
 echo "Server started on port $port with PID $pid"
 echo "To stop the server, run: kill $pid"
 echo "To view logs, run: tail -f serve-log.tmp"
 echo "To access the server, open http://localhost:$port in your browser"
-echo ""
+echo "🚀"
 # retain session of the process
 wait $pid
