@@ -1,1 +1,1 @@
-/nix/store/w0ssy8fg5f73s9z5pnklznsimv2x9da6-php-with-extensions-8.1.33/bin/php
+/nix/store/a2rrwv76xmiqszr3r6kjv9y13s256kgn-php-with-extensions-8.2.29/bin/php

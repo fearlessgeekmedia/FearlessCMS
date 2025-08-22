@@ -6,10 +6,14 @@ Version: 1.0
 Author: Fearless Geek
 */
 
-// Start session if not already started
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+// Check if session extension is loaded
+if (!extension_loaded('session') || !function_exists('session_start')) {
+    error_log("Warning: Session functionality not available in forms plugin");
+    return; // Skip plugin initialization
 }
+
+// Session should already be started by session.php
+// No need to start it again
 
 // Define constants
 define('FORMS_DIR', PLUGIN_DIR . '/forms');

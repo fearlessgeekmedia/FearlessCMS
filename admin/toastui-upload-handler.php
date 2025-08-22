@@ -1,5 +1,5 @@
 <?php
-session_start();
+// Session should already be started by session.php
 require_once dirname(__DIR__) . '/includes/auth.php';
 header('Content-Type: application/json');
 

@@ -18,9 +18,9 @@ require_once __DIR__ . '/includes/session.php';
 
 // Only log debug info in debug mode
 if (getenv('FCMS_DEBUG') === 'true') {
-    error_log("Main index - Session ID: " . session_id());
-    error_log("Main index - Session data: " . print_r($_SESSION, true));
-    error_log("Main index - Cookies: " . print_r($_COOKIE, true));
+    error_log("Main index - Session ID: " . (function_exists('session_id') ? session_id() : 'function_not_available'));
+    // Session debugging removed for security
+    // Cookie debugging removed for security
 }
 
 require_once __DIR__ . '/includes/config.php';
@@ -58,10 +58,10 @@ if (strpos($requestPath, $adminPath) === 0) {
         error_log("Admin route detected: " . $requestPath);
         error_log("Admin path from config: " . $adminPath);
         error_log("Request URI: " . $_SERVER['REQUEST_URI']);
-        error_log("Session status: " . session_status());
-        error_log("Session ID: " . session_id());
-        error_log("Session data: " . print_r($_SESSION, true));
-        error_log("Cookies: " . print_r($_COOKIE, true));
+        error_log("Session status: " . (function_exists('session_status') ? session_status() : 'function_not_available'));
+        error_log("Session ID: " . (function_exists('session_id') ? session_id() : 'function_not_available'));
+        // Session debugging removed for security
+        // Cookie debugging removed for security
     }
     require_once PROJECT_ROOT . "/includes/auth.php";
 
@@ -98,9 +98,7 @@ if (strpos($requestPath, $adminPath) === 0) {
             } else {
                 $redirectUrl = "/" . $adminPath . "/login";
             }
-            fcms_flush_output(); // Flush output buffer before setting headers
-            header("Location: " . $redirectUrl);
-            exit;
+            fcms_redirect($redirectUrl);
         }
         if (getenv('FCMS_DEBUG') === 'true') {
             error_log("Logged in, loading admin index");

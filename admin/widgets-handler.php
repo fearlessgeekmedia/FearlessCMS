@@ -1,8 +1,14 @@
 <?php
-// Start session if not already started
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+// Check if session extension is loaded
+if (!extension_loaded('session') || !function_exists('session_start')) {
+    error_log("Warning: Session functionality not available in widgets handler");
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'Session functionality not available']);
+    exit;
 }
+
+// Session should already be started by session.php
+// No need to start it again
 
 // Include required files
 require_once dirname(__DIR__) . '/includes/config.php';

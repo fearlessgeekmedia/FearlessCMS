@@ -141,13 +141,112 @@ main {
 }
 
 /* Typography */
-h1, h2, h3 { line-height: 1.2; color: #0a0a0a; }
-h1 { font-size: clamp(2rem, 1.25rem + 2.5vw, 3rem); margin: 0 0 .6rem 0; letter-spacing: -0.02em; }
-h2 { font-size: clamp(1.4rem, 1.05rem + 1.2vw, 2rem); margin: 1.6rem 0 .6rem; letter-spacing: -0.01em; }
-h3 { font-size: 1.1rem; margin: 1rem 0 .5rem; }
-p { color: #374151; margin: 0 0 1rem; }
+h1, h2, h3, h4, h5, h6 { 
+  line-height: 1.2; 
+  color: #0a0a0a; 
+  font-weight: 600;
+  margin-top: 0;
+}
+
+h1 { 
+  font-size: clamp(2rem, 1.25rem + 2.5vw, 3rem); 
+  margin: 0 0 1rem 0; 
+  letter-spacing: -0.02em; 
+  font-weight: 700;
+  color: #111827;
+}
+
+h2 { 
+  font-size: clamp(1.4rem, 1.05rem + 1.2vw, 2rem); 
+  margin: 2rem 0 1rem 0; 
+  letter-spacing: -0.01em; 
+  font-weight: 600;
+  color: #1f2937;
+  border-bottom: 2px solid var(--color-border);
+  padding-bottom: 0.5rem;
+}
+
+h3 { 
+  font-size: 1.3rem; 
+  margin: 1.5rem 0 0.75rem 0; 
+  font-weight: 600;
+  color: #374151;
+}
+
+h4 { 
+  font-size: 1.1rem; 
+  margin: 1.25rem 0 0.5rem 0; 
+  font-weight: 600;
+  color: #4b5563;
+}
+
+h5 { 
+  font-size: 1rem; 
+  margin: 1rem 0 0.5rem 0; 
+  font-weight: 600;
+  color: #6b7280;
+}
+
+h6 { 
+  font-size: 0.9rem; 
+  margin: 1rem 0 0.5rem 0; 
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+p { color: #374151; margin: 0 0 1rem; line-height: 1.6; }
 a { color: var(--color-accent); text-underline-offset: 3px; }
 a:hover { color: var(--color-accent-700); }
+
+/* Additional typography improvements */
+ul, ol { 
+  margin: 0 0 1rem 1.5rem; 
+  line-height: 1.6; 
+  color: #374151; 
+}
+
+li { 
+  margin-bottom: 0.5rem; 
+}
+
+strong, b { 
+  font-weight: 600; 
+  color: #111827; 
+}
+
+em, i { 
+  font-style: italic; 
+  color: #4b5563; 
+}
+
+code { 
+  background: #f3f4f6; 
+  color: #dc2626; 
+  padding: 0.2rem 0.4rem; 
+  border-radius: 4px; 
+  font-size: 0.9em; 
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; 
+}
+
+/* Dark mode typography improvements */
+@media (prefers-color-scheme: dark) {
+  ul, ol { color: #cbd5e1; }
+  strong, b { color: #f9fafb; }
+  em, i { color: #9ca3af; }
+  code { background: #1f2937; color: #fca5a5; }
+}
+
+:root[data-theme="dark"] ul, :root[data-theme="dark"] ol { color: #cbd5e1; }
+:root[data-theme="dark"] strong, :root[data-theme="dark"] b { color: #f9fafb; }
+:root[data-theme="dark"] em, :root[data-theme="dark"] i { color: #9ca3af; }
+:root[data-theme="dark"] code { background: #1f2937; color: #fca5a5; }
+
+:root[data-theme="light"] ul, :root[data-theme="light"] ol { color: #374151; }
+:root[data-theme="light"] strong, :root[data-theme="light"] b { color: #111827; }
+:root[data-theme="light"] em, :root[data-theme="light"] i { color: #4b5563; }
+:root[data-theme="light"] code { background: #f3f4f6; color: #dc2626; }
 
 blockquote {
   margin: 1.2rem 0;
@@ -348,7 +447,13 @@ footer {
   nav ul ul a:hover, .submenu a:hover { background: rgba(255,255,255,0.06); }
 
   main { background: transparent; }
-  h1, h2, h3 { color: #ffffff; }
+  h1, h2, h3, h4, h5, h6 { color: #ffffff; }
+  h1 { color: #f9fafb; }
+  h2 { color: #e5e7eb; border-bottom-color: rgba(255,255,255,0.1); }
+  h3 { color: #d1d5db; }
+  h4 { color: #9ca3af; }
+  h5 { color: #6b7280; }
+  h6 { color: #4b5563; }
   p { color: #cbd5e1; }
   a { color: var(--color-accent); }
   blockquote { background: #0f172a; border-left-color: var(--color-accent); }
@@ -391,7 +496,13 @@ footer {
 :root[data-theme="dark"] nav a:hover, :root[data-theme="dark"] .main-nav a:hover { color: #ffffff; }
 :root[data-theme="dark"] nav ul ul, :root[data-theme="dark"] .submenu { background: #111827; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 12px 28px rgba(0,0,0,0.35); }
 :root[data-theme="dark"] nav ul ul a:hover, :root[data-theme="dark"] .submenu a:hover { background: rgba(255,255,255,0.06); }
-:root[data-theme="dark"] h1, :root[data-theme="dark"] h2, :root[data-theme="dark"] h3 { color: #ffffff; }
+:root[data-theme="dark"] h1, :root[data-theme="dark"] h2, :root[data-theme="dark"] h3, :root[data-theme="dark"] h4, :root[data-theme="dark"] h5, :root[data-theme="dark"] h6 { color: #ffffff; }
+:root[data-theme="dark"] h1 { color: #f9fafb; }
+:root[data-theme="dark"] h2 { color: #e5e7eb; border-bottom-color: rgba(255,255,255,0.1); }
+:root[data-theme="dark"] h3 { color: #d1d5db; }
+:root[data-theme="dark"] h4 { color: #9ca3af; }
+:root[data-theme="dark"] h5 { color: #6b7280; }
+:root[data-theme="dark"] h6 { color: #4b5563; }
 :root[data-theme="dark"] p { color: #cbd5e1; }
 :root[data-theme="dark"] blockquote { background: #0f172a; border-left-color: var(--color-accent); }
 :root[data-theme="dark"] pre { background: #0f172a; color: #e5e7eb; border-color: rgba(255,255,255,0.08); }
@@ -422,7 +533,13 @@ footer {
 :root[data-theme="light"] nav a:hover, :root[data-theme="light"] .main-nav a:hover { color: #000000; }
 :root[data-theme="light"] nav ul ul, :root[data-theme="light"] .submenu { background: #ffffff; border: 1px solid var(--color-border); box-shadow: 0 12px 28px rgba(0,0,0,0.06); }
 :root[data-theme="light"] nav ul ul a:hover, :root[data-theme="light"] .submenu a:hover { background: rgba(0,0,0,0.04); }
-:root[data-theme="light"] h1, :root[data-theme="light"] h2, :root[data-theme="light"] h3 { color: #0a0a0a; }
+:root[data-theme="light"] h1, :root[data-theme="light"] h2, :root[data-theme="light"] h3, :root[data-theme="light"] h4, :root[data-theme="light"] h5, :root[data-theme="light"] h6 { color: #0a0a0a; }
+:root[data-theme="light"] h1 { color: #111827; }
+:root[data-theme="light"] h2 { color: #1f2937; border-bottom-color: var(--color-border); }
+:root[data-theme="light"] h3 { color: #374151; }
+:root[data-theme="light"] h4 { color: #4b5563; }
+:root[data-theme="light"] h5 { color: #6b7280; }
+:root[data-theme="light"] h6 { color: #9ca3af; }
 :root[data-theme="light"] p { color: #374151; }
 :root[data-theme="light"] blockquote { background: #f3f5ff; border-left-color: var(--color-accent); }
 :root[data-theme="light"] pre { background: #f8fafc; color: #0b1020; border-color: var(--color-border); }

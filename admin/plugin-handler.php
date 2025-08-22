@@ -1,8 +1,14 @@
 <?php
-// Start session if not already started
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+// Check if session extension is loaded
+if (!extension_loaded('session') || !function_exists('session_start')) {
+    error_log("Warning: Session functionality not available in plugin handler");
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'Session functionality not available']);
+    exit;
 }
+
+// Session should already be started by session.php
+// No need to start it again
 
 // Include required files
 require_once dirname(__DIR__) . '/includes/config.php';
@@ -12,8 +18,8 @@ require_once dirname(__DIR__) . '/includes/CMSModeManager.php';
 // Only handle AJAX requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     error_log("DEBUG: Plugin handler - Action received: " . $_POST['action']);
-    error_log("DEBUG: Plugin handler - POST data: " . print_r($_POST, true));
-    error_log("DEBUG: Plugin handler - Session data: " . print_r($_SESSION, true));
+    // POST data debugging removed for security
+    // Session debugging removed for security
 
     // Clear any previous output and set JSON header
     if (ob_get_level()) {

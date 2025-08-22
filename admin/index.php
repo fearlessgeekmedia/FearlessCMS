@@ -493,7 +493,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     // Handle logout action (special case - doesn't need CSRF for security)
     if ($postAction === 'logout') {
-        session_destroy();
+        if (function_exists('session_destroy')) {
+            session_destroy();
+        }
         fcms_flush_output(); // Flush output buffer before setting headers
         header('Location: /' . $adminPath . '/login');
         exit;

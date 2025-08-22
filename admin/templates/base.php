@@ -1,5 +1,5 @@
 <?php
-error_log("Admin base template - Current session: " . print_r($_SESSION, true));
+// Session debugging removed for security
 require_once dirname(dirname(__DIR__)) . '/version.php';
 
 // Get CMS mode manager instance

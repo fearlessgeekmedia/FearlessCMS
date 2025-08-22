@@ -3,7 +3,7 @@ require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../plugins/user-roles/user-roles.php';
 
 // Check if user is logged in
-session_start();
+// Session should already be started by session.php
 if (!isLoggedIn()) {
     header('Location: login.php');
     exit;

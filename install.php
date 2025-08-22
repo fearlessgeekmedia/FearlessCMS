@@ -11,12 +11,32 @@ if (getenv('FCMS_DEBUG') === 'true') {
 }
 ini_set('log_errors', 1);
 
-// Start session for CSRF protection
-session_start();
-
-// Generate CSRF token if not exists
-if (!isset($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+// Check if session extension is available and start session for CSRF protection
+$csrf_token = null;
+if (function_exists('session_start')) {
+    session_start();
+    // Generate CSRF token if not exists
+    if (!isset($_SESSION['csrf_token'])) {
+        // Use random_bytes() if available (PHP 7.0+), otherwise fallback
+        if (function_exists('random_bytes')) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        } elseif (function_exists('openssl_random_pseudo_bytes')) {
+            $_SESSION['csrf_token'] = bin2hex(openssl_random_pseudo_bytes(32));
+        } else {
+            $_SESSION['csrf_token'] = bin2hex(md5(uniqid(mt_rand(), true)));
+        }
+    }
+    $csrf_token = $_SESSION['csrf_token'];
+} else {
+    // Session extension not available - use simple token fallback
+    error_log("Warning: PHP session extension not available, using fallback CSRF protection");
+    if (function_exists('random_bytes')) {
+        $csrf_token = bin2hex(random_bytes(32));
+    } elseif (function_exists('openssl_random_pseudo_bytes')) {
+        $csrf_token = bin2hex(openssl_random_pseudo_bytes(32));
+    } else {
+        $csrf_token = bin2hex(md5(uniqid(mt_rand(), true)));
+    }
 }
 
 // CSRF validation function
@@ -24,7 +44,13 @@ function validate_csrf_token(): bool {
     if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token'])) {
         return false;
     }
-    return hash_equals($_SESSION['csrf_token'], $_POST['csrf_token']);
+    // Use hash_equals() if available (PHP 5.6+), otherwise fallback to comparison
+    if (function_exists('hash_equals')) {
+        return hash_equals($_SESSION['csrf_token'], $_POST['csrf_token']);
+    } else {
+        // Fallback comparison (less secure against timing attacks)
+        return $_SESSION['csrf_token'] === $_POST['csrf_token'];
+    }
 }
 
 // Rate limiting for admin creation

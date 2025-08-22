@@ -1,19 +1,45 @@
 <?php
 // Authentication functions
 
+// Check if session extension is loaded
+if (!extension_loaded('session') || !function_exists('session_start')) {
+    error_log("Warning: Session extension not loaded. Authentication functionality will be limited.");
+    // Define a dummy session array to prevent errors
+    if (!isset($_SESSION)) {
+        $_SESSION = [];
+    }
+}
+
 // CSRF Protection functions
 function generate_csrf_token() {
     if (!isset($_SESSION['csrf_token'])) {
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        // Use random_bytes() if available (PHP 7.0+), otherwise fallback to openssl_random_pseudo_bytes()
+        if (function_exists('random_bytes')) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        } elseif (function_exists('openssl_random_pseudo_bytes')) {
+            $_SESSION['csrf_token'] = bin2hex(openssl_random_pseudo_bytes(32));
+        } else {
+            // Last resort fallback (less secure)
+            $_SESSION['csrf_token'] = bin2hex(md5(uniqid(mt_rand(), true)));
+        }
     }
     return $_SESSION['csrf_token'];
 }
 
 function validate_csrf_token() {
+    error_log('CSRF Validation - Session token: ' . ($_SESSION['csrf_token'] ?? 'not set'));
+    error_log('CSRF Validation - POST token: ' . ($_POST['csrf_token'] ?? 'not set'));
+    error_log('CSRF Validation - Session ID: ' . (function_exists('session_id') ? session_id() : 'function_not_available'));
+    error_log('CSRF Validation - Session status: ' . (function_exists('session_status') ? session_status() : 'function_not_available'));
+    
     if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token'])) {
+        error_log('CSRF Validation - Missing token: POST=' . (isset($_POST['csrf_token']) ? 'yes' : 'no') . ', SESSION=' . (isset($_SESSION['csrf_token']) ? 'yes' : 'no'));
         return false;
     }
-    return hash_equals($_SESSION['csrf_token'], $_POST['csrf_token']);
+    
+    $isValid = $_SESSION['csrf_token'] === $_POST['csrf_token'];
+    error_log('CSRF Validation - Token comparison result: ' . ($isValid ? 'MATCH' : 'MISMATCH'));
+    return $isValid;
 }
 
 function csrf_token_field() {
@@ -232,7 +258,9 @@ function login($username, $password) {
             error_log("Password verified for user: " . $username);
 
             // Regenerate session ID to prevent session fixation attacks
-            session_regenerate_id(true);
+            if (function_exists('session_regenerate_id') && !headers_sent()) {
+                session_regenerate_id(false);
+            }
 
             // Set session variables
             $_SESSION['username'] = $username;
@@ -249,7 +277,6 @@ function login($username, $password) {
                 }
             }
 
-            error_log("Final session state: " . print_r($_SESSION, true));
             return true;
         }
         error_log("Password verification failed for user: " . $username);
@@ -262,8 +289,10 @@ function login($username, $password) {
 
 function logout() {
     error_log("Logging out user: " . ($_SESSION['username'] ?? 'unknown'));
-    session_destroy();
-    session_start();
+    if (function_exists('session_destroy')) {
+        session_destroy();
+    }
+    // Don't start a new session after logout
 }
 
 function fcms_check_permission($username, $permission) {

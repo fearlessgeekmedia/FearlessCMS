@@ -1,4 +1,5 @@
 <?php
+
 // Session is already started by index.php, so we don't need to start it again
 // Just ensure we have access to the required functions
 
@@ -29,8 +30,8 @@ $adminPath = $config['admin_path'] ?? 'admin';
 
 // If already logged in, redirect to dashboard
 if (isLoggedIn()) {
-    fcms_flush_output(); // Flush output buffer before setting headers
-    header('Location: /' . $adminPath . '?action=dashboard');
+    // Use JavaScript redirect instead of PHP headers to avoid "headers already sent" error
+    echo '<script>window.location.href = "/' . $adminPath . '?action=dashboard";</script>';
     exit;
 }
 
@@ -56,8 +57,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Too many login attempts. Please wait 15 minutes before trying again.';
         } elseif (login($username, $password)) {
             error_log("Successful login for user: " . $username . " from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
-            fcms_flush_output(); // Flush output buffer before setting headers
-            header('Location: /' . $adminPath . '?action=dashboard');
+            // Use JavaScript redirect instead of PHP headers to avoid "headers already sent" error
+            echo '<script>window.location.href = "/' . $adminPath . '?action=dashboard";</script>';
             exit;
         } else {
             error_log("Failed login for user: " . $username . " from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
