@@ -51,8 +51,9 @@ function deletePage(slug) {
         var form = document.createElement('form');
         form.method = 'POST';
         form.innerHTML = `
-            <input type="hidden" name="action" value="delete_page">
-            <input type="hidden" name="slug" value="${slug}">
+            <input type="hidden" name="action" value="delete_content">
+            <input type="hidden" name="path" value="${slug}">
+            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(generate_csrf_token()); ?>">
         `;
         document.body.appendChild(form);
         form.submit();

@@ -1,3 +1,4 @@
+
 <div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div>
@@ -44,9 +45,10 @@
         <p class="text-sm text-red-600 mb-4">This action cannot be undone.</p>
         <div class="flex justify-end gap-4">
             <button onclick="closeDeleteModal()" class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">Cancel</button>
-            <form method="POST" id="deleteForm" class="inline">
+            <form method="POST" id="deleteForm" class="inline" data-no-ajax="true">
                 <input type="hidden" name="action" value="delete_content">
                 <input type="hidden" name="path" id="deletePagePath">
+                <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
                 <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Delete</button>
             </form>
         </div>
@@ -55,8 +57,10 @@
 
 <script>
 function confirmDelete(path, title) {
+    console.log('confirmDelete called with path:', path, 'title:', title);
     document.getElementById('deletePageTitle').textContent = title;
     document.getElementById('deletePagePath').value = path;
+    console.log('Set deletePagePath value to:', document.getElementById('deletePagePath').value);
     document.getElementById('deleteModal').classList.remove('hidden');
     document.getElementById('deleteModal').classList.add('flex');
 }

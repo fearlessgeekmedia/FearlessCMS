@@ -106,9 +106,10 @@ if (!fcms_check_permission($_SESSION['username'], 'manage_content')) {
                 </div>
             </div>
             <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-                <form id="deleteForm" method="POST" class="inline-block">
+                <form id="deleteForm" method="POST" class="inline-block" data-no-ajax="true">
                     <input type="hidden" name="action" value="delete_content">
                     <input type="hidden" name="path" id="deletePath">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(generate_csrf_token()); ?>">
                     <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">Delete</button>
                 </form>
                 <button type="button" onclick="closeDeleteModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm">Cancel</button>

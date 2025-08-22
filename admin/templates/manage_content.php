@@ -76,6 +76,15 @@ if (is_dir(CONTENT_DIR)) {
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                 </svg>
                             </button>
+                            <!-- DEBUG: Direct delete form -->
+                            <form method="POST" style="display: inline; border: 2px solid red;">
+                                <input type="hidden" name="action" value="delete_content">
+                                <input type="hidden" name="path" value="<?php echo htmlspecialchars($item['path']); ?>">
+                                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(generate_csrf_token()); ?>">
+                                <button type="submit" class="bg-red-500 text-white px-2 py-1 rounded text-xs" onclick="return confirm('Are you sure you want to delete <?php echo htmlspecialchars($item['title']); ?>?')">
+                                    DELETE
+                                </button>
+                            </form>
                         </div>
                     </td>
                 </tr>
@@ -93,9 +102,10 @@ if (is_dir(CONTENT_DIR)) {
         <p class="text-sm text-red-600 mb-4">This action cannot be undone.</p>
         <div class="flex justify-end gap-4">
             <button onclick="closeDeleteModal()" class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">Cancel</button>
-            <form method="POST" id="deleteForm" class="inline">
+            <form method="POST" id="deleteForm" class="inline" data-no-ajax="true">
                 <input type="hidden" name="action" value="delete_content">
                 <input type="hidden" name="path" id="deletePagePath">
+                <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
                 <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Delete</button>
             </form>
         </div>

@@ -66,6 +66,7 @@ function generate_csrf_token() {
 function validate_csrf_token() {
     error_log('CSRF Validation - Session token: ' . ($_SESSION['csrf_token'] ?? 'not set'));
     error_log('CSRF Validation - POST token: ' . ($_POST['csrf_token'] ?? 'not set'));
+    error_log('CSRF Validation - POST data: ' . print_r($_POST, true));
     error_log('CSRF Validation - Session ID: ' . (function_exists('session_id') ? session_id() : 'function_not_available'));
     error_log('CSRF Validation - Session status: ' . (function_exists('session_status') ? session_status() : 'function_not_available'));
     
@@ -73,6 +74,8 @@ function validate_csrf_token() {
     if (isset($_POST['csrf_token']) && isset($_SESSION['csrf_token'])) {
         $isValid = $_SESSION['csrf_token'] === $_POST['csrf_token'];
         error_log('CSRF Validation - Token comparison result: ' . ($isValid ? 'MATCH' : 'MISMATCH'));
+        error_log('CSRF Validation - Session token length: ' . strlen($_SESSION['csrf_token']));
+        error_log('CSRF Validation - POST token length: ' . strlen($_POST['csrf_token']));
         return $isValid;
     }
     

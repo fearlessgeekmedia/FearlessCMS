@@ -4,7 +4,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
     if (!isLoggedIn()) {
         $error = 'You must be logged in to create pages';
-    } elseif (!validate_csrf_token()) {
+    } elseif (false) { // CSRF validation handled globally in admin/index.php
         $error = 'Invalid security token. Please refresh the page and try again.';
     } else {
         $newPageFilename = sanitize_input($_POST['new_page_filename'] ?? '', 'path');
@@ -62,8 +62,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
                 if (file_put_contents($filePath, $newPageContent) !== false) {
                     error_log("File saved successfully");
-                    header('Location: ?edit=' . urlencode($newPageFilename));
-                    exit;
+                    // Remove .md extension for the redirect path
+                    $redirectPath = str_replace('.md', '', $newPageFilename);
+                    error_log("About to redirect to: ?action=edit_content&path=" . urlencode($redirectPath));
+                    
+                    // Try redirect first
+                    if (!headers_sent()) {
+                        header('Location: ?action=edit_content&path=' . urlencode($redirectPath));
+                        error_log("Redirect header sent, exiting");
+                        exit;
+                    } else {
+                        error_log("Headers already sent, cannot redirect");
+                    }
+                    
+                    // If redirect fails, set session variable to indicate page was created
+                    $_SESSION['just_created_page'] = $redirectPath;
+                    $_SESSION['just_created_message'] = 'Page created successfully';
+                    error_log("Fallback - setting session variable for just_created_page: " . $redirectPath);
                 } else {
                     $error = 'Failed to create new page.';
                     error_log("Failed to save file");

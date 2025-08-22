@@ -89,9 +89,15 @@ global $cmsModeManager;
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Handle AJAX form submissions
+        // Handle AJAX form submissions (but skip delete forms)
         document.querySelectorAll('form[data-ajax="true"]').forEach(form => {
             form.addEventListener('submit', function(e) {
+                // Skip AJAX for delete forms - let them submit normally
+                const action = new FormData(this).get('action');
+                if (action && ['delete_content', 'delete_page'].includes(action)) {
+                    return; // Don't prevent default, let form submit normally
+                }
+                
                 e.preventDefault();
                 const formData = new FormData(this);
                 
@@ -168,12 +174,12 @@ global $cmsModeManager;
             });
         }
 
-        // Add data-ajax attributes to all forms and links
-        document.querySelectorAll('form').forEach(form => {
-            if (!form.hasAttribute('data-ajax')) {
-                form.setAttribute('data-ajax', 'true');
-            }
-        });
+        // TEMPORARILY DISABLED: Add data-ajax attributes to all forms and links EXCEPT forms marked with data-no-ajax
+        // document.querySelectorAll('form').forEach(form => {
+        //     if (!form.hasAttribute('data-ajax') && !form.hasAttribute('data-no-ajax')) {
+        //         form.setAttribute('data-ajax', 'true');
+        //     }
+        // });
 
         document.querySelectorAll('a').forEach(link => {
             if (link.getAttribute('href')?.startsWith('?action=')) {

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Delete Test</title>
+</head>
+<body>
+    <h1>Delete Test Form</h1>
+    <form method="POST" action="/admin/">
+        <input type="hidden" name="action" value="delete_content">
+        <input type="hidden" name="path" value="testpage5">
+        <input type="hidden" name="csrf_token" value="test_token">
+        <button type="submit">Delete testpage5</button>
+    </form>
+</body>
+</html> 
