@@ -1,8 +1,0 @@
-2025-08-18 22:19:17.428 [info] updateURL https://api2.cursor.sh/updates/api/update/linux-x64/cursor/1.2.2/c450d8a2252b67f34bbdbe4201fe164ed5a3be1638abc560f131199e3ceae6bc/stable
-2025-08-18 22:19:17.429 [info] update#setState idle
-2025-08-18 22:19:23.897 [error] #1: https://api2.cursor.sh/updates/api/update/linux-x64/cursor/1.2.2/c450d8a2252b67f34bbdbe4201fe164ed5a3be1638abc560f131199e3ceae6bc/stable - error undefined net::ERR_NAME_NOT_RESOLVED
-2025-08-18 22:19:23.906 [error] update#isLatestVersion(): failed to check for updates
-2025-08-18 22:19:23.906 [error] Error: net::ERR_NAME_NOT_RESOLVED
-    at SimpleURLLoaderWrapper.<anonymous> (node:electron/js2c/browser_init:2:118774)
-    at SimpleURLLoaderWrapper.emit (node:events:524:28)
-2025-08-18 22:19:36.006 [info] Extension host with pid 227995 exited with code: 0, signal: unknown.
