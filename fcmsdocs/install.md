@@ -140,7 +140,7 @@ php install.php --create-admin=admin --password=securepassword123
 
 #### Server Setup Script
 ```bash
-#!/bin/bash
+#!/usr/bin/env bash
 echo "Setting up FearlessCMS..."
 
 # Check system
@@ -446,7 +446,7 @@ EOF
 ```bash
 # Create security monitoring script
 cat > /usr/local/bin/fcms-security-monitor.sh << 'EOF'
-#!/bin/bash
+#!/usr/bin/env bash
 
 FCMS_PATH="/path/to/fearlesscms"
 LOG_FILE="/var/log/fcms-security.log"
@@ -540,7 +540,7 @@ testssl.sh yourdomain.com
 ```bash
 # Create encrypted backup script
 cat > /usr/local/bin/fcms-backup.sh << 'EOF'
-#!/bin/bash
+#!/usr/bin/env bash
 
 FCMS_PATH="/path/to/fearlesscms"
 BACKUP_PATH="/secure/backup/location"
@@ -583,7 +583,7 @@ EOF
 ```bash
 # Emergency lockdown script
 cat > /usr/local/bin/fcms-lockdown.sh << 'EOF'
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Disable all user logins except admin
 touch /path/to/fearlesscms/maintenance.lock
@@ -613,7 +613,7 @@ chmod +x /usr/local/bin/fcms-lockdown.sh
 ```bash
 # Create security check script
 cat > /usr/local/bin/fcms-security-check.sh << 'EOF'
-#!/bin/bash
+#!/usr/bin/env bash
 
 echo "FearlessCMS Security Check Report - $(date)"
 echo "================================================"

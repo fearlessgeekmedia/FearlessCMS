@@ -34,6 +34,11 @@
             "label": "File Permissions",
             "url": "/documentation/file-permissions",
             "description": "Security and file access"
+        },
+        {
+            "label": "Parallax Plugin",
+            "url": "/documentation/parallax-plugin",
+            "description": "Add stunning parallax scrolling effects"
         }
     ],
     "theme-development-nav": [

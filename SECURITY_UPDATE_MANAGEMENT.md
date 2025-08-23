@@ -131,7 +131,7 @@ sudo apt install lynis rkhunter
 
 # Create vulnerability scan script
 cat > /usr/local/bin/fcms-vuln-scan.sh << 'EOF'
-#!/bin/bash
+#!/usr/bin/env bash
 
 SCAN_DATE=$(date +%Y%m%d_%H%M%S)
 REPORT_DIR="/var/log/security-scans"
@@ -188,7 +188,7 @@ echo "0 2 * * 1 /usr/local/bin/fcms-vuln-scan.sh" | crontab -
 ```bash
 # Create risk assessment script
 cat > /usr/local/bin/fcms-risk-assessment.sh << 'EOF'
-#!/bin/bash
+#!/usr/bin/env bash
 
 UPDATE_TYPE="$1"
 COMPONENT="$2"
@@ -232,7 +232,7 @@ chmod +x /usr/local/bin/fcms-risk-assessment.sh
 ```bash
 # Create change request form
 cat > /usr/local/bin/fcms-change-request.sh << 'EOF'
-#!/bin/bash
+#!/usr/bin/env bash
 
 echo "FearlessCMS Change Request Form"
 echo "==============================="
@@ -302,7 +302,7 @@ chmod +x /usr/local/bin/fcms-change-request.sh
 ```bash
 # Emergency patch deployment script
 cat > /usr/local/bin/fcms-emergency-patch.sh << 'EOF'
-#!/bin/bash
+#!/usr/bin/env bash
 
 PATCH_ID="$1"
 PATCH_FILE="$2"
@@ -373,7 +373,7 @@ chmod +x /usr/local/bin/fcms-emergency-patch.sh
 ```bash
 # Post-patch validation script
 cat > /usr/local/bin/fcms-post-patch-validation.sh << 'EOF'
-#!/bin/bash
+#!/usr/bin/env bash
 
 PATCH_ID="$1"
 FCMS_PATH="/var/www/html/fearlesscms"
@@ -449,7 +449,7 @@ chmod +x /usr/local/bin/fcms-post-patch-validation.sh
 ```bash
 # Pre-update checklist script
 cat > /usr/local/bin/fcms-pre-update-check.sh << 'EOF'
-#!/bin/bash
+#!/usr/bin/env bash
 
 FCMS_PATH="/var/www/html/fearlesscms"
 CHECK_PASSED=0
@@ -518,7 +518,7 @@ chmod +x /usr/local/bin/fcms-pre-update-check.sh
 ```bash
 # Standard update script
 cat > /usr/local/bin/fcms-standard-update.sh << 'EOF'
-#!/bin/bash
+#!/usr/bin/env bash
 
 UPDATE_TYPE="$1"
 UPDATE_SOURCE="$2"
@@ -647,7 +647,7 @@ chmod +x /usr/local/bin/fcms-standard-update.sh
 ```bash
 # Create update monitoring daemon
 cat > /usr/local/bin/fcms-update-monitor.sh << 'EOF'
-#!/bin/bash
+#!/usr/bin/env bash
 
 CONFIG_FILE="/etc/fcms/update-monitor.conf"
 PID_FILE="/var/run/fcms-update-monitor.pid"

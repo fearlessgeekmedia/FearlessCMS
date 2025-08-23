@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 echo "🐺 FearlessCMS Development Environment Starter"
 echo "============================================="

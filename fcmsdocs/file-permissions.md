@@ -381,7 +381,7 @@ sudo apt install inotify-tools
 
 # Create monitoring script
 sudo cat > /usr/local/bin/fcms-file-monitor.sh << 'EOF'
-#!/bin/bash
+#!/usr/bin/env bash
 
 WATCH_DIRS="/var/www/html/fearlesscms/config /var/www/html/fearlesscms/admin"
 LOG_FILE="/var/log/fcms-file-changes.log"
@@ -502,7 +502,7 @@ EOF
 ```bash
 # Create automated permission checker
 sudo cat > /usr/local/bin/fcms-security-check.sh << 'EOF'
-#!/bin/bash
+#!/usr/bin/env bash
 
 FCMS_PATH="/var/www/html/fearlesscms"
 REPORT_FILE="/var/log/fcms-security-report.log"
@@ -614,7 +614,7 @@ echo "0 6 * * * /usr/local/bin/fcms-security-check.sh" | crontab -
 ```bash
 # Create auto-fix script for common issues
 sudo cat > /usr/local/bin/fcms-auto-fix.sh << 'EOF'
-#!/bin/bash
+#!/usr/bin/env bash
 
 FCMS_PATH="/var/www/html/fearlesscms"
 WEB_USER="www-data"
@@ -679,7 +679,7 @@ chmod +x /usr/local/bin/fcms-auto-fix.sh
 ```bash
 # Create permission backup script
 sudo cat > /usr/local/bin/fcms-backup-permissions.sh << 'EOF'
-#!/bin/bash
+#!/usr/bin/env bash
 
 FCMS_PATH="/var/www/html/fearlesscms"
 BACKUP_DIR="/backup/permissions"
@@ -706,7 +706,7 @@ EOF
 
 # Create permission restore script
 sudo cat > /usr/local/bin/fcms-restore-permissions.sh << 'EOF'
-#!/bin/bash
+#!/usr/bin/env bash
 
 if [ $# -ne 1 ]; then
     echo "Usage: $0 <backup_file>"
