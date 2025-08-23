@@ -6,6 +6,7 @@ fcms_register_admin_section('files', [
 ]);
 
 function fcms_render_file_manager() {
+    error_log("DEBUG: fcms_render_file_manager() called");
     $uploadsDir = dirname(__DIR__) . '/uploads';
     $webUploadsDir = '/uploads';
     $allowedExts = ['jpg','jpeg','png','gif','webp','pdf','zip','svg','txt','md'];
@@ -14,78 +15,126 @@ function fcms_render_file_manager() {
     $error = '';
     $success = '';
 
-    // Handle file upload
+    // Handle file upload (single or multiple files)
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'upload_file') {
         // Validate CSRF token
         if (!function_exists('validate_csrf_token') || !validate_csrf_token()) {
             $error = 'Invalid security token. Please refresh the page and try again.';
-        } elseif (!empty($_FILES['file']['name'])) {
-            $file = $_FILES['file'];
-
-            // Comprehensive file validation
-            $originalName = $file['name'];
-            $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
-            $mimeType = $file['type'];
-            $tmpName = $file['tmp_name'];
-
-            // Check for upload errors
-            if ($file['error'] !== UPLOAD_ERR_OK) {
-                $error = 'Upload error occurred.';
-            }
-            // Validate file extension
-            elseif (!in_array($ext, $allowedExts)) {
-                $error = 'File type not allowed. Allowed types: ' . implode(', ', $allowedExts);
-            }
-            // Validate file size
-            elseif ($file['size'] > $maxFileSize) {
-                $error = 'File is too large. Maximum size: ' . round($maxFileSize/1024/1024) . 'MB';
-            }
-            // Validate MIME type for additional security
-            elseif (!in_array($mimeType, ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'text/plain', 'application/pdf'])) {
-                $error = 'Invalid file type detected.';
-            }
-            // Check for executable content in filename
-            elseif (preg_match('/\.(php|phtml|php3|php4|php5|pl|py|jsp|asp|sh|cgi)$/i', $originalName)) {
-                $error = 'Executable files are not allowed.';
-            }
-            else {
+        } elseif (!empty($_FILES['files']['name'][0])) {
+            $uploadedFiles = $_FILES['files'];
+            $successCount = 0;
+            $errorCount = 0;
+            $errors = [];
+            
+            // Process each uploaded file
+            for ($i = 0; $i < count($uploadedFiles['name']); $i++) {
+                $file = [
+                    'name' => $uploadedFiles['name'][$i],
+                    'type' => $uploadedFiles['type'][$i],
+                    'tmp_name' => $uploadedFiles['tmp_name'][$i],
+                    'error' => $uploadedFiles['error'][$i],
+                    'size' => $uploadedFiles['size'][$i]
+                ];
+                
+                // Comprehensive file validation
+                $originalName = $file['name'];
+                $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+                $mimeType = $file['type'];
+                $tmpName = $file['tmp_name'];
+                
+                // Check for upload errors
+                if ($file['error'] !== UPLOAD_ERR_OK) {
+                    $errors[] = $originalName . ': Upload error occurred.';
+                    $errorCount++;
+                    continue;
+                }
+                
+                // Validate file extension
+                if (!in_array($ext, $allowedExts)) {
+                    $errors[] = $originalName . ': File type not allowed. Allowed types: ' . implode(', ', $allowedExts);
+                    $errorCount++;
+                    continue;
+                }
+                
+                // Validate file size
+                if ($file['size'] > $maxFileSize) {
+                    $errors[] = $originalName . ': File is too large. Maximum size: ' . round($maxFileSize/1024/1024) . 'MB';
+                    $errorCount++;
+                    continue;
+                }
+                
+                // Validate MIME type for additional security
+                if (!in_array($mimeType, ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'text/plain', 'application/pdf'])) {
+                    $errors[] = $originalName . ': Invalid file type detected.';
+                    $errorCount++;
+                    continue;
+                }
+                
+                // Check for executable content in filename
+                if (preg_match('/\.(php|phtml|php3|php4|php5|pl|py|jsp|asp|sh|cgi)$/i', $originalName)) {
+                    $errors[] = $originalName . ': Executable files are not allowed.';
+                    $errorCount++;
+                    continue;
+                }
+                
                 // Sanitize filename - remove dangerous characters
                 $safeName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $originalName);
                 $safeName = preg_replace('/_{2,}/', '_', $safeName); // Remove multiple underscores
-
+                
                 // Ensure filename doesn't start with dot
                 if (strpos($safeName, '.') === 0) {
                     $safeName = 'file' . $safeName;
                 }
-
+                
                 // Add timestamp to prevent conflicts
                 $pathInfo = pathinfo($safeName);
-                $finalName = $pathInfo['filename'] . '_' . time() . '.' . $pathInfo['extension'];
-
+                $finalName = $pathInfo['filename'] . '_' . time() . '_' . $i . '.' . $pathInfo['extension'];
+                
                 $target = $uploadsDir . '/' . $finalName;
-
+                
                 // Additional security: validate the actual file content
                 if (function_exists('finfo_open')) {
                     $finfo = finfo_open(FILEINFO_MIME_TYPE);
                     $detectedMime = finfo_file($finfo, $tmpName);
                     finfo_close($finfo);
-
+                    
                     $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'text/plain', 'application/pdf'];
                     if (!in_array($detectedMime, $allowedMimes)) {
-                        $error = 'File content does not match allowed types.';
+                        $errors[] = $originalName . ': File content does not match allowed types.';
+                        $errorCount++;
+                        continue;
                     }
                 }
-
-                if (!isset($error) && move_uploaded_file($tmpName, $target)) {
+                
+                // Attempt to upload the file
+                if (move_uploaded_file($tmpName, $target)) {
                     // Set secure file permissions
                     chmod($target, 0644);
-                    $success = 'File uploaded successfully as: ' . htmlspecialchars($finalName);
-                } elseif (!isset($error)) {
-                    $error = 'Failed to upload file.';
+                    $successCount++;
+                } else {
+                    $errors[] = $originalName . ': Failed to upload file.';
+                    $errorCount++;
+                }
+            }
+            
+            // Set success/error messages
+            if ($successCount > 0) {
+                if ($successCount === 1) {
+                    $success = '1 file uploaded successfully.';
+                } else {
+                    $success = $successCount . ' files uploaded successfully.';
+                }
+            }
+            
+            if ($errorCount > 0) {
+                if (empty($success)) {
+                    $error = 'Upload failed. ' . implode(' ', $errors);
+                } else {
+                    $error = 'Some files failed to upload: ' . implode(' ', $errors);
                 }
             }
         } else {
-            $error = 'No file selected.';
+            $error = 'No files selected.';
         }
     }
 

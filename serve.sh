@@ -10,10 +10,19 @@ cd "$SCRIPT_DIR" || {
 # clear previous logs if any
 rm -f serve-log.tmp
 
-# check if php is installed
+# check if php is installed and use nix-shell if needed
 if ! command -v php &> /dev/null
 then
-    echo "php could not be found"
+    echo "PHP not found in PATH, using nix-shell with php81..."
+    # Use nix-shell to get PHP with all required extensions
+    nix-shell -p php81 --pure --run "php -c php-config/99-custom.ini -S localhost:$port router.php" > serve-log.tmp 2>&1 &
+    pid=$!
+    echo "Server started on port $port with PID $pid using nix-shell PHP"
+    echo "To stop the server, run: kill $pid"
+    echo "To view logs, run: tail -f serve-log.tmp"
+    echo "To access the server, open http://localhost:$port in your browser"
+    echo "🚀"
+    wait $pid
     exit
 fi
 
@@ -28,6 +37,21 @@ fi
 if lsof -i:$port > /dev/null
 then
     echo "Port $port is already in use"
+    exit
+fi
+
+# check if PHP has session extension
+if ! php -m | grep -q session; then
+    echo "Warning: PHP session extension not found. Using nix-shell with php81 for proper session support..."
+    # Use nix-shell to get PHP with session extension
+    nix-shell -p php81 --pure --run "php -c php-config/99-custom.ini -S localhost:$port router.php" > serve-log.tmp 2>&1 &
+    pid=$!
+    echo "Server started on port $port with PID $pid using nix-shell PHP"
+    echo "To stop the server, run: kill $pid"
+    echo "To view logs, run: tail -f serve-log.tmp"
+    echo "To access the server, open http://localhost:$port in your browser"
+    echo "🚀"
+    wait $pid
     exit
 fi
 

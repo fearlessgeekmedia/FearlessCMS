@@ -57,6 +57,8 @@ if (!$sessionActive) {
     
     // Check if session save path is already configured
     $currentSavePath = ini_get('session.save_path');
+    $sessionSavePath = false; // Initialize variable
+    
     if (empty($currentSavePath)) {
         // Only try to set the path if it's not already configured
         // Try to configure session settings - these MUST be set before session_start()

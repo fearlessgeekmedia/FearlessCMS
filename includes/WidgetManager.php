@@ -1,9 +1,11 @@
 <?php
 class WidgetManager {
     private $widgetsFile;
+    private $documentationNavFile;
 
     public function __construct() {
         $this->widgetsFile = CONFIG_DIR . '/widgets.json';
+        $this->documentationNavFile = CONFIG_DIR . '/documentation-nav.json';
     }
 
     public function renderSidebar($sidebarName) {
@@ -28,6 +30,11 @@ class WidgetManager {
         $type = $widget['type'] ?? '';
         $title = htmlspecialchars($widget['title'] ?? '');
         
+        // Handle documentation navigation widgets
+        if ($type === 'documentation-nav') {
+            return $this->renderDocumentationNavWidget($widget);
+        }
+        
         // For HTML widgets, don't escape the content
         if ($type === 'html') {
             $content = $widget['content'] ?? '';
@@ -42,6 +49,43 @@ class WidgetManager {
         $html .= '<div class="widget-content">' . $content . '</div>';
         $html .= '</div>';
 
+        return $html;
+    }
+
+    private function renderDocumentationNavWidget($widget) {
+        $title = htmlspecialchars($widget['title'] ?? '');
+        $navKey = $widget['content'] ?? '';
+        
+        if (!file_exists($this->documentationNavFile)) {
+            return '';
+        }
+        
+        $navData = json_decode(file_get_contents($this->documentationNavFile), true);
+        if (!isset($navData[$navKey])) {
+            return '';
+        }
+        
+        $html = '<div class="widget widget-documentation-nav">';
+        if ($title) {
+            $html .= '<h3 class="widget-title">' . $title . '</h3>';
+        }
+        $html .= '<div class="widget-content">';
+        $html .= '<ul class="documentation-nav-list">';
+        
+        foreach ($navData[$navKey] as $item) {
+            $label = htmlspecialchars($item['label'] ?? '');
+            $url = htmlspecialchars($item['url'] ?? '#');
+            $description = htmlspecialchars($item['description'] ?? '');
+            
+            $html .= '<li class="documentation-nav-item">';
+            $html .= '<a href="' . $url . '" class="documentation-nav-link" title="' . $description . '">' . $label . '</a>';
+            $html .= '</li>';
+        }
+        
+        $html .= '</ul>';
+        $html .= '</div>';
+        $html .= '</div>';
+        
         return $html;
     }
 } 

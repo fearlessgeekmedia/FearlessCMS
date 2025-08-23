@@ -1,75 +1,6 @@
 <?php
-// Define allowed file extensions
-$allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'zip', 'svg', 'txt', 'md'];
-
-// Define max file size (10MB)
-$maxFileSize = 10 * 1024 * 1024;
-
-// Get uploads directory
-$uploadsDir = dirname(dirname(__DIR__)) . '/uploads';
-$webUploadsDir = '/uploads';
-
-// Ensure uploads directory exists
-if (!file_exists($uploadsDir)) {
-    mkdir($uploadsDir, 0755, true);
-}
-
-// Handle file upload
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'upload_file') {
-    if (!empty($_FILES['file']['name'])) {
-        $file = $_FILES['file'];
-        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-        if (!in_array($ext, $allowedExts)) {
-            $error = 'File type not allowed.';
-        } elseif ($file['size'] > $maxFileSize) {
-            $error = 'File is too large.';
-        } else {
-            $target = $uploadsDir . '/' . basename($file['name']);
-            if (move_uploaded_file($file['tmp_name'], $target)) {
-                $success = 'File uploaded successfully.';
-                // Ensure proper permissions
-                chmod($target, 0644);
-            } else {
-                $error = 'Failed to upload file.';
-            }
-        }
-    } else {
-        $error = 'No file selected.';
-    }
-}
-
-// Handle file deletion
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_file') {
-    $filename = $_POST['filename'] ?? '';
-    $filepath = realpath($uploadsDir . '/' . $filename);
-    if ($filename && $filepath && strpos($filepath, realpath($uploadsDir)) === 0 && is_file($filepath)) {
-        if (unlink($filepath)) {
-            $success = 'File deleted.';
-        } else {
-            $error = 'Failed to delete file.';
-        }
-    } else {
-        $error = 'Invalid file.';
-    }
-}
-
-// List files
-$files = [];
-if (is_dir($uploadsDir)) {
-    $files = array_diff(scandir($uploadsDir), ['.', '..']);
-    $files = array_map(function($file) use ($uploadsDir, $webUploadsDir) {
-        $filePath = $uploadsDir . '/' . $file;
-        $fileInfo = [
-            'name' => $file,
-            'size' => filesize($filePath),
-            'type' => mime_content_type($filePath),
-            'ext' => strtolower(pathinfo($file, PATHINFO_EXTENSION)),
-            'url' => $webUploadsDir . '/' . $file,
-            'modified' => filemtime($filePath)
-        ];
-        return $fileInfo;
-    }, $files);
-}
+// This template now delegates all file operations to the backend file manager function
+// The backend function handles CSRF validation, file processing, and security
 ?>
 
 # Add CSS for file previews
@@ -185,9 +116,65 @@ if (is_dir($uploadsDir)) {
 .view-toggle button:last-child {
     border-radius: 0 4px 4px 0;
 }
+
+/* Modal styles */
+#renameModal {
+    transition: opacity 0.2s ease;
+}
+
+#renameModal.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#renameModal:not(.hidden) {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+#renameModal .bg-white {
+    transform: scale(0.95);
+    transition: transform 0.2s ease;
+}
+
+#renameModal:not(.hidden) .bg-white {
+    transform: scale(1);
+}
+
+/* Upload progress styles */
+.upload-progress {
+    display: none;
+    margin-top: 1rem;
+}
+
+.upload-progress.show {
+    display: block;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 20px;
+    background-color: #f3f4f6;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: #3b82f6;
+    transition: width 0.3s ease;
+}
+
+.upload-status {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
 </style>
 
 <h2 class="text-2xl font-bold mb-6 fira-code">File Manager</h2>
+
+<!-- Display any messages from the backend -->
 <?php if (!empty($error)): ?>
     <div class="bg-red-100 text-red-700 p-4 rounded mb-4"><?= htmlspecialchars($error) ?></div>
 <?php endif; ?>
@@ -195,11 +182,32 @@ if (is_dir($uploadsDir)) {
     <div class="bg-green-100 text-green-700 p-4 rounded mb-4"><?= htmlspecialchars($success) ?></div>
 <?php endif; ?>
 
-<form method="POST" enctype="multipart/form-data" class="mb-6 flex items-center gap-4">
+<!-- Enhanced Upload Form with Multiple File Support -->
+<form method="POST" enctype="multipart/form-data" class="mb-6 p-4 border rounded bg-gray-50" id="uploadForm">
     <input type="hidden" name="action" value="upload_file">
-    <input type="file" name="file" required class="border rounded px-2 py-1">
-    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Upload</button>
-    <span class="text-sm text-gray-500">Allowed: <?= implode(', ', $allowedExts) ?>, max <?= round($maxFileSize/1024/1024) ?>MB</span>
+    <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
+    
+    <div class="mb-4">
+        <label for="files" class="block text-sm font-medium text-gray-700 mb-2">Select Files:</label>
+        <input type="file" name="files[]" id="files" multiple required 
+               class="border rounded px-3 py-2 w-full" 
+               accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.zip,.svg,.txt,.md">
+        <p class="text-sm text-gray-500 mt-1">
+            You can select multiple files. Allowed: JPG, PNG, GIF, WebP, PDF, ZIP, SVG, TXT, MD. Max 10MB per file.
+        </p>
+    </div>
+    
+    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+        Upload Files
+    </button>
+    
+    <!-- Upload Progress -->
+    <div class="upload-progress" id="uploadProgress">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+        <div class="upload-status" id="uploadStatus">Ready to upload...</div>
+    </div>
 </form>
 
 <div class="view-toggle flex gap-2">
@@ -217,15 +225,18 @@ if (is_dir($uploadsDir)) {
     </button>
 </div>
 
+<!-- File Grid View -->
 <div id="grid-view" class="file-grid">
     <?php foreach ($files as $file): ?>
         <div class="file-card">
-            <?php if (in_array($file['ext'], ['jpg', 'jpeg', 'png', 'gif', 'webp'])): ?>
+            <?php 
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])): ?>
                 <img src="<?= htmlspecialchars($file['url']) ?>" alt="<?= htmlspecialchars($file['name']) ?>" class="file-preview">
             <?php else: ?>
                 <div class="file-icon">
                     <?php
-                    $icon = match($file['ext']) {
+                    $icon = match($ext) {
                         'pdf' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>',
                         'zip' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg>',
                         'txt', 'md' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>',
@@ -244,9 +255,11 @@ if (is_dir($uploadsDir)) {
             </div>
             <div class="file-actions">
                 <a href="<?= htmlspecialchars($file['url']) ?>" target="_blank" class="bg-blue-500 text-white hover:bg-blue-600">View</a>
+                <button onclick="showRenameForm('<?= htmlspecialchars($file['name']) ?>')" class="bg-yellow-500 text-white hover:bg-yellow-600 w-full">Rename</button>
                 <form method="POST" style="display:inline" onsubmit="return confirm('Delete this file?')">
                     <input type="hidden" name="action" value="delete_file">
                     <input type="hidden" name="filename" value="<?= htmlspecialchars($file['name']) ?>">
+                    <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
                     <button type="submit" class="bg-red-500 text-white hover:bg-red-600 w-full">Delete</button>
                 </form>
             </div>
@@ -254,6 +267,7 @@ if (is_dir($uploadsDir)) {
     <?php endforeach; ?>
 </div>
 
+<!-- File List View -->
 <div id="list-view" class="hidden">
     <table class="w-full border-collapse">
         <thead>
@@ -269,12 +283,14 @@ if (is_dir($uploadsDir)) {
             <tr>
                 <td class="py-2 border-b">
                     <div class="flex items-center">
-                        <?php if (in_array($file['ext'], ['jpg', 'jpeg', 'png', 'gif', 'webp'])): ?>
+                        <?php 
+                        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+                        if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])): ?>
                             <img src="<?= htmlspecialchars($file['url']) ?>" alt="<?= htmlspecialchars($file['name']) ?>" class="file-preview">
                         <?php else: ?>
                             <div class="file-icon">
                                 <?php
-                                $icon = match($file['ext']) {
+                                $icon = match($ext) {
                                     'pdf' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>',
                                     'zip' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg>',
                                     'txt', 'md' => '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>',
@@ -293,9 +309,11 @@ if (is_dir($uploadsDir)) {
                 <td class="py-2 border-b">
                     <div class="flex gap-2">
                         <a href="<?= htmlspecialchars($file['url']) ?>" target="_blank" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">View</a>
+                        <button onclick="showRenameForm('<?= htmlspecialchars($file['name']) ?>')" class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600">Rename</button>
                         <form method="POST" style="display:inline" onsubmit="return confirm('Delete this file?')">
                             <input type="hidden" name="action" value="delete_file">
                             <input type="hidden" name="filename" value="<?= htmlspecialchars($file['name']) ?>">
+                            <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
                             <button type="submit" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">Delete</button>
                         </form>
                     </div>
@@ -304,6 +322,29 @@ if (is_dir($uploadsDir)) {
         <?php endforeach; ?>
         </tbody>
     </table>
+</div>
+
+<!-- Rename Modal -->
+<div id="renameModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 class="text-lg font-semibold mb-4">Rename File</h3>
+            <form method="POST" id="renameForm">
+                <input type="hidden" name="action" value="rename_file">
+                <input type="hidden" name="old_filename" id="oldFilename">
+                <div class="mb-4">
+                    <label for="new_filename" class="block text-sm font-medium text-gray-700 mb-2">New Filename:</label>
+                    <input type="text" name="new_filename" id="newFilename" required 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
+                <div class="flex gap-3">
+                    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Rename</button>
+                    <button type="button" onclick="hideRenameForm()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -339,5 +380,47 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('list-view-btn').addEventListener('click', () => {
         localStorage.setItem('fileManagerView', 'list');
     });
+    
+    // Handle file selection for multiple files
+    const fileInput = document.getElementById('files');
+    fileInput.addEventListener('change', function() {
+        const files = this.files;
+        if (files.length > 1) {
+            document.getElementById('uploadStatus').textContent = `${files.length} files selected for upload`;
+        } else if (files.length === 1) {
+            document.getElementById('uploadStatus').textContent = `1 file selected: ${files[0].name}`;
+        } else {
+            document.getElementById('uploadStatus').textContent = 'Ready to upload...';
+        }
+    });
+});
+
+// Rename file functions
+function showRenameForm(filename) {
+    document.getElementById('oldFilename').value = filename;
+    document.getElementById('newFilename').value = filename;
+    document.getElementById('renameModal').classList.remove('hidden');
+    document.getElementById('newFilename').focus();
+    document.getElementById('newFilename').select();
+}
+
+function hideRenameForm() {
+    document.getElementById('renameModal').classList.add('hidden');
+    document.getElementById('oldFilename').value = '';
+    document.getElementById('newFilename').value = '';
+}
+
+// Close modal when clicking outside
+document.getElementById('renameModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        hideRenameForm();
+    }
+});
+
+// Handle escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        hideRenameForm();
+    }
 });
 </script>

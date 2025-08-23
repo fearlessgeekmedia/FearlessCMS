@@ -2,7 +2,7 @@
 
 let
   # PHP with required extensions
-  php = pkgs.php82.withExtensions ({ enabled, all }: enabled ++ (with all; [
+  php = pkgs.php81.withExtensions ({ enabled, all }: enabled ++ (with all; [
     mbstring
     openssl
     pdo
@@ -12,6 +12,7 @@ let
     fileinfo
     curl
     gd
+    session
   ]));
 
   # Node.js with npm
@@ -65,7 +66,7 @@ in pkgs.mkShell {
     php
     nodejs
     pkgs.nodePackages.npm
-    pkgs.php82Packages.composer
+    pkgs.php81Packages.composer
   ] ++ devTools;
 
   shellHook = ''

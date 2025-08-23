@@ -162,13 +162,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
                 // Only save if we handled file uploads, otherwise let the main index.php handle it
                 if (isset($_FILES['logo']) || isset($_FILES['herobanner']) || isset($_POST['remove_logo']) || isset($_POST['remove_herobanner'])) {
+                    error_log('DEBUG: About to save theme options after file upload');
                     // Save updated options
                     if (file_put_contents($themeOptionsFile, json_encode($themeOptions, JSON_PRETTY_PRINT))) {
-                        header('Location: /admin/?action=manage_themes&success=1');
-                        exit;
+                        error_log('DEBUG: Theme options saved successfully, attempting redirect to: ?action=manage_themes&success=1');
+                        error_log('DEBUG: Headers already sent: ' . (headers_sent() ? 'YES' : 'NO'));
+                        if (!headers_sent()) {
+                            header('Location: ?action=manage_themes&success=1');
+                            exit;
+                        } else {
+                            error_log('DEBUG: Headers already sent, cannot redirect');
+                            // Fallback: set session message and continue
+                            $_SESSION['theme_upload_success'] = 'Hero banner uploaded successfully!';
+                            $action = 'manage_themes';
+                            $success = 'Hero banner uploaded successfully!';
+                        }
                     } else {
-                        header('Location: /admin/?action=manage_themes&error=Failed+to+save+theme+options');
-                        exit;
+                        error_log('DEBUG: Failed to save theme options');
+                        if (!headers_sent()) {
+                            header('Location: ?action=manage_themes&error=Failed+to+save+theme+options');
+                            exit;
+                        } else {
+                            error_log('DEBUG: Headers already sent, cannot redirect');
+                            $_SESSION['theme_upload_error'] = 'Failed to save theme options';
+                            $action = 'manage_themes';
+                            $error = 'Failed to save theme options';
+                        }
                     }
                 }
                 // If no file uploads, don't handle this action - let the main index.php handle it

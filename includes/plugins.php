@@ -341,18 +341,54 @@ function fcms_load_plugins() {
     $configFile = PLUGIN_CONFIG;
     $active = [];
 
+    if (getenv('FCMS_DEBUG') === 'true') {
+        error_log("Plugin loader called - Plugin dir: $pluginDir, Config file: $configFile");
+    }
+
     if (file_exists($configFile)) {
         $active = json_decode(file_get_contents($configFile), true);
         if (!is_array($active)) $active = [];
+        if (getenv('FCMS_DEBUG') === 'true') {
+            error_log("Active plugins: " . print_r($active, true));
+        }
+    } else {
+        if (getenv('FCMS_DEBUG') === 'true') {
+            error_log("Plugin config file not found: $configFile");
+        }
     }
 
-    if (!is_dir($pluginDir)) return;
+    if (!is_dir($pluginDir)) {
+        if (getenv('FCMS_DEBUG') === 'true') {
+            error_log("Plugin directory not found: $pluginDir");
+        }
+        return;
+    }
+    
     foreach (glob($pluginDir . '/*', GLOB_ONLYDIR) as $pluginFolder) {
         $pluginName = basename($pluginFolder);
-        if (!in_array($pluginName, $active)) continue;
+        if (getenv('FCMS_DEBUG') === 'true') {
+            error_log("Found plugin folder: $pluginName");
+        }
+        
+        if (!in_array($pluginName, $active)) {
+            if (getenv('FCMS_DEBUG') === 'true') {
+                error_log("Plugin $pluginName is not active, skipping");
+            }
+            continue;
+        }
+        
         $mainFile = $pluginFolder . '/' . $pluginName . '.php';
         if (file_exists($mainFile)) {
+            if (getenv('FCMS_DEBUG') === 'true') {
+                error_log("Loading plugin: $pluginName from $mainFile");
+            }
+            error_log("LOADING PLUGIN: $pluginName");
             include_once $mainFile;
+            error_log("PLUGIN LOADED: $pluginName");
+        } else {
+            if (getenv('FCMS_DEBUG') === 'true') {
+                error_log("Plugin main file not found: $mainFile");
+            }
         }
     }
 }

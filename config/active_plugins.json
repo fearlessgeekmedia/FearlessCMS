@@ -2,5 +2,6 @@
     "seo",
     "blog",
     "mariadb-connector",
-    "sqlite-connector"
+    "sqlite-connector",
+    "parallax"
 ]

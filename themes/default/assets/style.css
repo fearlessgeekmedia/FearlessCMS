@@ -38,6 +38,36 @@ body {
   margin-inline: auto;
 }
 
+/* Home page content should be full width */
+main {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Ensure all content within main is full width */
+main > * {
+  width: 100%;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Override any container constraints for home page content */
+main .container,
+main .parallax-section,
+main h1, main h2, main h3, main h4, main h5, main h6,
+main p, main div {
+  width: 100% !important;
+  max-width: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  margin-bottom: 2rem !important;
+}
+
+
+
 /* Header */
 header {
   background: #ffffff;
@@ -131,7 +161,7 @@ nav ul ul a:hover,
 
 /* Main content card */
 main {
-  width: min(960px, 92vw);
+  width: min(100%, 92vw);
   margin: 3rem auto 3.5rem auto;
   background: transparent;
   border: none;
@@ -149,7 +179,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 h1 { 
-  font-size: clamp(2rem, 1.25rem + 2.5vw, 3rem); 
+  font-size: clamp(2.5rem, 1.5rem + 3vw, 3.5rem) !important; 
   margin: 0 0 1rem 0; 
   letter-spacing: -0.02em; 
   font-weight: 700;
@@ -157,7 +187,7 @@ h1 {
 }
 
 h2 { 
-  font-size: clamp(1.4rem, 1.05rem + 1.2vw, 2rem); 
+  font-size: clamp(2rem, 1.25rem + 2.5vw, 3rem) !important; 
   margin: 2rem 0 1rem 0; 
   letter-spacing: -0.01em; 
   font-weight: 600;
@@ -333,7 +363,7 @@ footer {
 }
 .hero h1 {
   margin: 0.4rem 0 0.6rem 0;
-  font-size: clamp(1.8rem, 1.2rem + 2.6vw, 2.6rem);
+  font-size: clamp(2.5rem, 1.5rem + 3vw, 3.5rem) !important;
 }
 .hero p.lead {
   color: var(--color-muted);
@@ -472,8 +502,9 @@ footer {
   .hero-banner img { border-color: rgba(255,255,255,0.12); box-shadow: 0 10px 24px rgba(0,0,0,0.45); }
 
   .features .section-lead { color: #94a3b8; }
-  .feature-card { background: #0f172a; border: 1px solid rgba(255,255,255,0.08); box-shadow: none; }
-  .feature-card p { color: #a5b4fc; }
+  .feature-card { background: #0f172a !important; border: 1px solid rgba(255,255,255,0.12) !important; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.4) !important; }
+  .feature-card p { color: #e2e8f0 !important; }
+  .feature-card h3 { color: #f1f5f9 !important; }
   .feature-icon { background: #e5e7eb; color: #111827; }
 
   .logos .logo-item { opacity: 0.8; filter: grayscale(1) brightness(1.2); }
@@ -514,8 +545,9 @@ footer {
 :root[data-theme="dark"] .hero .stats { color: #94a3b8; }
 :root[data-theme="dark"] .hero-banner img { border-color: rgba(255,255,255,0.12); box-shadow: 0 10px 24px rgba(0,0,0,0.45); }
 :root[data-theme="dark"] .features .section-lead { color: #94a3b8; }
-:root[data-theme="dark"] .feature-card { background: #0f172a; border: 1px solid rgba(255,255,255,0.08); box-shadow: none; }
-:root[data-theme="dark"] .feature-card p { color: #a5b4fc; }
+:root[data-theme="dark"] .feature-card { background: #0f172a !important; border: 1px solid rgba(255,255,255,0.12) !important; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.4) !important; }
+:root[data-theme="dark"] .feature-card p { color: #e2e8f0 !important; }
+:root[data-theme="dark"] .feature-card h3 { color: #f1f5f9 !important; }
 :root[data-theme="dark"] .feature-icon { background: #e5e7eb; color: #111827; }
 :root[data-theme="dark"] .logos .logo-item { opacity: 0.8; filter: grayscale(1) brightness(1.2); }
 :root[data-theme="dark"] footer { background: #0b0f1a; color: #9ca3af; border-top: 1px solid rgba(255,255,255,0.08); }
@@ -558,3 +590,78 @@ footer {
 :root[data-theme="light"] footer { background: #ffffff; color: #6b7280; border-top: 1px solid var(--color-border); }
 :root[data-theme="light"] .cta-inner { background: #f5f7fb; border: 1px solid var(--color-border); color: #0b1020; }
 :root[data-theme="light"] .cta-title { color: #111827; }
+
+/* Feature Cards - 2 Column Grid Layout */
+.feature-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 16px !important;
+    padding: 1.5rem !important;
+    margin: 0.5rem !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    display: inline-block !important;
+    width: calc(49.8% - 1rem) !important;
+    vertical-align: top !important;
+    min-height: 120px !important;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+    padding-top: 20px !important;
+}
+
+/* Style the h3 headers within feature cards */
+.feature-card h3 {
+    background: none !important;
+    border: none !important;
+    padding: 0 0 1rem 0 !important;
+    margin: 0 0 1rem 0 !important;
+    box-shadow: none !important;
+    font-size: 1.3rem !important;
+    font-weight: 700 !important;
+    line-height: 1.4 !important;
+    color: #1e293b !important;
+    text-align: center !important;
+    min-height: auto !important;
+    width: 100% !important;
+    display: block !important;
+}
+
+/* Style the description text within feature cards */
+.feature-card p {
+    margin: 0 !important;
+    padding: 0 !important;
+    color: #4a5568 !important;
+    font-size: 1rem !important;
+    line-height: 1.6 !important;
+    text-align: center !important;
+}
+
+/* Hover effects for feature cards */
+.feature-card:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+    border-color: #cbd5e1 !important;
+}
+
+/* Create a container for the features that will force the grid layout */
+.parallax-section + h2 + p {
+    display: block !important;
+    clear: both !important;
+    margin-bottom: 2rem !important;
+}
+
+/* Force the first feature card to start a new line */
+.parallax-section + h2 + p + .feature-card {
+    clear: both !important;
+}
+
+/* Responsive grid adjustments */
+@media (max-width: 768px) {
+    .feature-card {
+        width: calc(100% - 1rem) !important;
+        display: block !important;
+        clear: both !important;
+    }
+}

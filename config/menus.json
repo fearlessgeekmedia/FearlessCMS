@@ -11,19 +11,43 @@
                 "id": "item_0"
             },
             {
-                "label": "About",
-                "url": "\/about",
-                "target": "",
+                "id": "item_1755905271683",
+                "label": "Development Roadmap",
+                "url": "\/dev-roadmap",
                 "class": "",
-                "id": "item_1",
+                "target": "",
                 "children": []
             },
             {
                 "id": "item_1750216127543",
-                "label": "Music",
-                "url": "\/music",
+                "label": "Documentation",
+                "url": "\/documentation",
                 "class": "",
                 "target": "",
+                "children": []
+            },
+            {
+                "id": "item_1755905246804",
+                "label": "News",
+                "url": "\/blog",
+                "class": "",
+                "target": "",
+                "children": []
+            },
+            {
+                "id": "item_1755905302987",
+                "label": "Support us on Ko-Fi",
+                "url": "https:\/\/ko-fi.com\/fearlessgeekmedia",
+                "class": "",
+                "target": "_blank",
+                "children": []
+            },
+            {
+                "id": "item_1755905650120",
+                "label": "Support us on Open Collective",
+                "url": "https:\/\/opencollective.com\/fearlesscms\/contribute",
+                "class": "",
+                "target": "_blank",
                 "children": []
             }
         ]

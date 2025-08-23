@@ -146,8 +146,9 @@ if (strpos($requestPath, '_preview/') === 0) {
         } else {
             // Convert markdown to HTML
             require_once PROJECT_ROOT . '/includes/Parsedown.php';
-            $Parsedown = new Parsedown();
-            $pageContentHtml = $Parsedown->text($content);
+                    $Parsedown = new Parsedown();
+        $Parsedown->setMarkupEscaped(false); // Allow HTML in markdown
+        $pageContentHtml = $Parsedown->text($content);
         }
 
         // Get site name from config
@@ -506,25 +507,49 @@ if (!$pageTitle) {
 // Check editor mode to determine content processing
 $editorMode = $metadata['editor_mode'] ?? 'markdown';
 
+// Load plugins BEFORE markdown processing to handle shortcodes
+fcms_load_plugins();
+
+// Process shortcodes in raw content first
+$pageContent = fcms_apply_filter('content', $pageContent);
+
 if ($editorMode === 'html') {
     // Use content as-is for HTML mode only
     $pageContentHtml = $pageContent;
 } else {
     // Convert markdown to HTML (default for both 'easy' and 'markdown' modes)
-    if (!class_exists('Parsedown')) {
-        require_once PROJECT_ROOT . '/includes/Parsedown.php';
-    }
-    $Parsedown = new Parsedown();
-    $pageContentHtml = $Parsedown->text($pageContent);
+            if (!class_exists('Parsedown')) {
+            require_once PROJECT_ROOT . '/includes/Parsedown.php';
+        }
+        $Parsedown = new Parsedown();
+        $Parsedown->setMarkupEscaped(false); // Allow HTML in markdown
+        $pageContentHtml = $Parsedown->text($pageContent);
 }
+
+// Apply after_content filters to the final HTML content
+$pageContentHtml = fcms_apply_filter('after_content', $pageContentHtml);
 
 // Debug: Check if content has curly braces
 if (strpos($pageContentHtml, '{') !== false || strpos($pageContentHtml, '}') !== false) {
     error_log("CONTENT HAS CURLY BRACES: " . substr($pageContentHtml, 0, 200));
 }
 
-// Apply content filters
-$pageContentHtml = fcms_apply_filter('content', $pageContentHtml);
+// Debug: Check if content contains parallax shortcodes
+if (strpos($pageContentHtml, '[parallax_section') !== false) {
+    error_log("CONTENT CONTAINS PARALLAX SHORTCODES");
+    error_log("Content before filter: " . substr($pageContentHtml, 0, 500));
+} else {
+    error_log("Content does not contain parallax shortcodes");
+}
+
+// Content filters already applied before markdown processing
+
+// Debug: Check content after filter
+if (strpos($pageContentHtml, '[parallax_section') !== false) {
+    error_log("Content still contains parallax shortcodes after filter - plugin not working!");
+} else {
+    error_log("Content processed successfully by plugins");
+}
 
 // --- Theme and template ---
 $themeManager = new ThemeManager();

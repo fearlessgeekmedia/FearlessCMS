@@ -8,5 +8,26 @@
         "id": "right-sidebar",
         "classes": "right-sidebar",
         "widgets": []
+    },
+    "documentation-sidebar": {
+        "id": "documentation-sidebar",
+        "classes": "documentation-sidebar",
+        "widgets": [
+            {
+                "type": "documentation-nav",
+                "title": "Documentation",
+                "content": "documentation-nav"
+            },
+            {
+                "type": "documentation-nav",
+                "title": "Theme Development",
+                "content": "theme-development-nav"
+            },
+            {
+                "type": "documentation-nav",
+                "title": "Advanced",
+                "content": "advanced-nav"
+            }
+        ]
     }
 }

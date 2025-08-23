@@ -3,5 +3,6 @@
     "blog",
     "ecommerce",
     "mariadb-connector",
-    "sqlite-connector"
+    "sqlite-connector",
+    "parallax"
 ]

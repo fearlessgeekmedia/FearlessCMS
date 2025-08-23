@@ -2,5 +2,25 @@
     "left-sidebar": {
         "name": "Left Sidebar",
         "widgets": []
+    },
+    "documentation-sidebar": {
+        "name": "Documentation Sidebar",
+        "widgets": [
+            {
+                "type": "documentation-nav",
+                "title": "Documentation",
+                "content": "documentation-nav"
+            },
+            {
+                "type": "documentation-nav",
+                "title": "Theme Development",
+                "content": "theme-development-nav"
+            },
+            {
+                "type": "documentation-nav",
+                "title": "Advanced",
+                "content": "advanced-nav"
+            }
+        ]
     }
 }
