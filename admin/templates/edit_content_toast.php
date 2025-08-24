@@ -69,7 +69,7 @@ foreach ($contentFiles as $file) {
             <label class="block mb-2">Template</label>
             <select name="template" class="w-full px-3 py-2 border border-gray-300 rounded">
                 <?php foreach ($templates as $template): ?>
-                    <option value="<?php echo htmlspecialchars($template); ?>" <?php echo (isset($metadata['template']) && $metadata['template'] === $template) ? 'selected' : ''; ?>>
+                    <option value="<?php echo htmlspecialchars($template); ?>" <?php echo (isset($currentTemplate) && $currentTemplate === $template) ? 'selected' : ''; ?>>
                         <?php echo ucfirst(htmlspecialchars($template)); ?>
                     </option>
                 <?php endforeach; ?>

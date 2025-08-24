@@ -169,6 +169,44 @@ $GLOBALS['fcms_admin_sections'] = [];
         }
     ]);
 
+    fcms_register_admin_section('manage_cache_settings', [
+        'label' => 'Cache Settings',
+        'menu_order' => 70,
+        'render_callback' => function() {
+            // Load cache configuration and statistics
+            if (class_exists('CacheManager')) {
+                $cacheManager = new CacheManager();
+                $cacheConfig = $cacheManager->getConfig();
+                $cacheStats = $cacheManager->getStats();
+                $cacheStatus = $cacheManager->getCacheStatus();
+                $cacheSize = $cacheManager->getCacheSize();
+                $cacheLastCleared = $cacheManager->getLastCleared();
+                
+                // Prepare cache template variables
+                $cache_enabled_checked = ($cacheConfig['enabled'] ?? false) ? 'checked' : '';
+                $cache_pages_checked = ($cacheConfig['cache_pages'] ?? false) ? 'checked' : '';
+                $cache_assets_checked = ($cacheConfig['cache_assets'] ?? false) ? 'checked' : '';
+                $cache_queries_checked = ($cacheConfig['cache_queries'] ?? false) ? 'checked' : '';
+                $cache_compression_checked = ($cacheConfig['cache_compression'] ?? false) ? 'checked' : '';
+                
+                $cache_duration = $cacheConfig['cache_duration'] ?? 3600;
+                $cache_duration_unit = $cacheConfig['cache_duration_unit'] ?? 'seconds';
+                $cache_storage = $cacheConfig['cache_storage'] ?? 'file';
+                $cache_max_size = $cacheConfig['cache_max_size'] ?? '100MB';
+                
+                $cache_duration_unit_seconds_selected = ($cache_duration_unit === 'seconds') ? 'selected' : '';
+                $cache_duration_unit_minutes_selected = ($cache_duration_unit === 'minutes') ? 'selected' : '';
+                $cache_duration_unit_hours_selected = ($cache_duration_unit === 'hours') ? 'selected' : '';
+                $cache_duration_unit_days_selected = ($cache_duration_unit === 'days') ? 'selected' : '';
+                
+                $cache_storage_file_selected = ($cache_storage === 'file') ? 'selected' : '';
+                $cache_storage_memory_selected = ($cache_storage === 'memory') ? 'selected' : '';
+            }
+            
+            include PROJECT_ROOT . '/admin/templates/cache-settings.php';
+        }
+    ]);
+
     // Register core admin sections dynamically
     fcms_register_admin_section('dashboard', [
         'label' => 'Dashboard',

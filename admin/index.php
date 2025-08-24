@@ -32,6 +32,7 @@ require_once dirname(__DIR__) . '/includes/functions.php';
 require_once dirname(__DIR__) . '/includes/ThemeManager.php';
 require_once dirname(__DIR__) . '/includes/plugins.php';
 require_once dirname(__DIR__) . '/includes/CMSModeManager.php';
+require_once dirname(__DIR__) . '/includes/CacheManager.php';
 
 // Generate CSRF token for forms
 generate_csrf_token();
@@ -41,6 +42,10 @@ $cmsModeManager = new CMSModeManager();
 $GLOBALS['cmsModeManager'] = $cmsModeManager;
 
 $themeManager = new ThemeManager(THEMES_DIR);
+
+// Create cache manager
+$cacheManager = new CacheManager();
+$GLOBALS['cacheManager'] = $cacheManager;
 
 // Handle plugin actions BEFORE other handlers are included
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && in_array($_POST['action'], ['activate_plugin', 'deactivate_plugin', 'delete_plugin'])) {
@@ -310,6 +315,33 @@ if (file_exists($configFile)) {
     // Custom CSS and JS functionality removed
 }
 
+// Load cache configuration and statistics
+$cacheConfig = $cacheManager->getConfig();
+$cacheStats = $cacheManager->getStats();
+$cacheStatus = $cacheManager->getCacheStatus();
+$cacheSize = $cacheManager->getCacheSize();
+$cacheLastCleared = $cacheManager->getLastCleared();
+
+// Prepare cache template variables
+$cache_enabled_checked = ($cacheConfig['enabled'] ?? false) ? 'checked' : '';
+$cache_pages_checked = ($cacheConfig['cache_pages'] ?? false) ? 'checked' : '';
+$cache_assets_checked = ($cacheConfig['cache_assets'] ?? false) ? 'checked' : '';
+$cache_queries_checked = ($cacheConfig['cache_queries'] ?? false) ? 'checked' : '';
+$cache_compression_checked = ($cacheConfig['cache_compression'] ?? false) ? 'checked' : '';
+
+$cache_duration = $cacheConfig['cache_duration'] ?? 3600;
+$cache_duration_unit = $cacheConfig['cache_duration_unit'] ?? 'seconds';
+$cache_storage = $cacheConfig['cache_storage'] ?? 'file';
+$cache_max_size = $cacheConfig['cache_max_size'] ?? '100MB';
+
+$cache_duration_unit_seconds_selected = ($cache_duration_unit === 'seconds') ? 'selected' : '';
+$cache_duration_unit_minutes_selected = ($cache_duration_unit === 'minutes') ? 'selected' : '';
+$cache_duration_unit_hours_selected = ($cache_duration_unit === 'hours') ? 'selected' : '';
+$cache_duration_unit_days_selected = ($cache_duration_unit === 'days') ? 'selected' : '';
+
+$cache_storage_file_selected = ($cache_storage === 'file') ? 'selected' : '';
+$cache_storage_memory_selected = ($cache_storage === 'memory') ? 'selected' : '';
+
 // Load menu options for menu management
 $menu_options = '';
 if (file_exists($menusFile)) {
@@ -472,6 +504,7 @@ if (
         $contentData = file_get_contents($contentFile);
         $title = '';
         $editorMode = 'markdown'; // Default to markdown
+        $currentTemplate = 'page'; // Default to page template
         if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $contentData, $matches)) {
             $metadata = json_decode($matches[1], true);
             if ($metadata) {
@@ -480,6 +513,9 @@ if (
                 }
                 if (isset($metadata['editor_mode'])) {
                     $editorMode = $metadata['editor_mode'];
+                }
+                if (isset($metadata['template'])) {
+                    $currentTemplate = $metadata['template'];
                 }
             }
         }
@@ -741,6 +777,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $success = 'Site name and tagline updated.';
 }
 
+// Handle POST for cache settings update
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_cache_settings') {
+    if (!isLoggedIn()) {
+        $error = 'You must be logged in to update cache settings';
+    } elseif (!validate_csrf_token()) {
+        $error = 'Invalid security token. Please refresh the page and try again.';
+    } else {
+        $cacheConfig = [
+            'enabled' => isset($_POST['cache_enabled']),
+            'cache_duration' => (int)($_POST['cache_duration'] ?? 3600),
+            'cache_duration_unit' => $_POST['cache_duration_unit'] ?? 'seconds',
+            'cache_pages' => isset($_POST['cache_pages']),
+            'cache_assets' => isset($_POST['cache_assets']),
+            'cache_queries' => isset($_POST['cache_queries']),
+            'cache_compression' => isset($_POST['cache_compression']),
+            'cache_storage' => $_POST['cache_storage'] ?? 'file',
+            'cache_max_size' => $_POST['cache_max_size'] ?? '100MB'
+        ];
+        
+        $cacheManager->updateConfig($cacheConfig);
+        $success = 'Cache settings updated successfully.';
+    }
+}
+
+// Handle POST for clearing cache
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'clear_cache') {
+    if (!isLoggedIn()) {
+        $error = 'You must be logged in to clear cache';
+    } elseif (!validate_csrf_token()) {
+        $error = 'Invalid security token. Please refresh the page and try again.';
+    } else {
+        $cleared = $cacheManager->clearCache();
+        $success = "Cache cleared successfully. {$cleared} files removed.";
+    }
+}
+
+// Handle POST for clearing cache stats
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'clear_cache_stats') {
+    if (!isLoggedIn()) {
+        $error = 'You must be logged in to clear cache statistics';
+    } elseif (!validate_csrf_token()) {
+        $error = 'Invalid security token. Please refresh the page and try again.';
+    } else {
+        $cacheManager->clearCacheStats();
+        $success = 'Cache statistics cleared successfully.';
+    }
+}
+
 // Handle POST requests for saving content
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_content') {
     error_log("DEBUG: save_content action triggered");
@@ -885,7 +969,7 @@ $template_map = [
     'manage_plugins' => 'plugins.php',
     'manage_themes' => 'themes.php',
     'manage_menus' => 'menus.php',
-    'manage_settings' => 'site-settings.html',
+    'manage_cache_settings' => 'cache-settings.php',
     'edit_content' => (isset($GLOBALS['editorMode']) && $GLOBALS['editorMode'] === 'basic') ? 'edit_content.php' : 'edit_content_toast.php',
     'new_content' => 'new_content.php',
     'create_page' => 'new_content.php', // Redirect create_page to new_content template
@@ -1123,6 +1207,13 @@ if (!$section_found) {
         error_log("Admin index.php - Invalid action: " . $action . " (Template file not found: " . $templateFile . ")");
         $content = '<div class="alert alert-danger">Invalid action specified.</div>';
         $templateFile = null; // Unset template file if not found
+    } else {
+        // Process template variables for HTML templates
+        if (str_ends_with($templateFile, '.html')) {
+            $templateContent = file_get_contents($templateFile);
+            $templateContent = processAdminTemplate($templateContent);
+            $content = $templateContent;
+        }
     }
 }
 
@@ -1132,4 +1223,42 @@ $plugins_menu_label = $cmsModeManager->canManagePlugins() ? 'Plugins' : 'Additio
 // Template will be included directly without output buffer interference
 
 include ADMIN_TEMPLATE_DIR . '/base.php';
+
+/**
+ * Process admin template variables
+ */
+function processAdminTemplate($content) {
+    global $siteName, $siteDescription, $totalPages, $activePlugins;
+    global $cache_enabled_checked, $cache_pages_checked, $cache_assets_checked, $cache_queries_checked, $cache_compression_checked;
+    global $cache_duration, $cache_duration_unit, $cache_storage, $cache_max_size;
+    global $cache_duration_unit_seconds_selected, $cache_duration_unit_minutes_selected, $cache_duration_unit_hours_selected, $cache_duration_unit_days_selected;
+    global $cache_storage_file_selected, $cache_storage_memory_selected;
+    global $cacheStatus, $cacheSize, $cacheLastCleared;
+    
+    // Replace template variables
+    $replacements = [
+        '{{site_name}}' => $siteName ?? 'FearlessCMS',
+        '{{site_description}}' => $siteDescription ?? '',
+        '{{total_pages}}' => $totalPages ?? 0,
+        '{{active_plugins}}' => count($activePlugins ?? []),
+        '{{cache_enabled_checked}}' => $cache_enabled_checked ?? '',
+        '{{cache_pages_checked}}' => $cache_pages_checked ?? '',
+        '{{cache_assets_checked}}' => $cache_assets_checked ?? '',
+        '{{cache_queries_checked}}' => $cache_queries_checked ?? '',
+        '{{cache_compression_checked}}' => $cache_compression_checked ?? '',
+        '{{cache_duration}}' => $cache_duration ?? 3600,
+        '{{cache_duration_unit_seconds_selected}}' => $cache_duration_unit_seconds_selected ?? '',
+        '{{cache_duration_unit_minutes_selected}}' => $cache_duration_unit_minutes_selected ?? '',
+        '{{cache_duration_unit_hours_selected}}' => $cache_duration_unit_hours_selected ?? '',
+        '{{cache_duration_unit_days_selected}}' => $cache_duration_unit_days_selected ?? '',
+        '{{cache_storage_file_selected}}' => $cache_storage_file_selected ?? '',
+        '{{cache_storage_memory_selected}}' => $cache_storage_memory_selected ?? '',
+        '{{cache_max_size}}' => $cache_max_size ?? '100MB',
+        '{{cache_status}}' => $cacheStatus ?? 'Unknown',
+        '{{cache_size}}' => $cacheSize ?? '0 B',
+        '{{cache_last_cleared}}' => $cacheLastCleared ?? 'Never'
+    ];
+    
+    return str_replace(array_keys($replacements), array_values($replacements), $content);
+}
 ?>

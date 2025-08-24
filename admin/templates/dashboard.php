@@ -33,6 +33,41 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Cache Status Summary -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg font-medium mb-4">Cache Status</h3>
+                <?php if (class_exists('CacheManager')): ?>
+                    <?php 
+                    $cacheManager = new CacheManager();
+                    $cacheConfig = $cacheManager->getConfig();
+                    $cacheStats = $cacheManager->getStats();
+                    $cacheStatus = $cacheManager->getCacheStatus();
+                    $cacheSize = $cacheManager->getCacheSize();
+                    ?>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Status:</span>
+                            <span class="px-2 py-1 text-xs rounded <?php echo $cacheStatus === 'Excellent' ? 'bg-green-100 text-green-800' : ($cacheStatus === 'Good' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'); ?>">
+                                <?php echo $cacheStatus; ?>
+                            </span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Size:</span>
+                            <span class="font-medium"><?php echo $cacheSize; ?></span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-600">Enabled:</span>
+                            <span class="text-sm"><?php echo ($cacheConfig['enabled'] ?? false) ? 'Yes' : 'No'; ?></span>
+                        </div>
+                        <div class="pt-2">
+                            <a href="?action=manage_cache_settings" class="text-blue-600 hover:text-blue-800 text-sm">Configure Cache Settings →</a>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <p class="text-sm text-gray-500">Cache system not available</p>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 </div>
