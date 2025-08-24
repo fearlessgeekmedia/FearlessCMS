@@ -12,7 +12,6 @@
       }
       .documentation-sidebar {
         flex: 0 0 300px;
-        background: #f8f9fa;
         padding: 1.5rem;
         border-radius: 8px;
         height: fit-content;
@@ -107,11 +106,11 @@
         font-weight: bold;
       }
       .breadcrumb {
-        background: #f8f9fa;
         padding: 0.5rem 1rem;
         border-radius: 4px;
         margin-bottom: 2rem;
         font-size: 0.9rem;
+        color: #333;
       }
       .breadcrumb a {
         color: #007bff;
@@ -149,10 +148,111 @@
         transition: all 0.2s;
         font-size: 0.95rem;
       }
-      .documentation-nav-link:hover {
-        color: #007bff;
-        background: #e9ecef;
-        padding-left: 0.5rem;
+              .documentation-nav-link:hover {
+          color: #007bff;
+          background: #e9ecef;
+          padding-left: 0.5rem;
+        }
+      
+      /* Dark mode support */
+      @media (prefers-color-scheme: dark) {
+        .documentation-layout {
+          background: #0f172a;
+          color: #e0e0e0;
+        }
+        
+        .documentation-sidebar {
+          background: #1e293b;
+          color: #e0e0e0;
+          border: 1px solid #475569;
+          border-radius: 8px;
+        }
+        
+        .documentation-sidebar h3 {
+          color: #e0e0e0;
+          border-bottom-color: #007bff;
+        }
+        
+        .documentation-sidebar a {
+          color: #b0b0b0;
+        }
+        
+        .documentation-sidebar a:hover {
+          color: #007bff;
+          background: #404040;
+        }
+        
+        .documentation-content h1 {
+          color: #e0e0e0;
+          border-bottom-color: #007bff;
+        }
+        
+        .documentation-content h2 {
+          color: #d0d0d0;
+        }
+        
+        .documentation-content h3 {
+          color: #c0c0c0;
+        }
+        
+        .documentation-content p {
+          color: #e0e0e0;
+        }
+        
+        .documentation-content code {
+          background: #404040;
+          color: #e0e0e0;
+        }
+        
+        .documentation-content pre {
+          background: #2d2d2d;
+          border-color: #404040;
+          color: #e0e0e0;
+        }
+        
+        .documentation-content blockquote {
+          border-left-color: #007bff;
+          color: #b0b0b0;
+        }
+        
+        .documentation-content table th {
+          background: #2d2d2d;
+          color: #e0e0e0;
+        }
+        
+        .documentation-content table td {
+          color: #e0e0e0;
+        }
+        
+        .documentation-content table th,
+        .documentation-content table td {
+          border-color: #404040;
+        }
+        
+        .breadcrumb {
+          background: #1e293b;
+          color: #e0e0e0;
+          border: 1px solid #475569;
+          border-radius: 6px;
+        }
+        
+        .breadcrumb a {
+          color: #007bff;
+        }
+        
+        .widget-documentation-nav .widget-title {
+          color: #e0e0e0;
+          border-bottom-color: #007bff;
+        }
+        
+        .documentation-nav-link {
+          color: #b0b0b0;
+        }
+        
+        .documentation-nav-link:hover {
+          color: #007bff;
+          background: #404040;
+        }
       }
       
       /* Responsive design */
@@ -166,7 +266,43 @@
           flex: none;
         }
       }
+      
+      /* Manual dark mode classes */
+      .dark-mode .documentation-layout {
+        background: #0f172a !important;
+        color: #e0e0e0 !important;
+      }
+      
+      .dark-mode .documentation-sidebar {
+        background: #1e293b !important;
+        color: #e0e0e0 !important;
+        border: 1px solid #475569 !important;
+        border-radius: 8px !important;
+      }
+      
+      .dark-mode .breadcrumb {
+        background: #1e293b !important;
+        color: #e0e0e0 !important;
+        border: 1px solid #475569 !important;
+        border-radius: 6px !important;
+      }
+      
+      .dark-mode .widget-documentation-nav .widget-title {
+        color: #e0e0e0 !important;
+        border-bottom-color: #007bff !important;
+      }
+      
+      .dark-mode .documentation-nav-link {
+        color: #b0b0b0 !important;
+      }
+      
+      .dark-mode .documentation-nav-link:hover {
+        color: #007bff !important;
+        background: #404040 !important;
+      }
     </style>
+    
+
   </head>
   <body>
     {{module=header.html}}

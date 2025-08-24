@@ -782,6 +782,47 @@ You can extend the template system by adding custom functions to the TemplateRen
 
 Menus are automatically generated from your content structure and can be customized in the admin panel.
 
+### Breadcrumb Navigation
+
+Breadcrumbs help users understand their location within your site. Here's a simple implementation:
+
+```html
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="/">Home</a>
+    {{#if parent}}
+        &gt; <a href="/{{parent.url}}">{{parent.title}}</a>
+    {{/if}}
+    &gt; <span class="current-page">{{title}}</span>
+</nav>
+```
+
+**Basic CSS for breadcrumbs:**
+```css
+.breadcrumb {
+    background: #f8f9fa;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    margin-bottom: 2rem;
+    font-size: 0.9rem;
+}
+
+.breadcrumb a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.breadcrumb .current-page {
+    color: #6c757d;
+    font-weight: 500;
+}
+```
+
+For more advanced breadcrumb implementations and dark mode support, see the [Template Reference](theme-templates-reference).
+
 ### SEO Optimization
 
 Templates automatically include meta tags and structured data for better SEO.

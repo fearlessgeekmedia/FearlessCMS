@@ -101,7 +101,7 @@ error_log("Available templates: " . print_r($templates, true));
 
         <div>
             <label class="block mb-2">Content</label>
-            <div id="editor" style="height: 600px;"></div>
+            <div id="richEditorContainer" class="quill-editor" style="height: 600px;"></div>
             <input type="hidden" name="new_page_content" id="content">
         </div>
 
@@ -112,50 +112,161 @@ error_log("Available templates: " . print_r($templates, true));
     </form>
 </div>
 
-<!-- Toast UI Editor -->
-<link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />
-<script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
+<!-- Quill.js Editor -->
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+
+<style>
+/* Quill.js Editor Styling */
+.quill-editor {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: white;
+}
+
+.quill-editor .ql-toolbar {
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    border-bottom: 1px solid #ccc;
+    background: #f8f9fa;
+}
+
+.quill-editor .ql-container {
+    border: none;
+    font-size: 14px;
+}
+
+.quill-editor .ql-editor {
+    min-height: 550px;
+    padding: 12px 15px;
+    line-height: 1.6;
+}
+
+.quill-editor .ql-editor h1,
+.quill-editor .ql-editor h2,
+.quill-editor .ql-editor h3,
+.quill-editor .ql-editor h4,
+.quill-editor .ql-editor h5,
+.quill-editor .ql-editor h6 {
+    margin: 1em 0 0.5em 0;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.quill-editor .ql-editor h1 {
+    font-size: 2em;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 0.3em;
+}
+
+.quill-editor .ql-editor h2 {
+    font-size: 1.5em;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 0.3em;
+}
+
+.quill-editor .ql-editor h3 {
+    font-size: 1.25em;
+}
+
+.quill-editor .ql-editor p {
+    margin: 0 0 1em 0;
+}
+
+.quill-editor .ql-editor blockquote {
+    border-left: 4px solid #007bff;
+    margin: 1em 0;
+    padding-left: 1em;
+    font-style: italic;
+    color: #6c757d;
+}
+
+.quill-editor .ql-editor code {
+    background: #f8f9fa;
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+}
+
+.quill-editor .ql-editor pre {
+    background: #f8f9fa;
+    padding: 1em;
+    border-radius: 4px;
+    overflow-x: auto;
+    border: 1px solid #e9ecef;
+}
+
+.quill-editor .ql-editor ul,
+.quill-editor .ql-editor ol {
+    margin: 1em 0;
+    padding-left: 2em;
+}
+
+.quill-editor .ql-editor li {
+    margin: 0.5em 0;
+}
+
+.quill-editor .ql-editor a {
+    color: #007bff;
+    color: #007bff;
+    text-decoration: none;
+}
+
+.quill-editor .ql-editor a:hover {
+    text-decoration: underline;
+}
+
+.quill-editor .ql-toolbar button {
+    color: #495057;
+}
+
+.quill-editor .ql-toolbar button:hover {
+    color: #007bff;
+}
+
+.quill-editor .ql-toolbar button.ql-active {
+    color: #007bff;
+}
+
+.quill-editor .ql-toolbar .ql-stroke {
+    stroke: currentColor;
+}
+
+.quill-editor .ql-toolbar .ql-fill {
+    fill: currentColor;
+}
+
+.quill-editor .ql-toolbar .ql-picker {
+    color: #495057;
+}
+
+.quill-editor .ql-toolbar .ql-picker-options {
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const editor = new toastui.Editor({
-        el: document.querySelector('#editor'),
-        height: '600px',
-        initialEditType: 'wysiwyg',
-        previewStyle: 'vertical',
-        toolbarItems: [
-            ['heading', 'bold', 'italic', 'strike'],
-            ['hr', 'quote'],
-            ['ul', 'ol', 'task', 'indent', 'outdent'],
-            ['table', 'link'<?php if ($cmsModeManager->canUploadContentImages()): ?>, 'image'<?php endif; ?>],
-            ['code', 'codeblock']
-        ]<?php if ($cmsModeManager->canUploadContentImages()): ?>,
-        hooks: {
-            addImageBlobHook: function(blob, callback) {
-                // Create form data
-                const formData = new FormData();
-                formData.append('file', blob);
-                formData.append('action', 'upload_image');
-
-                // Upload image
-                fetch('?action=upload_image', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        callback(data.url);
-                    } else {
-                        alert('Failed to upload image: ' + data.error);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Failed to upload image');
-                });
-            }
-        }<?php endif; ?>
+    // Initialize Quill.js
+    const editor = new Quill('#richEditorContainer', {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                [{ 'header': [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                [{ 'indent': '-1'}, { 'indent': '+1' }],
+                [{ 'color': [] }, { 'background': [] }],
+                [{ 'align': [] }],
+                ['link'<?php if ($cmsModeManager->canUploadContentImages()): ?>, 'image'<?php endif; ?>],
+                ['clean']
+            ]
+        },
+        placeholder: 'Start writing your content here...'
     });
 
     // Generate slug from title
@@ -173,7 +284,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update hidden input before form submission
     document.getElementById('editForm').addEventListener('submit', function(e) {
         e.preventDefault(); // Prevent default submission
-        const content = editor.getMarkdown();
+        const content = editor.root.innerHTML; // Get HTML content from Quill
         document.getElementById('content').value = content;
         console.log('Submitting form with data:', {
             action: this.action,
