@@ -1,6 +1,20 @@
+/**
+ * FearlessCMS Export Script
+ * 
+ * This script exports the CMS content to a static HTML site.
+ * 
+ * IMPORTANT: This script has been updated to handle HTML content instead of Markdown.
+ * All content files (.md) are expected to contain HTML content with JSON frontmatter.
+ * 
+ * Features:
+ * - Exports HTML content directly (no Markdown conversion)
+ * - Maintains all existing functionality (RSS, blog, etc.)
+ * - Supports both HTML and Markdown-style links for backward compatibility
+ * - Generates static site with proper relative paths
+ */
+
 const fs = require('fs-extra');
 const path = require('path');
-const { marked } = require('marked');
 const handlebars = require('handlebars');
 
 // Configuration
@@ -8,7 +22,6 @@ const config = JSON.parse(fs.readFileSync('config/config.json', 'utf8'));
 const theme = config.active_theme;
 const siteName = config.site_name;
 const customCss = config.custom_css || '';
-
 
 // Export directory
 const exportDir = 'export';
@@ -115,6 +128,13 @@ if (customCss) {
     fs.writeFileSync(customCssPath, customCss);
 }
 
+// Generate parallax plugin assets
+const parallaxCssPath = path.join(exportDir, 'assets', 'parallax.css');
+const parallaxJsPath = path.join(exportDir, 'assets', 'parallax.js');
+fs.mkdirSync(path.dirname(parallaxCssPath), { recursive: true });
+fs.writeFileSync(parallaxCssPath, generateParallaxCSS());
+fs.writeFileSync(parallaxJsPath, generateParallaxJS());
+console.log('Generated parallax plugin assets: parallax.css and parallax.js');
 
 
 // Copy the entire theme directory (css, js, assets, etc)
@@ -267,7 +287,7 @@ function generateRssFeed(posts) {
         rss += `      <link>${postUrl}</link>\n`;
         rss += `      <guid>${postUrl}</guid>\n`;
         rss += `      <pubDate>${pubDate}</pubDate>\n`;
-        rss += `      <description><![CDATA[${marked(post.content.substring(0, 300) + '...')}]]></description>\n`;
+        rss += `      <description><![CDATA[${post.content.substring(0, 300) + '...'}]]></description>\n`;
         rss += '    </item>\n';
     });
 
@@ -284,34 +304,311 @@ function generateRssHtml(posts) {
     html += '<div class="space-y-8">';
     posts.forEach(post => {
         const postUrl = `blog/${post.slug}/`; // Relative path for static site
-        html += `<article class="border-b pb-8"><h2 class="text-2xl font-bold mb-2"><a href="${postUrl}" class="text-blue-600 hover:underline">${post.title}</a></h2><div class="text-gray-600 mb-4">${post.date}</div><div class="prose">${marked(post.content.substring(0, 300) + '...')}</div><a href="${postUrl}" class="text-blue-600 hover:underline mt-4 inline-block">Read more →</a></article>`;
+        html += `<article class="border-b pb-8"><h2 class="text-2xl font-bold mb-2"><a href="${postUrl}" class="text-blue-600 hover:underline">${post.title}</a></h2><div class="text-gray-600 mb-4">${post.date}</div><div class="prose">${post.content.substring(0, 300) + '...'}</div><a href="${postUrl}" class="text-blue-600 hover:underline mt-4 inline-block">Read more →</a></article>`;
     });
     html += '</div></div>';
     return html;
 }
 
-// Process markdown files recursively
+// Helper function to process parallax shortcodes
+function processParallaxShortcodes(content) {
+    // Process parallax shortcodes similar to the PHP plugin
+    const parallaxRegex = /\[parallax_section([^\]]*)\](.*?)\[\/parallax_section\]/gs;
+    
+    return content.replace(parallaxRegex, (match, attributes, innerContent) => {
+        // Parse attributes
+        const id = extractAttribute(attributes, 'id') || 'parallax-' + Math.random().toString(36).substr(2, 9);
+        const backgroundImage = extractAttribute(attributes, 'background_image') || '';
+        const speed = extractAttribute(attributes, 'speed') || '0.5';
+        const effect = extractAttribute(attributes, 'effect') || 'scroll';
+        const overlayColor = extractAttribute(attributes, 'overlay_color') || 'rgba(0,0,0,0.3)';
+        const overlayOpacity = extractAttribute(attributes, 'overlay_opacity') || '0.3';
+        
+        if (!id || !backgroundImage) {
+            return '<div class="alert alert-danger">Parallax section requires both id and background_image attributes</div>';
+        }
+        
+        // Clean up inner content
+        let cleanContent = innerContent.trim();
+        
+        // Generate CSS class
+        const cssClass = 'parallax-section-' + id.replace(/[^a-zA-Z0-9_-]/g, '');
+        
+        // Build parallax HTML
+        let output = `<div id="${id}" class="${cssClass} parallax-section" data-speed="${speed}" data-effect="${effect}" data-overlay-color="${overlayColor}" data-overlay-opacity="${overlayOpacity}">`;
+        output += `<div class="parallax-background" style="background-image: url('${backgroundImage}');"></div>`;
+        output += `<div class="parallax-overlay" style="background-color: ${overlayColor}; opacity: ${overlayOpacity};"></div>`;
+        output += `<div class="parallax-content">`;
+        output += cleanContent;
+        output += `</div>`;
+        output += `</div>`;
+        
+        return output;
+    });
+}
+
+// Helper function to extract attributes from shortcode
+function extractAttribute(attributeString, attributeName) {
+    const regex = new RegExp(`${attributeName}=["']([^"']+)["']`);
+    const match = attributeString.match(regex);
+    return match ? match[1] : null;
+}
+
+// Generate parallax CSS
+function generateParallaxCSS() {
+    return `
+/* Parallax Plugin Styles */
+.parallax-section {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 500px;
+    height: auto;
+    background: transparent;
+}
+
+.parallax-background {
+    position: absolute;
+    top: 60% !important;
+    left: 50%;
+    width: 120%;
+    height: 120%;
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: scroll;
+    z-index: 1;
+    transform: translate(-50%, -50%);
+    will-change: transform;
+    background-clip: border-box;
+}
+
+.parallax-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.parallax-content {
+    position: relative;
+    z-index: 3;
+    padding: 4rem 2rem;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+    height: 100%;
+}
+
+.parallax-content h1,
+.parallax-content h2,
+.parallax-content h3,
+.parallax-content h4,
+.parallax-content h5,
+.parallax-content h6 {
+    text-shadow: 3px 3px 6px rgba(0,0,0,0.9);
+    color: white !important;
+}
+
+.parallax-content p {
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
+    color: white !important;
+}
+
+.parallax-content a {
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
+    color: white !important;
+}
+
+.parallax-content span,
+.parallax-content strong,
+.parallax-content em,
+.parallax-content code,
+.parallax-content mark {
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
+    color: white !important;
+}
+
+.parallax-content > *:first-child {
+    margin-top: 0;
+}
+
+.parallax-content > *:last-child {
+    margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+    .parallax-section {
+        min-height: 400px;
+    }
+    
+    .parallax-content {
+        padding: 2rem 1rem;
+        min-height: 300px;
+    }
+    
+    .parallax-background {
+        background-attachment: scroll;
+        top: 60% !important;
+        width: 130%;
+        height: 130%;
+    }
+}
+
+@media (max-width: 480px) {
+    .parallax-section {
+        min-height: 350px;
+    }
+    
+    .parallax-content {
+        padding: 1.5rem 1rem;
+        min-height: 250px;
+    }
+    
+    .parallax-background {
+        top: 60% !important;
+        width: 140%;
+        height: 140%;
+    }
+}
+`;
+}
+
+// Generate parallax JavaScript
+function generateParallaxJS() {
+    return `
+/* Parallax Plugin JavaScript */
+(function() {
+    'use strict';
+    
+    function initParallax() {
+        const parallaxSections = document.querySelectorAll('.parallax-section');
+        
+        if (parallaxSections.length === 0) return;
+        
+        // Check if user prefers reduced motion
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        
+        if (prefersReducedMotion) {
+            console.log('Parallax disabled due to user preference for reduced motion');
+            return;
+        }
+        
+        function updateParallax() {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            
+            parallaxSections.forEach(section => {
+                const rect = section.getBoundingClientRect();
+                const speed = parseFloat(section.dataset.speed) || 0.5;
+                const effect = section.dataset.effect || 'scroll';
+                
+                // Process all sections, not just those in viewport for initial positioning
+                const background = section.querySelector('.parallax-background');
+                if (background) {
+                    let yPos;
+                    
+                    if (effect === 'scroll') {
+                        yPos = (scrollTop - section.offsetTop) * speed;
+                    } else if (effect === 'fixed') {
+                        yPos = 0;
+                    } else {
+                        yPos = (scrollTop - section.offsetTop) * speed;
+                    }
+                    
+                    // Use transform3d for better performance and ensure proper initial positioning
+                    background.style.transform = \`translate3d(-50%, calc(-50% + \${yPos}px), 0)\`;
+                    
+                    // Ensure background covers the entire section
+                    background.style.minWidth = '140%';
+                    background.style.minHeight = '140%';
+                }
+            });
+        }
+        
+        // Throttle scroll events for performance
+        let ticking = false;
+        function requestTick() {
+            if (!ticking) {
+                requestAnimationFrame(updateParallax);
+                ticking = true;
+                setTimeout(() => { ticking = false; }, 16); // ~60fps
+            }
+        }
+        
+        // Initialize backgrounds immediately
+        parallaxSections.forEach(section => {
+            const background = section.querySelector('.parallax-background');
+            if (background) {
+                // Ensure immediate proper sizing and positioning
+                background.style.transform = 'translate3d(-50%, -50%, 0)';
+                background.style.minWidth = '150%';
+                background.style.minHeight = '150%';
+            }
+        });
+        
+        // Initial call
+        updateParallax();
+        
+        // Add scroll listener
+        window.addEventListener('scroll', requestTick, { passive: true });
+        window.addEventListener('resize', updateParallax, { passive: true });
+        
+        console.log(\`Initialized parallax for \${parallaxSections.length} sections\`);
+    }
+    
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initParallax);
+    } else {
+        initParallax();
+    }
+})();
+`;
+}
+
+// Process HTML content files recursively
 function processContentDirectory(dir, basePath = '') {
-    // First, read all markdown files to build the page hierarchy
+    // First, read all HTML content files to build the page hierarchy
     const pages = {};
     fs.readdirSync(dir).forEach(file => {
-        if (path.extname(file) === '.md') {
+        if (path.extname(file) === '.md') { // Still support .md files for backward compatibility
             const fullPath = path.join(dir, file);
             const content = fs.readFileSync(fullPath, 'utf8');
             const metadataMatch = content.match(/^<!--\s*json\s*({[\s\S]*?})\s*-->/);
             const metadata = metadataMatch ? JSON.parse(metadataMatch[1]) : {};
             const filename = path.basename(file, '.md');
             
-            console.log(`DEBUG: Processing file ${file}`);
+            console.log(`DEBUG: Processing HTML file ${file} (converted from Markdown)`);
             console.log(`DEBUG: Metadata match: ${metadataMatch ? metadataMatch[1] : 'none'}`);
             console.log(`DEBUG: Parsed metadata:`, metadata);
             
             // Extract links from content to determine parent-child relationships
-            const links = content.match(/\[([^\]]+)\]\(([^)]+)\)/g) || [];
-            const childPages = links.map(link => {
-                const match = link.match(/\[([^\]]+)\]\(([^)]+)\)/);
-                return match ? match[2].replace(/^\//, '') : null;
-            }).filter(Boolean);
+            // For HTML content, look for both href attributes and Markdown-style links
+            const hrefLinks = content.match(/href="([^"]+)"/g) || [];
+            const markdownLinks = content.match(/\[([^\]]+)\]\(([^)]+)\)/g) || [];
+            
+            const childPages = [
+                ...hrefLinks.map(link => {
+                    const match = link.match(/href="([^"]+)"/);
+                    return match ? match[1].replace(/^\//, '') : null;
+                }),
+                ...markdownLinks.map(link => {
+                    const match = link.match(/\[([^\]]+)\]\(([^)]+)\)/);
+                    return match ? match[2].replace(/^\//, '') : null;
+                })
+            ].filter(Boolean);
             
             pages[filename] = {
                 metadata,
@@ -352,7 +649,9 @@ function processContentDirectory(dir, basePath = '') {
         blogIndexContent += '<div class="mb-4"><a href="rss.xml" class="text-blue-600 hover:underline">📡 RSS Feed</a> | <a href="rss.html" class="text-blue-600 hover:underline">HTML RSS Feed</a></div>';
         blogIndexContent += '<div class="space-y-8">';
         publishedPosts.forEach(post => {
-            blogIndexContent += `<article class="border-b pb-8"><h2 class="text-2xl font-bold mb-2"><a href="${post.slug}/" class="text-blue-600 hover:underline">${post.title}</a></h2><div class="text-gray-600 mb-4">${post.date}</div><div class="prose">${marked(post.content.substring(0, 300) + '...')}</div><a href="${post.slug}/" class="text-blue-600 hover:underline mt-4 inline-block">Read more →</a></article>`;
+            // For blog posts, we expect HTML content, so no need for Markdown conversion
+            const postExcerpt = post.content ? post.content.substring(0, 300) + '...' : '';
+            blogIndexContent += `<article class="border-b pb-8"><h2 class="text-2xl font-bold mb-2"><a href="${post.slug}/" class="text-blue-600 hover:underline">${post.title}</a></h2><div class="text-gray-600 mb-4">${post.date}</div><div class="prose">${postExcerpt}</div><a href="${post.slug}/" class="text-blue-600 hover:underline mt-4 inline-block">Read more →</a></article>`;
         });
         blogIndexContent += '</div></div>';
 
@@ -370,7 +669,8 @@ function processContentDirectory(dir, basePath = '') {
                 postContent += `<div class="mb-8"><img src="../${post.featured_image}" alt="${post.title}" class="w-full h-96 object-cover rounded-lg shadow-lg"></div>`;
             }
             postContent += `<div class="text-gray-600 mb-8">${post.date}</div>`;
-            postContent += `<div class="prose max-w-none">${marked(post.content)}</div>`;
+            // Blog post content is already HTML, so no conversion needed
+            postContent += `<div class="prose max-w-none">${post.content}</div>`;
             postContent += '</article>';
 
             pages[`blog/${post.slug}`] = {
@@ -408,9 +708,26 @@ function processContentDirectory(dir, basePath = '') {
         templateContent = templateContent.replace(/{{sidebar=([^}]+)}}/g, '{{{sidebar}}}');
         templateContent = templateContent.replace(/{{menu=([^}]+)}}/g, '{{{mainMenu}}}');
         templateContent = templateContent.replace(/{{content}}/g, '{{{content}}}');
+        templateContent = templateContent.replace(/{{include=([^}]+)}}/g, '{{> $1}}');
 
         // Compile template
         const compiledTemplate = handlebars.compile(templateContent);
+
+        // Register partials if they exist
+        const partialsDir = path.join('themes', theme, 'templates');
+        if (fs.existsSync(partialsDir)) {
+            fs.readdirSync(partialsDir).forEach(file => {
+                if ((file.endsWith('.html') || file.endsWith('.mod')) && file !== `${template}.html`) {
+                    const partialName = path.basename(file, path.extname(file));
+                    const partialContent = fs.readFileSync(path.join(partialsDir, file), 'utf8');
+                    handlebars.registerPartial(partialName, partialContent);
+                }
+            });
+        }
+
+        // Handle missing partials gracefully
+        handlebars.registerPartial('ad-area.html', '<!-- Ad area placeholder -->');
+        handlebars.registerPartial('ad-area', '<!-- Ad area placeholder -->');
 
         // Determine export path based on parent-child relationships
         let exportFilePath;
@@ -437,9 +754,13 @@ function processContentDirectory(dir, basePath = '') {
         const sidebarContent = sidebarName ? generateSidebar(sidebarName) : '';
         const hasSidebar = sidebarContent && sidebarContent.trim() !== '';
 
-        // Convert markdown to HTML
-        const markdownContent = content.replace(/^<!--\s*json\s*.*?-->\n/, '');
-        const htmlContent = marked(markdownContent);
+        // Process content (now HTML instead of Markdown)
+        let htmlContent = content.replace(/^<!--\s*json\s*.*?-->\n/, '');
+        
+        // Process parallax shortcodes
+        htmlContent = processParallaxShortcodes(htmlContent);
+        
+        // Content is already HTML, so no conversion needed
 
         // Use logo and heroBanner from metadata or theme options
         const logoValue = logo ? `uploads/theme/${logo}` : themeOptions.logo || '';
@@ -465,6 +786,16 @@ function processContentDirectory(dir, basePath = '') {
             appendSiteTitle: seoSettings.append_site_title !== false
         });
         
+        // Check if content contains parallax sections
+        const hasParallax = htmlContent.includes('parallax-section');
+        let parallaxAssets = '';
+        if (hasParallax) {
+            const cssPath = makeRelativePath('/assets/parallax.css', pageDepth);
+            const jsPath = makeRelativePath('/assets/parallax.js', pageDepth);
+            parallaxAssets = `<link rel="stylesheet" href="${cssPath}">`;
+            parallaxAssets += `<script src="${jsPath}"></script>`;
+        }
+        
         // Render template
         let renderedHtml = compiledTemplate({
             title: pageTitle,
@@ -473,6 +804,7 @@ function processContentDirectory(dir, basePath = '') {
             theme,
             currentYear: new Date().getFullYear(),
             custom_css: customCss,
+            parallaxAssets: parallaxAssets,
             
             mainMenu,
             sidebar: hasSidebar ? sidebarContent : false,

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+<title> - FearlessCMS Documentation</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="../../themes/default/assets/style.css">
+
+<style>
+  /* ensure global UI toggles visible if injected */
+  .fcms-theme-toggle{display:inline-flex}
+  
+</style>
+    <style>
+      .documentation-layout {
+        display: flex;
+        gap: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+      .documentation-sidebar {
+        flex: 0 0 300px;
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        height: fit-content;
+        position: sticky;
+        top: 2rem;
+      }
+      .documentation-content {
+        flex: 1;
+        max-width: 800px;
+      }
+      .documentation-sidebar h3 {
+        margin-top: 0;
+        color: #333;
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 0.5rem;
+      }
+      .documentation-sidebar ul {
+        list-style: none;
+        padding: 0;
+      }
+      .documentation-sidebar li {
+        margin-bottom: 0.5rem;
+      }
+      .documentation-sidebar a {
+        color: #555;
+        text-decoration: none;
+        padding: 0.25rem 0;
+        display: block;
+        border-radius: 4px;
+        transition: all 0.2s;
+      }
+      .documentation-sidebar a:hover {
+        color: #007bff;
+        background: #e9ecef;
+        padding-left: 0.5rem;
+      }
+      .documentation-content h1 {
+        font-size: clamp(2.5rem, 1.5rem + 3vw, 3.5rem);
+        color: #333;
+        border-bottom: 3px solid #007bff;
+        padding-bottom: 1rem;
+        margin-bottom: 2rem;
+      }
+      .documentation-content h2 {
+        font-size: clamp(1.8rem, 1.15rem + 2vw, 2.5rem);
+        color: #444;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+      }
+      .documentation-content h3 {
+        color: #555;
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+      }
+      .documentation-content p {
+        line-height: 1.6;
+        margin-bottom: 1rem;
+      }
+      .documentation-content code {
+        background: #f8f9fa;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+      }
+      .documentation-content pre {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        overflow-x: auto;
+        border: 1px solid #e9ecef;
+      }
+      .documentation-content blockquote {
+        border-left: 4px solid #007bff;
+        padding-left: 1rem;
+        margin: 1rem 0;
+        font-style: italic;
+        color: #666;
+      }
+      .documentation-content table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+      }
+      .documentation-content th,
+      .documentation-content td {
+        border: 1px solid #ddd;
+        padding: 0.5rem;
+        text-align: left;
+      }
+      .documentation-content th {
+        background: #f8f9fa;
+        font-weight: bold;
+      }
+      .breadcrumb {
+        background: #f8f9fa;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        margin-bottom: 2rem;
+        font-size: 0.9rem;
+      }
+      .breadcrumb a {
+        color: #007bff;
+        text-decoration: none;
+      }
+      .breadcrumb a:hover {
+        text-decoration: underline;
+      }
+      
+      /* Widget styling for documentation sidebar */
+      .widget-documentation-nav {
+        margin-bottom: 2rem;
+      }
+      .widget-documentation-nav .widget-title {
+        margin-top: 0;
+        color: #333;
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 0.5rem;
+        font-size: 1.1rem;
+      }
+      .documentation-nav-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .documentation-nav-item {
+        margin-bottom: 0.5rem;
+      }
+      .documentation-nav-link {
+        color: #555;
+        text-decoration: none;
+        padding: 0.25rem 0;
+        display: block;
+        border-radius: 4px;
+        transition: all 0.2s;
+        font-size: 0.95rem;
+      }
+      .documentation-nav-link:hover {
+        color: #007bff;
+        background: #e9ecef;
+        padding-left: 0.5rem;
+      }
+      
+      /* Responsive design */
+      @media (max-width: 768px) {
+        .documentation-layout {
+          flex-direction: column;
+          padding: 1rem;
+        }
+        .documentation-sidebar {
+          position: static;
+          flex: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="/">
+        
+    </a>
+    <button id="fcms-hamburger" type="button" class="fcms-hamburger" aria-label="Toggle navigation" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <button id="fcms-theme-toggle" type="button" class="fcms-theme-toggle" aria-label="Toggle theme (system/light/dark)" title="Theme">◐</button>
+    <nav aria-label="Main navigation">
+      <ul class="main-menu"><li class=""><a href="../../" class="">Home</a></li><li class=""><a href="../../dev-roadmap" class="">Development Roadmap</a></li><li class=""><a href="../../documentation" class="">Documentation</a></li><li class=""><a href="../../blog" class="">News</a></li><li class=""><a href="https://ko-fi.com/fearlessgeekmedia" class="" target="_blank">Support us on Ko-Fi</a></li><li class=""><a href="https://opencollective.com/fearlesscms/contribute" class="" target="_blank">Support us on Open Collective</a></li></ul>
+    </nav>
+  </div>
+  <script>
+    (function(){
+      var root=document.documentElement;
+      var KEY='fcms-theme';
+      function apply(pref){ if(pref==='system'){ root.removeAttribute('data-theme'); } else { root.setAttribute('data-theme', pref); } }
+      try {
+        var pref=localStorage.getItem(KEY)||'system';
+        apply(pref);
+      } catch(e) {}
+
+      var toggle=document.getElementById('fcms-theme-toggle');
+      if(toggle){
+        toggle.addEventListener('click', function(){
+          var seq=['system','light','dark'];
+          var cur; try { cur=localStorage.getItem(KEY)||'system'; } catch(e){ cur='system'; }
+          var next=seq[(seq.indexOf(cur)+1)%3];
+          try { localStorage.setItem(KEY,next); } catch(e) {}
+          apply(next);
+          toggle.setAttribute('data-mode', next);
+        });
+      }
+
+      var hb=document.getElementById('fcms-hamburger');
+      var nav=document.querySelector('header nav');
+      if(hb && nav){
+        hb.addEventListener('click', function(){
+          var open=nav.classList.toggle('is-open');
+          hb.setAttribute('aria-expanded', open);
+        });
+      }
+    })();
+  </script>
+  
+</header>
+    <!-- Ad area placeholder -->    
+    <div class="documentation-layout">
+      <aside class="documentation-sidebar">
+        false
+      </aside>
+      
+      <main class="documentation-content">
+        <div class="breadcrumb">
+          <a href="/">Home</a> &gt; 
+          <a href="/documentation">Documentation</a>
+          &gt; FearlessCMS Documentation
+        </div>
+        
+        <h1>FearlessCMS Documentation</h1>
+        <!-- json {
+    "title": "FearlessCMS Documentation",
+    "editor_mode": "html",
+    "template": "documentation",
+    "converted_from_markdown": true,
+    "conversion_date": "2025-08-24 00:00:05"
+} -->
+
+<p>Welcome to the comprehensive documentation for FearlessCMS. This documentation covers everything you need to know about installing, configuring, customizing, and extending your FearlessCMS installation.</p>
+
+<h2>Getting Started</h2>
+
+<ul>
+    <li><strong><a href="html-editor-guide/">HTML Editor Guide</a></strong> - Complete guide to the new HTML editor system</li>
+    <li><strong><a href="install/">Installation Guide</a></strong> - Complete setup and installation instructions</li>
+    <li><strong><a href="gettingstarted/">Getting Started</a></strong> - Quick start guide for new users</li>
+    <li><strong><a href="cms-modes/">CMS Modes</a></strong> - Understanding different CMS operation modes</li>
+</ul>
+
+<h2>Theme Development</h2>
+
+<ul>
+    <li><strong><a href="creating-themes/">Creating Themes</a></strong> - Complete guide to building custom themes</li>
+    <li><strong><a href="theme-development-workflow/">Theme Development Workflow</a></strong> - Best practices and workflow</li>
+    <li><strong><a href="theme-templates-reference/">Theme Templates Reference</a></strong> - Template system documentation</li>
+    <li><strong><a href="theme-options-guide/">Theme Options Guide</a></strong> - Configuring theme options</li>
+    <li><strong><a href="sass-theme-guide/">SASS Theme Guide</a></strong> - Using SASS for advanced styling</li>
+    <li><strong><a href="modular-templates/">Modular Templates</a></strong> - Building reusable template components</li>
+    <li><strong><a href="theme-thumbnails-guide/">Theme Thumbnails Guide</a></strong> - Creating theme previews</li>
+</ul>
+
+<h2>Plugin Development</h2>
+
+<ul>
+    <li><strong><a href="plugin-development-guide/">Plugin Development Guide</a></strong> - Building custom plugins</li>
+    <li><strong><a href="parallax-plugin/">Parallax Plugin</a></strong> - Specialized plugin documentation with export support</li>
+</ul>
+
+<h2>Customization & Configuration</h2>
+
+<ul>
+    <li><strong><a href="customization-overview/">Customization Overview</a></strong> - System customization options</li>
+    <li><strong><a href="file-permissions/">File Permissions</a></strong> - Security and permission management</li>
+    <li><strong><a href="ad-area-system/">AD Area System</a></strong> - Advertisement area management</li>
+</ul>
+
+<h2>Advanced Topics</h2>
+
+<ul>
+    <li><strong><a href="theme-development-index/">Theme Development Index</a></strong> - Advanced theme development concepts</li>
+</ul>
+
+<h2>Documentation System</h2>
+
+<ul>
+    <li><strong><a href="DOCUMENTATION_SYSTEM/">Documentation System Overview</a></strong> - How to use and extend this documentation</li>
+</ul>
+
+<p><em>This documentation is continuously updated. If you find any issues or have suggestions for improvements, please contribute to the project.</em></p>
+      </main>
+    </div>
+    
+    <footer class="site-footer">
+  <div class="container">
+    Fearless Geek Media &copy; 
+  </div>
+</footer>
+  </body>
+</html> 

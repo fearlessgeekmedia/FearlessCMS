@@ -48,7 +48,7 @@ if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $contentData, $matches)) {
 
         <div class="mb-4">
             <label class="block mb-1">Content</label>
-            <textarea name="content" id="content" style="width: 100%; height: 600px; font-family: monospace;"><?php echo htmlspecialchars($contentWithoutMetadata); ?></textarea>
+            <textarea name="content" id="content" style="width: 100%; height: 600px; font-family: monospace;"><?php echo $contentWithoutMetadata; ?></textarea>
         </div>
 
         <div class="flex justify-between">

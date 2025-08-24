@@ -24,12 +24,6 @@ function parallax_process_shortcode($content) {
         error_log("Content preview: " . substr($content, 0, 500));
     }
     
-    // First, normalize escaped underscores to regular underscores
-    $content = str_replace('parallax\_section', 'parallax_section', $content);
-    $content = str_replace('background\_image', 'background_image', $content);
-    $content = str_replace('overlay\_color', 'overlay_color', $content);
-    $content = str_replace('overlay\_opacity', 'overlay_opacity', $content);
-    
     // Wrap feature sections in div containers for styling
     $content = wrapFeatureSections($content);
     
@@ -45,49 +39,19 @@ function parallax_process_shortcode($content) {
 
 // Function to wrap feature sections in div containers
 function wrapFeatureSections($content) {
-    // Manually handle the specific feature sections to avoid conflicts with parallax
+    // The content now already has proper HTML structure with feature-card divs
+    // We just need to ensure the CSS grid layout works properly
     
-    // Handle "Built for the Modern Web" section
-    $content = str_replace(
-        '<h3>🚀 Lightweight & Fast</h3>Built with performance in mind, ensuring your websites load quickly and efficiently.',
-        '<div class="feature-card"><h3>🚀 Lightweight & Fast</h3>Built with performance in mind, ensuring your websites load quickly and efficiently.</div>',
+    // Add a wrapper div around feature sections to ensure proper grid layout
+    $content = preg_replace(
+        '/(<h2>Built for the Modern Web<\/h2>.*?)(<div class="feature-card">.*?<\/div>.*?<\/div>.*?<\/div>)/s',
+        '$1<div class="features-grid">$2</div>',
         $content
     );
     
-    $content = str_replace(
-        '<h3>🔒 Secure by Design</h3>Security-first approach with regular updates and best practices built-in.',
-        '<div class="feature-card"><h3>🔒 Secure by Design</h3>Security-first approach with regular updates and best practices built-in.</div>',
-        $content
-    );
-    
-    $content = str_replace(
-        '<h3>🎨 Flexible Theming</h3>Customize your site with our powerful theming system and plugin architecture.',
-        '<div class="feature-card"><h3>🎨 Flexible Theming</h3>Customize your site with our powerful theming system and plugin architecture.</div>',
-        $content
-    );
-    
-    // Handle "Our Core Principles" section
-    $content = str_replace(
-        '<h3>🌐 Open Source Culture</h3>Contributors are encouraged to improve, distribute, and use the code for commercial or non-commercial purposes, with proper attribution to developers and contributors.',
-        '<div class="feature-card"><h3>🌐 Open Source Culture</h3>Contributors are encouraged to improve, distribute, and use the code for commercial or non-commercial purposes, with proper attribution to developers and contributors.</div>',
-        $content
-    );
-    
-    $content = str_replace(
-        '<h3>🔧 Clean Architecture</h3>Templates should be templates. Plugins should be plugins. We maintain clear separation of concerns for better maintainability and security.',
-        '<div class="feature-card"><h3>🔧 Clean Architecture</h3>Templates should be templates. Plugins should be plugins. We maintain clear separation of concerns for better maintainability and security.</div>',
-        $content
-    );
-    
-    $content = str_replace(
-        '<h3>⚡ Performance First</h3>Bloat is the enemy. FearlessCMS is designed to be as lightweight as possible without compromising functionality.',
-        '<div class="feature-card"><h3>⚡ Performance First</h3>Bloat is the enemy. FearlessCMS is designed to be as lightweight as possible without compromising functionality.</div>',
-        $content
-    );
-    
-    $content = str_replace(
-        '<h3>🛡️ Security & Privacy</h3>Security and privacy are non-negotiable. We prioritize the protection of user data and safeguard against vulnerabilities.',
-        '<div class="feature-card"><h3>🛡️ Security & Privacy</h3>Security and privacy are non-negotiable. We prioritize the protection of user data and safeguard against vulnerabilities.</div>',
+    $content = preg_replace(
+        '/(<h2>Our Core Principles<\/h2>.*?)(<div class="feature-card">.*?<\/div>.*?<\/div>.*?<\/div>.*?<\/div>)/s',
+        '$1<div class="features-grid">$2</div>',
         $content
     );
     
@@ -205,7 +169,7 @@ function parallax_enqueue_assets() {
         
         .parallax-background {
             position: absolute;
-            top: 50%;
+            top: 60% !important;
             left: 50%;
             width: 120%;
             height: 120%;
@@ -285,6 +249,29 @@ function parallax_enqueue_assets() {
             .parallax-content {
                 padding: 2rem 1rem;
                 min-height: 300px;
+            }
+            
+            .parallax-background {
+                top: 60% !important;
+                width: 130%;
+                height: 130%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .parallax-section {
+                min-height: 350px;
+            }
+            
+            .parallax-content {
+                padding: 1.5rem 1rem;
+                min-height: 250px;
+            }
+            
+            .parallax-background {
+                top: 60% !important;
+                width: 140%;
+                height: 140%;
             }
         }
         

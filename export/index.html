@@ -1,41 +1,164 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Look Ma, AI Slop Punk! - The Rest Of Us</title>
-    <link rel="stylesheet" href="themes/punk_rock/css/style.css">
-    
-</head>
-<body>
-    <header>
-        <div class="logo">The Rest Of Us</div>
-        <div class="slogan">Loud. Broke. Unapologetically Real.</div>
-        <nav class="main-menu">
-            <ul class="main-menu"><li class=""><a href="/" class="">Home</a></li><li class=""><a href="/about" class="">About</a></li><li class=""><a href="/music" class="">Music</a></li></ul>
-        </nav>
-    </header>
+<title> - FearlessCMS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="themes/default/assets/style.css">
+<link rel="stylesheet" href="assets/parallax.css"><script src="assets/parallax.js"></script>
+<style>
+  /* ensure global UI toggles visible if injected */
+  .fcms-theme-toggle{display:inline-flex}
+  
+</style>
+  </head>
+  <body>
+    <header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="/">
+        
+    </a>
+    <button id="fcms-hamburger" type="button" class="fcms-hamburger" aria-label="Toggle navigation" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <button id="fcms-theme-toggle" type="button" class="fcms-theme-toggle" aria-label="Toggle theme (system/light/dark)" title="Theme">◐</button>
+    <nav aria-label="Main navigation">
+      <ul class="main-menu"><li class=""><a href="" class="">Home</a></li><li class=""><a href="dev-roadmap" class="">Development Roadmap</a></li><li class=""><a href="documentation" class="">Documentation</a></li><li class=""><a href="blog" class="">News</a></li><li class=""><a href="https://ko-fi.com/fearlessgeekmedia" class="" target="_blank">Support us on Ko-Fi</a></li><li class=""><a href="https://opencollective.com/fearlesscms/contribute" class="" target="_blank">Support us on Open Collective</a></li></ul>
+    </nav>
+  </div>
+  <script>
+    (function(){
+      var root=document.documentElement;
+      var KEY='fcms-theme';
+      function apply(pref){ if(pref==='system'){ root.removeAttribute('data-theme'); } else { root.setAttribute('data-theme', pref); } }
+      try {
+        var pref=localStorage.getItem(KEY)||'system';
+        apply(pref);
+      } catch(e) {}
+
+      var toggle=document.getElementById('fcms-theme-toggle');
+      if(toggle){
+        toggle.addEventListener('click', function(){
+          var seq=['system','light','dark'];
+          var cur; try { cur=localStorage.getItem(KEY)||'system'; } catch(e){ cur='system'; }
+          var next=seq[(seq.indexOf(cur)+1)%3];
+          try { localStorage.setItem(KEY,next); } catch(e) {}
+          apply(next);
+          toggle.setAttribute('data-mode', next);
+        });
+      }
+
+      var hb=document.getElementById('fcms-hamburger');
+      var nav=document.querySelector('header nav');
+      if(hb && nav){
+        hb.addEventListener('click', function(){
+          var open=nav.classList.toggle('is-open');
+          hb.setAttribute('aria-expanded', open);
+        });
+      }
+    })();
+  </script>
+  
+</header>
+    <!-- Ad area placeholder -->
+<div class="hero-banner">
+  <div class="container">
+    <img src="uploads/herobanner_1755845067.png" alt="Hero banner">
+  </div>
+</div>
+
+
+
     <main>
-        <div class="hero-banner">
-            <img src="uploads/herobanner_1750210656.png" alt="Look Ma, AI Slop Punk!" style="max-width: 100%; height: auto;">
-        </div>
-        <div class="content">
-            <div class="main-content">
-                <h1>Look Ma, AI Slop Punk!</h1>
-                <!-- json {
-    "title": "Look Ma, AI Slop Punk!",
-    "editor_mode": "easy",
-    "template": "page"
+      <!-- json {
+    "title": "FearlessCMS",
+    "editor_mode": "html",
+    "template": "home",
+    "converted_from_markdown": true,
+    "conversion_date": "2025-08-24 00:00:05"
 } -->
 
-<p>The Rest Of Us ain’t your average band—we’re the digital gutter rats of punk rock, scraping raw noise from the trash heap of machine learning and slinging it back at the world with two fingers in the air. Our synths scream, our drums glitch, and the vocals? Let’s just say they’ve seen things. Welcome to the revolution—ugly, loud, and probably not FDA approved.</p>
+<div id="hero-section" class="parallax-section-hero-section parallax-section" data-speed="0.6" data-effect="scroll" data-overlay-color="rgba(0,0,0,0.5)" data-overlay-opacity="0.5"><div class="parallax-background" style="background-image: url('/uploads/workspace-hero.jpg');"></div><div class="parallax-overlay" style="background-color: rgba(0,0,0,0.5); opacity: 0.5;"></div><div class="parallax-content"><h1>FearlessCMS</h1>
 
-            </div>
-        </div>
+<p><span style="color: #fff">Modern, powerful content management for fearless developers</span></p>
+
+<p><a href="/documentation" class="btn-primary">Get Started</a></p></div></div>
+
+<h2>Built for the Modern Web</h2>
+
+<p>FearlessCMS combines cutting-edge technology with timeless principles to deliver a content management system that's both powerful and accessible.</p>
+
+<div class="feature-card">
+    <h3>🚀 Lightweight & Fast</h3>
+    <p>Built with performance in mind, ensuring your websites load quickly and efficiently.</p>
+</div>
+
+<div class="feature-card">
+    <h3>🔒 Secure by Design</h3>
+    <p>Security-first approach with regular updates and best practices built-in.</p>
+</div>
+
+<div class="feature-card">
+    <h3>🎨 Flexible Theming</h3>
+    <p>Customize your site with our powerful theming system and plugin architecture.</p>
+</div>
+
+<div id="manifesto-section" class="parallax-section-manifesto-section parallax-section" data-speed="0.4" data-effect="scroll" data-overlay-color="red" data-overlay-opacity="0.6"><div class="parallax-background" style="background-image: url('/uploads/red-led-grid.jpg');"></div><div class="parallax-overlay" style="background-color: red; opacity: 0.6;"></div><div class="parallax-content"><h2>The FearlessCMS Manifesto</h2>
+
+<p>For years, the World Wide Web has been dominated by content management systems that have become bloated and clunky over time. <strong>FearlessCMS</strong> strives to be different.</p>
+
+<div class="centered-cta">
+    <a href="#manifesto-details" class="btn-primary">Read Our Manifesto</a>
+</div></div></div>
+
+<h2>Our Core Principles</h2>
+
+<div class="feature-card">
+    <h3>🌐 Open Source Culture</h3>
+    <p>Contributors are encouraged to improve, distribute, and use the code for commercial or non-commercial purposes, with proper attribution to developers and contributors.</p>
+</div>
+
+<div class="feature-card">
+    <h3>🔧 Clean Architecture</h3>
+    <p>Templates should be templates. Plugins should be plugins. We maintain clear separation of concerns for better maintainability and security.</p>
+</div>
+
+<div class="feature-card">
+    <h3>⚡ Performance First</h3>
+    <p>Bloat is the enemy. FearlessCMS is designed to be as lightweight as possible without compromising functionality.</p>
+</div>
+
+<div class="feature-card">
+    <h3>🛡️ Security & Privacy</h3>
+    <p>Security and privacy are non-negotiable. We prioritize the protection of user data and safeguard against vulnerabilities.</p>
+</div>
+
+<div id="community-section" class="parallax-section-community-section parallax-section" data-speed="0.5" data-effect="scroll" data-overlay-color="#0066cc" data-overlay-opacity="0.7"><div class="parallax-background" style="background-image: url('/uploads/desk-setup.jpg');"></div><div class="parallax-overlay" style="background-color: #0066cc; opacity: 0.7;"></div><div class="parallax-content"><h2>Join Our Community</h2>
+
+<p>Whether you're a developer, designer, or casual user, FearlessCMS is built <strong>for the people</strong>. Join us in creating a better web.</p>
+
+<div class="centered-cta">
+    <a href="/documentation" class="btn-primary">View Documentation</a> <a href="https://github.com/fearlessgeekmedia/FearlessCMS" class="btn-secondary">Contribute on GitHub</a>
+</div></div></div>
+
+<h2>Ready to Get Started?</h2>
+
+<p>FearlessCMS is more than just a CMS - it's a movement towards better, more ethical web development.</p>
+
+<div class="centered-cta">
+    <a href="/documentation" class="btn-primary">Start Building Today</a>
+</div>
+
+<hr>
+
+<p><em>Contributions to this manifesto are welcome and encouraged. FearlessCMS is built on the belief that collaboration creates better software for everyone.</em></p>
     </main>
-    <footer>
-        &copy; 2025 The Rest Of Us. No gods. No managers.
-    </footer>
+    <footer class="site-footer">
+  <div class="container">
+    Fearless Geek Media &copy; 
+  </div>
+</footer>
     
-</body>
-</html> 
+  </body>
+</html>

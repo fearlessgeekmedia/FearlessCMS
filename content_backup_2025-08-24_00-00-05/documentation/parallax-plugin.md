@@ -1,3 +1,8 @@
+<!-- json {
+    "title": "Parallax Sections Plugin",
+    "template": "documentation"
+} -->
+
 # Parallax Sections Plugin
 
 ## Overview
@@ -82,24 +87,19 @@ Professional services with red overlay for emphasis
 [/parallax_section]
 ```
 
-## Technical Details
-
-### CSS Architecture
-- **Oversized backgrounds**: Images are 120% of section size for guaranteed coverage
-- **Centered positioning**: Uses CSS transforms for perfect centering
-- **Hardware acceleration**: `transform: translateZ(0)` for smooth performance
-- **Responsive sizing**: Automatically adapts to different screen sizes
-
-### JavaScript Performance
-- **Viewport-aware calculations**: Only processes visible sections
-- **Optimized transforms**: Minimal DOM manipulation
-- **Smooth transitions**: Hardware-accelerated animations
-- **Memory efficient**: Clean event handling and cleanup
-
-### Browser Compatibility
-- **Modern browsers**: Chrome, Firefox, Safari, Edge (latest versions)
-- **Mobile devices**: iOS Safari, Chrome Mobile, Samsung Internet
-- **Fallbacks**: Graceful degradation for older browsers
+### Contact Section with Custom Styling
+```
+[parallax_section id="contact" background_image="/uploads/contact-bg.jpg" speed="0.4" overlay_color="rgba(0,0,0,0.6)" overlay_opacity="0.6"]
+<div style="text-align: center; padding: 120px 0; color: white;">
+    <h2>Get In Touch</h2>
+    <p>Ready to start your next project? Let's talk!</p>
+    <div style="margin-top: 30px;">
+        <a href="mailto:hello@example.com" style="color: white; border: 1px solid white; padding: 12px 25px; text-decoration: none; margin: 0 10px; border-radius: 5px;">Email Us</a>
+        <a href="tel:+1234567890" style="color: white; border: 1px solid white; padding: 12px 25px; text-decoration: none; margin: 0 10px; border-radius: 5px;">Call Us</a>
+    </div>
+</div>
+[/parallax_section]
+```
 
 ## Best Practices
 
@@ -148,58 +148,18 @@ export FCMS_DEBUG=true
 
 This will log detailed information about parallax processing to help troubleshoot issues.
 
-## Export Support
-
-The parallax plugin now includes full support for static site export. When you export your site using the export script, all parallax sections are automatically processed and converted to fully functional HTML with CSS and JavaScript.
-
-### Export Features
-
-- **Automatic Processing** - Parallax shortcodes are converted to HTML during export
-- **CSS Generation** - Complete parallax styles are generated automatically
-- **JavaScript Generation** - Interactive parallax effects are included
-- **Asset Management** - CSS and JS files are automatically included on pages with parallax
-- **Performance Optimized** - Export generates optimized, production-ready assets
-
-### Export Process
-
-When you run the export script:
-
-1. All parallax shortcodes are processed and converted to HTML
-2. Parallax CSS is generated with responsive design support
-3. Parallax JavaScript is generated with performance optimizations
-4. Assets are automatically included on pages that need them
-5. Static site is generated with fully functional parallax effects
-
-### Generated Files
-
-The export process creates these files:
-
-- `export/assets/parallax.css` - Complete parallax styling
-- `export/assets/parallax.js` - Interactive parallax functionality
-
-### Export Example
-
-Run the export script to generate your static site:
-
-```bash
-npx node export.js
-```
-
-Your exported site will include fully functional parallax sections that work exactly like the live CMS version.
-
 ## Content Management
 
 ### Template Integration
-- **Content separation**: Parallax sections belong in HTML content files, not templates
+- **Content separation**: Parallax sections belong in markdown files, not templates
 - **Dynamic rendering**: Plugin automatically processes shortcodes in content
 - **Theme compatibility**: Works with all FearlessCMS themes
 - **Plugin independence**: No theme modifications required
-- **Export support**: Full static site generation with parallax effects
 
 ### File Organization
 ```
 content/
-├── home.md          # Contains parallax shortcodes (now HTML format)
+├── home.md          # Contains parallax shortcodes
 ├── about.md         # Other content files
 └── blog/
     └── post-1.md    # Blog posts with parallax sections

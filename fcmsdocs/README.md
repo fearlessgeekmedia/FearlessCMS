@@ -5,12 +5,14 @@ Welcome to the FearlessCMS documentation. Here you will find guides and referenc
 ## 📚 Documentation Index
 
 ### Getting Started
+- [HTML Editor Guide](html-editor-guide.md) - **NEW!** Complete guide to the new HTML editor system
 - [Installation and Setup](gettingstarted.md)
 - [CMS Modes Guide](cms-modes.md)
 - [File Permissions Guide](file-permissions.md)
 - [Installation Script](install.md)
 
 ### Content Management
+- [HTML Editor System](html-editor-guide.md) - Rich WYSIWYG editor with code view mode
 - [Content Editing](content-editing.md)
 - [Menu Editor](menueditor.md)
 - [Sidebars and Widgets](sidebars-widgets.md)
@@ -24,9 +26,31 @@ Welcome to the FearlessCMS documentation. Here you will find guides and referenc
 - [Theme Templates Reference](theme-templates-reference.md)
 - [Modular Templates](modular-templates.md)
 - [Plugin Development](plugin-development-guide.md)
-- [Parallax Sections Plugin](parallax-plugin.md)
+- [Parallax Sections Plugin](parallax-plugin.md) - **UPDATED!** Now includes export support
 - [Ad Area System](ad-area-system.md)
 
 ### Other Resources
 - [Development Roadmap](devroadmap.md)
+
+## 🆕 Recent Updates
+
+### HTML Editor System (Latest)
+FearlessCMS has transitioned from Markdown to HTML editing, providing:
+- **Dual-mode editing** - Rich WYSIWYG + Code view
+- **Better layout control** - Preserves feature cards and complex structures
+- **No escaping issues** - Shortcodes work perfectly
+- **Export support** - Full static site generation with parallax effects
+
+### Export System Enhancements
+- **HTML content support** - No more Markdown conversion
+- **Parallax plugin integration** - Automatic CSS/JS generation
+- **Asset management** - Smart inclusion of required resources
+- **Performance optimized** - Production-ready static sites
+
+## 🚀 Quick Start
+
+1. **Read the [HTML Editor Guide](html-editor-guide.md)** to understand the new system
+2. **Check [Installation](install.md)** for setup instructions
+3. **Explore [Theme Development](theme-development-index.md)** for customization
+4. **Review [Plugin Development](plugin-development-guide.md)** for extensions
 
