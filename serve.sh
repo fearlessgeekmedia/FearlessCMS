@@ -10,6 +10,20 @@ cd "$SCRIPT_DIR" || {
 # clear previous logs if any
 rm -f serve-log.tmp
 
+# set default port or use ENV variable
+port=${PORT:-8000}
+
+if [ "$1" == "--port" ]; then
+    port=$2
+fi
+
+# check if port is in use
+if lsof -i:$port > /dev/null
+then
+    echo "Port $port is already in use"
+    exit
+fi
+
 # check if php is installed and use nix-shell if needed
 if ! command -v php &> /dev/null
 then
@@ -23,20 +37,6 @@ then
     echo "To access the server, open http://localhost:$port in your browser"
     echo "🚀"
     wait $pid
-    exit
-fi
-
-# set default port or use ENV variable
-port=${PORT:-8000}
-
-if [ "$1" == "--port" ]; then
-    port=$2
-fi
-
-# check if port is in use
-if lsof -i:$port > /dev/null
-then
-    echo "Port $port is already in use"
     exit
 fi
 

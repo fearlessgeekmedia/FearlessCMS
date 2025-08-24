@@ -135,7 +135,7 @@
         document.getElementById('menu-preview').style.display = 'block';
 
         // Load menu data from server
-        fetch(`?action=load_menu&menu_id=${menuId}`)
+        fetch(`../menu-ajax-handler.php?action=load_menu&menu_id=${menuId}`)
             .then(response => response.json())
             .then(data => {
                 menuData = data;

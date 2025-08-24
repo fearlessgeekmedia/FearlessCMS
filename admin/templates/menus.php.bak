@@ -391,7 +391,7 @@ document.getElementById('new-menu-form').addEventListener('submit', function(e) 
     fetch('../menu-ajax-handler.php', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
+            'Content-Type: 'application/json',
         },
         body: JSON.stringify({ 
             action: 'create_menu',

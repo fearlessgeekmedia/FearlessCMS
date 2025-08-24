@@ -49,6 +49,14 @@
                 "class": "",
                 "target": "_blank",
                 "children": []
+            },
+            {
+                "id": "item_1756004901806",
+                "label": "Github",
+                "url": "https:\/\/github.com\/fearlessgeekmedia\/FearlessCMS",
+                "class": "",
+                "target": "_blank",
+                "children": []
             }
         ]
     }

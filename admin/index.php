@@ -12,6 +12,8 @@ require_once dirname(__DIR__) . '/includes/auth.php';
 // Apply security headers for admin interface
 set_security_headers();
 
+
+
 // Set appropriate error reporting for production
 if (getenv('FCMS_DEBUG') === 'true') {
     ini_set('display_errors', 1);
@@ -210,39 +212,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'manage_menus') {
     }
 }
 
-// Handle AJAX requests for loading menu data
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'load_menu') {
-    // Clear any output
-    ob_clean();
-    header('Content-Type: application/json');
 
-    if (!isLoggedIn()) {
-        echo json_encode(['success' => false, 'error' => 'You must be logged in to perform this action']);
-        exit;
-    }
-
-    if (!isset($_GET['menu_id'])) {
-        echo json_encode(['success' => false, 'error' => 'Menu ID is required']);
-        exit;
-    }
-
-    $menuId = $_GET['menu_id'];
-    $menuFile = CONFIG_DIR . '/menus.json';
-
-    if (!file_exists($menuFile)) {
-        echo json_encode(['success' => false, 'error' => 'Menu file not found']);
-        exit;
-    }
-
-    $menus = json_decode(file_get_contents($menuFile), true);
-    if (!isset($menus[$menuId])) {
-        echo json_encode(['success' => false, 'error' => 'Menu not found']);
-        exit;
-    }
-
-    echo json_encode($menus[$menuId]);
-    exit;
-}
 
 // Load admin path from config
 $configFile = CONFIG_DIR . '/config.json';
@@ -261,6 +231,8 @@ if (!isLoggedIn()) {
     header('Location: /' . $adminPath . '/login');
     exit;
 }
+
+
 
 // Load plugins and run init hook
 fcms_load_plugins();

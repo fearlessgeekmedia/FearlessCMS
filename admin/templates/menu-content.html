@@ -115,7 +115,7 @@ function deleteSelectedMenu() {
 function confirmDeleteMenu() {
     if (!currentMenu) return;
     
-    fetch('?action=manage_menus', {
+    fetch('../menu-ajax-handler.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -162,7 +162,7 @@ function loadMenu(menuId) {
     document.getElementById('delete-menu-btn').style.display = 'block';
 
     // Load menu data from server
-    fetch(`?action=load_menu&menu_id=${menuId}`)
+    fetch(`../menu-ajax-handler.php?action=load_menu&menu_id=${menuId}`)
         .then(response => response.json())
         .then(data => {
             menuData = data;
