@@ -10,15 +10,36 @@ error_log("DEBUG: Template variables - contentData preview: " . (isset($contentD
 
 // Extract content without metadata
 $contentWithoutMetadata = $contentData ?? '';
-error_log("DEBUG: Template - contentWithoutMetadata length: " . strlen($contentWithoutMetadata));
-
 $metadata = [];
+
+// Try to extract metadata, but fallback to full content if it fails
 if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $contentData, $matches)) {
     $metadata = json_decode($matches[1], true);
-    $contentWithoutMetadata = substr($contentData, strlen($matches[0]));
-    error_log("DEBUG: Template - metadata found, contentWithoutMetadata updated length: " . strlen($contentWithoutMetadata));
+    if ($metadata) {
+        // Get content after metadata, but be more careful about the extraction
+        $metadataEnd = strpos($contentData, '-->', strlen($matches[0]) - 3) + 3;
+        $contentWithoutMetadata = substr($contentData, $metadataEnd);
+        
+        // Trim any leading whitespace/newlines
+        $contentWithoutMetadata = ltrim($contentWithoutMetadata, " \t\n\r\0\x0B");
+        
+        // Debug the extraction
+        error_log("DEBUG: Metadata extraction - full match length: " . strlen($matches[0]));
+        error_log("DEBUG: Metadata extraction - metadataEnd position: " . $metadataEnd);
+        error_log("DEBUG: Metadata extraction - content length after: " . strlen($contentWithoutMetadata));
+        error_log("DEBUG: Metadata extraction - content preview: " . substr($contentWithoutMetadata, 0, 100));
+    } else {
+        // If JSON decode fails, use full content
+        $contentWithoutMetadata = $contentData;
+    }
 } else {
-    error_log("DEBUG: Template - no metadata found, using full contentData");
+    // No metadata found, use full content
+    $contentWithoutMetadata = $contentData;
+}
+
+// Ensure we have content to work with
+if (empty($contentWithoutMetadata) && !empty($contentData)) {
+    $contentWithoutMetadata = $contentData;
 }
 
 // Get all content files for parent selection
@@ -41,20 +62,6 @@ foreach ($contentFiles as $file) {
 ?>
 
 <div class="bg-white shadow rounded-lg p-6">
-    <!-- Debug Information -->
-    <?php if (isset($_GET['debug']) && $_GET['debug'] === '1'): ?>
-        <div class="mb-4 p-3 bg-yellow-100 border border-yellow-300 rounded text-xs">
-            <strong>Debug Info:</strong><br>
-            Path: <?php echo htmlspecialchars($path ?? 'NOT SET'); ?><br>
-            ContentData Length: <?php echo isset($contentData) ? strlen($contentData) : 'NOT SET'; ?><br>
-            ContentData Preview: <?php echo isset($contentData) ? htmlspecialchars(substr($contentData, 0, 100)) : 'NOT SET'; ?><br>
-            ContentWithoutMetadata Length: <?php echo strlen($contentWithoutMetadata); ?><br>
-            ContentWithoutMetadata Preview: <?php echo htmlspecialchars(substr($contentWithoutMetadata, 0, 100)); ?><br>
-            Title: <?php echo htmlspecialchars($title ?? 'NOT SET'); ?><br>
-            Error: <?php echo htmlspecialchars($error ?? 'NONE'); ?><br>
-        </div>
-    <?php endif; ?>
-    
     <!-- Success/Error Messages -->
     <?php if (isset($success) && !empty($success)): ?>
         <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
@@ -67,6 +74,8 @@ foreach ($contentFiles as $file) {
             <?php echo htmlspecialchars($error); ?>
         </div>
     <?php endif; ?>
+    
+
     
     <div class="flex justify-between items-center mb-6">
         <div class="flex gap-4">
@@ -81,6 +90,7 @@ foreach ($contentFiles as $file) {
         <input type="hidden" name="action" value="save_content">
         <input type="hidden" name="path" value="<?php echo htmlspecialchars($path); ?>">
         <input type="hidden" name="editor_mode" value="html">
+        <input type="hidden" name="content" id="content">
         <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
 
         <div class="grid grid-cols-2 gap-6">
@@ -134,13 +144,12 @@ foreach ($contentFiles as $file) {
             
             <!-- Code Editor Container -->
             <div id="codeEditorContainer" class="hidden">
-                <textarea id="codeEditor" class="w-full h-96 p-4 font-mono text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Edit HTML code here..."><?php echo htmlspecialchars($contentWithoutMetadata); ?></textarea>
+                <textarea id="codeEditor" class="w-full h-96 p-4 font-mono text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Edit HTML code here..."></textarea>
                 <div class="mt-2 text-sm text-gray-600">
                     <p>💡 <strong>Code View Mode:</strong> Edit raw HTML code. Use this for precise formatting, custom HTML, or troubleshooting.</p>
                 </div>
             </div>
             
-            <input type="hidden" name="content" id="content">
         </div>
 
         <div class="flex justify-end gap-4">
@@ -345,6 +354,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeof Quill !== 'undefined') {
         editor = new Quill('#richEditorContainer', { // Initialize with rich editor container
             theme: 'snow',
+            // Disable Quill's built-in sanitization to preserve HTML structure
+            sanitize: false,
             modules: {
                 toolbar: [
                     ['bold', 'italic', 'underline', 'strike'],
@@ -364,6 +375,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 ],
                 clipboard: {
                     matchVisual: false,
+                    // Allow more HTML elements and preserve styling
+                    matchers: []
                 },
                 keyboard: {
                     bindings: {
@@ -378,47 +391,82 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             placeholder: 'Start writing your content in HTML...',
             readOnly: false,
-            bounds: '.quill-editor'
+            bounds: '.quill-editor',
+            // Allow more HTML elements including div tags
+            formats: [
+                'header', 'font', 'size',
+                'bold', 'italic', 'underline', 'strike', 'blockquote',
+                'list', 'bullet', 'indent',
+                'link', 'image', 'video',
+                'color', 'background',
+                'align', 'direction',
+                'code', 'script', 'formula',
+                'div', 'span'
+            ]
         });
 
-        console.log('Quill.js editor initialized successfully');
+        // Configure Quill to preserve article tags (which Quill allows)
+        editor.clipboard.addMatcher('article', function(node, delta) {
+            // Preserve article tags and their attributes
+            return delta;
+        });
+        
+        // Add matcher for any HTML element to preserve structure
+        editor.clipboard.addMatcher('*', function(node, delta) {
+            // Preserve all HTML elements and their attributes
+            return delta;
+        });
+        
+        // Function to convert div tags to article tags for Quill compatibility
+        function convertDivToArticle(html) {
+            return html.replace(/<div/g, '<article').replace(/<\/div>/g, '</article>');
+        }
+        
+        // Function to convert article tags back to div tags for display
+        function convertArticleToDiv(html) {
+            return html.replace(/<article/g, '<div').replace(/<\/article>/g, '</div>');
+        }
         
         // Set initial content
-        const initialContent = <?php echo json_encode($contentWithoutMetadata, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES); ?>;
-        console.log('Raw content data:', initialContent);
-        console.log('Content type:', typeof initialContent);
-        console.log('Content length:', initialContent ? initialContent.length : 0);
+        const initialContent = <?php echo json_encode($contentWithoutMetadata, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
         
         if (initialContent && initialContent.trim()) {
-            editor.root.innerHTML = initialContent;
-            console.log('Content loaded in editor successfully');
+            // Check if content contains complex HTML that Quill might strip
+            // Only detect div tags with inline styles, not all HTML
+            const hasComplexHTML = /<div[^>]*style=/i.test(initialContent);
+            
+            if (hasComplexHTML) {
+                // For complex HTML, use a different approach - store in a hidden field and show in code view
+                document.getElementById('richEditorContainer').classList.add('hidden');
+                document.getElementById('codeEditorContainer').classList.remove('hidden');
+                document.getElementById('codeEditor').value = initialContent;
+            } else {
+                // For simple content, use Quill with article tag conversion
+                const quillCompatibleContent = convertDivToArticle(initialContent);
+                
+                try {
+                    editor.clipboard.dangerouslyPasteHTML(quillCompatibleContent);
+                } catch (e) {
+                    // Fallback to setContents if dangerouslyPasteHTML fails
+                    const delta = editor.clipboard.convert(quillCompatibleContent);
+                    editor.setContents(delta);
+                }
+            }
+            
+            // Ensure Quill editor is visible for simple content
+            if (!hasComplexHTML) {
+                document.getElementById('richEditorContainer').classList.remove('hidden');
+                document.getElementById('codeEditorContainer').classList.add('hidden');
+            }
         } else {
-            console.error('No content to load - this indicates a problem');
-            console.log('Content preview:', initialContent ? initialContent.substring(0, 100) : 'No content');
+            // Try to load from the full content data as fallback
+            const fullContent = <?php echo json_encode($contentData ?? '', JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
+            if (fullContent && fullContent.trim()) {
+                editor.root.innerHTML = fullContent;
+            }
         }
         
-        // Check if we're coming from a save operation
-        const urlParams = new URLSearchParams(window.location.search);
-        console.log('Raw URL parameters:', Object.fromEntries(urlParams));
-        
-        // Check for both encoded and non-encoded parameters
-        const hasSaved = urlParams.has('saved') || urlParams.has('amp;saved');
-        const savedValue = urlParams.get('saved') || urlParams.get('amp;saved');
-        
-        console.log('Has saved parameter:', hasSaved);
-        console.log('Saved value:', savedValue);
-        
-        if (hasSaved && savedValue === '1') {
-            console.log('Content saved successfully - showing fresh content');
-        } else {
-            console.log('Not coming from save operation or invalid saved value');
-        }
-        
-        // Admin area - content is always fresh, no manual refresh needed
-        console.log('Content loaded in editor - length:', initialContent ? initialContent.length : 0);
-        console.log('Content preview:', initialContent ? initialContent.substring(0, 100) : 'No content');
-        
-        // Toggle between rich editor and code editor
+        // Toggle between rich editor and code editor with content sync
         document.getElementById('toggleMode').addEventListener('click', function() {
             const richEditorContainer = document.getElementById('richEditorContainer');
             const codeEditorContainer = document.getElementById('codeEditorContainer');
@@ -428,6 +476,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (richEditorContainer.classList.contains('hidden')) {
                 // Switching from Code View to Rich Editor
+                const htmlContent = codeEditor.value;
+                
+                // Check if content contains complex HTML that Quill will strip
+                // Only detect div tags with inline styles, not all HTML
+                const hasComplexHTML = /<div[^>]*style=/i.test(htmlContent);
+                if (hasComplexHTML) {
+                    alert('Complex HTML detected! This content contains div tags with inline styles that will be stripped by the rich text editor. Staying in code view to preserve your HTML.');
+                    return; // Don't switch modes
+                }
+                
+                // For simple content, switch to rich editor
                 richEditorContainer.classList.remove('hidden');
                 codeEditorContainer.classList.add('hidden');
                 modeIndicator.textContent = 'Rich Editor Mode';
@@ -435,7 +494,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 toggleButton.className = 'px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors';
                 
                 // Update rich editor with code editor content
-                const htmlContent = codeEditor.value;
                 editor.root.innerHTML = htmlContent;
                 editor.enable();
                 
@@ -472,15 +530,18 @@ document.addEventListener('DOMContentLoaded', function() {
             const richEditorContainer = document.getElementById('richEditorContainer');
             const codeEditor = document.getElementById('codeEditor');
             
+            let contentToSave = '';
+            
             if (richEditorContainer.classList.contains('hidden')) {
                 // In code view mode, use code editor content
-                document.getElementById('content').value = codeEditor.value;
+                contentToSave = codeEditor.value;
             } else {
-                // In rich editor mode, use Quill content
-                document.getElementById('content').value = editor.root.innerHTML;
+                // In rich editor mode, use Quill content and convert article tags back to div tags
+                contentToSave = convertArticleToDiv(editor.root.innerHTML);
             }
             
-
+            // Set the content in the hidden field
+            document.getElementById('content').value = contentToSave;
         });
 
     } else {
@@ -516,9 +577,11 @@ function previewContent() {
             alert('Failed to create preview: ' + (data.error || 'Unknown error'));
         }
     })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Failed to create preview. Please try again.');
-    });
+            .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to create preview. Please try again.');
+        });
 }
+
+
 </script>

@@ -934,6 +934,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $parentPage = $_POST['parent'] ?? '';
         $template = $_POST['template'] ?? 'page';
         $editorMode = $_POST['editor_mode'] ?? 'easy';
+        
+
 
         // Validate filename: allow slashes for subfolders
         if (empty($fileName) || !preg_match('/^[a-zA-Z0-9_\\-\/]+$/', $fileName)) {
@@ -972,6 +974,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             }
             error_log("DEBUG: Attempting to save file: " . $filePath);
             error_log("DEBUG: Content length: " . strlen($content));
+
             if (file_put_contents($filePath, $content) !== false) {
                 error_log("DEBUG: File saved successfully");
                 
@@ -1084,7 +1087,7 @@ $template_map = [
     'manage_themes' => 'themes.php',
     'manage_menus' => 'menus.php',
     'manage_cache_settings' => 'cache-settings.php',
-    'edit_content' => (isset($GLOBALS['editorMode']) && $GLOBALS['editorMode'] === 'basic') ? 'edit_content.php' : 'edit_content_quill.php',
+    'edit_content' => 'edit_content_quill.php',
     'new_content' => 'new_content.php',
     'create_page' => 'new_content.php', // Redirect create_page to new_content template
     'files' => 'file_manager.php',

@@ -54,6 +54,12 @@ main > * {
   margin-right: 0;
 }
 
+h3 {
+  font-size: 2rem !important;
+  margin-top: 1em !important;
+  margin-bottom: 1em !important;
+}
+
 /* Override any container constraints for home page content */
 main .container,
 main .parallax-section,
@@ -195,7 +201,6 @@ h2 {
   letter-spacing: -0.01em; 
   font-weight: 600;
   color: #1f2937;
-  border-bottom: 2px solid var(--color-border);
   padding-bottom: 0.5rem;
 }
 
@@ -608,41 +613,45 @@ footer {
     clear: both;
 }
 
-/* Feature Cards - 2 Column Grid Layout */
+/* Manifesto Grid - Simple 2x4 layout */
+.manifesto-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    width: 100%;
+    margin: 2rem 0;
+}
+
+@media (max-width: 768px) {
+    .manifesto-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Feature Cards - Basic styling */
 .feature-card {
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
-    border: 1px solid #e2e8f0 !important;
-    border-radius: 16px !important;
-    padding: 1.5rem !important;
-    margin: 0.5rem !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    position: relative !important;
-    overflow: hidden !important;
-    box-sizing: border-box !important;
-    display: inline-block !important;
-    width: calc(49.8% - 1rem) !important;
-    vertical-align: top !important;
-    min-height: 120px !important;
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
-    padding-top: 20px !important;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    min-height: 120px;
 }
 
 /* Style the h3 headers within feature cards */
 .feature-card h3 {
-    background: none !important;
-    border: none !important;
-    padding: 0 0 1rem 0 !important;
-    margin: 0 0 1rem 0 !important;
-    box-shadow: none !important;
-    font-size: 1.3rem !important;
-    font-weight: 700 !important;
-    line-height: 1.4 !important;
-    color: #1e293b !important;
-    text-align: center !important;
-    min-height: auto !important;
-    width: 100% !important;
-    display: block !important;
+    background: none;
+    border: none;
+    padding: 0 0 1rem 0;
+    margin: 0 0 1rem 0;
+    box-shadow: none;
+    font-size: 1.3rem;
+    font-weight: 700;
+    line-height: 1.4;
+    color: #1e293b;
+    text-align: center;
+    width: 100%;
+    display: block;
 }
 
 /* Style the description text within feature cards */
@@ -657,8 +666,8 @@ footer {
 
 /* Hover effects for feature cards */
 .feature-card:hover {
-    transform: translateY(-4px) !important;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12) !important;
     border-color: #cbd5e1 !important;
 }
 
