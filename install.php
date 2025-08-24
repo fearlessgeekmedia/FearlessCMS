@@ -95,7 +95,8 @@ $UPDATES_DIR = $projectRoot . '/.fcms_updates';
 $ALLOWED_COMMANDS = [
     'which' => ['which'],
     'npm' => ['npm', 'init', '-y'],
-    'npm_install' => ['npm', 'install', 'fs-extra', 'handlebars', 'marked', '--save']
+    'npm_install' => ['npm', 'install', 'fs-extra', 'handlebars', 'marked', '--save'],
+    'npm_install_dev' => ['npm', 'install', 'sass', '--save-dev']
 ];
 
 function check_extension(string $ext): array {
@@ -177,6 +178,33 @@ if (PHP_SAPI === 'cli') {
             $writable = $exists ? is_writable($d) : is_writable(dirname($d));
             echo "  - {$d}: " . ($exists ? 'exists' : 'missing') . ', ' . ($writable ? 'writable' : 'not writable') . "\n";
         }
+        
+        // Check Node.js if available
+        $node = run_cmd(['which', 'node']);
+        $npm = run_cmd(['which', 'npm']);
+        if ($node['code'] === 0 && $npm['code'] === 0) {
+            echo "Node.js:\n";
+            $nodeVersion = run_cmd(['node', '--version']);
+            $npmVersion = run_cmd(['npm', '--version']);
+            echo "  - node: " . trim($nodeVersion['out']) . "\n";
+            echo "  - npm: " . trim($npmVersion['out']) . "\n";
+            
+            // Check if package.json exists and dependencies
+            if (file_exists($projectRoot . '/package.json')) {
+                echo "  - package.json: exists\n";
+                $packageJson = json_decode(file_get_contents($projectRoot . '/package.json'), true);
+                if (isset($packageJson['dependencies'])) {
+                    echo "  - dependencies: " . implode(', ', array_keys($packageJson['dependencies'])) . "\n";
+                }
+                if (isset($packageJson['devDependencies'])) {
+                    echo "  - devDependencies: " . implode(', ', array_keys($packageJson['devDependencies'])) . "\n";
+                }
+            } else {
+                echo "  - package.json: missing\n";
+            }
+        } else {
+            echo "Node.js: not available\n";
+        }
     }
 
     if (isset($options['create-dirs'])) {
@@ -214,6 +242,21 @@ if (PHP_SAPI === 'cli') {
             }
             $install = run_cmd(['npm', 'install', 'fs-extra', 'handlebars', 'marked', '--save'], $projectRoot);
             echo 'npm install: exit ' . $install['code'] . "\n";
+            if (trim($install['out'])) echo strip_tags($install['out']) . "\n";
+            if (trim($install['err'])) echo strip_tags($install['err']) . "\n";
+            if ($install['code'] !== 0) $exitCode = 1;
+        }
+    }
+
+    if (isset($options['install-dev-deps'])) {
+        $node = run_cmd(['which', 'node']);
+        $npm = run_cmd(['which', 'npm']);
+        if ($node['code'] !== 0 || $npm['code'] !== 0) {
+            echo "Node.js or npm not found in PATH. Please install Node.js and npm first.\n";
+            $exitCode = 1;
+        } else {
+            $install = run_cmd(['npm', 'install', 'sass', '--save-dev'], $projectRoot);
+            echo 'SASS install: exit ' . $install['code'] . "\n";
             if (trim($install['out'])) echo strip_tags($install['out']) . "\n";
             if (trim($install['err'])) echo strip_tags($install['err']) . "\n";
             if ($install['code'] !== 0) $exitCode = 1;
@@ -277,7 +320,7 @@ if (PHP_SAPI === 'cli') {
     }
 
     if (empty($options)) {
-        echo "Usage: php install.php [--check] [--create-dirs] [--install-export-deps] [--create-admin=<username> --password=<pwd>|--password-file=<file>]\n";
+        echo "Usage: php install.php [--check] [--create-dirs] [--install-export-deps] [--install-dev-deps] [--create-admin=<username> --password=<pwd>|--password-file=<file>]\n";
     }
 
     // Security warning for CLI users
@@ -329,9 +372,24 @@ if ($action === 'install_export_deps') {
             $init = run_cmd(['npm', 'init', '-y'], $projectRoot);
             $resultMessages[] = 'npm init: exit ' . $init['code'] . (trim($init['err']) ? ' (' . htmlspecialchars($init['err']) . ')' : '');
         }
-        // Install dependencies used by export.js
+        // Install dependencies used by export.js and other tools
         $install = run_cmd(['npm', 'install', 'fs-extra', 'handlebars', 'marked', '--save'], $projectRoot);
         $resultMessages[] = 'npm install: exit ' . $install['code'];
+        if (trim($install['out'])) $resultMessages[] = '<pre class="text-xs whitespace-pre-wrap">' . htmlspecialchars($install['out']) . '</pre>';
+        if (trim($install['err'])) $resultMessages[] = '<pre class="text-xs text-red-700 whitespace-pre-wrap">' . htmlspecialchars($install['err']) . '</pre>';
+    }
+}
+
+if ($action === 'install_dev_deps') {
+    // Detect node and npm
+    $node = run_cmd(['which', 'node']);
+    $npm = run_cmd(['which', 'npm']);
+    if ($node['code'] !== 0 || $npm['code'] !== 0) {
+        $resultMessages[] = 'Node.js or npm not found in PATH. Please install Node.js and npm first.';
+    } else {
+        // Install SASS compiler as dev dependency
+        $install = run_cmd(['npm', 'install', 'sass', '--save-dev'], $projectRoot);
+        $resultMessages[] = 'SASS install: exit ' . $install['code'];
         if (trim($install['out'])) $resultMessages[] = '<pre class="text-xs whitespace-pre-wrap">' . htmlspecialchars($install['out']) . '</pre>';
         if (trim($install['err'])) $resultMessages[] = '<pre class="text-xs text-red-700 whitespace-pre-wrap">' . htmlspecialchars($install['err']) . '</pre>';
     }
@@ -516,12 +574,24 @@ if ($action === 'create_admin') {
             </section>
 
             <section>
-                <h2 class="text-xl font-semibold mb-3">Export Tool (Optional)</h2>
-                <p class="text-sm text-gray-600 mb-2">The static site exporter (<code>export.js</code>) uses Node.js packages: <code>fs-extra</code>, <code>handlebars</code>, <code>marked</code>.</p>
+                <h2 class="text-xl font-semibold mb-3">Export Tool & Development Dependencies (Optional)</h2>
+                <p class="text-sm text-gray-600 mb-2">The static site exporter (<code>export.js</code>) and other tools use Node.js packages: <code>fs-extra</code>, <code>handlebars</code>, <code>marked</code>.</p>
+                <p class="text-xs text-gray-500 mb-3">These dependencies enable static site generation, template processing, and content conversion capabilities.</p>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                     <div class="bg-gray-50 p-4 rounded">
                         <div class="text-sm text-gray-500">node</div>
                         <div class="font-mono"><?php echo htmlspecialchars(trim($hasNode['out']) ?: 'not found'); ?></div>
+                        <?php if (trim($hasNode['out'])): ?>
+                            <?php 
+                            // Get actual Node.js version by running node --version
+                            $nodeVersionCmd = run_cmd(['node', '--version']);
+                            $nodeVersion = trim($nodeVersionCmd['out']);
+                            $nodeVersionOk = version_compare($nodeVersion, '14.14.0', '>=');
+                            ?>
+                            <div class="mt-1 text-xs <?php echo $nodeVersionOk ? 'text-green-700' : 'text-red-700'; ?>">
+                                <?php echo $nodeVersionOk ? 'OK (>= 14.14)' : 'Requires Node.js 14.14+'; ?>
+                            </div>
+                        <?php endif; ?>
                     </div>
                     <div class="bg-gray-50 p-4 rounded">
                         <div class="text-sm text-gray-500">npm</div>
@@ -535,6 +605,57 @@ if ($action === 'create_admin') {
                 </form>
                 <p class="text-xs text-gray-600 mt-2">If Node.js is not available, run locally:<br>
                 <code>npm install fs-extra handlebars marked</code></p>
+                
+                <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
+                    <h4 class="font-medium text-blue-800 mb-2">Dependency Details:</h4>
+                    <ul class="text-xs text-blue-700 space-y-1">
+                        <li><strong>fs-extra:</strong> Enhanced file system operations for export tool</li>
+                        <li><strong>handlebars:</strong> Template engine for dynamic content generation</li>
+                        <li><strong>marked:</strong> Markdown parser (for legacy content support)</li>
+                    </ul>
+                    <p class="text-xs text-blue-600 mt-2">These packages enable the export tool to process templates, handle file operations, and convert content formats.</p>
+                </div>
+                
+                <div class="mt-4">
+                    <h3 class="font-medium mb-2">Optional Development Dependencies</h3>
+                                    <p class="text-sm text-gray-600 mb-2">For theme development with SASS/SCSS support:</p>
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
+                    <input type="hidden" name="action" value="install_dev_deps">
+                    <button class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">Install SASS Compiler</button>
+                </form>
+                <p class="text-xs text-gray-600 mt-2">Installs <code>sass</code> as a development dependency for compiling SASS/SCSS files.</p>
+                
+                <div class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                    <h4 class="font-medium text-yellow-800 mb-2">Installation Process:</h4>
+                    <ul class="text-xs text-yellow-700 space-y-1">
+                        <li>Creates <code>package.json</code> if it doesn't exist</li>
+                        <li>Installs production dependencies to <code>node_modules/</code></li>
+                        <li>Updates <code>package-lock.json</code> with exact versions</li>
+                        <li>Dependencies are available via <code>npx</code> or <code>node_modules/.bin/</code></li>
+                    </ul>
+                </div>
+                
+                <div class="mt-3 p-3 bg-gray-50 border border-gray-200 rounded">
+                    <h4 class="font-medium text-gray-800 mb-2">Common Development Commands:</h4>
+                    <ul class="text-xs text-gray-700 space-y-1">
+                        <li><code>npx sass themes/your-theme/assets/style.scss themes/your-theme/assets/style.css</code> - Compile SASS to CSS</li>
+                        <li><code>npx sass --watch themes/your-theme/assets/</code> - Watch and auto-compile SASS files</li>
+                        <li><code>node export.js</code> - Generate static site export</li>
+                        <li><code>npm run build</code> - Build project (if scripts defined in package.json)</li>
+                    </ul>
+                    <p class="text-xs text-gray-600 mt-2">These commands help with theme development, content export, and project building workflows.</p>
+                
+                <div class="mt-3 p-3 bg-red-50 border border-red-200 rounded">
+                    <h4 class="font-medium text-red-800 mb-2">Troubleshooting:</h4>
+                    <ul class="text-xs text-red-700 space-y-1">
+                        <li><strong>Permission denied:</strong> Ensure npm has write access to project directory</li>
+                        <li><strong>Network errors:</strong> Check internet connection and npm registry access</li>
+                        <li><strong>Version conflicts:</strong> Delete <code>node_modules/</code> and <code>package-lock.json</code>, then reinstall</li>
+                        <li><strong>Node.js not found:</strong> Install Node.js from <a href="https://nodejs.org" class="underline">nodejs.org</a></li>
+                    </ul>
+                </div>
+                </div>
             </section>
 
             <section>
@@ -570,7 +691,27 @@ if ($action === 'create_admin') {
                     <li>Visit <code>/admin/</code> to log in and configure your site.</li>
                     <li>Use the Updates section in Mission Control to keep FearlessCMS up to date.</li>
                     <li>Use the Store to browse and install plugins/themes (if enabled).</li>
+                    <li>Run <code>node export.js</code> to generate a static version of your site (requires Node.js dependencies).</li>
+                    <li>Use <code>npx sass</code> to compile SASS/SCSS files for custom themes (requires SASS dependency).</li>
                 </ul>
+            </section>
+
+            <section class="bg-blue-50 border border-blue-200 rounded p-4">
+                <h2 class="text-xl font-semibold mb-3 text-blue-800">🖥️ Command Line Interface</h2>
+                <div class="text-blue-700 space-y-2">
+                    <p><strong>CLI Usage:</strong> This installer also supports command-line operation for automation and server environments.</p>
+                    <div class="bg-white border border-blue-300 rounded p-3 mt-3">
+                        <p class="font-mono text-sm text-blue-800">Available CLI commands:</p>
+                        <ul class="list-disc ml-6 text-sm mt-2 space-y-1">
+                            <li><code>php install.php --check</code> - Check system requirements</li>
+                            <li><code>php install.php --create-dirs</code> - Create required directories</li>
+                            <li><code>php install.php --install-export-deps</code> - Install Node.js dependencies</li>
+                            <li><code>php install.php --install-dev-deps</code> - Install development dependencies</li>
+                            <li><code>php install.php --create-admin=username --password=password</code> - Create admin user</li>
+                        </ul>
+                    </div>
+                    <p class="text-sm mt-3"><strong>Example:</strong> <code>php install.php --check --create-dirs --install-export-deps</code></p>
+                </div>
             </section>
 
             <section class="bg-red-50 border border-red-200 rounded p-4">

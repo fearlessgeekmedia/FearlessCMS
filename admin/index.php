@@ -12,6 +12,16 @@ require_once dirname(__DIR__) . '/includes/auth.php';
 // Apply security headers for admin interface
 set_security_headers();
 
+// Prevent browser caching of admin pages to ensure fresh content
+header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
+
+// Ensure output is not buffered to prevent stale content
+if (ob_get_level()) {
+    ob_end_clean();
+}
+
 
 
 // Set appropriate error reporting for production
@@ -448,9 +458,10 @@ $plugin_nav_items = '';
 
 // Load content data for edit_content action
 if (
-    $action === 'edit_content' && isset($_GET['path'])
+    $action === 'edit_content' && (isset($_GET['path']) || isset($_GET['amp;path']))
 ) {
-    $path = sanitize_input($_GET['path'], 'path');
+    // Handle both encoded and non-encoded path parameters
+    $path = sanitize_input($_GET['path'] ?? $_GET['amp;path'] ?? '', 'path');
 
     // Basic security: block path traversal attempts
     if (strpos($path, '../') !== false || strpos($path, './') === 0) {
@@ -463,6 +474,11 @@ if (
     if (!str_ends_with($contentFile, '.md')) {
         $contentFile .= '.md';
     }
+    
+    // Debug: Show exact path resolution
+    error_log("DEBUG: Path resolution - original path: " . $path);
+    error_log("DEBUG: Path resolution - CONTENT_DIR: " . CONTENT_DIR);
+    error_log("DEBUG: Path resolution - final contentFile: " . $contentFile);
 
     // Ensure file is within content directory
     $realContentFile = realpath($contentFile);
@@ -471,9 +487,100 @@ if (
         error_log("Invalid path access attempt: " . $_GET['path']);
         die('Access denied: Invalid path');
     }
+    
+    // Debug: Log the exact file path being used
+    error_log("DEBUG: Content file path: " . $contentFile);
+    error_log("DEBUG: Real content file path: " . ($realContentFile ?: 'NOT FOUND'));
+    error_log("DEBUG: Content directory: " . $realContentDir);
+    
+
+    
     // $contentFile is already set above
     if (file_exists($contentFile)) {
-        $contentData = file_get_contents($contentFile);
+        $fileModTime = filemtime($contentFile);
+        $fileHash = md5_file($contentFile);
+        error_log("DEBUG: File modification time: " . date('Y-m-d H:i:s', $fileModTime));
+        error_log("DEBUG: File hash: " . $fileHash);
+        
+        // Force fresh content loading by clearing any potential file cache
+        clearstatcache(true, $contentFile);
+        
+        // Check if we're coming from a save operation (handle both encoded and non-encoded)
+        $isFromSave = (isset($_GET['saved']) && $_GET['saved'] === '1') || 
+                     (isset($_GET['amp;saved']) && $_GET['amp;saved'] === '1');
+        
+        if ($isFromSave) {
+            error_log("DEBUG: Save operation detected - path: " . $path . ", file: " . $contentFile);
+            error_log("DEBUG: GET parameters: " . print_r($_GET, true));
+            error_log("DEBUG: File exists check: " . (file_exists($contentFile) ? 'YES' : 'NO'));
+            error_log("DEBUG: File readable check: " . (is_readable($contentFile) ? 'YES' : 'NO'));
+            
+            // Show the actual file contents to debug
+            if (file_exists($contentFile)) {
+                $fileContents = file_get_contents($contentFile);
+                error_log("DEBUG: File contents length: " . strlen($fileContents));
+                error_log("DEBUG: File contents preview: " . substr($fileContents, 0, 200));
+            } else {
+                error_log("DEBUG: File does not exist: " . $contentFile);
+            }
+        }
+        
+        // Debug: Log all GET parameters to see what's happening
+        error_log("DEBUG: All GET parameters: " . print_r($_GET, true));
+        error_log("DEBUG: Path being used: " . $path);
+        
+        // Initialize contentData variable
+        $contentData = '';
+        
+        // Admin area - simple file reading without complex locking
+        if (!is_readable($contentFile)) {
+            error_log("ERROR: File is not readable: " . $contentFile);
+            $error = 'File is not readable';
+        } else {
+            // If coming from save operation, force reload content
+            if ($isFromSave) {
+                error_log("DEBUG: Force reloading content after save operation");
+                // Clear any cached file info
+                clearstatcache(true, $contentFile);
+                // Small delay to ensure file system is updated
+                usleep(100000); // 0.1 second
+                
+                // Force reload content from disk
+                $contentData = file_get_contents($contentFile);
+                error_log("DEBUG: Content RELOADED from file after save - length: " . strlen($contentData));
+                
+                // Verify the content is actually fresh
+                if (strlen($contentData) > 0) {
+                    error_log("DEBUG: Fresh content verified - length: " . strlen($contentData));
+                } else {
+                    error_log("ERROR: Content is empty after reload - this indicates a problem");
+                    // Try to load content again as fallback
+                    $contentData = file_get_contents($contentFile);
+                    error_log("DEBUG: Fallback content load - length: " . strlen($contentData));
+                    
+                    // If still empty, try alternative path
+                    if (strlen($contentData) === 0) {
+                        error_log("DEBUG: Trying alternative path resolution");
+                        $altPath = CONTENT_DIR . '/' . $path . '.md';
+                        if (file_exists($altPath)) {
+                            $contentData = file_get_contents($altPath);
+                            error_log("DEBUG: Alternative path content load - length: " . strlen($contentData));
+                        }
+                    }
+                }
+            } else {
+                // Normal content loading
+                $contentData = file_get_contents($contentFile);
+                error_log("DEBUG: Content loaded from file: " . $contentFile . " - Content length: " . strlen($contentData));
+            }
+            
+            error_log("DEBUG: Content preview: " . substr($contentData, 0, 200));
+        }
+        
+        // Admin area - always load fresh content from disk
+        error_log("DEBUG: Admin area - content loaded fresh from disk");
+        error_log("DEBUG: Final contentData length: " . strlen($contentData));
+        
         $title = '';
         $editorMode = 'markdown'; // Default to markdown
         $currentTemplate = 'page'; // Default to page template
@@ -497,6 +604,12 @@ if (
         }
         // Make $editorMode global for the template
         $GLOBALS['editorMode'] = $editorMode;
+        
+        // Debug: Log the final variables that will be used by the template
+        error_log("DEBUG: Final variables for template - contentData length: " . strlen($contentData));
+        error_log("DEBUG: Final variables for template - title: " . $title);
+        error_log("DEBUG: Final variables for template - editorMode: " . $editorMode);
+        error_log("DEBUG: Final variables for template - path: " . $path);
     } else {
         $error = 'Content file not found';
         $contentData = '';
@@ -861,24 +974,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             error_log("DEBUG: Content length: " . strlen($content));
             if (file_put_contents($filePath, $content) !== false) {
                 error_log("DEBUG: File saved successfully");
+                
+                // Verify the file was actually written
+                $writtenContent = file_get_contents($filePath);
+                if ($writtenContent === $content) {
+                    error_log("DEBUG: File content verified - written content matches");
+                } else {
+                    error_log("ERROR: File content mismatch - written: " . strlen($writtenContent) . ", expected: " . strlen($content));
+                }
+                
+                // Admin area should never be cached - ensure fresh content
+                error_log("DEBUG: Admin area - no caching applied");
+                
+                // Only clear public cache if it exists (not admin cache)
+                if (isset($cacheManager) && method_exists($cacheManager, 'clearCache')) {
+                    // Only clear public-facing cache, not admin cache
+                    $cleared = $cacheManager->clearCache();
+                    error_log("DEBUG: Public cache cleared after content save. {$cleared} files removed.");
+                }
+                
+                // Small delay to ensure file system has updated
+                usleep(50000); // 0.05 second delay
+                error_log("DEBUG: File system delay completed");;
+                
+                // Admin area - ensure content is fresh without complex versioning
+                error_log("DEBUG: Content saved successfully - admin area always loads fresh");
+                
                 // Remove .md extension for the redirect path
                 $redirectPath = str_replace('.md', '', $fileName);
                 error_log("DEBUG: About to redirect to: ?action=edit_content&path=" . urlencode($redirectPath));
+                error_log("DEBUG: Save path: " . $filePath);
+                error_log("DEBUG: Redirect path: " . $redirectPath);
+                error_log("DEBUG: Original fileName: " . $fileName);
                 
-                // Try redirect first
+                // Always use redirect for admin area to ensure fresh content
+                $timestamp = time();
+                $redirectUrl = '?action=edit_content&path=' . urlencode($redirectPath) . '&saved=1&_t=' . $timestamp;
+                error_log("DEBUG: Redirecting to: " . $redirectUrl . " (timestamp: " . $timestamp . ")");
+                
                 if (!headers_sent()) {
-                    header('Location: ?action=edit_content&path=' . urlencode($redirectPath));
-                    error_log("DEBUG: Redirect header sent, exiting");
+                    header('Location: ' . $redirectUrl);
                     exit;
                 } else {
-                    error_log("DEBUG: Headers already sent, cannot redirect");
+                    // If headers already sent, use JavaScript redirect with proper encoding
+                    echo '<script>window.location.href = "' . addslashes($redirectUrl) . '";</script>';
+                    echo '<p>Redirecting... <a href="' . htmlspecialchars($redirectUrl) . '">Click here if not redirected automatically</a></p>';
+                    exit;
                 }
-                
-                // If redirect fails, set action to edit_content and continue
-                $action = 'edit_content';
-                $_GET['path'] = $redirectPath;
-                $success = 'File saved successfully';
-                error_log("DEBUG: Fallback - setting action to edit_content");
             } else {
                 error_log("DEBUG: Failed to save file");
                 $error = 'Failed to save file';
@@ -942,7 +1084,7 @@ $template_map = [
     'manage_themes' => 'themes.php',
     'manage_menus' => 'menus.php',
     'manage_cache_settings' => 'cache-settings.php',
-    'edit_content' => (isset($GLOBALS['editorMode']) && $GLOBALS['editorMode'] === 'basic') ? 'edit_content.php' : 'edit_content_toast.php',
+    'edit_content' => (isset($GLOBALS['editorMode']) && $GLOBALS['editorMode'] === 'basic') ? 'edit_content.php' : 'edit_content_quill.php',
     'new_content' => 'new_content.php',
     'create_page' => 'new_content.php', // Redirect create_page to new_content template
     'files' => 'file_manager.php',

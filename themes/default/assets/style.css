@@ -63,11 +63,12 @@ main p, main div {
   max-width: none !important;
   margin-left: 0 !important;
   margin-right: 0 !important;
-  margin-bottom: 2rem !important;
+  margin-bottom: 0arem !important;
 }
 
 .parallax-section {
-  margin-top: 20px;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 /* Header */
