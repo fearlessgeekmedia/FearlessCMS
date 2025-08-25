@@ -432,8 +432,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (initialContent && initialContent.trim()) {
             // Check if content contains complex HTML that Quill might strip
-            // Only detect div tags with inline styles, not all HTML
-            const hasComplexHTML = /<div[^>]*style=/i.test(initialContent);
+            // Detect complex HTML including div tags, grid layouts, custom classes, and complex structures
+            const hasComplexHTML = /<div[^>]*style=|<div[^>]*class=|grid|parallax|shortcode|\[.*?\]/i.test(initialContent);
             
             if (hasComplexHTML) {
                 // For complex HTML, use a different approach - store in a hidden field and show in code view
@@ -479,10 +479,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const htmlContent = codeEditor.value;
                 
                 // Check if content contains complex HTML that Quill will strip
-                // Only detect div tags with inline styles, not all HTML
-                const hasComplexHTML = /<div[^>]*style=/i.test(htmlContent);
+                // Detect complex HTML including div tags, grid layouts, custom classes, and complex structures
+                const hasComplexHTML = /<div[^>]*style=|<div[^>]*class=|grid|parallax|shortcode|\[.*?\]/i.test(htmlContent);
                 if (hasComplexHTML) {
-                    alert('Complex HTML detected! This content contains div tags with inline styles that will be stripped by the rich text editor. Staying in code view to preserve your HTML.');
+                    alert('Complex HTML detected! This content contains complex structures (grids, parallax, shortcodes, or custom styling) that will be stripped by the rich text editor. Staying in code view to preserve your HTML.');
                     return; // Don't switch modes
                 }
                 
