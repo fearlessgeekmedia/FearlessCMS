@@ -16,6 +16,11 @@
             "description": "First steps with your CMS"
         },
         {
+            "label": "Export to Static HTML",
+            "url": "/documentation/export-sites-to-static-html",
+            "description": "Streamlined export system for static site generation"
+        },
+        {
             "label": "Creating Themes",
             "url": "/documentation/creating-themes",
             "description": "Build custom themes"

@@ -159,23 +159,24 @@ function wordpress_import_admin_page() {
             <div class="bg-red-100 text-red-700 p-4 rounded"><?= htmlspecialchars($error) ?></div>
         <?php endif; ?>
         
-        <div class="bg-white shadow rounded-lg p-6">
-            <h3 class="text-lg font-medium mb-4">Import WordPress Content</h3>
-            
-            <div class="space-y-4">
-                <p class="text-gray-600">
-                    Upload your WordPress XML export file to import content into FearlessCMS.
-                    The import process will:
-                </p>
+        <form method="POST" enctype="multipart/form-data" class="mt-6">
+            <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg font-medium mb-4">Import WordPress Content</h3>
                 
-                <ul class="list-disc list-inside text-gray-600 space-y-2">
-                    <li>Convert posts and pages to Markdown format</li>
-                    <li>Preserve categories and tags</li>
-                    <li>Maintain post dates and metadata</li>
-                    <li>Create appropriate directory structure</li>
-                </ul>
-                
-                <form method="POST" enctype="multipart/form-data" class="mt-6">
+                <div class="space-y-4">
+                    <p class="text-gray-600">
+                        Upload your WordPress XML export file to import content into FearlessCMS.
+                        The import process will:
+                    </p>
+                    
+                    <ul class="list-disc list-inside text-gray-600 space-y-2">
+                        <li>Convert posts and pages to Markdown format</li>
+                        <li>Preserve categories and tags</li>
+                        <li>Maintain post dates and metadata</li>
+                        <li>Create appropriate directory structure</li>
+                    </ul>
+                    
                     <div class="space-y-4">
                         <div>
                             <label class="block font-medium mb-1">WordPress XML File</label>
@@ -189,9 +190,9 @@ function wordpress_import_admin_page() {
                             </button>
                         </div>
                     </div>
-                </form>
+                </div>
             </div>
-        </div>
+        </form>
     </div>
     <?php
     

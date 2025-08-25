@@ -3,9 +3,8 @@
     <a class="brand" href="/">
       {{#if themeOptions.logo}}
         <img class="brand-logo" src="/{{themeOptions.logo}}" alt="{{site_name}}">
-      {{else}}
-        {{site_name}}
       {{/if}}
+      <span class="brand-text">{{site_name}}</span>
     </a>
     <button id="fcms-hamburger" type="button" class="fcms-hamburger" aria-label="Toggle navigation" aria-expanded="false">
       <span></span><span></span><span></span>

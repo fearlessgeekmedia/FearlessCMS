@@ -1,0 +1,1246 @@
+  <style>
+        .parallax-section {
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Ensure sections have adequate height for content */
+            min-height: 500px;
+            height: auto;
+            /* Ensure proper background coverage */
+            background: transparent;
+        }
+        
+        .parallax-background {
+            position: absolute;
+            top: 60% !important;
+            left: 50%;
+            width: 120%;
+            height: 120%;
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-attachment: scroll;
+            z-index: 1;
+            /* Center using transform, then adjust for parallax */
+            transform: translate(-50%, -50%);
+            will-change: transform;
+            /* Prevent any gaps during scroll */
+            background-clip: border-box;
+        }
+        
+        .parallax-content {
+            position: relative;
+            z-index: 3;
+            padding: 4rem 2rem;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            /* Ensure content takes full height */
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Ensure content is readable over background */
+        .parallax-content h1,
+        .parallax-content h2,
+        .parallax-content h3,
+        .parallax-content h4,
+        .parallax-content h5,
+        .parallax-content h6 {
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.9);
+            color: white !important;
+        }
+        
+        .parallax-content p {
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
+            color: white !important;
+        }
+        
+        .parallax-content a {
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
+            color: white !important;
+        }
+        
+        /* Support for inline HTML elements like span, strong, em, etc. */
+        .parallax-content span,
+        .parallax-content strong,
+        .parallax-content em,
+        .parallax-content code,
+        .parallax-content mark {
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
+            color: white !important;
+        }
+        
+        /* Ensure content is properly spaced */
+        .parallax-content > *:first-child {
+            margin-top: 0;
+        }
+        
+        .parallax-content > *:last-child {
+            margin-bottom: 0;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .parallax-section {
+                min-height: 400px;
+            }
+            
+            .parallax-content {
+                padding: 2rem 1rem;
+                min-height: 300px;
+            }
+            
+            .parallax-background {
+                top: 60% !important;
+                width: 130%;
+                height: 130%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .parallax-section {
+                min-height: 350px;
+            }
+            
+            .parallax-content {
+                padding: 1.5rem 1rem;
+                min-height: 250px;
+            }
+            
+            .parallax-background {
+                top: 60% !important;
+                width: 140%;
+                height: 140%;
+            }
+        }
+        
+        /* Ensure sections maintain proper aspect ratio */
+        .parallax-section {
+            box-sizing: border-box;
+        }
+        
+        /* Fix for content overflow */
+        .parallax-content > * {
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        
+        /* Ensure background images always cover the full section */
+        .parallax-background {
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            /* Enhanced coverage for scrolling */
+            background-clip: border-box !important;
+            /* Ensure background extends beyond section boundaries during scroll */
+            transform-origin: center center !important;
+        }
+        
+        /* Additional rules for better background coverage during scroll */
+        .parallax-section {
+            /* Ensure section maintains proper dimensions during scroll */
+            transform: translateZ(0);
+            backface-visibility: hidden;
+        }
+        
+        /* Enhanced background coverage - no pseudo-elements needed */
+        
+        /* Ensure background covers everything - simplified approach */
+        
+        /* Clean, unified background coverage rules */
+        .parallax-section {
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* Ensure smooth scrolling and prevent background gaps */
+        .parallax-section {
+            /* Hardware acceleration */
+            transform: translateZ(0);
+            /* Prevent background clipping */
+            clip-path: none;
+            /* Ensure proper stacking context */
+            isolation: isolate;
+        }
+        
+        /* Ensure background images are fully loaded before display */
+        .parallax-background {
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        
+        .parallax-background.loaded {
+            opacity: 1;
+        }
+        
+        /* Fallback for images that fail to load */
+        .parallax-background:not([style*="background-image"]) {
+            background-color: #f0f0f0;
+        }
+        
+        /* Styling for regular content sections between parallax */
+        .parallax-section + h2 {
+            margin-top: 4rem;
+            margin-bottom: 2rem;
+        }
+        
+        h2 + p {
+            margin-top: 1rem;
+            margin-bottom: 3rem;
+        }
+        
+        /* Professional section headers */
+        h2 {
+            color: #1a202c;
+            font-size: 2.8rem;
+            font-weight: 800;
+            text-align: center;
+            margin: 3rem 0 1.5rem 0;
+            padding: 0;
+            border: none;
+            background: none;
+            position: relative;
+            letter-spacing: -0.025em;
+        }
+        
+        /* Add elegant underline to section headers */
+        h2 {
+            border-bottom: 4px solid transparent;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6) bottom;
+            background-size: 60px 4px;
+            background-repeat: no-repeat;
+            background-position: center bottom;
+            padding-bottom: 20px;
+        }
+        
+        /* Section descriptions */
+        h2 + p {
+            text-align: center;
+            font-size: 1.25rem;
+            color: #4a5568;
+            max-width: 900px;
+            margin: 0 auto 3rem auto;
+            line-height: 1.7;
+            padding: 0 2rem;
+            font-weight: 400;
+        }
+        
+        /* Feature Cards - 2 Column Grid Layout (temporary placement for testing) */
+        .feature-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 16px !important;
+            padding: 1.5rem !important;
+            margin: 0.5rem !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            position: relative !important;
+            overflow: hidden !important;
+            box-sizing: border-box !important;
+            display: inline-block !important;
+            width: calc(50% - 1rem) !important;
+            vertical-align: top !important;
+            min-height: 120px !important;
+            border-top: 4px solid transparent !important;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899) top, linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+            background-size: 100% 4px, 100% 100% !important;
+            background-repeat: no-repeat !important;
+            background-position: center top, center center !important;
+            padding-top: 20px !important;
+        }
+        
+        /* Style the h3 headers within feature cards */
+        .feature-card h3 {
+            background: none !important;
+            border: none !important;
+            padding: 0 0 1rem 0 !important;
+            margin: 0 0 1rem 0 !important;
+            box-shadow: none !important;
+            font-size: 1.3rem !important;
+            font-weight: 700 !important;
+            line-height: 1.4 !important;
+            color: #1e293b !important;
+            text-align: center !important;
+            min-height: auto !important;
+            width: 100% !important;
+            display: block !important;
+        }
+        
+        /* Style the description text within feature cards */
+        .feature-card p {
+            margin: 0 !important;
+            padding: 0 !important;
+            color: #4a5568 !important;
+            font-size: 1rem !important;
+            line-height: 1.6 !important;
+            text-align: center !important;
+        }
+        
+        /* Hover effects for feature cards */
+        .feature-card:hover {
+            transform: translateY(-4px) !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+            border-color: #cbd5e1 !important;
+        }
+        
+        /* Create a container for the features that will force the grid layout */
+        .parallax-section + h2 + p {
+            display: block !important;
+            clear: both !important;
+            margin-bottom: 2rem !important;
+        }
+        
+        /* Force the first feature card to start a new line */
+        .parallax-section + h2 + p + .feature-card {
+            clear: both !important;
+        }
+        
+        /* Responsive grid adjustments */
+        @media (max-width: 768px) {
+            .feature-card {
+                width: calc(100% - 1rem) !important;
+                display: block !important;
+                clear: both !important;
+            }
+        }
+</style><script>
+        function initParallax() {
+            const parallaxSections = document.querySelectorAll(".parallax-section");
+            
+            if (parallaxSections.length === 0) {
+                console.log("No parallax sections found");
+                return;
+            }
+            
+            console.log("Found " + parallaxSections.length + " parallax sections");
+            
+            // Set up scroll event listener for parallax effect
+            window.addEventListener("scroll", function() {
+                parallaxSections.forEach(function(section) {
+                    const rect = section.getBoundingClientRect();
+                    const speed = parseFloat(section.dataset.speed) || 0.5;
+                    const effect = section.dataset.effect || "scroll";
+                    
+                    // Apply parallax to visible sections
+                    if (rect.top < window.innerHeight && rect.bottom > 0) {
+                        const background = section.querySelector(".parallax-background");
+                        if (background) {
+                            const scrolled = window.pageYOffset;
+                            const sectionTop = section.offsetTop;
+                            
+                            // Simple parallax calculation relative to section position
+                            const relativeScroll = scrolled - sectionTop;
+                            const rate = relativeScroll * speed * 0.5;
+                            
+                            // Apply transform while maintaining centering
+                            background.style.transform = "translate(-50%, calc(-50% + " + rate + "px))";
+                        }
+                    }
+                });
+            });
+        }
+        
+        // Function to set overlay colors and opacity
+        function setOverlayStyles() {
+            console.log("Setting overlay styles...");
+            const parallaxSections = document.querySelectorAll(".parallax-section");
+            console.log("Found " + parallaxSections.length + " parallax sections");
+            
+            parallaxSections.forEach(function(section, index) {
+                const overlayColor = section.dataset.overlayColor || "rgba(0,0,0,0.4)";
+                const overlayOpacity = section.dataset.overlayOpacity || "0.4";
+                
+                console.log("Section " + index + " - Color: " + overlayColor + ", Opacity: " + overlayOpacity);
+                
+                // Convert color names to hex if needed
+                let finalColor = overlayColor;
+                if (overlayColor.startsWith("rgba")) {
+                    finalColor = overlayColor;
+                } else if (overlayColor.startsWith("#")) {
+                    finalColor = hexToRgba(overlayColor, overlayOpacity);
+                } else {
+                    finalColor = colorNameToRgba(overlayColor, overlayOpacity);
+                }
+                
+                console.log("Final color: " + finalColor);
+                
+                // Apply the overlay color directly to the ::before pseudo-element
+                const overlayDiv = document.createElement("div");
+                overlayDiv.className = "parallax-overlay";
+                overlayDiv.style.cssText = "position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: " + finalColor + "; z-index: 1;";
+                
+                // Remove existing overlay if any
+                const existingOverlay = section.querySelector(".parallax-overlay");
+                if (existingOverlay) {
+                    existingOverlay.remove();
+                }
+                
+                // Insert the overlay before the content
+                const content = section.querySelector(".parallax-content");
+                if (content) {
+                    section.insertBefore(overlayDiv, content);
+                    console.log("Overlay added to section " + index);
+                } else {
+                    console.log("No content found in section " + index);
+                }
+            });
+        }
+        
+        // Helper function to convert hex to rgba
+        function hexToRgba(hex, opacity) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return "rgba(" + r + "," + g + "," + b + "," + opacity + ")";
+        }
+        
+        // Helper function to convert color names to rgba
+        function colorNameToRgba(colorName, opacity) {
+            const colors = {
+                "black": "0,0,0",
+                "white": "255,255,255",
+                "red": "255,0,0",
+                "green": "0,128,0",
+                "blue": "0,0,255",
+                "yellow": "255,255,0",
+                "purple": "128,0,128",
+                "orange": "255,165,0",
+                "pink": "255,192,203",
+                "brown": "165,42,42",
+                "gray": "128,128,128",
+                "grey": "128,128,128"
+            };
+            
+            const rgb = colors[colorName.toLowerCase()] || "0,0,0";
+            return "rgba(" + rgb + "," + opacity + ")";
+        }
+        
+        // Initialize parallax when DOM is ready
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", initParallax);
+        } else {
+            initParallax();
+        }
+        
+        // Also initialize on window load for images
+        window.addEventListener("load", function() {
+            // Ensure all background images are loaded
+            const parallaxSections = document.querySelectorAll(".parallax-section");
+            parallaxSections.forEach(function(section) {
+                const background = section.querySelector(".parallax-background");
+                if (background) {
+                    const bgImage = background.style.backgroundImage;
+                    if (bgImage && bgImage !== "none") {
+                        const imgUrl = bgImage.replace(/url\(["\']?([^"\']+)["\']?\)/, "$1");
+                        const img = new Image();
+                        img.onload = function() {
+                            background.classList.add("loaded");
+                        };
+                        img.onerror = function() {
+                            console.warn("Failed to load parallax background image:", imgUrl);
+                        };
+                        img.src = imgUrl;
+                    } else {
+                        background.classList.add("loaded");
+                    }
+                }
+            });
+            
+            // Initialize overlays after images are loaded
+            setOverlayStyles();
+        });
+</script><!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+<title>FearlessCMS - Installation Guide</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="/themes/default/assets/style.css">
+
+<style>
+  
+  /* ensure global UI toggles visible if injected */
+  .fcms-theme-toggle{display:inline-flex}
+  {{custom_css}}
+</style>
+    <style>
+      .documentation-layout {
+        display: flex;
+        gap: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+      .documentation-sidebar {
+        flex: 0 0 300px;
+        padding: 1.5rem;
+        border-radius: 8px;
+        height: fit-content;
+        position: sticky;
+        top: 2rem;
+      }
+      .documentation-content {
+        flex: 1;
+        max-width: 800px;
+      }
+      .documentation-sidebar h3 {
+        margin-top: 0;
+        color: #333;
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 0.5rem;
+      }
+      .documentation-sidebar ul {
+        list-style: none;
+        padding: 0;
+      }
+      .documentation-sidebar li {
+        margin-bottom: 0.5rem;
+      }
+      .documentation-sidebar a {
+        color: #555;
+        text-decoration: none;
+        padding: 0.25rem 0;
+        display: block;
+        border-radius: 4px;
+        transition: all 0.2s;
+      }
+      .documentation-sidebar a:hover {
+        color: #007bff;
+        background: #e9ecef;
+        padding-left: 0.5rem;
+      }
+      .documentation-content h1 {
+        font-size: clamp(2.5rem, 1.5rem + 3vw, 3.5rem);
+        color: #333;
+        border-bottom: 3px solid #007bff;
+        padding-bottom: 1rem;
+        margin-bottom: 2rem;
+      }
+      .documentation-content h2 {
+        font-size: clamp(1.8rem, 1.15rem + 2vw, 2.5rem);
+        color: #444;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+      }
+      .documentation-content h3 {
+        color: #555;
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+      }
+      .documentation-content p {
+        line-height: 1.6;
+        margin-bottom: 1rem;
+      }
+      .documentation-content code {
+        background: #f8f9fa;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+      }
+      .documentation-content pre {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        overflow-x: auto;
+        border: 1px solid #e9ecef;
+      }
+      .documentation-content blockquote {
+        border-left: 4px solid #007bff;
+        padding-left: 1rem;
+        margin: 1rem 0;
+        font-style: italic;
+        color: #666;
+      }
+      .documentation-content table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+      }
+      .documentation-content th,
+      .documentation-content td {
+        border: 1px solid #ddd;
+        padding: 0.5rem;
+        text-align: left;
+      }
+      .documentation-content th {
+        background: #f8f9fa;
+        font-weight: bold;
+      }
+      .breadcrumb {
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        margin-bottom: 2rem;
+        font-size: 0.9rem;
+        color: #333;
+      }
+      .breadcrumb a {
+        color: #007bff;
+        text-decoration: none;
+      }
+      .breadcrumb a:hover {
+        text-decoration: underline;
+      }
+      
+      /* Widget styling for documentation sidebar */
+      .widget-documentation-nav {
+        margin-bottom: 2rem;
+      }
+      .widget-documentation-nav .widget-title {
+        margin-top: 0;
+        color: #333;
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 0.5rem;
+        font-size: 1.1rem;
+      }
+      .documentation-nav-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .documentation-nav-item {
+        margin-bottom: 0.5rem;
+      }
+      .documentation-nav-link {
+        color: #555;
+        text-decoration: none;
+        padding: 0.25rem 0;
+        display: block;
+        border-radius: 4px;
+        transition: all 0.2s;
+        font-size: 0.95rem;
+      }
+              .documentation-nav-link:hover {
+          color: #007bff;
+          background: #e9ecef;
+          padding-left: 0.5rem;
+        }
+      
+      /* Dark mode support */
+      @media (prefers-color-scheme: dark) {
+        .documentation-layout {
+          background: #0f172a;
+          color: #e0e0e0;
+        }
+        
+        .documentation-sidebar {
+          background: #1e293b;
+          color: #e0e0e0;
+          border: 1px solid #475569;
+          border-radius: 8px;
+        }
+        
+        .documentation-sidebar h3 {
+          color: #e0e0e0;
+          border-bottom-color: #007bff;
+        }
+        
+        .documentation-sidebar a {
+          color: #b0b0b0;
+        }
+        
+        .documentation-sidebar a:hover {
+          color: #007bff;
+          background: #404040;
+        }
+        
+        .documentation-content h1 {
+          color: #e0e0e0;
+          border-bottom-color: #007bff;
+        }
+        
+        .documentation-content h2 {
+          color: #d0d0d0;
+        }
+        
+        .documentation-content h3 {
+          color: #c0c0c0;
+        }
+        
+        .documentation-content p {
+          color: #e0e0e0;
+        }
+        
+        .documentation-content code {
+          background: #404040;
+          color: #e0e0e0;
+        }
+        
+        .documentation-content pre {
+          background: #2d2d2d;
+          border-color: #404040;
+          color: #e0e0e0;
+        }
+        
+        .documentation-content blockquote {
+          border-left-color: #007bff;
+          color: #b0b0b0;
+        }
+        
+        .documentation-content table th {
+          background: #2d2d2d;
+          color: #e0e0e0;
+        }
+        
+        .documentation-content table td {
+          color: #e0e0e0;
+        }
+        
+        .documentation-content table th,
+        .documentation-content table td {
+          border-color: #404040;
+        }
+        
+        .breadcrumb {
+          background: #1e293b;
+          color: #e0e0e0;
+          border: 1px solid #475569;
+          border-radius: 6px;
+        }
+        
+        .breadcrumb a {
+          color: #007bff;
+        }
+        
+        .widget-documentation-nav .widget-title {
+          color: #e0e0e0;
+          border-bottom-color: #007bff;
+        }
+        
+        .documentation-nav-link {
+          color: #b0b0b0;
+        }
+        
+        .documentation-nav-link:hover {
+          color: #007bff;
+          background: #404040;
+        }
+      }
+      
+      /* Responsive design */
+      @media (max-width: 768px) {
+        .documentation-layout {
+          flex-direction: column;
+          padding: 1rem;
+        }
+        .documentation-sidebar {
+          position: static;
+          flex: none;
+        }
+      }
+      
+      /* Manual dark mode classes */
+      .dark-mode .documentation-layout {
+        background: #0f172a !important;
+        color: #e0e0e0 !important;
+      }
+      
+      .dark-mode .documentation-sidebar {
+        background: #1e293b !important;
+        color: #e0e0e0 !important;
+        border: 1px solid #475569 !important;
+        border-radius: 8px !important;
+      }
+      
+      .dark-mode .breadcrumb {
+        background: #1e293b !important;
+        color: #e0e0e0 !important;
+        border: 1px solid #475569 !important;
+        border-radius: 6px !important;
+      }
+      
+      .dark-mode .widget-documentation-nav .widget-title {
+        color: #e0e0e0 !important;
+        border-bottom-color: #007bff !important;
+      }
+      
+      .dark-mode .documentation-nav-link {
+        color: #b0b0b0 !important;
+      }
+      
+      .dark-mode .documentation-nav-link:hover {
+        color: #007bff !important;
+        background: #404040 !important;
+      }
+    </style>
+    
+
+  <script src="https://cdn.tailwindcss.com"></script>
+<style id="fcms-nav-style">\n@media (max-width: 900px){header nav{display:none}header nav.is-open{display:block}.fcms-hamburger{display:inline-flex;gap:6px;flex-direction:column;justify-content:center;align-items:center;width:40px;height:36px;border:1px solid rgba(0,0,0,0.15);border-radius:10px;background:#fff;margin-left:6px} .fcms-hamburger span{display:block;width:20px;height:2px;background:#111;border-radius:2px}}\n@media (prefers-color-scheme: dark){@media (max-width:900px){.fcms-hamburger{background:#0f172a;border-color:rgba(255,255,255,0.25)} .fcms-hamburger span{background:#e5e7eb}}}\n@media (min-width: 901px){.fcms-hamburger{display:none !important}}\n.fcms-theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:40px;height:36px;margin-left:8px;border:1px solid rgba(0,0,0,0.15);border-radius:10px;background:#fff;color:#111;font-size:16px;line-height:1} .fcms-theme-toggle:focus{outline:2px solid #6366f1; outline-offset:2px}\n@media (prefers-color-scheme: dark){.fcms-theme-toggle{background:#0f172a;border-color:rgba(255,255,255,0.25);color:#e5e7eb}}\n</style>
+<script id="fcmsThemeInit">\n(function(){\n  var root=document.documentElement;\n  var KEY="fcms-theme";\n  function apply(pref){\n    if(pref==="system"){root.removeAttribute("data-theme");} else {root.setAttribute("data-theme", pref);}\n  }\n  function init(){\n    var pref=localStorage.getItem(KEY)||"system"; apply(pref);\n    window.fcmsSetTheme=function(p){localStorage.setItem(KEY,p);apply(p);return p;};\n    window.fcmsCycleTheme=function(){var seq=["system","light","dark"];var cur=localStorage.getItem(KEY)||"system";var next=seq[(seq.indexOf(cur)+1)%3];localStorage.setItem(KEY,next);apply(next);return next;};\n  }\n  document.addEventListener("DOMContentLoaded", init);\n})();\n(function(){\n  function enhance(){\n    var header=document.querySelector("header"); if(!header) return;\n    var nav=header.querySelector("nav"); if(!nav) return;\n    var parent=nav.parentNode;\n    var enableH=true;\n    var enableT=true;\n    if(enableH){\n      var hb=document.getElementById("fcms-hamburger");\n      if(!hb){ hb=document.createElement("button"); hb.id="fcms-hamburger"; hb.type="button"; hb.className="fcms-hamburger"; hb.setAttribute("aria-label","Toggle navigation"); hb.setAttribute("aria-expanded","false"); hb.innerHTML="<span></span><span></span><span></span>"; try{parent.insertBefore(hb, nav);}catch(e){header.appendChild(hb);} }\n      if(hb && !hb._wired){ hb.addEventListener("click", function(){ var open=nav.classList.toggle("is-open"); hb.setAttribute("aria-expanded", open); }); hb._wired=true; }\n    }\n    if(enableT){\n      var t=document.getElementById("fcms-theme-toggle");\n      if(!t){ t=document.createElement("button"); t.id="fcms-theme-toggle"; t.type="button"; t.className="fcms-theme-toggle"; t.setAttribute("aria-label","Toggle theme (system/light/dark)"); t.title="Theme"; t.textContent="◐"; try{parent.insertBefore(t, nav);}catch(e){header.appendChild(t);} }\n      if(t && !t._wired){ t.addEventListener("click", function(){ var next=window.fcmsCycleTheme?window.fcmsCycleTheme():null; t.setAttribute("data-mode", next); }); t._wired=true; }\n    }\n  }\n  document.addEventListener("DOMContentLoaded", enhance);\n})();\n</script>
+</head>
+  <body>
+    <header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="/">
+      
+        <img class="brand-logo" src="/uploads/logo_1756077606.png" alt="FearlessCMS">
+      
+      <span class="brand-text">FearlessCMS</span>
+    </a>
+    <button id="fcms-hamburger" type="button" class="fcms-hamburger" aria-label="Toggle navigation" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <button id="fcms-theme-toggle" type="button" class="fcms-theme-toggle" aria-label="Toggle theme (system/light/dark)" title="Theme">◐</button>
+    <nav aria-label="Main navigation">
+      <ul class="main-menu"><li class=""><a href="/" class="">Home</a></li><li class=""><a href="/dev-roadmap" class="">Development Roadmap</a></li><li class=""><a href="/documentation" class="">Documentation</a></li><li class=""><a href="/blog" class="">News</a></li><li class=""><a href="https://ko-fi.com/fearlessgeekmedia" class="" target="_blank">Support us on Ko-Fi</a></li><li class=""><a href="https://opencollective.com/fearlesscms/contribute" class="" target="_blank">Support us on Open Collective</a></li><li class=""><a href="https://github.com/fearlessgeekmedia/FearlessCMS" class="" target="_blank">Github</a></li></ul>
+    </nav>
+  </div>
+  <script>
+    (function(){
+      var root=document.documentElement;
+      var KEY='fcms-theme';
+      function apply(pref){ if(pref==='system'){ root.removeAttribute('data-theme'); } else { root.setAttribute('data-theme', pref); } }
+      try {
+        var pref=localStorage.getItem(KEY)||'system';
+        apply(pref);
+      } catch(e) {}
+
+      var toggle=document.getElementById('fcms-theme-toggle');
+      if(toggle){
+        toggle.addEventListener('click', function(){
+          var seq=['system','light','dark'];
+          var cur; try { cur=localStorage.getItem(KEY)||'system'; } catch(e){ cur='system'; }
+          var next=seq[(seq.indexOf(cur)+1)%3];
+          try { localStorage.setItem(KEY,next); } catch(e) {}
+          apply(next);
+          toggle.setAttribute('data-mode', next);
+        });
+      }
+
+      var hb=document.getElementById('fcms-hamburger');
+      var nav=document.querySelector('header nav');
+      if(hb && nav){
+        hb.addEventListener('click', function(){
+          var open=nav.classList.toggle('is-open');
+          hb.setAttribute('aria-expanded', open);
+        });
+      }
+    })();
+  </script>
+  
+</header>
+    <!-- Include file not found: ad-area.html -->
+    
+    <div class="documentation-layout">
+      <aside class="documentation-sidebar">
+        <div class="widget widget-documentation-nav"><h3 class="widget-title">Documentation</h3><div class="widget-content"><ul class="documentation-nav-list"><li class="documentation-nav-item"><a href="/documentation" class="documentation-nav-link" title="Getting started with FearlessCMS">Overview</a></li><li class="documentation-nav-item"><a href="/documentation/install" class="documentation-nav-link" title="Install and setup guide">Installation</a></li><li class="documentation-nav-item"><a href="/documentation/gettingstarted" class="documentation-nav-link" title="First steps with your CMS">Getting Started</a></li><li class="documentation-nav-item"><a href="/documentation/export-sites-to-static-html" class="documentation-nav-link" title="Streamlined export system for static site generation">Export to Static HTML</a></li><li class="documentation-nav-item"><a href="/documentation/creating-themes" class="documentation-nav-link" title="Build custom themes">Creating Themes</a></li><li class="documentation-nav-item"><a href="/documentation/plugin-development-guide" class="documentation-nav-link" title="Extend functionality with plugins">Plugin Development</a></li><li class="documentation-nav-item"><a href="/documentation/cms-modes" class="documentation-nav-link" title="Different CMS operation modes">CMS Modes</a></li><li class="documentation-nav-item"><a href="/documentation/file-permissions" class="documentation-nav-link" title="Security and file access">File Permissions</a></li><li class="documentation-nav-item"><a href="/documentation/parallax-plugin" class="documentation-nav-link" title="Add stunning parallax scrolling effects">Parallax Plugin</a></li></ul></div></div><div class="widget widget-documentation-nav"><h3 class="widget-title">Theme Development</h3><div class="widget-content"><ul class="documentation-nav-list"><li class="documentation-nav-item"><a href="/documentation/theme-development-workflow" class="documentation-nav-link" title="Theme development process">Workflow</a></li><li class="documentation-nav-item"><a href="/documentation/theme-templates-reference" class="documentation-nav-link" title="Template system reference">Templates</a></li><li class="documentation-nav-item"><a href="/documentation/theme-options-guide" class="documentation-nav-link" title="Theme configuration options">Options</a></li><li class="documentation-nav-item"><a href="/documentation/sass-theme-guide" class="documentation-nav-link" title="Styling with SASS">SASS Guide</a></li><li class="documentation-nav-item"><a href="/documentation/modular-templates" class="documentation-nav-link" title="Building reusable components">Modular Templates</a></li></ul></div></div><div class="widget widget-documentation-nav"><h3 class="widget-title">Advanced</h3><div class="widget-content"><ul class="documentation-nav-list"><li class="documentation-nav-item"><a href="/documentation/theme-development-index" class="documentation-nav-link" title="Complete development reference">Development Index</a></li><li class="documentation-nav-item"><a href="/documentation/customization-overview" class="documentation-nav-link" title="Advanced customization techniques">Customization</a></li><li class="documentation-nav-item"><a href="/documentation/ad-area-system" class="documentation-nav-link" title="Advertisement area system">AD Areas</a></li></ul></div></div>
+      </aside>
+      
+      <main class="documentation-content">
+        <div class="breadcrumb">
+          <a href="/">Home</a> &gt; 
+          <a href="/documentation">Documentation</a>
+          
+          &gt; Installation Guide
+          
+        </div>
+        
+        <h1>Installation Guide</h1>
+        <p>The <code>install.php</code> script is a comprehensive installation and setup tool for FearlessCMS that provides both web-based and command-line interfaces for initializing your CMS installation.</p><p><h2>📋 Table of Contents</h2></p><p><ul><li><a href="#overview">Overview</a></li>
+<li><a href="#security-features">Security Features</a></li>
+<li><a href="#web-interface">Web Interface</a></li>
+<li><a href="#command-line-interface">Command Line Interface</a></li>
+<li><a href="#directory-structure">Directory Structure</a></li>
+<li><a href="#configuration">Configuration</a></li>
+<li><a href="#troubleshooting">Troubleshooting</a></li>
+<li><a href="#security-best-practices">Security Best Practices</a></li></p><p><h2 id="overview">🎯 Overview</h2></p><p>The installation script (<code>install.php</code>) is designed to:</p><p><li>Create necessary directory structure</li>
+<li>Set up configuration files</li>
+<li>Install export dependencies (Node.js packages)</li>
+<li>Create administrator accounts</li>
+<li>Validate system requirements</li>
+<li>Provide security features like CSRF protection and rate limiting</li></p><p><h2 id="security-features">🔒 Security Features</h2></p><p><h3>CSRF Protection</h3>
+<li>Generates and validates CSRF tokens for all POST requests</li>
+<li>Prevents cross-site request forgery attacks</li>
+<li>Session-based token generation</li></p><p><h3>Rate Limiting</h3>
+<li>Prevents brute force attacks on admin creation</li>
+<li>Configurable attempt limits and time windows</li>
+<li>Session-based rate limiting</li></p><p><h3>Command Whitelisting</h3>
+<li>Only allows specific, safe commands to execute</li>
+<li>Prevents arbitrary command execution</li>
+<li>Validates working directory paths</li></p><p><h3>Input Validation</h3>
+<li>Username format validation (3-32 characters, alphanumeric + underscore + hyphen)</li>
+<li>Password strength requirements</li>
+<li>Directory path validation</li></p><p><h2 id="web-interface">🌐 Web Interface</h2></p><p><h3>Access</h3>
+Navigate to <code>install.php</code> in your web browser to access the web-based installation interface.</p><p><h3>Available Actions</h3></p><p>#### 1. Create Directories
+Creates the essential directory structure:
+<li><code>config/</code> - Configuration files</li>
+<li><code>admin/uploads/</code> - Admin file uploads</li>
+<li><code>uploads/</code> - Public file uploads</li>
+<li><code>content/</code> - Content files</li>
+<li><code>sessions/</code> - Session storage</li>
+<li><code>cache/</code> - Cache files</li>
+<li><code>backups/</code> - Backup storage</li>
+<li><code>.fcms_updates/</code> - Update files</li></p><p>#### 2. Install Export Dependencies
+Installs Node.js packages required for the export functionality:
+<li><code>fs-extra</code> - Enhanced file system operations</li>
+<li><code>handlebars</code> - Template engine</li>
+<li><code>marked</code> - Markdown parser</li></p><p>#### 3. Create Administrator Account
+Creates the first administrator user with full system access.</p><p><h2 id="command-line-interface">💻 Command Line Interface</h2></p><p>The script supports various CLI options for automated installation and server management.</p><p><h3>Basic Usage</h3>
+<pre><code>bash
+php install.php [options]
+</code></pre></p><p><h3>Available Options</h3></p><p>#### System Check
+<pre><code>bash
+php install.php --check
+</code></pre>
+Displays:
+<li>PHP version information</li>
+<li>Required extension status</li>
+<li>Directory existence and permissions</li>
+<li>Project root path</li></p><p>#### Create Directories
+<pre><code>bash
+php install.php --create-dirs
+</code></pre>
+Creates all necessary directories and initializes configuration files.</p><p>#### Install Export Dependencies
+<pre><code>bash
+php install.php --install-export-deps
+</code></pre>
+Installs Node.js dependencies for the export functionality.</p><p>#### Create Administrator Account
+<pre><code>bash
+php install.php --create-admin=username --password=password
+</code></pre>
+Creates an administrator account with the specified credentials.</p><p><strong>Alternative password input methods:</strong>
+<pre><code>bash
+<h1>Read password from file</h1>
+php install.php --create-admin=username --password-file=/path/to/password.txt</p><p><h1>Interactive password input</h1>
+php install.php --create-admin=username
+</code></pre></p><p><h3>CLI Examples</h3></p><p>#### Complete Automated Installation
+<pre><code>bash
+<h1>Check system requirements</h1>
+php install.php --check</p><p><h1>Create directory structure</h1>
+php install.php --create-dirs</p><p><h1>Install dependencies</h1>
+php install.php --install-export-deps</p><p><h1>Create admin account</h1>
+php install.php --create-admin=admin --password=securepassword123
+</code></pre></p><p>#### Server Setup Script
+<pre><code>bash
+#!/usr/bin/env bash
+echo "Setting up FearlessCMS..."</p><p><h1>Check system</h1>
+php install.php --check</p><p><h1>Create directories</h1>
+php install.php --create-dirs</p><p><h1>Install dependencies</h1>
+php install.php --install-export-deps</p><p><h1>Create admin (password from environment variable)</h1>
+php install.php --create-admin=admin --password="$ADMIN_PASSWORD"</p><p>echo "Installation complete!"
+</code></pre></p><p><h2 id="directory-structure">📁 Directory Structure</h2></p><p>The installer creates the following directory structure:</p><p><pre><code>
+FearlessCMS/
+├── config/                 # Configuration files
+├── admin/
+│   └── uploads/           # Admin file uploads
+├── uploads/                # Public file uploads
+├── content/                # Content files
+├── sessions/               # Session storage
+├── cache/                  # Cache files
+├── backups/                # Backup storage
+└── .fcms_updates/         # Update files
+</code></pre></p><p><h2 id="configuration">⚙️ Configuration</h2></p><p><h3>Environment Variables</h3>
+<li><code>FCMS_CONFIG_DIR</code> - Custom configuration directory path</li></p><p><h3>Default Configuration</h3>
+The installer automatically creates default configuration files when <code>includes/config.php</code> is included.</p><p><h3>Security Configuration</h3>
+<li>CSRF token generation</li>
+<li>Rate limiting settings</li>
+<li>Command whitelist validation</li></p><p><h2 id="troubleshooting">🔧 Troubleshooting</h2></p><p><h3>Common Issues</h3></p><p>#### Permission Errors
+<pre><code>bash
+<h1>Check directory permissions</h1>
+ls -la config/
+ls -la uploads/</p><p><h1>Fix permissions if needed</h1>
+chmod 755 config/
+chmod 755 uploads/
+</code></pre></p><p>#### Node.js Dependencies
+<pre><code>bash
+<h1>Check Node.js installation</h1>
+node --version
+npm --version</p><p><h1>Install Node.js if missing</h1>
+<h1>Ubuntu/Debian</h1>
+sudo apt install nodejs npm</p><p><h1>CentOS/RHEL</h1>
+sudo yum install nodejs npm</p><p><h1>macOS</h1>
+brew install node
+</code></pre></p><p>#### PHP Extensions
+Ensure these PHP extensions are loaded:
+<li><code>curl</code> - HTTP requests</li>
+<li><code>json</code> - JSON processing</li>
+<li><code>mbstring</code> - Multibyte string handling</li>
+<li><code>phar</code> - PHAR archives</li>
+<li><code>zip</code> - ZIP file handling</li>
+<li><code>openssl</code> - Encryption and SSL</li></p><p><h3>Error Messages</h3></p><p>#### "Command not allowed for security reasons"
+<li>The command is not in the whitelist</li>
+<li>Use only the supported installation commands</li></p><p>#### "Invalid working directory"
+<li>Working directory is outside project root</li>
+<li>Ensure you're running from the FearlessCMS directory</li></p><p>#### "Failed to create directory"
+<li>Check parent directory permissions</li>
+<li>Ensure sufficient disk space</li>
+<li>Verify user has write permissions</li></p><p><h2 id="security-best-practices">🛡️ Security Best Practices</h2></p><p><h3>Critical Post-Installation Security Steps</h3></p><p>#### 1. Immediate Security Actions
+<pre><code>bash
+<h1>Delete the installer (CRITICAL)</h1>
+rm install.php</p><p><h1>Secure configuration files</h1>
+chmod 600 config/<em>.json
+chmod 700 config/</p><p><h1>Secure session directory</h1>
+chmod 700 sessions/</p><p><h1>Set restrictive permissions on sensitive files</h1>
+find . -name "</em>.log" -exec chmod 600 {} \;
+</code></pre></p><p>#### 2. File System Security Hardening
+<pre><code>bash
+<h1>Create .htaccess files to block access to sensitive directories</h1>
+cat > config/.htaccess << 'EOF'
+Order deny,allow
+Deny from all
+EOF</p><p>cat > sessions/.htaccess << 'EOF'
+Order deny,allow
+Deny from all
+EOF</p><p>cat > backups/.htaccess << 'EOF'
+Order deny,allow
+Deny from all
+EOF</p><p><h1>Secure file ownership (replace 'www-data' with your web server user)</h1>
+chown -R www-data:www-data config/ sessions/ uploads/ cache/ backups/
+</code></pre></p><p>#### 3. Environment Security Configuration
+<pre><code>bash
+<h1>Set security environment variables</h1>
+export FCMS_DEBUG=false
+export FCMS_SECURE_MODE=true
+export FCMS_CONFIG_DIR=/secure/path/outside/webroot</p><p><h1>Add to your web server configuration or .env file</h1>
+echo "FCMS_DEBUG=false" >> .env
+echo "FCMS_SECURE_MODE=true" >> .env
+</code></pre></p><p><h3>Production Deployment Security</h3></p><p>#### 1. SSL/TLS Configuration
+<pre><code>apache
+<h1>Apache SSL configuration</h1>
+<VirtualHost <em>:443>
+    SSLEngine on
+    SSLCertificateFile /path/to/certificate.crt
+    SSLCertificateKeyFile /path/to/private.key
+    SSLProtocol all -SSLv2 -SSLv3 -TLSv1 -TLSv1.1
+    SSLCipherSuite ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256
+    SSLHonorCipherOrder on
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+</VirtualHost>
+</code></pre></p><p><pre><code>nginx
+<h1>Nginx SSL configuration</h1>
+server {
+    listen 443 ssl http2;
+    ssl_certificate /path/to/certificate.crt;
+    ssl_certificate_key /path/to/private.key;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256;
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+}
+</code></pre></p><p>#### 2. Security Headers Configuration
+<pre><code>apache
+<h1>Apache security headers</h1>
+Header always set X-Frame-Options "DENY"
+Header always set X-Content-Type-Options "nosniff"
+Header always set X-XSS-Protection "1; mode=block"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
+Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+</code></pre></p><p><pre><code>nginx
+<h1>Nginx security headers</h1>
+add_header X-Frame-Options "DENY" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header X-XSS-Protection "1; mode=block" always;
+add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'" always;
+add_header Permissions-Policy "geolocation=(), microphone=(), camera=()" always;
+</code></pre></p><p>#### 3. Directory Access Restrictions
+<pre><code>apache
+<h1>Apache directory restrictions</h1>
+<DirectoryMatch "/(config|sessions|backups|\.git)">
+    Order deny,allow
+    Deny from all
+</DirectoryMatch></p><p><Files "</em>.json">
+    Order deny,allow
+    Deny from all
+</Files></p><p><Files "<em>.log">
+    Order deny,allow
+    Deny from all
+</Files>
+</code></pre></p><p><pre><code>nginx
+<h1>Nginx directory restrictions</h1>
+location ~ /(config|sessions|backups|\.git) {
+    deny all;
+    return 404;
+}</p><p>location ~ \.(json|log)$ {
+    deny all;
+    return 404;
+}
+</code></pre></p><p>#### 4. PHP Security Configuration
+<pre><code>ini
+<h1>Add to php.ini or .htaccess</h1>
+expose_php = Off
+display_errors = Off
+log_errors = On
+error_log = /var/log/php_errors.log
+allow_url_fopen = Off
+allow_url_include = Off
+enable_dl = Off
+file_uploads = On
+upload_max_filesize = 10M
+post_max_size = 10M
+max_execution_time = 30
+max_input_time = 30
+memory_limit = 128M
+session.cookie_httponly = 1
+session.cookie_secure = 1
+session.use_strict_mode = 1
+session.cookie_samesite = Strict
+</code></pre></p><p><h3>Advanced Security Configuration</h3></p><p>#### 1. Firewall Rules
+<pre><code>bash
+<h1>UFW (Ubuntu/Debian)</h1>
+ufw allow 22    # SSH
+ufw allow 80    # HTTP
+ufw allow 443   # HTTPS
+ufw enable</p><p><h1>Restrict admin access by IP (optional)</h1>
+ufw allow from YOUR_IP_ADDRESS to any port 80
+ufw allow from YOUR_IP_ADDRESS to any port 443
+</code></pre></p><p>#### 2. Fail2Ban Configuration
+<pre><code>bash
+<h1>Install fail2ban</h1>
+sudo apt install fail2ban</p><p><h1>Create FearlessCMS jail</h1>
+cat > /etc/fail2ban/jail.local << 'EOF'
+[fearlesscms]
+enabled = true
+port = http,https
+filter = fearlesscms
+logpath = /path/to/fearlesscms/error.log
+maxretry = 5
+bantime = 3600
+findtime = 600
+EOF</p><p><h1>Create filter</h1>
+cat > /etc/fail2ban/filter.d/fearlesscms.conf << 'EOF'
+[Definition]
+failregex = ^.</em>Failed login attempt.<em>from <HOST>.</em>$
+            ^.<em>Suspicious activity detected.</em>from <HOST>.<em>$
+ignoreregex =
+EOF
+</code></pre></p><p>#### 3. Security Monitoring Setup
+<pre><code>bash
+<h1>Create security monitoring script</h1>
+cat > /usr/local/bin/fcms-security-monitor.sh << 'EOF'
+#!/usr/bin/env bash</p><p>FCMS_PATH="/path/to/fearlesscms"
+LOG_FILE="/var/log/fcms-security.log"</p><p><h1>Monitor failed logins</h1>
+tail -f "$FCMS_PATH/error.log" | grep -i "failed login" >> "$LOG_FILE" &</p><p><h1>Monitor suspicious file access</h1>
+tail -f /var/log/apache2/access.log | grep -E "(\.\.\/|config\/|sessions\/)" >> "$LOG_FILE" &</p><p><h1>Monitor unusual upload activity</h1>
+inotifywait -m -r "$FCMS_PATH/uploads/" -e create,modify --format '%w%f %e %T' --timefmt '%Y-%m-%d %H:%M:%S' >> "$LOG_FILE" &
+EOF</p><p>chmod +x /usr/local/bin/fcms-security-monitor.sh</p><p><h1>Add to crontab for automatic startup</h1>
+echo "@reboot /usr/local/bin/fcms-security-monitor.sh" | crontab -
+</code></pre></p><p><h3>Access Control & Authentication</h3></p><p>#### 1. Strong Password Requirements
+<li><strong>Minimum length</strong>: 12 characters (16+ recommended)</li>
+<li><strong>Complexity</strong>: Mixed case, numbers, symbols</li>
+<li><strong>Uniqueness</strong>: Different from other passwords</li>
+<li><strong>Regular updates</strong>: Change every 90 days</li></p><p>#### 2. Two-Factor Authentication Setup
+<pre><code>php
+// Enable 2FA in config/auth.json
+{
+    "require_2fa": true,
+    "2fa_methods": ["totp", "backup_codes"],
+    "session_timeout": 1800
+}
+</code></pre></p><p>#### 3. Role-Based Access Control
+<pre><code>json
+// Configure roles in config/roles.json
+{
+    "admin": {
+        "permissions": ["all"],
+        "ip_restrictions": ["192.168.1.0/24"]
+    },
+    "editor": {
+        "permissions": ["content_edit", "file_upload"],
+        "max_upload_size": "5MB"
+    },
+    "author": {
+        "permissions": ["content_create", "content_edit_own"],
+        "max_upload_size": "2MB"
+    }
+}
+</code></pre></p><p><h3>Security Validation & Testing</h3></p><p>#### 1. Security Checklist Verification
+<pre><code>bash
+<h1>Run the security validation script</h1>
+curl -s https://raw.githubusercontent.com/fearlesscms/security-tools/main/validate.sh | bash</p><p><h1>Or manual checks:</h1>
+<h1>Check file permissions</h1>
+find . -type f -perm /o+w -exec ls -la {} \;</p><p><h1>Check for sensitive files in web root</h1>
+find . -name "</em>.json" -o -name "<em>.log" -o -name "</em>.sql" | grep -v node_modules</p><p><h1>Verify SSL configuration</h1>
+openssl s_client -connect yourdomain.com:443 -servername yourdomain.com
+</code></pre></p><p>#### 2. Penetration Testing
+<pre><code>bash
+<h1>Basic security scan with nikto</h1>
+nikto -h https://yourdomain.com</p><p><h1>SQL injection testing with sqlmap</h1>
+sqlmap -u "https://yourdomain.com/login.php" --forms --batch --level=3</p><p><h1>SSL/TLS testing</h1>
+testssl.sh yourdomain.com
+</code></pre></p><p><h3>Backup Security</h3></p><p>#### 1. Encrypted Backups
+<pre><code>bash
+<h1>Create encrypted backup script</h1>
+cat > /usr/local/bin/fcms-backup.sh << 'EOF'
+#!/usr/bin/env bash</p><p>FCMS_PATH="/path/to/fearlesscms"
+BACKUP_PATH="/secure/backup/location"
+DATE=$(date +%Y%m%d_%H%M%S)
+GPG_RECIPIENT="backup@yourdomain.com"</p><p><h1>Create compressed archive</h1>
+tar -czf "/tmp/fcms_backup_$DATE.tar.gz" -C "$FCMS_PATH" .</p><p><h1>Encrypt backup</h1>
+gpg --encrypt --recipient "$GPG_RECIPIENT" --output "$BACKUP_PATH/fcms_backup_$DATE.tar.gz.gpg" "/tmp/fcms_backup_$DATE.tar.gz"</p><p><h1>Clean up temporary file</h1>
+rm "/tmp/fcms_backup_$DATE.tar.gz"</p><p><h1>Remove backups older than 30 days</h1>
+find "$BACKUP_PATH" -name "fcms_backup_<em>.tar.gz.gpg" -mtime +30 -delete
+EOF</p><p>chmod +x /usr/local/bin/fcms-backup.sh</p><p><h1>Schedule daily backups</h1>
+echo "0 2 </em> <em> </em> /usr/local/bin/fcms-backup.sh" | crontab -
+</code></pre></p><p><h3>Incident Response Preparation</h3></p><p>#### 1. Security Contact Information
+<pre><code>bash
+<h1>Create security contacts file</h1>
+cat > security-contacts.txt << 'EOF'
+Emergency Security Contact: security@yourdomain.com
+System Administrator: admin@yourdomain.com
+Hosting Provider: support@hostingprovider.com
+Legal Counsel: legal@yourdomain.com
+EOF
+</code></pre></p><p>#### 2. Incident Response Scripts
+<pre><code>bash
+<h1>Emergency lockdown script</h1>
+cat > /usr/local/bin/fcms-lockdown.sh << 'EOF'
+#!/usr/bin/env bash</p><p><h1>Disable all user logins except admin</h1>
+touch /path/to/fearlesscms/maintenance.lock</p><p><h1>Block suspicious IPs (example)</h1>
+<h1>iptables -A INPUT -s SUSPICIOUS_IP -j DROP</h1></p><p><h1>Create incident log</h1>
+echo "$(date): Emergency lockdown activated" >> /var/log/fcms-incidents.log</p><p>echo "FearlessCMS has been locked down. Check incident logs for details."
+EOF</p><p>chmod +x /usr/local/bin/fcms-lockdown.sh
+</code></pre></p><p><h3>Regular Security Maintenance</h3></p><p>#### 1. Security Update Schedule
+<li><strong>Daily</strong>: Monitor security logs</li>
+<li><strong>Weekly</strong>: Check for failed login attempts</li>
+<li><strong>Monthly</strong>: Update dependencies and review user accounts</li>
+<li><strong>Quarterly</strong>: Security configuration review</li>
+<li><strong>Annually</strong>: Full security audit and penetration testing</li></p><p>#### 2. Automated Security Checks
+<pre><code>bash
+<h1>Create security check script</h1>
+cat > /usr/local/bin/fcms-security-check.sh << 'EOF'
+#!/usr/bin/env bash</p><p>echo "FearlessCMS Security Check Report - $(date)"
+echo "================================================"</p><p><h1>Check file permissions</h1>
+echo "Checking file permissions..."
+if [ -r config/auth.json ]; then
+    echo "WARNING: config/auth.json is world-readable"
+fi</p><p><h1>Check for default passwords</h1>
+echo "Checking for default passwords..."
+if grep -q "changeme\|admin123\|password" config/<em>.json; then
+    echo "WARNING: Default passwords detected"
+fi</p><p><h1>Check SSL certificate</h1>
+echo "Checking SSL certificate..."
+if command -v openssl >/dev/null; then
+    openssl s_client -connect localhost:443 -servername $(hostname) </dev/null 2>/dev/null | openssl x509 -noout -dates
+fi</p><p>echo "Security check completed."
+EOF</p><p>chmod +x /usr/local/bin/fcms-security-check.sh</p><p><h1>Run weekly security checks</h1>
+echo "0 9 </em> <em> 1 /usr/local/bin/fcms-security-check.sh" | crontab -
+</code></pre></p><p><h2>📚 Related Documentation</h2></p><p><li><a href="gettingstarted.md">Installation and Setup</a></li>
+<li><a href="file-permissions.md">File Permissions Guide</a></li>
+<li><a href="cms-modes.md">CMS Modes Guide</a></li>
+<li><a href="../config/README.md">Configuration Guide</a></li></p><p><h2>🆘 Getting Help</h2></p><p>If you encounter issues during installation:</p><p><li><strong>Check system requirements</strong> using <code>--check</code> option</li>
+<li><strong>Review error messages</strong> for specific issues</li>
+<li><strong>Verify permissions</strong> on directories and files</li>
+<li><strong>Check PHP error logs</strong> for additional details</li>
+<li><strong>Consult the community</strong> for support</li></ul></p><p>---</p><p><strong>Happy installing!</strong> 🚀</p><p></em>This documentation is maintained by the FearlessCMS community. Last updated: January 2024*
+</p>
+      </main>
+    </div>
+    
+    <footer class="site-footer">
+  <div class="container">
+    Fearless Geek Media &copy; 2025
+  </div>
+</footer>
+  </body>
+</html> 

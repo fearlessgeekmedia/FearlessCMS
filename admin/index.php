@@ -1078,6 +1078,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     } // Close the CSRF validation else block
 }
 
+// Theme options are now handled entirely by theme-handler.php
+
 // Map actions to their template files
 error_log("DEBUG: About to map actions to templates. Current action: " . $action);
 $template_map = [

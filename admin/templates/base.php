@@ -18,6 +18,17 @@ global $cmsModeManager;
     <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
     <style>
         .fira-code { font-family: 'Fira Code', monospace; }
+        
+        /* Improved submenu navigation */
+        .submenu {
+            margin-top: 0 !important;
+            border-top: 2px solid transparent;
+        }
+        
+        /* Ensure no gap between parent and submenu */
+        .relative.group {
+            padding-bottom: 2px;
+        }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -35,9 +46,9 @@ global $cmsModeManager;
                     $hasChildren = isset($section['children']) && !empty($section['children']);
                     
                     if ($hasChildren) {
-                        echo '<div class="relative group">';
+                        echo '<div class="relative group" onmouseenter="showSubmenu(this)" onmouseleave="hideSubmenu(this)">';
                         echo '<a href="' . BASE_URL . '?action=' . htmlspecialchars($id) . '" class="hover:text-green-200">' . htmlspecialchars($section['label']) . '</a>';
-                        echo '<div class="absolute hidden group-hover:block bg-green-700 text-white shadow-lg rounded-md mt-2 py-2 w-48 z-10">';
+                        echo '<div class="absolute hidden bg-green-700 text-white shadow-lg rounded-md mt-0 py-2 w-48 z-10 submenu">';
                         foreach ($section['children'] as $child_id => $child_section) {
                             echo '<a href="' . BASE_URL . '?action=' . htmlspecialchars($child_id) . '" class="block px-4 py-2 hover:bg-green-800">' . htmlspecialchars($child_section['label']) . '</a>';
                         }
@@ -88,6 +99,39 @@ global $cmsModeManager;
     </div>
 
     <script>
+    // Submenu functions for better dropdown navigation
+    function showSubmenu(element) {
+        const submenu = element.querySelector('.submenu');
+        if (submenu) {
+            submenu.classList.remove('hidden');
+        }
+    }
+    
+    function hideSubmenu(element) {
+        const submenu = element.querySelector('.submenu');
+        if (submenu) {
+            // Add a small delay to allow moving mouse to submenu
+            setTimeout(() => {
+                if (!element.matches(':hover') && !submenu.matches(':hover')) {
+                    submenu.classList.add('hidden');
+                }
+            }, 100);
+        }
+    }
+    
+    // Add mouse events to submenus to keep them visible
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.submenu').forEach(submenu => {
+            submenu.addEventListener('mouseenter', function() {
+                this.classList.remove('hidden');
+            });
+            
+            submenu.addEventListener('mouseleave', function() {
+                this.classList.add('hidden');
+            });
+        });
+    });
+    
     document.addEventListener('DOMContentLoaded', function() {
         // Handle AJAX form submissions (but skip delete forms)
         document.querySelectorAll('form[data-ajax="true"]').forEach(form => {

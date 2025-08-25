@@ -101,6 +101,7 @@ fcms_register_admin_section('blog', [
                 echo '<form method="POST" class="space-y-4" id="blog-post-form">';
                 echo '<input type="hidden" name="action" value="save_post">';
                 echo '<input type="hidden" name="id" value="' . htmlspecialchars($edit['id']) . '">';
+                echo csrf_token_field();
                 echo '<div><label>Title:</label><input name="title" value="' . htmlspecialchars($edit['title']) . '" class="border rounded px-2 py-1 w-full"></div>';
                 echo '<div><label>Slug:</label><input name="slug" value="' . htmlspecialchars($edit['slug']) . '" class="border rounded px-2 py-1 w-full"></div>';
                 echo '<div class="text-sm text-gray-500">The slug should be URL-friendly (lowercase, no spaces). Example: my-blog-post</div>';
@@ -111,7 +112,9 @@ fcms_register_admin_section('blog', [
                 echo '<input type="hidden" name="content" id="blog-editor-content">';
                 echo '<button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Save</button>';
                 echo '</form>';
-                echo '<form method="POST" class="mt-4"><input type="hidden" name="action" value="delete_post"><input type="hidden" name="id" value="' . htmlspecialchars($edit['id']) . '"><button type="submit" onclick="return confirm(\'Delete this post?\')" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Delete</button></form>';
+                echo '<form method="POST" class="mt-4"><input type="hidden" name="action" value="delete_post"><input type="hidden" name="id" value="' . htmlspecialchars($edit['id']) . '">';
+                echo csrf_token_field();
+                echo '<button type="submit" onclick="return confirm(\'Delete this post?\')" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Delete</button></form>';
                 echo '<a href="?action=blog" class="inline-block mt-4 text-blue-600 hover:underline">Back to list</a>';
                 
                 // Toast UI Editor initialization
@@ -136,6 +139,7 @@ fcms_register_admin_section('blog', [
         } elseif (isset($_GET['new'])) {
             echo '<form method="POST" class="space-y-4" id="blog-post-form">';
             echo '<input type="hidden" name="action" value="save_post">';
+            echo csrf_token_field();
             echo '<div><label>Title:</label><input name="title" class="border rounded px-2 py-1 w-full"></div>';
             echo '<div><label>Slug:</label><input name="slug" class="border rounded px-2 py-1 w-full" placeholder="auto-generated-if-empty"></div>';
             echo '<div class="text-sm text-gray-500">The slug should be URL-friendly (lowercase, no spaces). Example: my-blog-post</div>';

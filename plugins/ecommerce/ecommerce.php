@@ -223,6 +223,7 @@ function ecommerce_admin_products_page() {
     <div class="bg-white p-6 rounded-lg shadow mb-6">
         <h3 class="text-lg font-semibold mb-4">Add New Product</h3>
         <form method="POST" class="space-y-4">
+            <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
             <input type="hidden" name="add_product" value="1">
             <div>
                 <label class="block font-medium mb-1">Name</label>
@@ -272,6 +273,7 @@ function ecommerce_admin_products_page() {
                                 <td class="py-2 px-4 border-b"><?= htmlspecialchars($product['stock']) ?></td>
                                 <td class="py-2 px-4 border-b">
                                     <form method="POST" class="inline-block">
+                                        <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
                                         <input type="hidden" name="product_id" value="<?= htmlspecialchars($product['id']) ?>">
                                         <input type="hidden" name="name" value="<?= htmlspecialchars($product['name']) ?>">
                                         <input type="hidden" name="description" value="<?= htmlspecialchars($product['description']) ?>">
@@ -280,6 +282,7 @@ function ecommerce_admin_products_page() {
                                         <button type="button" onclick="openEditModal(this)" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm">Edit</button>
                                     </form>
                                     <form method="POST" class="inline-block" onsubmit="return confirm('Are you sure you want to delete this product?');">
+                                        <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
                                         <input type="hidden" name="product_id" value="<?= htmlspecialchars($product['id']) ?>">
                                         <button type="submit" name="delete_product" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">Delete</button>
                                     </form>
@@ -297,6 +300,7 @@ function ecommerce_admin_products_page() {
         <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <h3 class="text-lg font-semibold mb-4">Edit Product</h3>
             <form method="POST" class="space-y-4">
+                <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
                 <input type="hidden" name="edit_product" value="1">
                 <input type="hidden" name="product_id" id="edit_product_id">
                 <div>
@@ -400,6 +404,7 @@ function ecommerce_admin_orders_page() {
                                 <td class="py-2 px-4 border-b"><?= htmlspecialchars($order['created_at']) ?></td>
                                 <td class="py-2 px-4 border-b">
                                     <form method="POST" class="inline-block">
+                                        <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
                                         <input type="hidden" name="order_id" value="<?= htmlspecialchars($order['id']) ?>">
                                         <select name="status" class="border rounded px-2 py-1 text-sm">
                                             <option value="pending" <?= $order['status'] == 'pending' ? 'selected' : '' ?>>Pending</option>

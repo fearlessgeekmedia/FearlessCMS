@@ -33,6 +33,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 break;
 
             case 'save_theme_options':
+                error_log('DEBUG: save_theme_options action received');
+                error_log('DEBUG: POST data: ' . print_r($_POST, true));
+                error_log('DEBUG: FILES data: ' . print_r($_FILES, true));
+                error_log('DEBUG: REQUEST_METHOD: ' . $_SERVER['REQUEST_METHOD']);
+                error_log('DEBUG: Content-Type: ' . ($_SERVER['CONTENT_TYPE'] ?? 'not set'));
+                
                 if (!fcms_check_permission($_SESSION['username'], 'manage_themes')) {
                     header('Content-Type: application/json');
                     echo json_encode(['success' => false, 'error' => 'You do not have permission to manage themes']);
@@ -72,7 +78,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 }
 
                 // Handle logo upload
-                if (isset($_FILES['logo']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
+                if (isset($_FILES['logo']) && $_FILES['logo']['error'] !== UPLOAD_ERR_NO_FILE) {
+                    error_log('Logo upload attempt.');
+                    error_log('logo _FILES: ' . print_r($_FILES['logo'], true));
+
+                    if ($_FILES['logo']['error'] !== UPLOAD_ERR_OK) {
+                        $errorMessages = [
+                            UPLOAD_ERR_INI_SIZE   => 'The uploaded file exceeds the upload_max_filesize directive in php.ini.',
+                            UPLOAD_ERR_FORM_SIZE  => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.',
+                            UPLOAD_ERR_PARTIAL    => 'The uploaded file was only partially uploaded.',
+                            UPLOAD_ERR_NO_FILE    => 'No file was uploaded.',
+                            UPLOAD_ERR_NO_TMP_DIR => 'Missing a temporary folder.',
+                            UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk.',
+                            UPLOAD_ERR_EXTENSION  => 'A PHP extension stopped the file upload.'
+                        ];
+                        $err = $_FILES['logo']['error'];
+                        $msg = $errorMessages[$err] ?? 'Unknown upload error.';
+                        error_log('Logo upload error: ' . $msg);
+
+                        // Return detailed error to client
+                        header('Content-Type: application/json');
+                        echo json_encode([
+                            'success' => false,
+                            'error' => $msg,
+                            'details' => [
+                                'error_code' => $err,
+                                'file_size' => $_FILES['logo']['size'] ?? 'unknown',
+                                'max_size' => ini_get('upload_max_filesize')
+                            ]
+                        ]);
+                        exit;
+                    }
+
+                    // If we get here, the upload was successful
                     // Remove old logo if exists
                     if (!empty($themeOptions['logo'])) {
                         $oldLogoPath = PROJECT_ROOT . '/' . $themeOptions['logo'];
@@ -100,7 +138,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 }
 
                 // Handle hero banner upload
-                if (isset($_FILES['herobanner'])) {
+                if (isset($_FILES['herobanner']) && $_FILES['herobanner']['error'] !== UPLOAD_ERR_NO_FILE) {
                     error_log('Hero banner upload attempt.');
                     error_log('herobanner _FILES: ' . print_r($_FILES['herobanner'], true));
 
@@ -161,7 +199,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 }
 
                 // Only save if we handled file uploads, otherwise let the main index.php handle it
-                if (isset($_FILES['logo']) || isset($_FILES['herobanner']) || isset($_POST['remove_logo']) || isset($_POST['remove_herobanner'])) {
+                if ((isset($_FILES['logo']) && $_FILES['logo']['error'] !== UPLOAD_ERR_NO_FILE) || 
+                    (isset($_FILES['herobanner']) && $_FILES['herobanner']['error'] !== UPLOAD_ERR_NO_FILE) || 
+                    isset($_POST['remove_logo']) || 
+                    isset($_POST['remove_herobanner'])) {
                     error_log('DEBUG: About to save theme options after file upload');
                     // Save updated options
                     if (file_put_contents($themeOptionsFile, json_encode($themeOptions, JSON_PRETTY_PRINT))) {

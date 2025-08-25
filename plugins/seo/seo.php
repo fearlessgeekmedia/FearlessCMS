@@ -54,6 +54,7 @@ function seo_admin_page() {
     <h2 class="text-2xl font-bold mb-6 fira-code">SEO Settings</h2>
     
     <form method="POST" class="space-y-6">
+        <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
         <input type="hidden" name="action" value="save_seo_settings">
         
         <div>

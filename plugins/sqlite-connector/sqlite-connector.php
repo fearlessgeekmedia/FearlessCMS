@@ -225,6 +225,7 @@ function sqlite_connector_admin_page() {
             <h3 class="text-lg font-semibold mb-4">Database Configuration</h3>
             
             <form method="POST" class="space-y-4">
+                <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
                 <input type="hidden" name="action" value="save_config">
                 
                 <div>

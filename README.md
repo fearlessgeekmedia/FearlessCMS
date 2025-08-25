@@ -81,17 +81,25 @@ php install.php --create-admin=<username> --password-file=/path/to/secret
 
 ### Static Site Export
 
-Like the rest of the CMS, the export script is experimental, but even more so than the CMS. It may not work properly for every situation.
+FearlessCMS includes powerful export functionality that converts your dynamic PHP site to static HTML for deployment on any static hosting service.
 
-To export your site to static HTML, you'll need to install the following Node.js dependencies (or use the installer to do it for you):
+#### Export System
+
+FearlessCMS includes a streamlined export system that automatically crawls your running site, ensuring full compatibility with all plugins and themes:
 
 ```bash
-npm install fs-extra handlebars marked
+# Start your development server
+nix-shell -p php81 --run "export FCMS_DEBUG=true && ./serve.sh"
+
+# In another terminal, export your site
+./export-robust.sh
 ```
 
-Then run the export script:
-```bash
-node export.js
-```
+**Features:**
+- ✅ **Zero maintenance** - automatically works with new plugins/themes
+- ✅ **Full compatibility** - whatever renders in browser gets exported
+- ✅ **Deploy anywhere** - Netlify, Vercel, GitHub Pages, AWS S3, etc.
+- ✅ **Simple commands** - just run the script and export
+- ✅ **Complete assets** - CSS, JS, images, and all dependencies included
 
-The exported static site will be available in the `export` directory.
+For complete export documentation, visit: [Export to Static HTML Guide](https://fearlesscms.online/documentation/export-sites-to-static-html/)

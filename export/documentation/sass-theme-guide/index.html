@@ -1,0 +1,1274 @@
+  <style>
+        .parallax-section {
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Ensure sections have adequate height for content */
+            min-height: 500px;
+            height: auto;
+            /* Ensure proper background coverage */
+            background: transparent;
+        }
+        
+        .parallax-background {
+            position: absolute;
+            top: 60% !important;
+            left: 50%;
+            width: 120%;
+            height: 120%;
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-attachment: scroll;
+            z-index: 1;
+            /* Center using transform, then adjust for parallax */
+            transform: translate(-50%, -50%);
+            will-change: transform;
+            /* Prevent any gaps during scroll */
+            background-clip: border-box;
+        }
+        
+        .parallax-content {
+            position: relative;
+            z-index: 3;
+            padding: 4rem 2rem;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            /* Ensure content takes full height */
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Ensure content is readable over background */
+        .parallax-content h1,
+        .parallax-content h2,
+        .parallax-content h3,
+        .parallax-content h4,
+        .parallax-content h5,
+        .parallax-content h6 {
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.9);
+            color: white !important;
+        }
+        
+        .parallax-content p {
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
+            color: white !important;
+        }
+        
+        .parallax-content a {
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
+            color: white !important;
+        }
+        
+        /* Support for inline HTML elements like span, strong, em, etc. */
+        .parallax-content span,
+        .parallax-content strong,
+        .parallax-content em,
+        .parallax-content code,
+        .parallax-content mark {
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
+            color: white !important;
+        }
+        
+        /* Ensure content is properly spaced */
+        .parallax-content > *:first-child {
+            margin-top: 0;
+        }
+        
+        .parallax-content > *:last-child {
+            margin-bottom: 0;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .parallax-section {
+                min-height: 400px;
+            }
+            
+            .parallax-content {
+                padding: 2rem 1rem;
+                min-height: 300px;
+            }
+            
+            .parallax-background {
+                top: 60% !important;
+                width: 130%;
+                height: 130%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .parallax-section {
+                min-height: 350px;
+            }
+            
+            .parallax-content {
+                padding: 1.5rem 1rem;
+                min-height: 250px;
+            }
+            
+            .parallax-background {
+                top: 60% !important;
+                width: 140%;
+                height: 140%;
+            }
+        }
+        
+        /* Ensure sections maintain proper aspect ratio */
+        .parallax-section {
+            box-sizing: border-box;
+        }
+        
+        /* Fix for content overflow */
+        .parallax-content > * {
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        
+        /* Ensure background images always cover the full section */
+        .parallax-background {
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            /* Enhanced coverage for scrolling */
+            background-clip: border-box !important;
+            /* Ensure background extends beyond section boundaries during scroll */
+            transform-origin: center center !important;
+        }
+        
+        /* Additional rules for better background coverage during scroll */
+        .parallax-section {
+            /* Ensure section maintains proper dimensions during scroll */
+            transform: translateZ(0);
+            backface-visibility: hidden;
+        }
+        
+        /* Enhanced background coverage - no pseudo-elements needed */
+        
+        /* Ensure background covers everything - simplified approach */
+        
+        /* Clean, unified background coverage rules */
+        .parallax-section {
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* Ensure smooth scrolling and prevent background gaps */
+        .parallax-section {
+            /* Hardware acceleration */
+            transform: translateZ(0);
+            /* Prevent background clipping */
+            clip-path: none;
+            /* Ensure proper stacking context */
+            isolation: isolate;
+        }
+        
+        /* Ensure background images are fully loaded before display */
+        .parallax-background {
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        
+        .parallax-background.loaded {
+            opacity: 1;
+        }
+        
+        /* Fallback for images that fail to load */
+        .parallax-background:not([style*="background-image"]) {
+            background-color: #f0f0f0;
+        }
+        
+        /* Styling for regular content sections between parallax */
+        .parallax-section + h2 {
+            margin-top: 4rem;
+            margin-bottom: 2rem;
+        }
+        
+        h2 + p {
+            margin-top: 1rem;
+            margin-bottom: 3rem;
+        }
+        
+        /* Professional section headers */
+        h2 {
+            color: #1a202c;
+            font-size: 2.8rem;
+            font-weight: 800;
+            text-align: center;
+            margin: 3rem 0 1.5rem 0;
+            padding: 0;
+            border: none;
+            background: none;
+            position: relative;
+            letter-spacing: -0.025em;
+        }
+        
+        /* Add elegant underline to section headers */
+        h2 {
+            border-bottom: 4px solid transparent;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6) bottom;
+            background-size: 60px 4px;
+            background-repeat: no-repeat;
+            background-position: center bottom;
+            padding-bottom: 20px;
+        }
+        
+        /* Section descriptions */
+        h2 + p {
+            text-align: center;
+            font-size: 1.25rem;
+            color: #4a5568;
+            max-width: 900px;
+            margin: 0 auto 3rem auto;
+            line-height: 1.7;
+            padding: 0 2rem;
+            font-weight: 400;
+        }
+        
+        /* Feature Cards - 2 Column Grid Layout (temporary placement for testing) */
+        .feature-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 16px !important;
+            padding: 1.5rem !important;
+            margin: 0.5rem !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            position: relative !important;
+            overflow: hidden !important;
+            box-sizing: border-box !important;
+            display: inline-block !important;
+            width: calc(50% - 1rem) !important;
+            vertical-align: top !important;
+            min-height: 120px !important;
+            border-top: 4px solid transparent !important;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899) top, linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+            background-size: 100% 4px, 100% 100% !important;
+            background-repeat: no-repeat !important;
+            background-position: center top, center center !important;
+            padding-top: 20px !important;
+        }
+        
+        /* Style the h3 headers within feature cards */
+        .feature-card h3 {
+            background: none !important;
+            border: none !important;
+            padding: 0 0 1rem 0 !important;
+            margin: 0 0 1rem 0 !important;
+            box-shadow: none !important;
+            font-size: 1.3rem !important;
+            font-weight: 700 !important;
+            line-height: 1.4 !important;
+            color: #1e293b !important;
+            text-align: center !important;
+            min-height: auto !important;
+            width: 100% !important;
+            display: block !important;
+        }
+        
+        /* Style the description text within feature cards */
+        .feature-card p {
+            margin: 0 !important;
+            padding: 0 !important;
+            color: #4a5568 !important;
+            font-size: 1rem !important;
+            line-height: 1.6 !important;
+            text-align: center !important;
+        }
+        
+        /* Hover effects for feature cards */
+        .feature-card:hover {
+            transform: translateY(-4px) !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+            border-color: #cbd5e1 !important;
+        }
+        
+        /* Create a container for the features that will force the grid layout */
+        .parallax-section + h2 + p {
+            display: block !important;
+            clear: both !important;
+            margin-bottom: 2rem !important;
+        }
+        
+        /* Force the first feature card to start a new line */
+        .parallax-section + h2 + p + .feature-card {
+            clear: both !important;
+        }
+        
+        /* Responsive grid adjustments */
+        @media (max-width: 768px) {
+            .feature-card {
+                width: calc(100% - 1rem) !important;
+                display: block !important;
+                clear: both !important;
+            }
+        }
+</style><script>
+        function initParallax() {
+            const parallaxSections = document.querySelectorAll(".parallax-section");
+            
+            if (parallaxSections.length === 0) {
+                console.log("No parallax sections found");
+                return;
+            }
+            
+            console.log("Found " + parallaxSections.length + " parallax sections");
+            
+            // Set up scroll event listener for parallax effect
+            window.addEventListener("scroll", function() {
+                parallaxSections.forEach(function(section) {
+                    const rect = section.getBoundingClientRect();
+                    const speed = parseFloat(section.dataset.speed) || 0.5;
+                    const effect = section.dataset.effect || "scroll";
+                    
+                    // Apply parallax to visible sections
+                    if (rect.top < window.innerHeight && rect.bottom > 0) {
+                        const background = section.querySelector(".parallax-background");
+                        if (background) {
+                            const scrolled = window.pageYOffset;
+                            const sectionTop = section.offsetTop;
+                            
+                            // Simple parallax calculation relative to section position
+                            const relativeScroll = scrolled - sectionTop;
+                            const rate = relativeScroll * speed * 0.5;
+                            
+                            // Apply transform while maintaining centering
+                            background.style.transform = "translate(-50%, calc(-50% + " + rate + "px))";
+                        }
+                    }
+                });
+            });
+        }
+        
+        // Function to set overlay colors and opacity
+        function setOverlayStyles() {
+            console.log("Setting overlay styles...");
+            const parallaxSections = document.querySelectorAll(".parallax-section");
+            console.log("Found " + parallaxSections.length + " parallax sections");
+            
+            parallaxSections.forEach(function(section, index) {
+                const overlayColor = section.dataset.overlayColor || "rgba(0,0,0,0.4)";
+                const overlayOpacity = section.dataset.overlayOpacity || "0.4";
+                
+                console.log("Section " + index + " - Color: " + overlayColor + ", Opacity: " + overlayOpacity);
+                
+                // Convert color names to hex if needed
+                let finalColor = overlayColor;
+                if (overlayColor.startsWith("rgba")) {
+                    finalColor = overlayColor;
+                } else if (overlayColor.startsWith("#")) {
+                    finalColor = hexToRgba(overlayColor, overlayOpacity);
+                } else {
+                    finalColor = colorNameToRgba(overlayColor, overlayOpacity);
+                }
+                
+                console.log("Final color: " + finalColor);
+                
+                // Apply the overlay color directly to the ::before pseudo-element
+                const overlayDiv = document.createElement("div");
+                overlayDiv.className = "parallax-overlay";
+                overlayDiv.style.cssText = "position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: " + finalColor + "; z-index: 1;";
+                
+                // Remove existing overlay if any
+                const existingOverlay = section.querySelector(".parallax-overlay");
+                if (existingOverlay) {
+                    existingOverlay.remove();
+                }
+                
+                // Insert the overlay before the content
+                const content = section.querySelector(".parallax-content");
+                if (content) {
+                    section.insertBefore(overlayDiv, content);
+                    console.log("Overlay added to section " + index);
+                } else {
+                    console.log("No content found in section " + index);
+                }
+            });
+        }
+        
+        // Helper function to convert hex to rgba
+        function hexToRgba(hex, opacity) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return "rgba(" + r + "," + g + "," + b + "," + opacity + ")";
+        }
+        
+        // Helper function to convert color names to rgba
+        function colorNameToRgba(colorName, opacity) {
+            const colors = {
+                "black": "0,0,0",
+                "white": "255,255,255",
+                "red": "255,0,0",
+                "green": "0,128,0",
+                "blue": "0,0,255",
+                "yellow": "255,255,0",
+                "purple": "128,0,128",
+                "orange": "255,165,0",
+                "pink": "255,192,203",
+                "brown": "165,42,42",
+                "gray": "128,128,128",
+                "grey": "128,128,128"
+            };
+            
+            const rgb = colors[colorName.toLowerCase()] || "0,0,0";
+            return "rgba(" + rgb + "," + opacity + ")";
+        }
+        
+        // Initialize parallax when DOM is ready
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", initParallax);
+        } else {
+            initParallax();
+        }
+        
+        // Also initialize on window load for images
+        window.addEventListener("load", function() {
+            // Ensure all background images are loaded
+            const parallaxSections = document.querySelectorAll(".parallax-section");
+            parallaxSections.forEach(function(section) {
+                const background = section.querySelector(".parallax-background");
+                if (background) {
+                    const bgImage = background.style.backgroundImage;
+                    if (bgImage && bgImage !== "none") {
+                        const imgUrl = bgImage.replace(/url\(["\']?([^"\']+)["\']?\)/, "$1");
+                        const img = new Image();
+                        img.onload = function() {
+                            background.classList.add("loaded");
+                        };
+                        img.onerror = function() {
+                            console.warn("Failed to load parallax background image:", imgUrl);
+                        };
+                        img.src = imgUrl;
+                    } else {
+                        background.classList.add("loaded");
+                    }
+                }
+            });
+            
+            // Initialize overlays after images are loaded
+            setOverlayStyles();
+        });
+</script><!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+<title>FearlessCMS - SASS Theme Development Guide</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="/themes/default/assets/style.css">
+
+<style>
+  
+  /* ensure global UI toggles visible if injected */
+  .fcms-theme-toggle{display:inline-flex}
+  {{custom_css}}
+</style>
+    <style>
+      .documentation-layout {
+        display: flex;
+        gap: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+      .documentation-sidebar {
+        flex: 0 0 300px;
+        padding: 1.5rem;
+        border-radius: 8px;
+        height: fit-content;
+        position: sticky;
+        top: 2rem;
+      }
+      .documentation-content {
+        flex: 1;
+        max-width: 800px;
+      }
+      .documentation-sidebar h3 {
+        margin-top: 0;
+        color: #333;
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 0.5rem;
+      }
+      .documentation-sidebar ul {
+        list-style: none;
+        padding: 0;
+      }
+      .documentation-sidebar li {
+        margin-bottom: 0.5rem;
+      }
+      .documentation-sidebar a {
+        color: #555;
+        text-decoration: none;
+        padding: 0.25rem 0;
+        display: block;
+        border-radius: 4px;
+        transition: all 0.2s;
+      }
+      .documentation-sidebar a:hover {
+        color: #007bff;
+        background: #e9ecef;
+        padding-left: 0.5rem;
+      }
+      .documentation-content h1 {
+        font-size: clamp(2.5rem, 1.5rem + 3vw, 3.5rem);
+        color: #333;
+        border-bottom: 3px solid #007bff;
+        padding-bottom: 1rem;
+        margin-bottom: 2rem;
+      }
+      .documentation-content h2 {
+        font-size: clamp(1.8rem, 1.15rem + 2vw, 2.5rem);
+        color: #444;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+      }
+      .documentation-content h3 {
+        color: #555;
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+      }
+      .documentation-content p {
+        line-height: 1.6;
+        margin-bottom: 1rem;
+      }
+      .documentation-content code {
+        background: #f8f9fa;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+      }
+      .documentation-content pre {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        overflow-x: auto;
+        border: 1px solid #e9ecef;
+      }
+      .documentation-content blockquote {
+        border-left: 4px solid #007bff;
+        padding-left: 1rem;
+        margin: 1rem 0;
+        font-style: italic;
+        color: #666;
+      }
+      .documentation-content table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+      }
+      .documentation-content th,
+      .documentation-content td {
+        border: 1px solid #ddd;
+        padding: 0.5rem;
+        text-align: left;
+      }
+      .documentation-content th {
+        background: #f8f9fa;
+        font-weight: bold;
+      }
+      .breadcrumb {
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        margin-bottom: 2rem;
+        font-size: 0.9rem;
+        color: #333;
+      }
+      .breadcrumb a {
+        color: #007bff;
+        text-decoration: none;
+      }
+      .breadcrumb a:hover {
+        text-decoration: underline;
+      }
+      
+      /* Widget styling for documentation sidebar */
+      .widget-documentation-nav {
+        margin-bottom: 2rem;
+      }
+      .widget-documentation-nav .widget-title {
+        margin-top: 0;
+        color: #333;
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 0.5rem;
+        font-size: 1.1rem;
+      }
+      .documentation-nav-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .documentation-nav-item {
+        margin-bottom: 0.5rem;
+      }
+      .documentation-nav-link {
+        color: #555;
+        text-decoration: none;
+        padding: 0.25rem 0;
+        display: block;
+        border-radius: 4px;
+        transition: all 0.2s;
+        font-size: 0.95rem;
+      }
+              .documentation-nav-link:hover {
+          color: #007bff;
+          background: #e9ecef;
+          padding-left: 0.5rem;
+        }
+      
+      /* Dark mode support */
+      @media (prefers-color-scheme: dark) {
+        .documentation-layout {
+          background: #0f172a;
+          color: #e0e0e0;
+        }
+        
+        .documentation-sidebar {
+          background: #1e293b;
+          color: #e0e0e0;
+          border: 1px solid #475569;
+          border-radius: 8px;
+        }
+        
+        .documentation-sidebar h3 {
+          color: #e0e0e0;
+          border-bottom-color: #007bff;
+        }
+        
+        .documentation-sidebar a {
+          color: #b0b0b0;
+        }
+        
+        .documentation-sidebar a:hover {
+          color: #007bff;
+          background: #404040;
+        }
+        
+        .documentation-content h1 {
+          color: #e0e0e0;
+          border-bottom-color: #007bff;
+        }
+        
+        .documentation-content h2 {
+          color: #d0d0d0;
+        }
+        
+        .documentation-content h3 {
+          color: #c0c0c0;
+        }
+        
+        .documentation-content p {
+          color: #e0e0e0;
+        }
+        
+        .documentation-content code {
+          background: #404040;
+          color: #e0e0e0;
+        }
+        
+        .documentation-content pre {
+          background: #2d2d2d;
+          border-color: #404040;
+          color: #e0e0e0;
+        }
+        
+        .documentation-content blockquote {
+          border-left-color: #007bff;
+          color: #b0b0b0;
+        }
+        
+        .documentation-content table th {
+          background: #2d2d2d;
+          color: #e0e0e0;
+        }
+        
+        .documentation-content table td {
+          color: #e0e0e0;
+        }
+        
+        .documentation-content table th,
+        .documentation-content table td {
+          border-color: #404040;
+        }
+        
+        .breadcrumb {
+          background: #1e293b;
+          color: #e0e0e0;
+          border: 1px solid #475569;
+          border-radius: 6px;
+        }
+        
+        .breadcrumb a {
+          color: #007bff;
+        }
+        
+        .widget-documentation-nav .widget-title {
+          color: #e0e0e0;
+          border-bottom-color: #007bff;
+        }
+        
+        .documentation-nav-link {
+          color: #b0b0b0;
+        }
+        
+        .documentation-nav-link:hover {
+          color: #007bff;
+          background: #404040;
+        }
+      }
+      
+      /* Responsive design */
+      @media (max-width: 768px) {
+        .documentation-layout {
+          flex-direction: column;
+          padding: 1rem;
+        }
+        .documentation-sidebar {
+          position: static;
+          flex: none;
+        }
+      }
+      
+      /* Manual dark mode classes */
+      .dark-mode .documentation-layout {
+        background: #0f172a !important;
+        color: #e0e0e0 !important;
+      }
+      
+      .dark-mode .documentation-sidebar {
+        background: #1e293b !important;
+        color: #e0e0e0 !important;
+        border: 1px solid #475569 !important;
+        border-radius: 8px !important;
+      }
+      
+      .dark-mode .breadcrumb {
+        background: #1e293b !important;
+        color: #e0e0e0 !important;
+        border: 1px solid #475569 !important;
+        border-radius: 6px !important;
+      }
+      
+      .dark-mode .widget-documentation-nav .widget-title {
+        color: #e0e0e0 !important;
+        border-bottom-color: #007bff !important;
+      }
+      
+      .dark-mode .documentation-nav-link {
+        color: #b0b0b0 !important;
+      }
+      
+      .dark-mode .documentation-nav-link:hover {
+        color: #007bff !important;
+        background: #404040 !important;
+      }
+    </style>
+    
+
+  <script src="https://cdn.tailwindcss.com"></script>
+<style id="fcms-nav-style">\n@media (max-width: 900px){header nav{display:none}header nav.is-open{display:block}.fcms-hamburger{display:inline-flex;gap:6px;flex-direction:column;justify-content:center;align-items:center;width:40px;height:36px;border:1px solid rgba(0,0,0,0.15);border-radius:10px;background:#fff;margin-left:6px} .fcms-hamburger span{display:block;width:20px;height:2px;background:#111;border-radius:2px}}\n@media (prefers-color-scheme: dark){@media (max-width:900px){.fcms-hamburger{background:#0f172a;border-color:rgba(255,255,255,0.25)} .fcms-hamburger span{background:#e5e7eb}}}\n@media (min-width: 901px){.fcms-hamburger{display:none !important}}\n.fcms-theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:40px;height:36px;margin-left:8px;border:1px solid rgba(0,0,0,0.15);border-radius:10px;background:#fff;color:#111;font-size:16px;line-height:1} .fcms-theme-toggle:focus{outline:2px solid #6366f1; outline-offset:2px}\n@media (prefers-color-scheme: dark){.fcms-theme-toggle{background:#0f172a;border-color:rgba(255,255,255,0.25);color:#e5e7eb}}\n</style>
+<script id="fcmsThemeInit">\n(function(){\n  var root=document.documentElement;\n  var KEY="fcms-theme";\n  function apply(pref){\n    if(pref==="system"){root.removeAttribute("data-theme");} else {root.setAttribute("data-theme", pref);}\n  }\n  function init(){\n    var pref=localStorage.getItem(KEY)||"system"; apply(pref);\n    window.fcmsSetTheme=function(p){localStorage.setItem(KEY,p);apply(p);return p;};\n    window.fcmsCycleTheme=function(){var seq=["system","light","dark"];var cur=localStorage.getItem(KEY)||"system";var next=seq[(seq.indexOf(cur)+1)%3];localStorage.setItem(KEY,next);apply(next);return next;};\n  }\n  document.addEventListener("DOMContentLoaded", init);\n})();\n(function(){\n  function enhance(){\n    var header=document.querySelector("header"); if(!header) return;\n    var nav=header.querySelector("nav"); if(!nav) return;\n    var parent=nav.parentNode;\n    var enableH=true;\n    var enableT=true;\n    if(enableH){\n      var hb=document.getElementById("fcms-hamburger");\n      if(!hb){ hb=document.createElement("button"); hb.id="fcms-hamburger"; hb.type="button"; hb.className="fcms-hamburger"; hb.setAttribute("aria-label","Toggle navigation"); hb.setAttribute("aria-expanded","false"); hb.innerHTML="<span></span><span></span><span></span>"; try{parent.insertBefore(hb, nav);}catch(e){header.appendChild(hb);} }\n      if(hb && !hb._wired){ hb.addEventListener("click", function(){ var open=nav.classList.toggle("is-open"); hb.setAttribute("aria-expanded", open); }); hb._wired=true; }\n    }\n    if(enableT){\n      var t=document.getElementById("fcms-theme-toggle");\n      if(!t){ t=document.createElement("button"); t.id="fcms-theme-toggle"; t.type="button"; t.className="fcms-theme-toggle"; t.setAttribute("aria-label","Toggle theme (system/light/dark)"); t.title="Theme"; t.textContent="◐"; try{parent.insertBefore(t, nav);}catch(e){header.appendChild(t);} }\n      if(t && !t._wired){ t.addEventListener("click", function(){ var next=window.fcmsCycleTheme?window.fcmsCycleTheme():null; t.setAttribute("data-mode", next); }); t._wired=true; }\n    }\n  }\n  document.addEventListener("DOMContentLoaded", enhance);\n})();\n</script>
+</head>
+  <body>
+    <header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="/">
+      
+        <img class="brand-logo" src="/uploads/logo_1756077606.png" alt="FearlessCMS">
+      
+      <span class="brand-text">FearlessCMS</span>
+    </a>
+    <button id="fcms-hamburger" type="button" class="fcms-hamburger" aria-label="Toggle navigation" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <button id="fcms-theme-toggle" type="button" class="fcms-theme-toggle" aria-label="Toggle theme (system/light/dark)" title="Theme">◐</button>
+    <nav aria-label="Main navigation">
+      <ul class="main-menu"><li class=""><a href="/" class="">Home</a></li><li class=""><a href="/dev-roadmap" class="">Development Roadmap</a></li><li class=""><a href="/documentation" class="">Documentation</a></li><li class=""><a href="/blog" class="">News</a></li><li class=""><a href="https://ko-fi.com/fearlessgeekmedia" class="" target="_blank">Support us on Ko-Fi</a></li><li class=""><a href="https://opencollective.com/fearlesscms/contribute" class="" target="_blank">Support us on Open Collective</a></li><li class=""><a href="https://github.com/fearlessgeekmedia/FearlessCMS" class="" target="_blank">Github</a></li></ul>
+    </nav>
+  </div>
+  <script>
+    (function(){
+      var root=document.documentElement;
+      var KEY='fcms-theme';
+      function apply(pref){ if(pref==='system'){ root.removeAttribute('data-theme'); } else { root.setAttribute('data-theme', pref); } }
+      try {
+        var pref=localStorage.getItem(KEY)||'system';
+        apply(pref);
+      } catch(e) {}
+
+      var toggle=document.getElementById('fcms-theme-toggle');
+      if(toggle){
+        toggle.addEventListener('click', function(){
+          var seq=['system','light','dark'];
+          var cur; try { cur=localStorage.getItem(KEY)||'system'; } catch(e){ cur='system'; }
+          var next=seq[(seq.indexOf(cur)+1)%3];
+          try { localStorage.setItem(KEY,next); } catch(e) {}
+          apply(next);
+          toggle.setAttribute('data-mode', next);
+        });
+      }
+
+      var hb=document.getElementById('fcms-hamburger');
+      var nav=document.querySelector('header nav');
+      if(hb && nav){
+        hb.addEventListener('click', function(){
+          var open=nav.classList.toggle('is-open');
+          hb.setAttribute('aria-expanded', open);
+        });
+      }
+    })();
+  </script>
+  
+</header>
+    <!-- Include file not found: ad-area.html -->
+    
+    <div class="documentation-layout">
+      <aside class="documentation-sidebar">
+        <div class="widget widget-documentation-nav"><h3 class="widget-title">Documentation</h3><div class="widget-content"><ul class="documentation-nav-list"><li class="documentation-nav-item"><a href="/documentation" class="documentation-nav-link" title="Getting started with FearlessCMS">Overview</a></li><li class="documentation-nav-item"><a href="/documentation/install" class="documentation-nav-link" title="Install and setup guide">Installation</a></li><li class="documentation-nav-item"><a href="/documentation/gettingstarted" class="documentation-nav-link" title="First steps with your CMS">Getting Started</a></li><li class="documentation-nav-item"><a href="/documentation/export-sites-to-static-html" class="documentation-nav-link" title="Streamlined export system for static site generation">Export to Static HTML</a></li><li class="documentation-nav-item"><a href="/documentation/creating-themes" class="documentation-nav-link" title="Build custom themes">Creating Themes</a></li><li class="documentation-nav-item"><a href="/documentation/plugin-development-guide" class="documentation-nav-link" title="Extend functionality with plugins">Plugin Development</a></li><li class="documentation-nav-item"><a href="/documentation/cms-modes" class="documentation-nav-link" title="Different CMS operation modes">CMS Modes</a></li><li class="documentation-nav-item"><a href="/documentation/file-permissions" class="documentation-nav-link" title="Security and file access">File Permissions</a></li><li class="documentation-nav-item"><a href="/documentation/parallax-plugin" class="documentation-nav-link" title="Add stunning parallax scrolling effects">Parallax Plugin</a></li></ul></div></div><div class="widget widget-documentation-nav"><h3 class="widget-title">Theme Development</h3><div class="widget-content"><ul class="documentation-nav-list"><li class="documentation-nav-item"><a href="/documentation/theme-development-workflow" class="documentation-nav-link" title="Theme development process">Workflow</a></li><li class="documentation-nav-item"><a href="/documentation/theme-templates-reference" class="documentation-nav-link" title="Template system reference">Templates</a></li><li class="documentation-nav-item"><a href="/documentation/theme-options-guide" class="documentation-nav-link" title="Theme configuration options">Options</a></li><li class="documentation-nav-item"><a href="/documentation/sass-theme-guide" class="documentation-nav-link" title="Styling with SASS">SASS Guide</a></li><li class="documentation-nav-item"><a href="/documentation/modular-templates" class="documentation-nav-link" title="Building reusable components">Modular Templates</a></li></ul></div></div><div class="widget widget-documentation-nav"><h3 class="widget-title">Advanced</h3><div class="widget-content"><ul class="documentation-nav-list"><li class="documentation-nav-item"><a href="/documentation/theme-development-index" class="documentation-nav-link" title="Complete development reference">Development Index</a></li><li class="documentation-nav-item"><a href="/documentation/customization-overview" class="documentation-nav-link" title="Advanced customization techniques">Customization</a></li><li class="documentation-nav-item"><a href="/documentation/ad-area-system" class="documentation-nav-link" title="Advertisement area system">AD Areas</a></li></ul></div></div>
+      </aside>
+      
+      <main class="documentation-content">
+        <div class="breadcrumb">
+          <a href="/">Home</a> &gt; 
+          <a href="/documentation">Documentation</a>
+          
+          &gt; SASS Theme Development Guide
+          
+        </div>
+        
+        <h1>SASS Theme Development Guide</h1>
+        <p><h1>SASS Theme Development Guide</h1></p><p>This guide covers how to develop FearlessCMS themes that use SASS (Syntactically Awesome Style Sheets) for CSS preprocessing. This is useful for complex themes that benefit from SASS features like variables, mixins, and nested rules.</p><p><h2>When to Use SASS</h2></p><p>Consider using SASS for your theme if you need:</p><p><ul><li><strong>Complex styling</strong> with many variables and calculations</li>
+<li><strong>Reusable components</strong> that benefit from mixins</li>
+<li><strong>Organized CSS structure</strong> with partials and imports</li>
+<li><strong>Advanced features</strong> like functions and loops</li>
+<li><strong>Better maintainability</strong> for large stylesheets</li></p><p><h2>SASS Setup</h2></p><p><h3>1. Install SASS</h3></p><p>You'll need to install SASS on your development machine:</p><p><pre><code>bash
+<h1>Using npm (recommended)</h1>
+npm install -g sass</p><p><h1>Using Ruby (if you have Ruby installed)</h1>
+gem install sass</p><p><h1>Using Homebrew (macOS)</h1>
+brew install sass/sass/sass
+</code></pre></p><p><h3>2. Theme Structure with SASS</h3></p><p>Organize your SASS files in a logical structure:</p><p><pre><code>
+themes/your-sass-theme/
+├── templates/
+│   ├── home.html
+│   ├── page.html
+│   ├── blog.html
+│   └── 404.html
+├── assets/
+│   ├── sass/
+│   │   ├── main.scss          # Main SASS file
+│   │   ├── _variables.scss    # Variables
+│   │   ├── _mixins.scss       # Mixins
+│   │   ├── _base.scss         # Base styles
+│   │   ├── _layout.scss       # Layout styles
+│   │   ├── _components.scss   # Component styles
+│   │   └── _utilities.scss    # Utility classes
+│   ├── style.css              # Compiled CSS (generated)
+│   ├── images/
+│   └── js/
+├── theme.json
+├── config.json
+└── README.md
+</code></pre></p><p><h3>3. SASS File Organization</h3></p><p>#### main.scss (Main Entry Point)</p><p><pre><code>scss
+// Import all SASS files
+@import 'variables';
+@import 'mixins';
+@import 'base';
+@import 'layout';
+@import 'components';
+@import 'utilities';
+</code></pre></p><p>#### _variables.scss (Variables)</p><p><pre><code>scss
+// Colors
+$primary-color: #007bff;
+$secondary-color: #6c757d;
+$success-color: #28a745;
+$danger-color: #dc3545;
+$warning-color: #ffc107;
+$info-color: #17a2b8;</p><p>// Typography
+$font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+$font-size-base: 1rem;
+$line-height-base: 1.6;</p><p>// Spacing
+$spacing-unit: 1rem;
+$container-max-width: 1200px;</p><p>// Breakpoints
+$breakpoint-sm: 576px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 992px;
+$breakpoint-xl: 1200px;</p><p>// Theme options integration
+$theme-colors: (
+  'blue': #007bff,
+  'green': #28a745,
+  'purple': #6f42c1,
+  'orange': #fd7e14
+);
+</code></pre></p><p>#### _mixins.scss (Reusable Mixins)</p><p><pre><code>scss
+// Responsive breakpoint mixin
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == sm {
+    @media (min-width: $breakpoint-sm) { @content; }
+  } @else if $breakpoint == md {
+    @media (min-width: $breakpoint-md) { @content; }
+  } @else if $breakpoint == lg {
+    @media (min-width: $breakpoint-lg) { @content; }
+  } @else if $breakpoint == xl {
+    @media (min-width: $breakpoint-xl) { @content; }
+  }
+}</p><p>// Button mixin
+@mixin button($bg-color: $primary-color, $text-color: white) {
+  background-color: $bg-color;
+  color: $text-color;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    background-color: darken($bg-color, 10%);
+  }
+}</p><p>// Card mixin
+@mixin card($bg-color: white, $border-color: #e9ecef) {
+  background-color: $bg-color;
+  border: 1px solid $border-color;
+  border-radius: 8px;
+  padding: $spacing-unit;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+</code></pre></p><p>#### _base.scss (Base Styles)</p><p><pre><code>scss
+// Reset and base styles
+<em> {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}</p><p>html {
+  font-size: 16px;
+}</p><p>body {
+  font-family: $font-family-base;
+  font-size: $font-size-base;
+  line-height: $line-height-base;
+  color: $text-color;
+  background-color: $bg-color;
+}</p><p>// Typography
+h1, h2, h3, h4, h5, h6 {
+  margin-bottom: $spacing-unit;
+  font-weight: 600;
+  line-height: 1.2;
+}</p><p>h1 { font-size: 2.5rem; }
+h2 { font-size: 2rem; }
+h3 { font-size: 1.75rem; }
+h4 { font-size: 1.5rem; }
+h5 { font-size: 1.25rem; }
+h6 { font-size: 1rem; }</p><p>p {
+  margin-bottom: $spacing-unit;
+}</p><p>a {
+  color: $primary-color;
+  text-decoration: none;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+}
+</code></pre></p><p>#### _layout.scss (Layout Styles)</p><p><pre><code>scss
+// Container
+.container {
+  max-width: $container-max-width;
+  margin: 0 auto;
+  padding: 0 $spacing-unit;
+  
+  @include respond-to(md) {
+    padding: 0 ($spacing-unit </em> 2);
+  }
+}</p><p>// Grid system
+.grid {
+  display: grid;
+  gap: $spacing-unit;
+  
+  &--2-cols {
+    grid-template-columns: 1fr;
+    
+    @include respond-to(md) {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  
+  &--3-cols {
+    grid-template-columns: 1fr;
+    
+    @include respond-to(md) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+}</p><p>// Header
+.header {
+  background-color: $header-bg;
+  padding: $spacing-unit 0;
+  border-bottom: 1px solid $border-color;
+}</p><p>// Main content
+.main {
+  padding: ($spacing-unit <em> 2) 0;
+  min-height: 60vh;
+}</p><p>// Footer
+.footer {
+  background-color: $footer-bg;
+  color: $footer-text-color;
+  padding: ($spacing-unit </em> 2) 0;
+  margin-top: auto;
+}
+</code></pre></p><p>#### _components.scss (Component Styles)</p><p><pre><code>scss
+// Buttons
+.btn {
+  @include button;
+  
+  &--secondary {
+    @include button($secondary-color);
+  }
+  
+  &--success {
+    @include button($success-color);
+  }
+  
+  &--danger {
+    @include button($danger-color);
+  }
+}</p><p>// Cards
+.card {
+  @include card;
+  
+  &--featured {
+    @include card($primary-color, $primary-color);
+    color: white;
+  }
+}</p><p>// Navigation
+.nav {
+  display: flex;
+  align-items: center;
+  
+  &__list {
+    display: flex;
+    list-style: none;
+    gap: $spacing-unit;
+  }
+  
+  &__link {
+    color: $nav-link-color;
+    text-decoration: none;
+    padding: 0.5rem;
+    
+    &:hover {
+      color: $nav-link-hover-color;
+    }
+  }
+}</p><p>// Blog posts
+.blog-post {
+  margin-bottom: ($spacing-unit <em> 2);
+  padding-bottom: ($spacing-unit </em> 2);
+  border-bottom: 1px solid $border-color;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+  
+  &__title {
+    margin-bottom: $spacing-unit;
+    
+    a {
+      color: $text-color;
+      text-decoration: none;
+      
+      &:hover {
+        color: $primary-color;
+      }
+    }
+  }
+  
+  &__meta {
+    color: $text-muted;
+    font-size: 0.9rem;
+    margin-bottom: $spacing-unit;
+  }
+  
+  &__excerpt {
+    color: $text-muted;
+    margin-bottom: $spacing-unit;
+  }
+}
+</code></pre></p><p><h2>Development Workflow with SASS</h2></p><p><h3>1. Watch Mode</h3></p><p>Use SASS watch mode during development:</p><p><pre><code>bash
+<h1>Watch for changes and compile automatically</h1>
+sass --watch assets/sass/main.scss:assets/style.css</p><p><h1>Or with compressed output</h1>
+sass --watch assets/sass/main.scss:assets/style.css --style compressed
+</code></pre></p><p><h3>2. Build Process</h3></p><p>For production builds:</p><p><pre><code>bash
+<h1>Compile once with compressed output</h1>
+sass assets/sass/main.scss:assets/style.css --style compressed</p><p><h1>Or create a build script in package.json</h1>
+</code></pre></p><p><h3>3. Package.json Scripts</h3></p><p>Create a <code>package.json</code> file in your theme directory:</p><p><pre><code>json
+{
+  "name": "your-sass-theme",
+  "version": "1.0.0",
+  "scripts": {
+    "sass:watch": "sass --watch assets/sass/main.scss:assets/style.css",
+    "sass:build": "sass assets/sass/main.scss:assets/style.css --style compressed",
+    "sass:dev": "sass assets/sass/main.scss:assets/style.css --style expanded"
+  },
+  "devDependencies": {
+    "sass": "^1.32.0"
+  }
+}
+</code></pre></p><p>Then use:</p><p><pre><code>bash
+npm run sass:watch  # Development
+npm run sass:build  # Production
+npm run sass:dev    # Development with expanded output
+</code></pre></p><p><h2>Theme Options Integration</h2></p><p><h3>CSS Custom Properties with SASS</h3></p><p>Use SASS to generate CSS custom properties for theme options:</p><p><pre><code>scss
+// _variables.scss
+$theme-colors: (
+  'blue': #007bff,
+  'green': #28a745,
+  'purple': #6f42c1,
+  'orange': #fd7e14
+);</p><p>// Generate CSS custom properties
+:root {
+  @each $name, $color in $theme-colors {
+    --color-#{$name}: #{$color};
+  }
+  
+  --primary-color: var(--color-blue);
+  --secondary-color: var(--color-gray);
+}</p><p>// Theme-specific classes
+@each $name, $color in $theme-colors {
+  .theme-#{$name} {
+    --primary-color: var(--color-#{$name});
+  }
+}
+</code></pre></p><p><h3>Dynamic Theme Options</h3></p><p>Create SASS functions to handle theme options:</p><p><pre><code>scss
+// _functions.scss
+@function theme-color($color-name) {
+  @return var(--color-#{$color-name});
+}</p><p>@function theme-option($option-name) {
+  @return var(--theme-#{$option-name});
+}</p><p>// Usage
+.button {
+  background-color: theme-color('primary');
+  color: white;
+}</p><p>.sidebar {
+  @if theme-option('show-sidebar') {
+    display: block;
+  } @else {
+    display: none;
+  }
+}
+</code></pre></p><p><h2>Example: Complete SASS Theme</h2></p><p><h3>Theme Structure</h3></p><p><pre><code>
+themes/sass-example/
+├── templates/
+│   ├── home.html
+│   ├── page.html
+│   ├── blog.html
+│   └── 404.html
+├── assets/
+│   ├── sass/
+│   │   ├── main.scss
+│   │   ├── _variables.scss
+│   │   ├── _mixins.scss
+│   │   ├── _base.scss
+│   │   ├── _layout.scss
+│   │   ├── _components.scss
+│   │   └── _utilities.scss
+│   ├── style.css
+│   └── images/
+├── theme.json
+├── config.json
+├── package.json
+└── README.md
+</code></pre></p><p><h3>main.scss</h3></p><p><pre><code>scss
+// Import all SASS files
+@import 'variables';
+@import 'mixins';
+@import 'base';
+@import 'layout';
+@import 'components';
+@import 'utilities';</p><p>// Theme-specific overrides
+@import 'theme-overrides';
+</code></pre></p><p><h3>Template Usage</h3></p><p><pre><code>html
+<!DOCTYPE html>
+<html lang="en" class="theme-{{themeOptions.colorScheme}}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}} - {{siteName}}</title>
+    <link rel="stylesheet" href="/themes/{{theme}}/assets/style.css">
+<script src="https://cdn.tailwindcss.com"></script>
+<style id="fcms-nav-style">\n@media (max-width: 900px){header nav{display:none}header nav.is-open{display:block}.fcms-hamburger{display:inline-flex;gap:6px;flex-direction:column;justify-content:center;align-items:center;width:40px;height:36px;border:1px solid rgba(0,0,0,0.15);border-radius:10px;background:#fff;margin-left:6px} .fcms-hamburger span{display:block;width:20px;height:2px;background:#111;border-radius:2px}}\n@media (prefers-color-scheme: dark){@media (max-width:900px){.fcms-hamburger{background:#0f172a;border-color:rgba(255,255,255,0.25)} .fcms-hamburger span{background:#e5e7eb}}}\n@media (min-width: 901px){.fcms-hamburger{display:none !important}}\n.fcms-theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:40px;height:36px;margin-left:8px;border:1px solid rgba(0,0,0,0.15);border-radius:10px;background:#fff;color:#111;font-size:16px;line-height:1} .fcms-theme-toggle:focus{outline:2px solid #6366f1; outline-offset:2px}\n@media (prefers-color-scheme: dark){.fcms-theme-toggle{background:#0f172a;border-color:rgba(255,255,255,0.25);color:#e5e7eb}}\n</style>
+<script id="fcmsThemeInit">\n(function(){\n  var root=document.documentElement;\n  var KEY="fcms-theme";\n  function apply(pref){\n    if(pref==="system"){root.removeAttribute("data-theme");} else {root.setAttribute("data-theme", pref);}\n  }\n  function init(){\n    var pref=localStorage.getItem(KEY)||"system"; apply(pref);\n    window.fcmsSetTheme=function(p){localStorage.setItem(KEY,p);apply(p);return p;};\n    window.fcmsCycleTheme=function(){var seq=["system","light","dark"];var cur=localStorage.getItem(KEY)||"system";var next=seq[(seq.indexOf(cur)+1)%3];localStorage.setItem(KEY,next);apply(next);return next;};\n  }\n  document.addEventListener("DOMContentLoaded", init);\n})();\n(function(){\n  function enhance(){\n    var header=document.querySelector("header"); if(!header) return;\n    var nav=header.querySelector("nav"); if(!nav) return;\n    var parent=nav.parentNode;\n    var enableH=true;\n    var enableT=true;\n    if(enableH){\n      var hb=document.getElementById("fcms-hamburger");\n      if(!hb){ hb=document.createElement("button"); hb.id="fcms-hamburger"; hb.type="button"; hb.className="fcms-hamburger"; hb.setAttribute("aria-label","Toggle navigation"); hb.setAttribute("aria-expanded","false"); hb.innerHTML="<span></span><span></span><span></span>"; try{parent.insertBefore(hb, nav);}catch(e){header.appendChild(hb);} }\n      if(hb && !hb._wired){ hb.addEventListener("click", function(){ var open=nav.classList.toggle("is-open"); hb.setAttribute("aria-expanded", open); }); hb._wired=true; }\n    }\n    if(enableT){\n      var t=document.getElementById("fcms-theme-toggle");\n      if(!t){ t=document.createElement("button"); t.id="fcms-theme-toggle"; t.type="button"; t.className="fcms-theme-toggle"; t.setAttribute("aria-label","Toggle theme (system/light/dark)"); t.title="Theme"; t.textContent="◐"; try{parent.insertBefore(t, nav);}catch(e){header.appendChild(t);} }\n      if(t && !t._wired){ t.addEventListener("click", function(){ var next=window.fcmsCycleTheme?window.fcmsCycleTheme():null; t.setAttribute("data-mode", next); }); t._wired=true; }\n    }\n  }\n  document.addEventListener("DOMContentLoaded", enhance);\n})();\n</script>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            {{#if themeOptions.logo}}
+                <img src="/{{themeOptions.logo}}" alt="{{siteName}}" class="logo">
+            {{else}}
+                <h1>{{siteName}}</h1>
+            {{/if}}
+            
+            <nav class="nav">
+                {{#if menu.main}}
+                    <ul class="nav__list">
+                        {{#each menu.main}}
+                            <li><a href="/{{url}}" class="nav__link">{{title}}</a></li>
+                        {{/each}}
+                    </ul>
+                {{/if}}
+            </nav>
+        </div>
+    </header></p><p>    <main class="main">
+        <div class="container">
+            <article class="content">
+                {{content}}
+            </article>
+        </div>
+    </main></p><p>    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 {{siteName}}</p>
+        </div>
+    </footer>
+</body>
+</html>
+</code></pre></p><p><h2>Best Practices</h2></p><p><h3>1. File Organization</h3></p><p><li>Keep SASS files modular and focused</li>
+<li>Use partials (files starting with <code>_</code>) for imports</li>
+<li>Group related styles together</li>
+<li>Use consistent naming conventions</li></p><p><h3>2. Variable Management</h3></p><p><li>Define all colors, fonts, and spacing as variables</li>
+<li>Use semantic variable names</li>
+<li>Create variable maps for complex data</li>
+<li>Document variable purposes</li></p><p><h3>3. Mixin Usage</h3></p><p><li>Create mixins for repeated patterns</li>
+<li>Keep mixins focused and reusable</li>
+<li>Use parameters for flexibility</li>
+<li>Document mixin parameters</li></p><p><h3>4. Performance</h3></p><p><li>Minimize SASS compilation time</li>
+<li>Use <code>@import</code> sparingly (consider <code>@use</code> for newer SASS)</li>
+<li>Avoid deeply nested selectors</li>
+<li>Compress output for production</li></p><p><h3>5. Maintenance</h3></p><p><li>Keep SASS files up to date</li>
+<li>Document complex SASS logic</li>
+<li>Use consistent formatting</li>
+<li>Regular refactoring</li></p><p><h2>Troubleshooting</h2></p><p><h3>Common Issues</h3></p><p><li><strong>SASS not compiling</strong>: Check file paths and syntax</li>
+<li><strong>Variables not working</strong>: Ensure proper import order</li>
+<li><strong>Large CSS output</strong>: Use <code>@extend</code> instead of mixins where appropriate</li>
+<li><strong>Slow compilation</strong>: Reduce file complexity and nesting</li></p><p><h3>Debug Tips</h3></p><p><li>Use SASS source maps for debugging</li>
+<li>Check SASS compilation errors</li>
+<li>Validate CSS output</li>
+<li>Test with different SASS versions</li></ul></p><p><h2>Deployment</h2></p><p><h3>1. Build for Production</h3></p><p><pre><code>bash
+<h1>Compile with compressed output</h1>
+sass assets/sass/main.scss:assets/style.css --style compressed</p><p><h1>Or use npm script</h1>
+npm run sass:build
+</code></pre></p><p><h3>2. Include in Theme Package</h3></p><p>Make sure to include the compiled <code>style.css</code> file in your theme package, not the SASS source files.</p><p><h3>3. Documentation</h3></p><p>Include SASS setup instructions in your theme's README.md for developers who want to modify the theme.</p><p>This approach gives you the power of SASS while maintaining compatibility with FearlessCMS's simple theme system. </p>
+      </main>
+    </div>
+    
+    <footer class="site-footer">
+  <div class="container">
+    Fearless Geek Media &copy; 2025
+  </div>
+</footer>
+  </body>
+</html> 
