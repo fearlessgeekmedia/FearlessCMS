@@ -248,7 +248,7 @@ if (strpos($requestPath, '_preview/') === 0) {
 error_log("DEBUG: Reached top of index.php");
 // --- File-based page cache for public pages ---
 // Only cache GET requests, non-admin, non-logged-in
-$cacheEnabled = false;
+$cacheEnabled = true;
 $cacheDir = __DIR__ . '/cache';
 $cacheLifetime = 300; // 5 minutes
 
@@ -265,7 +265,7 @@ $adminPath = $config["admin_path"] ?? "admin";
 $isAdminRoute = (strpos($requestPath, $adminPath) === 0);
 $isLoggedIn = function_exists('isLoggedIn') ? isLoggedIn() : false;
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !$isAdminRoute && !$isLoggedIn) {
-    $cacheEnabled = false; // Temporarily disabled for debugging
+    $cacheEnabled = true; // Enable caching for public pages
 
     if (!is_dir($cacheDir)) {
         mkdir($cacheDir, 0755, true);

@@ -662,17 +662,14 @@ footer {
 
 /* Features Grid Container */
 .features-grid {
-    display: block;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    gap: 1rem;
     width: 100%;
     margin: 2rem 0;
-    clear: both;
 }
 
-.features-grid::after {
-    content: '';
-    display: table;
-    clear: both;
-}
+
 
 /* Manifesto Grid - Simple 2x4 layout */
 .manifesto-grid {
@@ -745,11 +742,22 @@ footer {
 }
 
 /* Responsive grid adjustments */
+@media (max-width: 900px) {
+    .features-grid {
+        grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+    }
+}
+
+@media (max-width: 560px) {
+    .features-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
 @media (max-width: 768px) {
     .feature-card {
-        width: calc(100% - 1rem) !important;
-        display: block !important;
-        clear: both !important;
+        width: 100% !important;
+        margin-bottom: 1rem !important;
     }
 }
 
@@ -956,5 +964,61 @@ h2 + p:has(.btn-secondary) {
     .next-post {
         width: 100%;
         text-align: center;
+    }
+}
+
+/* Force manifesto and export cards to stack on mobile */
+@media (max-width: 768px) {
+    /* Override any grid layouts to force single column on mobile */
+    .grid {
+        grid-template-columns: 1fr !important;
+        display: grid !important;
+    }
+    
+    /* Specific targeting for manifesto and export sections */
+    [id*="manifesto-section"] .grid,
+    [id*="export-section"] .grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+    
+    /* Ensure cards take full width on mobile */
+    .grid > div {
+        width: 100% !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    /* Override any inline styles that might be preventing stacking */
+    div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+    }
+    
+    div[style*="repeat(2"] {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Additional mobile-first responsive rules */
+@media (max-width: 480px) {
+    /* Extra small screens - ensure single column */
+    .grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem !important;
+    }
+    
+    /* Reduce padding on cards for mobile */
+    .grid > div {
+        padding: 1rem !important;
+    }
+    
+    /* Ensure text is readable on mobile */
+    .grid > div h3 {
+        font-size: 1.1rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+    
+    .grid > div p {
+        font-size: 0.95rem !important;
+        line-height: 1.5 !important;
     }
 }

@@ -3,6 +3,6 @@
     "site_name": "FearlessCMS",
     "site_description": "Fast and Fearless Content Managment",
     "admin_path": "admin",
-    "custom_css": "",
+
     "store_url": "https:\/\/raw.githubusercontent.com\/fearlessgeekmedia\/FearlessCMS-Store\/main\/store.json"
 }

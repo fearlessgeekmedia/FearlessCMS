@@ -9,5 +9,5 @@
         --neon-pink: {{neonPink}};
         --dark-mode: {{darkMode}};
     }
-    {{custom_css}}
+    
 </style> 

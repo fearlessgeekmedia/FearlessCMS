@@ -234,21 +234,32 @@
             font-weight: 400;
         }
         
-        /* Feature Cards - 2 Column Grid Layout (temporary placement for testing) */
+        /* Feature Cards - Responsive Grid Layout - High Specificity */
+        .features .features-grid,
+        section.features .features-grid,
+        .features-grid {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 1rem !important;
+            width: 100% !important;
+            margin: 2rem 0 !important;
+        }
+        
+        .features .feature-card,
+        section.features .feature-card,
+        .features-grid .feature-card,
         .feature-card {
             background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 16px !important;
             padding: 1.5rem !important;
-            margin: 0.5rem !important;
+            margin: 0 !important;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
             position: relative !important;
             overflow: hidden !important;
             box-sizing: border-box !important;
-            display: inline-block !important;
-            width: calc(50% - 1rem) !important;
-            vertical-align: top !important;
+            width: 100% !important;
             min-height: 120px !important;
             border-top: 4px solid transparent !important;
             background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899) top, linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
@@ -299,17 +310,22 @@
             margin-bottom: 2rem !important;
         }
         
-        /* Force the first feature card to start a new line */
-        .parallax-section + h2 + p + .feature-card {
-            clear: both !important;
+
+        
+        /* Responsive grid adjustments - High Specificity */
+        @media (max-width: 900px) {
+            .features .features-grid,
+            section.features .features-grid,
+            .features-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
         }
         
-        /* Responsive grid adjustments */
-        @media (max-width: 768px) {
-            .feature-card {
-                width: calc(100% - 1rem) !important;
-                display: block !important;
-                clear: both !important;
+        @media (max-width: 560px) {
+            .features .features-grid,
+            section.features .features-grid,
+            .features-grid {
+                grid-template-columns: 1fr !important;
             }
         }
 </style><script>
@@ -466,15 +482,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light dark">
 <link rel="stylesheet" href="/themes/default/assets/style.css">
-
+<script src="https://cdn.tailwindcss.com"></script>
 <style>
   
   /* ensure global UI toggles visible if injected */
   .fcms-theme-toggle{display:inline-flex}
-  {{custom_css}}
 </style>
-  <script src="https://cdn.tailwindcss.com"></script>
-<style id="fcms-nav-style">\n@media (max-width: 900px){header nav{display:none}header nav.is-open{display:block}.fcms-hamburger{display:inline-flex;gap:6px;flex-direction:column;justify-content:center;align-items:center;width:40px;height:36px;border:1px solid rgba(0,0,0,0.15);border-radius:10px;background:#fff;margin-left:6px} .fcms-hamburger span{display:block;width:20px;height:2px;background:#111;border-radius:2px}}\n@media (prefers-color-scheme: dark){@media (max-width:900px){.fcms-hamburger{background:#0f172a;border-color:rgba(255,255,255,0.25)} .fcms-hamburger span{background:#e5e7eb}}}\n@media (min-width: 901px){.fcms-hamburger{display:none !important}}\n.fcms-theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:40px;height:36px;margin-left:8px;border:1px solid rgba(0,0,0,0.15);border-radius:10px;background:#fff;color:#111;font-size:16px;line-height:1} .fcms-theme-toggle:focus{outline:2px solid #6366f1; outline-offset:2px}\n@media (prefers-color-scheme: dark){.fcms-theme-toggle{background:#0f172a;border-color:rgba(255,255,255,0.25);color:#e5e7eb}}\n</style>
+  <style id="fcms-nav-style">\n@media (max-width: 900px){header nav{display:none}header nav.is-open{display:block}.fcms-hamburger{display:inline-flex;gap:6px;flex-direction:column;justify-content:center;align-items:center;width:40px;height:36px;border:1px solid rgba(0,0,0,0.15);border-radius:10px;background:#fff;margin-left:6px} .fcms-hamburger span{display:block;width:20px;height:2px;background:#111;border-radius:2px}}\n@media (prefers-color-scheme: dark){@media (max-width:900px){.fcms-hamburger{background:#0f172a;border-color:rgba(255,255,255,0.25)} .fcms-hamburger span{background:#e5e7eb}}}\n@media (min-width: 901px){.fcms-hamburger{display:none !important}}\n.fcms-theme-toggle{display:inline-flex;align-items:center;justify-content:center;width:40px;height:36px;margin-left:8px;border:1px solid rgba(0,0,0,0.15);border-radius:10px;background:#fff;color:#111;font-size:16px;line-height:1} .fcms-theme-toggle:focus{outline:2px solid #6366f1; outline-offset:2px}\n@media (prefers-color-scheme: dark){.fcms-theme-toggle{background:#0f172a;border-color:rgba(255,255,255,0.25);color:#e5e7eb}}\n</style>
 <script id="fcmsThemeInit">\n(function(){\n  var root=document.documentElement;\n  var KEY="fcms-theme";\n  function apply(pref){\n    if(pref==="system"){root.removeAttribute("data-theme");} else {root.setAttribute("data-theme", pref);}\n  }\n  function init(){\n    var pref=localStorage.getItem(KEY)||"system"; apply(pref);\n    window.fcmsSetTheme=function(p){localStorage.setItem(KEY,p);apply(p);return p;};\n    window.fcmsCycleTheme=function(){var seq=["system","light","dark"];var cur=localStorage.getItem(KEY)||"system";var next=seq[(seq.indexOf(cur)+1)%3];localStorage.setItem(KEY,next);apply(next);return next;};\n  }\n  document.addEventListener("DOMContentLoaded", init);\n})();\n(function(){\n  function enhance(){\n    var header=document.querySelector("header"); if(!header) return;\n    var nav=header.querySelector("nav"); if(!nav) return;\n    var parent=nav.parentNode;\n    var enableH=true;\n    var enableT=true;\n    if(enableH){\n      var hb=document.getElementById("fcms-hamburger");\n      if(!hb){ hb=document.createElement("button"); hb.id="fcms-hamburger"; hb.type="button"; hb.className="fcms-hamburger"; hb.setAttribute("aria-label","Toggle navigation"); hb.setAttribute("aria-expanded","false"); hb.innerHTML="<span></span><span></span><span></span>"; try{parent.insertBefore(hb, nav);}catch(e){header.appendChild(hb);} }\n      if(hb && !hb._wired){ hb.addEventListener("click", function(){ var open=nav.classList.toggle("is-open"); hb.setAttribute("aria-expanded", open); }); hb._wired=true; }\n    }\n    if(enableT){\n      var t=document.getElementById("fcms-theme-toggle");\n      if(!t){ t=document.createElement("button"); t.id="fcms-theme-toggle"; t.type="button"; t.className="fcms-theme-toggle"; t.setAttribute("aria-label","Toggle theme (system/light/dark)"); t.title="Theme"; t.textContent="◐"; try{parent.insertBefore(t, nav);}catch(e){header.appendChild(t);} }\n      if(t && !t._wired){ t.addEventListener("click", function(){ var next=window.fcmsCycleTheme?window.fcmsCycleTheme():null; t.setAttribute("data-mode", next); }); t._wired=true; }\n    }\n  }\n  document.addEventListener("DOMContentLoaded", enhance);\n})();\n</script>
 </head>
   <body>
@@ -531,7 +545,7 @@
     <!-- Include file not found: ad-area.html -->
     <main>
       <h1>Development Roadmap</h1>
-      <p>This project is currently in alpha. - Alpha 2</p><p><strong>What works:</strong></p><ul><li>Page creation and editing</li><li>Add and delete users</li><li>Create and edit menus</li></ul><p><strong>For Alpha 2:</strong></p><ul><li>Media gallery (You can use something like <a href="https://uploadthing.com" target="_blank">uploadthing</a> or upload to your own web host in the meantime) - done</li><li>Plugins - done</li><li>Sidebars - done</li><li>User Roles (Alpha 2)</li><li><s>Custom CSS and JavaScript </s>- scrapped</li><li>Targets on the menu editor (such as <code>_blank</code>) - done</li><li>Multiple Templates within a theme beyond the three required - done</li><li>Basic SEO - done via plugin</li><li>sub/child pages - done but removed. Will be re-implemented</li></ul><p><strong>For Alpha 3</strong></p><ul><li>Plugins and Themes Store</li><li>Basic e-commerce</li><li>Set up for OAuth</li></ul>
+      <p>This project is currently in alpha. - Alpha 2</p><p><strong>For Alpha 2:</strong></p><ul><li>Media gallery (You can use something like <a href="https://uploadthing.com" target="_blank">uploadthing</a> or upload to your own web host in the meantime) - done</li><li>Plugins - done</li><li>Sidebars - done</li><li>User Roles (Alpha 2) - done (though a bit wonky)</li><li><s>Custom CSS and JavaScript </s>- scrapped</li><li>Targets on the menu editor (such as <code>_blank</code>) - done</li><li>Multiple Templates within a theme beyond the three required - done</li><li>Basic SEO - done via plugin</li><li>sub/child pages - done</li></ul><p><strong>For Alpha 3</strong></p><ul><li>Plugins and Themes Store (started)</li><li>Basic e-commerce</li><li>Set up for OAuth</li><li>Improve User Roles</li><li>Aggressively test themes for mobile compatibility and optimize them if not</li></ul><p><strong>For Beta 1</strong></p><ul><li>TBD</li></ul>
     </main>
     <footer class="site-footer">
   <div class="container">

@@ -234,21 +234,32 @@
             font-weight: 400;
         }
         
-        /* Feature Cards - 2 Column Grid Layout (temporary placement for testing) */
+        /* Feature Cards - Responsive Grid Layout - High Specificity */
+        .features .features-grid,
+        section.features .features-grid,
+        .features-grid {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 1rem !important;
+            width: 100% !important;
+            margin: 2rem 0 !important;
+        }
+        
+        .features .feature-card,
+        section.features .feature-card,
+        .features-grid .feature-card,
         .feature-card {
             background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
             border: 1px solid #e2e8f0 !important;
             border-radius: 16px !important;
             padding: 1.5rem !important;
-            margin: 0.5rem !important;
+            margin: 0 !important;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
             position: relative !important;
             overflow: hidden !important;
             box-sizing: border-box !important;
-            display: inline-block !important;
-            width: calc(50% - 1rem) !important;
-            vertical-align: top !important;
+            width: 100% !important;
             min-height: 120px !important;
             border-top: 4px solid transparent !important;
             background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899) top, linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
@@ -299,17 +310,22 @@
             margin-bottom: 2rem !important;
         }
         
-        /* Force the first feature card to start a new line */
-        .parallax-section + h2 + p + .feature-card {
-            clear: both !important;
+
+        
+        /* Responsive grid adjustments - High Specificity */
+        @media (max-width: 900px) {
+            .features .features-grid,
+            section.features .features-grid,
+            .features-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
         }
         
-        /* Responsive grid adjustments */
-        @media (max-width: 768px) {
-            .feature-card {
-                width: calc(100% - 1rem) !important;
-                display: block !important;
-                clear: both !important;
+        @media (max-width: 560px) {
+            .features .features-grid,
+            section.features .features-grid,
+            .features-grid {
+                grid-template-columns: 1fr !important;
             }
         }
 </style><script>
@@ -466,12 +482,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light dark">
 <link rel="stylesheet" href="/themes/default/assets/style.css">
-
+<script src="https://cdn.tailwindcss.com"></script>
 <style>
   
   /* ensure global UI toggles visible if injected */
   .fcms-theme-toggle{display:inline-flex}
-  {{custom_css}}
 </style>
     <style>
       .documentation-layout {
@@ -774,8 +789,7 @@
     </style>
     
 
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
+  </head>
   <body>
     <header class="site-header">
   <div class="container header-inner">
