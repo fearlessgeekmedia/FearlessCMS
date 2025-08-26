@@ -1,8 +1,14 @@
 <?php
-// Start session if not already started
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+// Check if session extension is loaded
+if (!extension_loaded('session') || !function_exists('session_start')) {
+    error_log("Warning: Session functionality not available in plugin handler");
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'Session functionality not available']);
+    exit;
 }
+
+// Session should already be started by session.php
+// No need to start it again
 
 // Include required files
 require_once dirname(__DIR__) . '/includes/config.php';
@@ -12,9 +18,9 @@ require_once dirname(__DIR__) . '/includes/CMSModeManager.php';
 // Only handle AJAX requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     error_log("DEBUG: Plugin handler - Action received: " . $_POST['action']);
-    error_log("DEBUG: Plugin handler - POST data: " . print_r($_POST, true));
-    error_log("DEBUG: Plugin handler - Session data: " . print_r($_SESSION, true));
-    
+    // POST data debugging removed for security
+    // Session debugging removed for security
+
     // Clear any previous output and set JSON header
     if (ob_get_level()) {
         ob_end_clean();
@@ -23,6 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     if (!isLoggedIn()) {
         error_log("DEBUG: Plugin handler - User not logged in");
+        fcms_flush_output(); // Flush output buffer before setting headers
         http_response_code(403);
         echo json_encode(['success' => false, 'error' => 'You must be logged in to perform this action']);
         exit;
@@ -57,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 error_log("DEBUG: Plugin handler - Plugin activated successfully");
                 echo json_encode(['success' => true, 'message' => 'Plugin activated successfully']);
                 break;
-                
+
             case 'deactivate_plugin':
                 error_log("DEBUG: Plugin handler - Processing deactivate_plugin");
                 if (!$cmsModeManager->canDeactivatePlugins()) {
@@ -95,14 +102,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     throw new Exception('Invalid plugin slug');
                 }
                 error_log("DEBUG: Plugin handler - Deleting plugin: " . $plugin_slug);
-                
+
                 // Check if plugin is active before deletion
                 $activePluginsFile = PLUGIN_CONFIG;
                 $activePlugins = file_exists($activePluginsFile) ? json_decode(file_get_contents($activePluginsFile), true) : [];
                 if (in_array($plugin_slug, $activePlugins)) {
                     throw new Exception('Cannot delete an active plugin. Please deactivate it first.');
                 }
-                
+
                 // Delete plugin directory with realpath check
                 $pluginDir = PLUGIN_DIR . '/' . $plugin_slug;
                 $resolvedPluginDir = realpath($pluginDir);
@@ -115,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         throw new Exception('Failed to delete plugin directory');
                     }
                 }
-                
+
                 error_log("DEBUG: Plugin handler - Plugin deleted successfully");
                 echo json_encode(['success' => true, 'message' => 'Plugin deleted successfully']);
                 break;
@@ -126,6 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
     } catch (Exception $e) {
         error_log("DEBUG: Plugin handler - Exception caught: " . $e->getMessage());
+        fcms_flush_output(); // Flush output buffer before setting headers
         http_response_code(400);
         echo json_encode(['success' => false, 'error' => $e->getMessage()]);
     }
@@ -140,7 +148,7 @@ function deleteDirectory($dir) {
     if (!is_dir($dir)) {
         return false;
     }
-    
+
     $files = array_diff(scandir($dir), array('.', '..'));
     foreach ($files as $file) {
         $path = $dir . '/' . $file;
@@ -150,6 +158,6 @@ function deleteDirectory($dir) {
             unlink($path);
         }
     }
-    
+
     return rmdir($dir);
-} 
+}

@@ -12,7 +12,7 @@ class ThemeManager {
         $this->themesPath = $root . '/themes';
         $this->configPath = CONFIG_DIR . '/config.json';
         $this->loadActiveTheme();
-        
+
         // Validate active theme, fallback to default if missing/invalid
         if (!$this->validateTheme($this->activeTheme)) {
             // Try fallback to default
@@ -35,15 +35,15 @@ class ThemeManager {
     private function validateTheme($themeName) {
         $themePath = $this->themesPath . "/$themeName";
         $templatesPath = $themePath . '/templates';
-        
+
         if (!is_dir($themePath)) {
             return false;
         }
-        
+
         if (!is_dir($templatesPath)) {
             return false;
         }
-        
+
         // Check for required templates
         $requiredTemplates = ['page.html', '404.html'];
         foreach ($requiredTemplates as $template) {
@@ -76,12 +76,12 @@ class ThemeManager {
     private function registerThemeSidebars($themeName) {
         $sidebars = [];
         $templatesPath = $this->themesPath . "/$themeName/templates";
-        
+
         // Scan all template files
         $templateFiles = glob($templatesPath . '/*.html');
         foreach ($templateFiles as $templateFile) {
             $content = file_get_contents($templateFile);
-            
+
             // Find all sidebar declarations
             preg_match_all('/{{sidebar=([^}]+)}}/', $content, $matches);
             if (!empty($matches[1])) {
@@ -102,14 +102,14 @@ class ThemeManager {
         if (!empty($sidebars)) {
             $widgetsFile = ADMIN_CONFIG_DIR . '/widgets.json';
             $existingWidgets = file_exists($widgetsFile) ? json_decode(file_get_contents($widgetsFile), true) : [];
-            
+
             // Merge new sidebars with existing ones, preserving existing widgets
             foreach ($sidebars as $name => $sidebar) {
                 if (!isset($existingWidgets[$name])) {
                     $existingWidgets[$name] = $sidebar;
                 }
             }
-            
+
             file_put_contents($widgetsFile, json_encode($existingWidgets, JSON_PRETTY_PRINT));
         }
     }
@@ -117,12 +117,12 @@ class ThemeManager {
     private function registerThemeMenus($themeName) {
         $menus = [];
         $templatesPath = $this->themesPath . "/$themeName/templates";
-        
+
         // Scan all template files
         $templateFiles = glob($templatesPath . '/*.html');
         foreach ($templateFiles as $templateFile) {
             $content = file_get_contents($templateFile);
-            
+
             // Find all menu declarations
             preg_match_all('/{{menu=([^}]+)}}/', $content, $matches);
             if (!empty($matches[1])) {
@@ -143,14 +143,14 @@ class ThemeManager {
         if (!empty($menus)) {
             $menusFile = ADMIN_CONFIG_DIR . '/menus.json';
             $existingMenus = file_exists($menusFile) ? json_decode(file_get_contents($menusFile), true) : [];
-            
+
             // Merge new menus with existing ones, preserving existing items
             foreach ($menus as $name => $menu) {
                 if (!isset($existingMenus[$name])) {
                     $existingMenus[$name] = $menu;
                 }
             }
-            
+
             file_put_contents($menusFile, json_encode($existingMenus, JSON_PRETTY_PRINT));
         }
     }
@@ -158,11 +158,28 @@ class ThemeManager {
     public function getThemes() {
         $themes = [];
         $themeFolders = array_filter(glob($this->themesPath . '/*'), 'is_dir');
-        
+
         foreach ($themeFolders as $themeFolder) {
             $themeId = basename($themeFolder);
             $themeConfigFile = $themeFolder . '/config.json';
-            
+
+            // Check for thumbnail files
+            $thumbnail = null;
+            $thumbnailExtensions = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
+            foreach ($thumbnailExtensions as $ext) {
+                $thumbnailPath = $themeFolder . "/thumbnail.$ext";
+                if (file_exists($thumbnailPath)) {
+                    $thumbnail = "themes/$themeId/thumbnail.$ext";
+                    break;
+                }
+                // Also check for screenshot
+                $screenshotPath = $themeFolder . "/screenshot.$ext";
+                if (file_exists($screenshotPath)) {
+                    $thumbnail = "themes/$themeId/screenshot.$ext";
+                    break;
+                }
+            }
+
             if (file_exists($themeConfigFile)) {
                 $themeConfig = json_decode(file_get_contents($themeConfigFile), true);
                 $themes[] = [
@@ -171,6 +188,7 @@ class ThemeManager {
                     'description' => $themeConfig['description'] ?? 'A theme for FearlessCMS',
                     'version' => $themeConfig['version'] ?? '1.0',
                     'author' => $themeConfig['author'] ?? 'Unknown',
+                    'thumbnail' => $thumbnail,
                     'active' => ($themeId === $this->activeTheme)
                 ];
             } else {
@@ -181,11 +199,12 @@ class ThemeManager {
                     'description' => 'A theme for FearlessCMS',
                     'version' => '1.0',
                     'author' => 'Unknown',
+                    'thumbnail' => $thumbnail,
                     'active' => ($themeId === $this->activeTheme)
                 ];
             }
         }
-        
+
         return $themes;
     }
 

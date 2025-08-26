@@ -1,121 +1,56 @@
-# FearlessCMS Theme Development Documentation
+# FearlessCMS Documentation
 
-Welcome to the FearlessCMS theme development documentation! This collection of guides will help you create beautiful, functional themes for FearlessCMS.
+Welcome to the FearlessCMS documentation. Here you will find guides and references for using, developing, and extending FearlessCMS.
 
 ## 📚 Documentation Index
 
 ### Getting Started
-- **[Customization Overview](customization-overview.md)** - Complete guide to all customization options
-- **[Creating Themes in FearlessCMS](creating-themes.md)** - Complete guide to creating themes from scratch
-- **[Theme Development Workflow](theme-development-workflow.md)** - Step-by-step development process and best practices
+- [HTML Editor Guide](html-editor-guide.md) - **NEW!** Complete guide to the new HTML editor system
+- [Installation and Setup](gettingstarted.md)
+- [CMS Modes Guide](cms-modes.md)
+- [File Permissions Guide](file-permissions.md)
+- [Installation Script](install.md)
 
-### Reference Guides
-- **[Template Reference](theme-templates-reference.md)** - Complete template syntax and variable reference
-- **[Theme Options Guide](theme-options-guide.md)** - How to implement and use theme options
-- **[Modular Templates](modular-templates.md)** - How to use the modular template system for better code organization
+### Content Management
+- [HTML Editor System](html-editor-guide.md) - Rich WYSIWYG editor with code view mode
+- [Content Editing](content-editing.md)
+- [Menu Editor](menueditor.md)
+- [Sidebars and Widgets](sidebars-widgets.md)
 
-### System Administration
-- **[CMS Modes Guide](cms-modes.md)** - How to configure and manage CMS operational modes
-- **[File Permissions Guide](file-permissions.md)** - Setting up proper file permissions and ownership
+### Development Guides
+- [Theme Development](theme-development-index.md)
+- [Creating Themes](creating-themes.md)
+- [Theme Development Workflow](theme-development-workflow.md)
+- [Theme Thumbnails Guide](theme-thumbnails-guide.md)
+- [Theme Options Guide](theme-options-guide.md)
+- [Theme Templates Reference](theme-templates-reference.md)
+- [Modular Templates](modular-templates.md)
+- [Plugin Development](plugin-development-guide.md)
+- [Parallax Sections Plugin](parallax-plugin.md) - **UPDATED!** Now includes export support
+- [Ad Area System](ad-area-system.md)
 
-### Examples and Tutorials
-- **[Nightfall Theme Example](../themes/nightfall/)** - Real-world example of a complete theme
-- **[Theme Examples](../themes/)** - Browse all available themes for inspiration
+### Other Resources
+- [Development Roadmap](devroadmap.md)
+
+## 🆕 Recent Updates
+
+### HTML Editor System (Latest)
+FearlessCMS has transitioned from Markdown to HTML editing, providing:
+- **Dual-mode editing** - Rich WYSIWYG + Code view
+- **Better layout control** - Preserves feature cards and complex structures
+- **No escaping issues** - Shortcodes work perfectly
+- **Export support** - Full static site generation with parallax effects
+
+### Export System Enhancements
+- **HTML content support** - No more Markdown conversion
+- **Parallax plugin integration** - Automatic CSS/JS generation
+- **Asset management** - Smart inclusion of required resources
+- **Performance optimized** - Production-ready static sites
 
 ## 🚀 Quick Start
 
-1. **Read the Basics**: Start with [Creating Themes in FearlessCMS](creating-themes.md)
-2. **Follow the Workflow**: Use [Theme Development Workflow](theme-development-workflow.md) for step-by-step guidance
-3. **Reference Syntax**: Check [Template Reference](theme-templates-reference.md) for all available variables and syntax
-4. **Add Options**: Learn about [Theme Options](theme-options-guide.md) to make your theme customizable
-5. **Go Modular**: Explore [Modular Templates](modular-templates.md) for better code organization
+1. **Read the [HTML Editor Guide](html-editor-guide.md)** to understand the new system
+2. **Check [Installation](install.md)** for setup instructions
+3. **Explore [Theme Development](theme-development-index.md)** for customization
+4. **Review [Plugin Development](plugin-development-guide.md)** for extensions
 
-## 🎯 What You'll Learn
-
-- How to create a complete theme from scratch
-- Template system and variable usage
-- **Modular template system for reusable components**
-- Implementing theme options for customization
-- Responsive design principles
-- Best practices for theme development
-- Testing and deployment strategies
-- **CMS modes and system administration**
-- **File permissions and security best practices**
-
-## 📁 Theme Structure
-
-A typical FearlessCMS theme includes:
-
-```
-themes/your-theme/
-├── templates/
-│   ├── home.html      # Homepage template
-│   ├── page.html      # Individual page template
-│   ├── blog.html      # Blog listing template
-│   ├── 404.html       # Error page template
-│   ├── header.html    # Header module (modular system)
-│   ├── footer.html    # Footer module (modular system)
-│   └── navigation.html # Navigation module (modular system)
-├── assets/
-│   ├── style.css      # Main stylesheet
-│   ├── images/        # Theme images
-│   └── js/           # JavaScript files
-├── theme.json        # Theme metadata
-├── config.json       # Theme options (optional)
-└── README.md         # Theme documentation
-```
-
-## 🔧 Key Features
-
-- **Simple Template System**: Easy-to-learn syntax with powerful features
-- **Modular Templates**: Break down templates into reusable components with `{{module=filename.html}}`
-- **Theme Options**: User-friendly customization without code editing
-- **Responsive Design**: Built-in support for mobile-first design
-- **Extensible**: Add custom functionality with JavaScript
-- **SEO-Friendly**: Semantic HTML and meta tag support
-
-## 💡 Tips for Success
-
-1. **Start Simple**: Begin with a basic, functional theme
-2. **Use Modular Templates**: Break down complex templates into reusable modules
-3. **Test Thoroughly**: Check on different devices and browsers
-4. **Use Semantic HTML**: Follow web standards for better accessibility
-5. **Mobile-First**: Design for mobile devices first, then enhance for desktop
-6. **Document Everything**: Include clear documentation for users
-
-## 🤝 Contributing
-
-Found an issue or have a suggestion? Contributions are welcome! Please:
-
-1. Check existing issues first
-2. Follow the established documentation style
-3. Test your changes thoroughly
-4. Submit clear, descriptive pull requests
-
-## 📖 Additional Resources
-
-- [FearlessCMS Main Documentation](../README.md)
-- [Admin Panel Guide](../admin/README.md)
-- [Plugin Development Guide](../plugins/README.md)
-- [CMS Modes Guide](cms-modes.md) - System administration and deployment modes
-- [File Permissions Guide](file-permissions.md) - Security and permission setup
-- [API Reference](../docs/api.md)
-
-## 🆘 Getting Help
-
-If you need help with theme development:
-
-1. **Check the documentation** - Most questions are answered here
-2. **Look at examples** - Browse existing themes for inspiration
-3. **Search issues** - Check if your question has been asked before
-4. **Ask the community** - Join discussions in the project forums
-
-## 🔒 Security Note: Config Directory Location
-
-FearlessCMS supports storing your configuration files outside the webroot for enhanced security. Set the `FCMS_CONFIG_DIR` environment variable to point to a secure directory. See [File Permissions Guide](file-permissions.md) for details.
-
----
-
-**Happy theme development!** 🎨
-
-*This documentation is maintained by the FearlessCMS community. Last updated: January 2025* 

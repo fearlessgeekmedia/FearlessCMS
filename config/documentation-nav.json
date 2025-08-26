@@ -1,0 +1,93 @@
+{
+    "documentation-nav": [
+        {
+            "label": "Overview",
+            "url": "/documentation",
+            "description": "Getting started with FearlessCMS"
+        },
+        {
+            "label": "Installation",
+            "url": "/documentation/install",
+            "description": "Install and setup guide"
+        },
+        {
+            "label": "Getting Started",
+            "url": "/documentation/gettingstarted",
+            "description": "First steps with your CMS"
+        },
+        {
+            "label": "Export to Static HTML",
+            "url": "/documentation/export-sites-to-static-html",
+            "description": "Streamlined export system for static site generation"
+        },
+        {
+            "label": "Creating Themes",
+            "url": "/documentation/creating-themes",
+            "description": "Build custom themes"
+        },
+        {
+            "label": "Plugin Development",
+            "url": "/documentation/plugin-development-guide",
+            "description": "Extend functionality with plugins"
+        },
+        {
+            "label": "CMS Modes",
+            "url": "/documentation/cms-modes",
+            "description": "Different CMS operation modes"
+        },
+        {
+            "label": "File Permissions",
+            "url": "/documentation/file-permissions",
+            "description": "Security and file access"
+        },
+        {
+            "label": "Parallax Plugin",
+            "url": "/documentation/parallax-plugin",
+            "description": "Add stunning parallax scrolling effects"
+        }
+    ],
+    "theme-development-nav": [
+        {
+            "label": "Workflow",
+            "url": "/documentation/theme-development-workflow",
+            "description": "Theme development process"
+        },
+        {
+            "label": "Templates",
+            "url": "/documentation/theme-templates-reference",
+            "description": "Template system reference"
+        },
+        {
+            "label": "Options",
+            "url": "/documentation/theme-options-guide",
+            "description": "Theme configuration options"
+        },
+        {
+            "label": "SASS Guide",
+            "url": "/documentation/sass-theme-guide",
+            "description": "Styling with SASS"
+        },
+        {
+            "label": "Modular Templates",
+            "url": "/documentation/modular-templates",
+            "description": "Building reusable components"
+        }
+    ],
+    "advanced-nav": [
+        {
+            "label": "Development Index",
+            "url": "/documentation/theme-development-index",
+            "description": "Complete development reference"
+        },
+        {
+            "label": "Customization",
+            "url": "/documentation/customization-overview",
+            "description": "Advanced customization techniques"
+        },
+        {
+            "label": "AD Areas",
+            "url": "/documentation/ad-area-system",
+            "description": "Advertisement area system"
+        }
+    ]
+} 

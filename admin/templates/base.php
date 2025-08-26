@@ -1,5 +1,5 @@
 <?php
-error_log("Admin base template - Current session: " . print_r($_SESSION, true));
+// Session debugging removed for security
 require_once dirname(dirname(__DIR__)) . '/version.php';
 
 // Get CMS mode manager instance
@@ -13,11 +13,22 @@ global $cmsModeManager;
     <title>Mission Control - <?php echo htmlspecialchars($pageTitle ?? ''); ?></title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
-    <!-- Toast UI Editor -->
-    <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />
-    <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
+    <!-- Quill.js Editor (replaces Toast UI) -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
     <style>
         .fira-code { font-family: 'Fira Code', monospace; }
+        
+        /* Improved submenu navigation */
+        .submenu {
+            margin-top: 0 !important;
+            border-top: 2px solid transparent;
+        }
+        
+        /* Ensure no gap between parent and submenu */
+        .relative.group {
+            padding-bottom: 2px;
+        }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -29,17 +40,23 @@ global $cmsModeManager;
                 <a href="/" target="_blank">Your site</a>
             </div>
             <div class="flex items-center space-x-4">
-                <a href="<?php echo BASE_URL; ?>?action=manage_users" class="hover:text-green-200">Users</a>
-                <a href="<?php echo BASE_URL; ?>?action=files" class="hover:text-green-200">Files</a>
-                <a href="<?php echo BASE_URL; ?>?action=manage_themes" class="hover:text-green-200">Themes</a>
-                <a href="<?php echo BASE_URL; ?>?action=manage_menus" class="hover:text-green-200">Menus</a>
-                <a href="<?php echo BASE_URL; ?>?action=manage_widgets" class="hover:text-green-200">Widgets</a>
-                <a href="<?php echo BASE_URL; ?>?action=manage_plugins" class="hover:text-green-200"><?php echo $plugins_menu_label ?? 'Plugins'; ?></a>
                 <?php 
-                // Add admin sections to navigation
                 $admin_sections = fcms_get_admin_sections();
                 foreach ($admin_sections as $id => $section) {
-                    echo '<a href="' . BASE_URL . '?action=' . htmlspecialchars($id) . '" class="hover:text-green-200">' . htmlspecialchars($section['label']) . '</a>';
+                    $hasChildren = isset($section['children']) && !empty($section['children']);
+                    
+                    if ($hasChildren) {
+                        echo '<div class="relative group" onmouseenter="showSubmenu(this)" onmouseleave="hideSubmenu(this)">';
+                        echo '<a href="' . BASE_URL . '?action=' . htmlspecialchars($id) . '" class="hover:text-green-200">' . htmlspecialchars($section['label']) . '</a>';
+                        echo '<div class="absolute hidden bg-green-700 text-white shadow-lg rounded-md mt-0 py-2 w-48 z-10 submenu">';
+                        foreach ($section['children'] as $child_id => $child_section) {
+                            echo '<a href="' . BASE_URL . '?action=' . htmlspecialchars($child_id) . '" class="block px-4 py-2 hover:bg-green-800">' . htmlspecialchars($child_section['label']) . '</a>';
+                        }
+                        echo '</div>';
+                        echo '</div>';
+                    } else if (!isset($section['parent'])) { // Only display top-level items that are not children of other sections
+                        echo '<a href="' . BASE_URL . '?action=' . htmlspecialchars($id) . '" class="hover:text-green-200">' . htmlspecialchars($section['label']) . '</a>';
+                    }
                 }
                 if (!empty($plugin_nav_items)) echo $plugin_nav_items; 
                 ?>
@@ -66,20 +83,79 @@ global $cmsModeManager;
                 <?php echo htmlspecialchars($success); ?>
             </div>
         <?php endif; ?>
+        
+        <!-- Session Messages -->
+        <?php if (isset($_SESSION['error'])): ?>
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-4" role="alert">
+                <?php echo htmlspecialchars($_SESSION['error']); ?>
+            </div>
+            <?php unset($_SESSION['error']); ?>
+        <?php endif; ?>
+        <?php if (isset($_SESSION['success'])): ?>
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mt-4" role="alert">
+                <?php echo htmlspecialchars($_SESSION['success']); ?>
+            </div>
+            <?php unset($_SESSION['success']); ?>
+        <?php endif; ?>
     </div>
 
     <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div class="bg-white shadow rounded-lg p-6">
             <h2 class="text-2xl font-bold mb-6 fira-code"><?php echo htmlspecialchars($pageTitle ?? ''); ?></h2>
-            <?php echo $content ?? ''; ?>
+            <?php
+            if (isset($templateFile) && $templateFile && file_exists($templateFile)) {
+                include $templateFile;
+            } else {
+                echo $content ?? '';
+            }
+            ?>
         </div>
     </div>
 
     <script>
+    // Submenu functions for better dropdown navigation
+    function showSubmenu(element) {
+        const submenu = element.querySelector('.submenu');
+        if (submenu) {
+            submenu.classList.remove('hidden');
+        }
+    }
+    
+    function hideSubmenu(element) {
+        const submenu = element.querySelector('.submenu');
+        if (submenu) {
+            // Add a small delay to allow moving mouse to submenu
+            setTimeout(() => {
+                if (!element.matches(':hover') && !submenu.matches(':hover')) {
+                    submenu.classList.add('hidden');
+                }
+            }, 100);
+        }
+    }
+    
+    // Add mouse events to submenus to keep them visible
     document.addEventListener('DOMContentLoaded', function() {
-        // Handle AJAX form submissions
+        document.querySelectorAll('.submenu').forEach(submenu => {
+            submenu.addEventListener('mouseenter', function() {
+                this.classList.remove('hidden');
+            });
+            
+            submenu.addEventListener('mouseleave', function() {
+                this.classList.add('hidden');
+            });
+        });
+    });
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle AJAX form submissions (but skip delete forms)
         document.querySelectorAll('form[data-ajax="true"]').forEach(form => {
             form.addEventListener('submit', function(e) {
+                // Skip AJAX for delete forms - let them submit normally
+                const action = new FormData(this).get('action');
+                if (action && ['delete_content', 'delete_page'].includes(action)) {
+                    return; // Don't prevent default, let form submit normally
+                }
+                
                 e.preventDefault();
                 const formData = new FormData(this);
                 
@@ -156,12 +232,12 @@ global $cmsModeManager;
             });
         }
 
-        // Add data-ajax attributes to all forms and links
-        document.querySelectorAll('form').forEach(form => {
-            if (!form.hasAttribute('data-ajax')) {
-                form.setAttribute('data-ajax', 'true');
-            }
-        });
+        // TEMPORARILY DISABLED: Add data-ajax attributes to all forms and links EXCEPT forms marked with data-no-ajax
+        // document.querySelectorAll('form').forEach(form => {
+        //     if (!form.hasAttribute('data-ajax') && !form.hasAttribute('data-no-ajax')) {
+        //         form.setAttribute('data-ajax', 'true');
+        //     }
+        // });
 
         document.querySelectorAll('a').forEach(link => {
             if (link.getAttribute('href')?.startsWith('?action=')) {
@@ -172,8 +248,9 @@ global $cmsModeManager;
     </script>
     
     <!-- Version Bar -->
-    <div class="fixed bottom-0 left-0 right-0 bg-gray-800 text-white text-sm py-1 px-4 text-center">
-        FearlessCMS v<?php echo APP_VERSION; ?>
+    <div class="fixed bottom-0 left-0 right-0 bg-gray-800 text-white text-sm py-1 px-4 text-center flex justify-between items-center">
+        <span>FearlessCMS v<?php echo APP_VERSION; ?></span>
+        <a href="https://ko-fi.com/fearlessgeekmedia" target="_blank" class="text-blue-300 hover:text-blue-100">Support FearlessCMS on Ko-fi!</a>
     </div>
 </body>
 </html>

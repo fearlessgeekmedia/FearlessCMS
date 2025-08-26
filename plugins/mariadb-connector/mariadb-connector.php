@@ -177,10 +177,11 @@ function mariadb_connector_admin_page() {
     
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Configuration Form -->
-        <div class="bg-white p-6 rounded-lg shadow">
+        <div class="bg-white shadow rounded-lg p-6">
             <h3 class="text-lg font-semibold mb-4">Database Configuration</h3>
             
             <form method="POST" class="space-y-4">
+                <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
                 <input type="hidden" name="action" value="save_config">
                 
                 <div>

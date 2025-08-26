@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}</title>
+    <link rel="stylesheet" href="../../themes/default/assets/style.css">
+    <style>
+        .site-header {
+            background: #ffffff;
+            color: #111827;
+            padding: 1rem 0;
+            border-bottom: 1px solid #e3e8f2;
+            position: sticky;
+            top: 0;
+            z-index: 30;
+        }
+        .header-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            width: min(1100px, 92vw);
+            margin-inline: auto;
+        }
+        .brand {
+            color: #0a0a0a;
+            text-decoration: none;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            font-size: clamp(1.1rem, 0.9rem + 1vw, 1.5rem);
+        }
+        .main-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            gap: 1.4rem;
+            align-items: center;
+        }
+        .main-menu a {
+            color: #111827;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 0.2rem;
+            display: inline-block;
+            transition: color .2s ease;
+        }
+        .main-menu a:hover {
+            color: #000;
+        }
+        .site-footer {
+            background: #ffffff;
+            color: #6b7280;
+            text-align: center;
+            padding: 1.4rem 0 1.2rem 0;
+            border-top: 1px solid #e3e8f2;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="../../">
+                FearlessCMS
+            </a>
+            <nav aria-label="Main navigation">
+                {{{mainMenu}}}
+            </nav>
+        </div>
+    </header>
+    
+    <main>
+        <div class="container">
+            <article class="blog-post">
+                <header class="post-header">
+                    <h1>{{title}}</h1>
+                    {{#if date}}
+                    <div class="post-meta">
+                        <time datetime="{{date}}">{{date}}</time>
+                    </div>
+                    {{/if}}
+                </header>
+                
+                <div class="post-content">
+                    {{{content}}}
+                </div>
+                
+                <footer class="post-footer">
+                    <div class="post-navigation">
+                        <a href="../../blog" class="back-to-blog">← Back to Blog</a>
+                    </div>
+                </footer>
+            </article>
+        </div>
+    </main>
+    
+    <footer class="site-footer">
+        <div class="container">
+            Fearless Geek Media &copy; {{currentYear}}
+        </div>
+    </footer>
+</body>
+</html> 

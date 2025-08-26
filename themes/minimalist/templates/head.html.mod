@@ -9,5 +9,5 @@
         --accent-color: {{accentColor}};
         --font-family: {{fontFamily}}, sans-serif;
     }
-    {{custom_css}}
+    
 </style> 

@@ -1,5 +1,34 @@
 RewriteEngine On
 
+# Security: Hide sensitive files and directories
+<Files ~ "\.(log|tmp|bak|backup|ini|json)$">
+    Require all denied
+</Files>
+
+# Security: Block access to sensitive directories
+RewriteRule ^(config|sessions|cache|backups|\.git|includes|admin/config|admin/includes)/ - [F,L]
+
+# Security: Block access to PHP files in sensitive areas
+RewriteRule ^(config|sessions|cache|backups)/.*\.php$ - [F,L]
+
+# Security: Block access to temporary and test files
+RewriteRule \.(tmp|test|debug|bak|backup)$ - [F,L]
+
+# Security: Block direct access to handler files
+RewriteRule ^admin/.*-handler\.php$ - [F,L]
+
+# Security: Block suspicious requests
+RewriteCond %{QUERY_STRING} (eval\(|base64_decode|gzinflate) [NC]
+RewriteRule .* - [F,L]
+
+# Security: Block path traversal attempts
+RewriteCond %{THE_REQUEST} \s/+[^\s]*\.\./ [NC]
+RewriteRule .* - [F,L]
+
+# Security: Block null byte attacks
+RewriteCond %{QUERY_STRING} \x00 [NC]
+RewriteRule .* - [F,L]
+
 # Handle admin section
 RewriteCond %{REQUEST_URI} ^/admin/?$
 RewriteRule ^admin/?$ admin/index.php [L]
@@ -19,4 +48,4 @@ RewriteRule ^admin/([^/]+)/?$ admin/index.php?action=$1 [L,QSA]
 # Handle content pages
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ index.php [L,QSA] 
+RewriteRule ^(.*)$ index.php [L,QSA]

@@ -347,6 +347,7 @@ function forms_settings_page() {
         <?php endif; ?>
         
         <form method="POST" class="space-y-6">
+            <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
             <div class="bg-white shadow sm:rounded-md p-6">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">SMTP Settings</h3>
                 

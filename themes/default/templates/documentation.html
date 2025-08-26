@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    {{module=head.html}}
+    <style>
+      .documentation-layout {
+        display: flex;
+        gap: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+      }
+      .documentation-sidebar {
+        flex: 0 0 300px;
+        padding: 1.5rem;
+        border-radius: 8px;
+        height: fit-content;
+        position: sticky;
+        top: 2rem;
+      }
+      .documentation-content {
+        flex: 1;
+        max-width: 800px;
+      }
+      .documentation-sidebar h3 {
+        margin-top: 0;
+        color: #333;
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 0.5rem;
+      }
+      .documentation-sidebar ul {
+        list-style: none;
+        padding: 0;
+      }
+      .documentation-sidebar li {
+        margin-bottom: 0.5rem;
+      }
+      .documentation-sidebar a {
+        color: #555;
+        text-decoration: none;
+        padding: 0.25rem 0;
+        display: block;
+        border-radius: 4px;
+        transition: all 0.2s;
+      }
+      .documentation-sidebar a:hover {
+        color: #007bff;
+        background: #e9ecef;
+        padding-left: 0.5rem;
+      }
+      .documentation-content h1 {
+        font-size: clamp(2.5rem, 1.5rem + 3vw, 3.5rem);
+        color: #333;
+        border-bottom: 3px solid #007bff;
+        padding-bottom: 1rem;
+        margin-bottom: 2rem;
+      }
+      .documentation-content h2 {
+        font-size: clamp(1.8rem, 1.15rem + 2vw, 2.5rem);
+        color: #444;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+      }
+      .documentation-content h3 {
+        color: #555;
+        margin-top: 1.5rem;
+        margin-bottom: 0.75rem;
+      }
+      .documentation-content p {
+        line-height: 1.6;
+        margin-bottom: 1rem;
+      }
+      .documentation-content code {
+        background: #f8f9fa;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+      }
+      .documentation-content pre {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        overflow-x: auto;
+        border: 1px solid #e9ecef;
+      }
+      .documentation-content blockquote {
+        border-left: 4px solid #007bff;
+        padding-left: 1rem;
+        margin: 1rem 0;
+        font-style: italic;
+        color: #666;
+      }
+      .documentation-content table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+      }
+      .documentation-content th,
+      .documentation-content td {
+        border: 1px solid #ddd;
+        padding: 0.5rem;
+        text-align: left;
+      }
+      .documentation-content th {
+        background: #f8f9fa;
+        font-weight: bold;
+      }
+      .breadcrumb {
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        margin-bottom: 2rem;
+        font-size: 0.9rem;
+        color: #333;
+      }
+      .breadcrumb a {
+        color: #007bff;
+        text-decoration: none;
+      }
+      .breadcrumb a:hover {
+        text-decoration: underline;
+      }
+      
+      /* Widget styling for documentation sidebar */
+      .widget-documentation-nav {
+        margin-bottom: 2rem;
+      }
+      .widget-documentation-nav .widget-title {
+        margin-top: 0;
+        color: #333;
+        border-bottom: 2px solid #007bff;
+        padding-bottom: 0.5rem;
+        font-size: 1.1rem;
+      }
+      .documentation-nav-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .documentation-nav-item {
+        margin-bottom: 0.5rem;
+      }
+      .documentation-nav-link {
+        color: #555;
+        text-decoration: none;
+        padding: 0.25rem 0;
+        display: block;
+        border-radius: 4px;
+        transition: all 0.2s;
+        font-size: 0.95rem;
+      }
+              .documentation-nav-link:hover {
+          color: #007bff;
+          background: #e9ecef;
+          padding-left: 0.5rem;
+        }
+      
+      /* Dark mode support */
+      @media (prefers-color-scheme: dark) {
+        .documentation-layout {
+          background: #0f172a;
+          color: #e0e0e0;
+        }
+        
+        .documentation-sidebar {
+          background: #1e293b;
+          color: #e0e0e0;
+          border: 1px solid #475569;
+          border-radius: 8px;
+        }
+        
+        .documentation-sidebar h3 {
+          color: #e0e0e0;
+          border-bottom-color: #007bff;
+        }
+        
+        .documentation-sidebar a {
+          color: #b0b0b0;
+        }
+        
+        .documentation-sidebar a:hover {
+          color: #007bff;
+          background: #404040;
+        }
+        
+        .documentation-content h1 {
+          color: #e0e0e0;
+          border-bottom-color: #007bff;
+        }
+        
+        .documentation-content h2 {
+          color: #d0d0d0;
+        }
+        
+        .documentation-content h3 {
+          color: #c0c0c0;
+        }
+        
+        .documentation-content p {
+          color: #e0e0e0;
+        }
+        
+        .documentation-content code {
+          background: #404040;
+          color: #e0e0e0;
+        }
+        
+        .documentation-content pre {
+          background: #2d2d2d;
+          border-color: #404040;
+          color: #e0e0e0;
+        }
+        
+        .documentation-content blockquote {
+          border-left-color: #007bff;
+          color: #b0b0b0;
+        }
+        
+        .documentation-content table th {
+          background: #2d2d2d;
+          color: #e0e0e0;
+        }
+        
+        .documentation-content table td {
+          color: #e0e0e0;
+        }
+        
+        .documentation-content table th,
+        .documentation-content table td {
+          border-color: #404040;
+        }
+        
+        .breadcrumb {
+          background: #1e293b;
+          color: #e0e0e0;
+          border: 1px solid #475569;
+          border-radius: 6px;
+        }
+        
+        .breadcrumb a {
+          color: #007bff;
+        }
+        
+        .widget-documentation-nav .widget-title {
+          color: #e0e0e0;
+          border-bottom-color: #007bff;
+        }
+        
+        .documentation-nav-link {
+          color: #b0b0b0;
+        }
+        
+        .documentation-nav-link:hover {
+          color: #007bff;
+          background: #404040;
+        }
+      }
+      
+      /* Responsive design */
+      @media (max-width: 768px) {
+        .documentation-layout {
+          flex-direction: column;
+          padding: 1rem;
+        }
+        .documentation-sidebar {
+          position: static;
+          flex: none;
+        }
+      }
+      
+      /* Manual dark mode classes */
+      .dark-mode .documentation-layout {
+        background: #0f172a !important;
+        color: #e0e0e0 !important;
+      }
+      
+      .dark-mode .documentation-sidebar {
+        background: #1e293b !important;
+        color: #e0e0e0 !important;
+        border: 1px solid #475569 !important;
+        border-radius: 8px !important;
+      }
+      
+      .dark-mode .breadcrumb {
+        background: #1e293b !important;
+        color: #e0e0e0 !important;
+        border: 1px solid #475569 !important;
+        border-radius: 6px !important;
+      }
+      
+      .dark-mode .widget-documentation-nav .widget-title {
+        color: #e0e0e0 !important;
+        border-bottom-color: #007bff !important;
+      }
+      
+      .dark-mode .documentation-nav-link {
+        color: #b0b0b0 !important;
+      }
+      
+      .dark-mode .documentation-nav-link:hover {
+        color: #007bff !important;
+        background: #404040 !important;
+      }
+    </style>
+    
+
+  </head>
+  <body>
+    {{module=header.html}}
+    {{include=ad-area.html}}
+    
+    <div class="documentation-layout">
+      <aside class="documentation-sidebar">
+        {{sidebar=documentation-sidebar}}
+      </aside>
+      
+      <main class="documentation-content">
+        <div class="breadcrumb">
+          <a href="/">Home</a> &gt; 
+          <a href="/documentation">Documentation</a>
+          {{#if title}}
+          &gt; {{title}}
+          {{/if}}
+        </div>
+        
+        <h1>{{title}}</h1>
+        {{content}}
+      </main>
+    </div>
+    
+    {{module=footer.html}}
+  </body>
+</html> 

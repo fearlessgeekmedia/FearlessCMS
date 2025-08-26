@@ -1,5 +1,5 @@
 <?php
-error_log("Base template - Current session: " . print_r($_SESSION, true));
+// Session debugging removed for security
 require_once dirname(dirname(__DIR__)) . '/version.php';
 ?>
 <!DOCTYPE html>

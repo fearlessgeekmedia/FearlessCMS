@@ -113,7 +113,7 @@ function loadMenu(menuId) {
     document.getElementById('delete-menu-btn').style.display = 'block';
 
     // Load menu data from server
-    fetch(`?action=load_menu&menu_id=${menuId}`)
+    fetch(`../menu-ajax-handler.php?action=load_menu&menu_id=${menuId}`)
         .then(response => response.json())
         .then(data => {
             menuData = data;
@@ -349,7 +349,7 @@ function saveMenu() {
     
     console.log('Sending menu data:', menuDataToSave);
     
-    fetch('?action=manage_menus', {
+    fetch('../menu-ajax-handler.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -388,7 +388,7 @@ document.getElementById('new-menu-form').addEventListener('submit', function(e) 
     const name = document.getElementById('new-menu-name').value;
     const menuClass = document.getElementById('new-menu-class').value;
     
-    fetch('?action=manage_menus', {
+    fetch('../menu-ajax-handler.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -436,7 +436,7 @@ function deleteSelectedMenu() {
 function confirmDeleteMenu() {
     if (!currentMenu) return;
     
-    fetch('?action=manage_menus', {
+    fetch('../menu-ajax-handler.php', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

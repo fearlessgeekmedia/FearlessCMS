@@ -1,4 +1,4 @@
-<?php echo "<div style='color:red'>DEBUG: editorMode is " . (isset($editorMode) ? $editorMode : 'NOT SET') . "</div>"; ?>
+
 <?php
 // Get available templates
 $templates = [];
@@ -29,7 +29,7 @@ if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $contentData, $matches)) {
     <form method="POST" action="" id="content-form">
         <input type="hidden" name="action" value="save_content" />
         <input type="hidden" name="path" value="<?php echo htmlspecialchars($path); ?>" />
-        
+
         <div class="mb-4">
             <label class="block mb-1">Title</label>
             <input type="text" name="title" value="<?php echo htmlspecialchars($title); ?>" class="w-full border rounded px-3 py-2" required>
@@ -48,7 +48,7 @@ if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $contentData, $matches)) {
 
         <div class="mb-4">
             <label class="block mb-1">Content</label>
-            <textarea name="content" id="content" style="width: 100%; height: 600px; font-family: monospace;"><?php echo htmlspecialchars($contentWithoutMetadata); ?></textarea>
+            <textarea name="content" id="content" style="width: 100%; height: 600px; font-family: monospace;"><?php echo $contentWithoutMetadata; ?></textarea>
         </div>
 
         <div class="flex justify-between">
@@ -56,4 +56,4 @@ if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $contentData, $matches)) {
             <a href="?action=dashboard" class="text-gray-600 hover:text-gray-800">Cancel</a>
         </div>
     </form>
-</div> 
+</div>

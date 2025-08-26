@@ -69,6 +69,7 @@ function forms_new_form_page() {
         </div>
         
         <form method="POST" class="space-y-6">
+            <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
             <div class="bg-white shadow sm:rounded-md p-6">
                 <div class="space-y-4">
                     <div class="mb-4">

@@ -17,9 +17,9 @@ The primary way to customize FearlessCMS is through themes. Themes control the v
 - **Theme Options**: User-friendly customization without code editing
 
 **Getting Started:**
-- [Creating Themes Guide](creating-themes.md) - Complete theme development tutorial
-- [Theme Development Workflow](theme-development-workflow.md) - Step-by-step process
-- [Template Reference](theme-templates-reference.md) - All available variables and syntax
+- [Creating Themes Guide](creating-themes) - Complete theme development tutorial
+- [Theme Development Workflow](theme-development-workflow) - Step-by-step process
+- [Template Reference](theme-templates-reference) - All available variables and syntax
 
 ### Theme Options System
 Allow users to customize themes without editing code:
@@ -73,7 +73,7 @@ Extend FearlessCMS functionality with custom plugins:
 - **Event Hooks**: Respond to system events
 
 **Getting Started:**
-- [Plugin Development Guide](plugin-development-guide.md) - Complete plugin tutorial
+- [Plugin Development Guide](plugin-development-guide) - Complete plugin tutorial
 - [Plugin Examples](../plugins/) - Browse existing plugins
 
 ### Built-in Plugins
@@ -105,7 +105,7 @@ Configure FearlessCMS for different environments:
 ```
 
 **Getting Started:**
-- [CMS Modes Guide](cms-modes.md) - Detailed mode configuration
+- [CMS Modes Guide](cms-modes) - Detailed mode configuration
 
 ### File Permissions
 Proper file permissions are crucial for security and functionality:
@@ -124,7 +124,7 @@ Proper file permissions are crucial for security and functionality:
 - Avoid overly permissive 777/666 permissions
 
 **Getting Started:**
-- [File Permissions Guide](file-permissions.md) - Complete permission setup
+- [File Permissions Guide](file-permissions) - Complete permission setup
 
 ## 📝 Content Customization
 
@@ -182,7 +182,7 @@ Break down templates into reusable components:
 - **Consistency**: Ensure uniform appearance
 
 **Getting Started:**
-- [Modular Templates Guide](modular-templates.md) - Complete modular system guide
+- [Modular Templates Guide](modular-templates) - Complete modular system guide
 
 ### SASS/SCSS Support
 Use SASS for advanced CSS development:
@@ -194,7 +194,7 @@ Use SASS for advanced CSS development:
 - **Functions**: Dynamic CSS generation
 
 **Getting Started:**
-- [SASS Theme Guide](sass-theme-guide.md) - SASS integration tutorial
+- [SASS Theme Guide](sass-theme-guide) - SASS integration tutorial
 
 ### Custom JavaScript
 Add interactive functionality:
@@ -240,14 +240,14 @@ Deploy customizations to production:
 ## 📚 Resources
 
 ### Documentation
-- [Creating Themes](creating-themes.md) - Theme development tutorial
-- [Plugin Development](plugin-development-guide.md) - Plugin creation guide
-- [Template Reference](theme-templates-reference.md) - Template syntax reference
-- [Theme Options](theme-options-guide.md) - Theme customization options
-- [Modular Templates](modular-templates.md) - Component system guide
-- [SASS Integration](sass-theme-guide.md) - Advanced CSS development
-- [CMS Modes](cms-modes.md) - System configuration
-- [File Permissions](file-permissions.md) - Security setup
+- [Creating Themes](creating-themes) - Theme development tutorial
+- [Plugin Development](plugin-development-guide) - Plugin creation guide
+- [Template Reference](theme-templates-reference) - Template syntax reference
+- [Theme Options](theme-options-guide) - Theme customization options
+- [Modular Templates](modular-templates) - Component system guide
+- [SASS Integration](sass-theme-guide) - Advanced CSS development
+- [CMS Modes](cms-modes) - System configuration
+- [File Permissions](file-permissions) - Security setup
 
 ### Examples
 - [Theme Examples](../themes/) - Browse existing themes

@@ -171,6 +171,35 @@ FearlessCMS supports several option types:
 }
 ```
 
+#### Breadcrumb Options
+```json
+{
+    "showBreadcrumbs": {
+        "type": "checkbox",
+        "label": "Show Breadcrumbs",
+        "description": "Display breadcrumb navigation on pages",
+        "default": true
+    },
+    "breadcrumbStyle": {
+        "type": "select",
+        "label": "Breadcrumb Style",
+        "description": "Choose breadcrumb appearance",
+        "options": [
+            {"value": "minimal", "label": "Minimal (Home > Page)"},
+            {"value": "full", "label": "Full Path (Home > Section > Page)"},
+            {"value": "custom", "label": "Custom Separator"}
+        ],
+        "default": "minimal"
+    },
+    "breadcrumbSeparator": {
+        "type": "text",
+        "label": "Breadcrumb Separator",
+        "description": "Character to separate breadcrumb levels",
+        "default": ">"
+    }
+}
+```
+
 ## Using Theme Options in Templates
 
 ### Basic Usage
@@ -191,7 +220,16 @@ Access theme options using the `{{themeOptions.key}}` syntax:
         <!-- Sidebar content -->
     </aside>
 {{/if}}
-```
+
+{{#if themeOptions.showBreadcrumbs}}
+    <nav class="breadcrumb breadcrumb-{{themeOptions.breadcrumbStyle}}" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        {{#if parent}}
+            {{themeOptions.breadcrumbSeparator}} <a href="/{{parent.url}}">{{parent.title}}</a>
+        {{/if}}
+        {{themeOptions.breadcrumbSeparator}} <span class="current-page">{{title}}</span>
+    </nav>
+{{/if}}
 
 ### Using Theme Options with Modular Templates
 

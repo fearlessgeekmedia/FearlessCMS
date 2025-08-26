@@ -14,6 +14,7 @@ if (!isset($_GET['edit'])): ?>
     <h3 class="text-lg font-medium mb-4">Add New User</h3>
     <form method="POST" class="space-y-4">
         <input type="hidden" name="action" value="add_user">
+        <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
         <div>
             <input type="text" name="new_username" required class="w-full px-3 py-2 border border-gray-300 rounded" placeholder="Username">
         </div>
@@ -81,6 +82,7 @@ if (!isset($_GET['edit'])): ?>
         <form method="POST" class="space-y-4">
             <input type="hidden" name="action" value="edit_user">
             <input type="hidden" name="username" value="<?= htmlspecialchars($_GET['edit']) ?>">
+            <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
             <div>
                 <label class="block mb-2">Username:</label>
                 <input type="text" value="<?= htmlspecialchars($_GET['edit']) ?>" class="w-full px-3 py-2 border border-gray-300 rounded bg-gray-100" readonly>
@@ -156,6 +158,7 @@ if (!isset($_GET['edit'])): ?>
                     <form method="POST" style="display:inline" onsubmit="console.log('Delete form submitted for user: <?= htmlspecialchars($user['username']) ?>');">
                         <input type="hidden" name="action" value="delete_user">
                         <input type="hidden" name="username" value="<?= htmlspecialchars($user['username']) ?>">
+                        <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
                         <button type="submit" onclick="return confirm('Are you sure you want to delete this user?')" class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">Delete</button>
                     </form>
                 </td>

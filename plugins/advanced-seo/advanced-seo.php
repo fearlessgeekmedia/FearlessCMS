@@ -505,6 +505,7 @@ function advanced_seo_admin_page() {
         <?php endif; ?>
         
         <form method="POST" class="space-y-6">
+            <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
             <input type="hidden" name="action" value="save_advanced_seo_settings">
             
             <!-- Basic SEO Settings -->
@@ -921,6 +922,7 @@ function advanced_seo_meta_editor_page() {
         
         <?php if ($selected_page): ?>
             <form method="POST" class="space-y-6">
+                <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
                 <input type="hidden" name="action" value="save_meta_tags">
                 <input type="hidden" name="page_path" value="<?= htmlspecialchars($selected_page) ?>">
                 
@@ -1118,6 +1120,7 @@ function advanced_seo_og_preview_page() {
         <div class="bg-white shadow rounded-lg p-6">
             <h3 class="text-lg font-medium mb-4">Open Graph Preview Generator</h3>
             <form method="POST" class="space-y-4">
+                <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
                 <input type="hidden" name="action" value="preview_og">
                 
                 <div class="grid grid-cols-2 gap-4">
@@ -1369,6 +1372,7 @@ function advanced_seo_404_monitor_page() {
         <div class="bg-white shadow rounded-lg p-6">
             <h3 class="text-lg font-medium mb-4">Add Redirect Rule</h3>
             <form method="POST" class="space-y-4">
+                <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
                 <input type="hidden" name="action" value="redirect_404">
                 
                 <div class="grid grid-cols-2 gap-4">
@@ -1525,6 +1529,7 @@ function advanced_seo_404_monitor_page() {
         <div class="bg-white shadow rounded-lg p-6">
             <h3 class="text-lg font-medium mb-4">Maintenance</h3>
             <form method="POST" class="space-y-4">
+                <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
                 <input type="hidden" name="action" value="clear_404_logs">
                 <p class="text-gray-600">Clear all 404 error logs. This action cannot be undone.</p>
                 <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded" 
@@ -1837,6 +1842,7 @@ function advanced_seo_license_page() {
                 </div>
                 
                 <form method="POST" class="mt-4">
+                    <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
                     <input type="hidden" name="action" value="deactivate_license">
                     <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded" 
                             onclick="return confirm('Are you sure you want to deactivate the license?')">
@@ -1870,6 +1876,7 @@ function advanced_seo_license_page() {
             <div class="bg-white shadow rounded-lg p-6">
                 <h3 class="text-lg font-medium mb-4">Activate License</h3>
                 <form method="POST" class="space-y-4">
+                    <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
                     <input type="hidden" name="action" value="activate_license">
                     
                     <div>

@@ -81,7 +81,7 @@ if (!empty($current_sidebar) && isset($widgets[$current_sidebar])) {
 ?>
 
 <!-- Add Sortable.js in the head section -->
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script src="/admin/serve-js.php"></script>
 
 <div class="space-y-6">
     <!-- Error Message -->
@@ -317,8 +317,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const errorMessage = document.getElementById('error-message');
 
     // Function to show error message
-    function showError(message) {
-        if (errorMessage) {
+    function showError(message, element = null) {
+        if (element) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'inline-block ml-4 text-red-700';
+            errorDiv.textContent = message;
+            element.parentNode.insertBefore(errorDiv, element.nextSibling);
+            setTimeout(() => errorDiv.remove(), 5000);
+        } else if (errorMessage) {
             errorMessage.textContent = message;
             errorMessage.classList.remove('hidden');
             errorMessage.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -327,10 +333,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Function to hide error message
-    function hideError() {
-        if (errorMessage) {
-            errorMessage.classList.add('hidden');
+    function showSuccess(message, element = null) {
+        if (element) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'inline-block ml-4 text-green-700';
+            successDiv.textContent = message;
+            element.parentNode.insertBefore(successDiv, element.nextSibling);
+            setTimeout(() => successDiv.remove(), 5000);
+        } else {
+            const successDiv = document.getElementById('success-message');
+            if (successDiv) {
+                successDiv.textContent = message;
+                successDiv.classList.remove('hidden');
+                setTimeout(() => {
+                    successDiv.classList.add('hidden');
+                }, 5000);
+            } else {
+                alert('Success: ' + message);
+            }
         }
     }
 
@@ -434,6 +454,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (confirm('Are you sure you want to delete this widget?')) {
                 const widgetId = e.target.dataset.id;
                 const sidebarId = sidebarSelect.value;
+
+                console.log('Deleting widget. ID:', widgetId, 'Sidebar ID:', sidebarId);
+
                 const formData = new FormData();
                 formData.append('action', 'delete_widget');
                 formData.append('sidebar', sidebarId);
@@ -481,7 +504,9 @@ document.addEventListener('DOMContentLoaded', function() {
             // Populate the form
             addWidgetForm.querySelector('[name="title"]').value = title;
             addWidgetForm.querySelector('[name="type"]').value = type;
-            addWidgetForm.querySelector('[name="content"]').value = widgetItem.dataset.content || '';
+            const tempTextarea = document.createElement('textarea');
+            tempTextarea.innerHTML = widgetItem.dataset.content || '';
+            addWidgetForm.querySelector('[name="content"]').value = tempTextarea.value;
             addWidgetForm.querySelector('[name="classes"]').value = widgetItem.dataset.classes || '';
             
             // Add widget ID for update
@@ -537,9 +562,10 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             console.log('Save response:', data);
             if (data.success) {
-                window.location.reload();
+                showSuccess('Widget saved successfully!', e.submitter);
+                setTimeout(() => window.location.reload(), 1000);
             } else {
-                showError(data.error || 'Failed to save widget');
+                showError(data.error || 'Failed to save widget', e.submitter);
             }
         })
         .catch(error => {
@@ -572,9 +598,9 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                showSuccess('Sidebar changes saved successfully!');
+                showSuccess('Sidebar changes saved successfully!', this);
             } else {
-                showError(data.error || 'Failed to save sidebar');
+                showError(data.error || 'Failed to save sidebar', this);
             }
         })
         .catch(error => {
@@ -598,9 +624,10 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                window.location.reload();
+                showSuccess('Sidebar created successfully!', e.submitter);
+                setTimeout(() => window.location.reload(), 1000);
             } else {
-                showError(data.error || 'Failed to create sidebar');
+                showError(data.error || 'Failed to create sidebar', e.submitter);
             }
         })
         .catch(error => {

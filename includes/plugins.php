@@ -1,4 +1,10 @@
 <?php
+require_once PROJECT_ROOT . '/includes/ThemeManager.php';
+$themeManager = new ThemeManager();
+
+// Include admin functions needed for admin sections
+require_once PROJECT_ROOT . '/admin/includes/filemanager.php';
+
 // includes/plugins.php
 
 // Make sure PROJECT_ROOT is defined
@@ -18,7 +24,7 @@ if (!defined('PLUGIN_DIR')) {
 
 // Define PLUGIN_CONFIG if not already defined
 if (!defined('PLUGIN_CONFIG')) {
-    define('PLUGIN_CONFIG', ADMIN_CONFIG_DIR . '/plugins.json');
+    define('PLUGIN_CONFIG', CONFIG_DIR . '/plugins.json');
 }
 
 // --- Hook system ---
@@ -103,14 +109,159 @@ function fcms_register_permission_hook($hook, $callback) {
 // --- Admin section registration ---
 $GLOBALS['fcms_admin_sections'] = [];
 
-// Register the Plugins section
-fcms_register_admin_section('manage_plugins', [
-    'label' => 'Plugins',
-    'menu_order' => 45,
-    'render_callback' => function() {
-        include PROJECT_ROOT . '/admin/templates/plugins.php';
-    }
-]);
+    fcms_register_admin_section('dashboard', [
+        'label' => 'Dashboard',
+        'menu_order' => 5,
+        'render_callback' => function() {
+            include PROJECT_ROOT . '/admin/templates/dashboard.php';
+        }
+    ]);
+
+    fcms_register_admin_section('manage_content', [
+        'label' => 'Content',
+        'menu_order' => 10,
+        'render_callback' => function() {
+            include PROJECT_ROOT . '/admin/templates/manage_content.php';
+        }
+    ]);
+
+    fcms_register_admin_section('manage_users', [
+        'label' => 'Users',
+        'menu_order' => 20,
+        'render_callback' => function() {
+            include PROJECT_ROOT . '/admin/templates/users.php';
+        }
+    ]);
+
+    // File manager section moved to admin/index.php after filemanager.php is loaded
+
+    fcms_register_admin_section('manage_themes', [
+        'label' => 'Themes',
+        'menu_order' => 40,
+        'render_callback' => function() {
+            include PROJECT_ROOT . '/admin/templates/themes.php';
+        }
+    ]);
+
+    fcms_register_admin_section('manage_plugins', [
+        'label' => 'Plugins',
+        'menu_order' => 45,
+        'render_callback' => function() {
+            include PROJECT_ROOT . '/admin/templates/plugins.php';
+        }
+    ]);
+
+    fcms_register_admin_section('manage_menus', [
+        'label' => 'Menus',
+        'menu_order' => 50,
+        'render_callback' => function() {
+            include PROJECT_ROOT . '/admin/templates/menus.php';
+        }
+    ]);
+
+    fcms_register_admin_section('manage_widgets', [
+        'label' => 'Widgets',
+        'menu_order' => 60,
+        'render_callback' => function() {
+            include PROJECT_ROOT . '/admin/templates/widgets.php';
+        }
+    ]);
+
+    fcms_register_admin_section('files', [
+        'label' => 'Files',
+        'menu_order' => 30,
+        'render_callback' => 'fcms_render_file_manager'
+    ]);
+
+    fcms_register_admin_section('manage_cache_settings', [
+        'label' => 'Cache Settings',
+        'menu_order' => 70,
+        'render_callback' => function() {
+            // Load cache configuration and statistics
+            if (class_exists('CacheManager')) {
+                $cacheManager = new CacheManager();
+                $cacheConfig = $cacheManager->getConfig();
+                $cacheStats = $cacheManager->getStats();
+                $cacheStatus = $cacheManager->getCacheStatus();
+                $cacheSize = $cacheManager->getCacheSize();
+                $cacheLastCleared = $cacheManager->getLastCleared();
+                
+                // Prepare cache template variables
+                $cache_enabled_checked = ($cacheConfig['enabled'] ?? false) ? 'checked' : '';
+                $cache_pages_checked = ($cacheConfig['cache_pages'] ?? false) ? 'checked' : '';
+                $cache_assets_checked = ($cacheConfig['cache_assets'] ?? false) ? 'checked' : '';
+                $cache_queries_checked = ($cacheConfig['cache_queries'] ?? false) ? 'checked' : '';
+                $cache_compression_checked = ($cacheConfig['cache_compression'] ?? false) ? 'checked' : '';
+                
+                $cache_duration = $cacheConfig['cache_duration'] ?? 3600;
+                $cache_duration_unit = $cacheConfig['cache_duration_unit'] ?? 'seconds';
+                $cache_storage = $cacheConfig['cache_storage'] ?? 'file';
+                $cache_max_size = $cacheConfig['cache_max_size'] ?? '100MB';
+                
+                $cache_duration_unit_seconds_selected = ($cache_duration_unit === 'seconds') ? 'selected' : '';
+                $cache_duration_unit_minutes_selected = ($cache_duration_unit === 'minutes') ? 'selected' : '';
+                $cache_duration_unit_hours_selected = ($cache_duration_unit === 'hours') ? 'selected' : '';
+                $cache_duration_unit_days_selected = ($cache_duration_unit === 'days') ? 'selected' : '';
+                
+                $cache_storage_file_selected = ($cache_storage === 'file') ? 'selected' : '';
+                $cache_storage_memory_selected = ($cache_storage === 'memory') ? 'selected' : '';
+            }
+            
+            include PROJECT_ROOT . '/admin/templates/cache-settings.php';
+        }
+    ]);
+
+    // Register core admin sections dynamically
+    fcms_register_admin_section('dashboard', [
+        'label' => 'Dashboard',
+        'menu_order' => 5,
+        'render_callback' => function() {
+            include PROJECT_ROOT . '/admin/templates/dashboard.php';
+        }
+    ]);
+
+    fcms_register_admin_section('manage_content', [
+        'label' => 'Content',
+        'menu_order' => 10,
+        'render_callback' => function() {
+            include PROJECT_ROOT . '/admin/templates/manage_content.php';
+        }
+    ]);
+
+    fcms_register_admin_section('manage_users', [
+        'label' => 'Users',
+        'menu_order' => 20,
+        'render_callback' => function() {
+            include PROJECT_ROOT . '/admin/templates/users.php';
+        }
+    ]);
+
+
+
+    fcms_register_admin_section('manage_themes', [
+        'label' => 'Themes',
+        'menu_order' => 40,
+        'render_callback' => function() use ($themeManager) {
+            include PROJECT_ROOT . '/admin/templates/themes.php';
+        }
+    ]);
+
+    fcms_register_admin_section('manage_menus', [
+        'label' => 'Menus',
+        'menu_order' => 50,
+        'render_callback' => function() {
+            include PROJECT_ROOT . '/admin/templates/menus.php';
+        }
+    ]);
+
+    fcms_register_admin_section('manage_widgets', [
+        'label' => 'Widgets',
+        'menu_order' => 60,
+        'render_callback' => function() {
+            include PROJECT_ROOT . '/admin/templates/widgets.php';
+        }
+    ]);
+
 
 /**
  * Register an admin section.
@@ -123,7 +274,9 @@ fcms_register_admin_section('manage_plugins', [
  * ]
  */
 function fcms_register_admin_section($id, $opts) {
-    error_log("Registering admin section: " . $id . " with options: " . print_r($opts, true));
+    if (getenv('FCMS_DEBUG') === 'true') {
+        error_log("Registering admin section: " . $id . " with options: " . print_r($opts, true));
+    }
     $GLOBALS['fcms_admin_sections'][$id] = $opts;
 }
 
@@ -133,16 +286,52 @@ function fcms_register_admin_section($id, $opts) {
  */
 function fcms_get_admin_sections() {
     $sections = $GLOBALS['fcms_admin_sections'];
-    
-    error_log("Admin sections before sorting: " . print_r($sections, true));
-    
+
+    if (getenv('FCMS_DEBUG') === 'true') {
+        error_log("Admin sections before sorting: " . print_r($sections, true));
+    }
+
+    // Apply CMS mode filtering
+    if (isset($GLOBALS['cmsModeManager'])) {
+        $cmsModeManager = $GLOBALS['cmsModeManager'];
+
+        // Filter out sections based on CMS mode permissions
+        $filtered_sections = [];
+        foreach ($sections as $id => $section) {
+            $show_section = true;
+
+            // Check specific permissions for restricted sections
+            switch ($id) {
+                case 'manage_plugins':
+                    $show_section = $cmsModeManager->canManagePlugins();
+                    break;
+                case 'store':
+                    $show_section = $cmsModeManager->canAccessStore();
+                    break;
+                case 'files':
+                    $show_section = $cmsModeManager->canManageFiles();
+                    break;
+            }
+
+            if ($show_section) {
+                $filtered_sections[$id] = $section;
+            }
+        }
+        $sections = $filtered_sections;
+    }
+
+    // Apply custom filters
+    $sections = fcms_apply_filter('filter_admin_sections', $sections);
+
     // First, sort by menu_order
     uasort($sections, function($a, $b) {
         return ($a['menu_order'] ?? 100) <=> ($b['menu_order'] ?? 100);
     });
-    
-    error_log("Admin sections after sorting: " . print_r($sections, true));
-    
+
+    if (getenv('FCMS_DEBUG') === 'true') {
+        error_log("Admin sections after sorting: " . print_r($sections, true));
+    }
+
     // Then, organize into parent/child structure
     $organized = [];
     foreach ($sections as $id => $section) {
@@ -174,9 +363,11 @@ function fcms_get_admin_sections() {
             }
         }
     }
-    
-    error_log("Admin sections after organization: " . print_r($organized, true));
-    
+
+    if (getenv('FCMS_DEBUG') === 'true') {
+        error_log("Admin sections after organization: " . print_r($organized, true));
+    }
+
     return $organized;
 }
 
@@ -186,21 +377,61 @@ function fcms_load_plugins() {
     $configFile = PLUGIN_CONFIG;
     $active = [];
 
+    if (getenv('FCMS_DEBUG') === 'true') {
+        error_log("Plugin loader called - Plugin dir: $pluginDir, Config file: $configFile");
+    }
+
     if (file_exists($configFile)) {
         $active = json_decode(file_get_contents($configFile), true);
         if (!is_array($active)) $active = [];
+        if (getenv('FCMS_DEBUG') === 'true') {
+            error_log("Active plugins: " . print_r($active, true));
+        }
+    } else {
+        if (getenv('FCMS_DEBUG') === 'true') {
+            error_log("Plugin config file not found: $configFile");
+        }
     }
 
-    if (!is_dir($pluginDir)) return;
+    if (!is_dir($pluginDir)) {
+        if (getenv('FCMS_DEBUG') === 'true') {
+            error_log("Plugin directory not found: $pluginDir");
+        }
+        return;
+    }
+    
     foreach (glob($pluginDir . '/*', GLOB_ONLYDIR) as $pluginFolder) {
         $pluginName = basename($pluginFolder);
-        if (!in_array($pluginName, $active)) continue;
+        if (getenv('FCMS_DEBUG') === 'true') {
+            error_log("Found plugin folder: $pluginName");
+        }
+        
+        if (!in_array($pluginName, $active)) {
+            if (getenv('FCMS_DEBUG') === 'true') {
+                error_log("Plugin $pluginName is not active, skipping");
+            }
+            continue;
+        }
+        
         $mainFile = $pluginFolder . '/' . $pluginName . '.php';
         if (file_exists($mainFile)) {
+            if (getenv('FCMS_DEBUG') === 'true') {
+                error_log("Loading plugin: $pluginName from $mainFile");
+            }
+            error_log("LOADING PLUGIN: $pluginName");
             include_once $mainFile;
+            error_log("PLUGIN LOADED: $pluginName");
+        } else {
+            if (getenv('FCMS_DEBUG') === 'true') {
+                error_log("Plugin main file not found: $mainFile");
+            }
         }
     }
 }
-fcms_load_plugins();
-fcms_do_hook('init');
-?>
+
+// Defer plugin loading until after session is established
+// Only load plugins if we're not in a critical session initialization phase
+if (!isset($GLOBALS['FCMS_SESSION_INITIALIZING']) || !$GLOBALS['FCMS_SESSION_INITIALIZING']) {
+    fcms_load_plugins();
+    fcms_do_hook('init');
+}

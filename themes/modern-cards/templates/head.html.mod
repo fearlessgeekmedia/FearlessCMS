@@ -8,5 +8,5 @@
         --primary-color: {{primaryColor}};
         --font-family: {{fontFamily}};
     }
-    {{custom_css}}
+    
 </style> 

@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/themes/{{theme}}/style.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-      {{custom_css}}
+      
     </style>
 </head>
 <body>
@@ -69,7 +69,6 @@
         </footer>
     </div>
     <script>
-      {{custom_js}}
     </script>
 </body>
 </html> 

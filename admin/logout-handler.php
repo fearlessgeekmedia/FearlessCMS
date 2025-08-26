@@ -7,7 +7,9 @@ $adminPath = $config['admin_path'] ?? 'admin';
 
 // Handle logout
 if (isset($_GET['action']) && $_GET['action'] === 'logout') {
-    session_destroy();
+    if (function_exists('session_destroy')) {
+        session_destroy();
+    }
     header('Location: /' . $adminPath . '/index.php');
     exit;
 }

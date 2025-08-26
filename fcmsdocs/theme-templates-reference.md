@@ -46,6 +46,14 @@ FearlessCMS uses a simple template system with double curly braces `{{}}` for va
 |----------|-------------|---------|
 | `{{themeOptions.key}}` | Custom theme option | Value depends on theme |
 
+### CMS Mode Variables
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `{{cmsMode}}` | Current CMS mode identifier | "full-featured", "hosting-service-plugins" |
+| `{{isHostingServiceMode}}` | Boolean indicating hosting service mode | true, false |
+| `{{cmsModeName}}` | Human-readable mode name | "Full Featured", "Hosting Service (Plugin Mode)" |
+
 ## Conditional Statements
 
 ### Basic If/Else
@@ -90,6 +98,20 @@ FearlessCMS uses a simple template system with double curly braces `{{}}` for va
     </article>
 {{else}}
     <p>No content available</p>
+{{/if}}
+
+<!-- CMS mode conditional -->
+{{#if isHostingServiceMode}}
+    <div class="hosting-service-notice">
+        <p>This site is hosted by our premium hosting service.</p>
+    </div>
+{{/if}}
+
+<!-- Check specific CMS mode -->
+{{#if cmsMode === "hosting-service-plugins"}}
+    <div class="plugin-mode-notice">
+        <p>Plugin management is available in this mode.</p>
+    </div>
 {{/if}}
 ```
 
@@ -178,6 +200,20 @@ Use the `{{module=filename.html}}` syntax to include other template files:
 {{module=footer.html}}
 {{module=navigation.html}}
 ```
+
+### File Include Syntax
+
+Use the `{{include=filename.html}}` syntax to include files from the themes directory (not theme-specific):
+
+```html
+{{include=ad-area.html}}
+{{include=shared-components.html}}
+{{include=common-ads.html}}
+```
+
+**Note**: The `{{include=}}` syntax is different from `{{module=}}`:
+- `{{module=}}` looks for files in the current theme's templates directory
+- `{{include=}}` looks for files in the main themes directory (shared across all themes)
 
 ### Module Features
 
@@ -313,7 +349,124 @@ If a module file is not found, the system will log an error and insert a comment
 - `hero-banner.html` - Hero banner sections
 - `content-layout.html` - Content area layouts
 
-For more detailed information about modular templates, see the [Modular Templates Guide](modular-templates.md).
+For more detailed information about modular templates, see the [Modular Templates Guide](modular-templates).
+
+## Navigation Elements
+
+### Breadcrumbs
+
+Breadcrumbs provide users with navigation context and help them understand their current location within your site. FearlessCMS provides several variables to help you implement effective breadcrumb navigation.
+
+#### Basic Breadcrumb Implementation
+
+```html
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="/">Home</a>
+    {{#if parent}}
+        &gt; <a href="/{{parent.url}}">{{parent.title}}</a>
+    {{/if}}
+    &gt; <span class="current-page">{{title}}</span>
+</nav>
+```
+
+#### Advanced Breadcrumb with Full Path
+
+```html
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="/">Home</a>
+    {{#if url}}
+        {{#if (url != 'home')}}
+            &gt; <a href="/documentation">Documentation</a>
+            {{#if (url != 'documentation')}}
+                &gt; <span class="current-page">{{title}}</span>
+            {{/if}}
+        {{/if}}
+    {{/if}}
+</nav>
+```
+
+#### Breadcrumb Styling
+
+**Light Mode CSS:**
+```css
+.breadcrumb {
+    background: #f8f9fa;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    margin-bottom: 2rem;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.breadcrumb a {
+    color: #007bff;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.breadcrumb a:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+.breadcrumb .current-page {
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.breadcrumb > * + * {
+    margin-left: 0.5rem;
+}
+```
+
+**Dark Mode Support:**
+```css
+@media (prefers-color-scheme: dark) {
+    .breadcrumb {
+        background: #2d2d2d !important;
+        color: #e0e0e0 !important;
+    }
+    
+    .breadcrumb a {
+        color: #007bff !important;
+    }
+    
+    .breadcrumb a:hover {
+        color: #4da6ff !important;
+    }
+    
+    .breadcrumb .current-page {
+        color: #b0b0b0 !important;
+    }
+}
+```
+
+#### Breadcrumb Best Practices
+
+1. **Accessibility**: Always include `aria-label="Breadcrumb"` for screen readers
+2. **Current Page**: Show the current page as text, not a link
+3. **Separators**: Use clear separators like `&gt;` or `/` between levels
+4. **Responsive**: Ensure breadcrumbs work well on mobile devices
+5. **Dark Mode**: Always include dark mode styles for better user experience
+6. **Consistency**: Use the same breadcrumb style across all pages
+
+#### Dynamic Breadcrumb Example
+
+For complex sites with multiple levels, you can create dynamic breadcrumbs:
+
+```html
+<nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="/">Home</a>
+    {{#if breadcrumbPath}}
+        {{#each breadcrumbPath}}
+            &gt; <a href="/{{url}}">{{title}}</a>
+        {{/each}}
+    {{/if}}
+    &gt; <span class="current-page">{{title}}</span>
+</nav>
+```
+
+This requires setting up a `breadcrumbPath` variable in your content or template data.
 
 ## Template Examples
 

@@ -1,0 +1,522 @@
+  <style>
+        .parallax-section {
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Ensure sections have adequate height for content */
+            min-height: 500px;
+            height: auto;
+            /* Ensure proper background coverage */
+            background: transparent;
+        }
+        
+        .parallax-background {
+            position: absolute;
+            top: 60% !important;
+            left: 50%;
+            width: 120%;
+            height: 120%;
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-attachment: scroll;
+            z-index: 1;
+            /* Center using transform, then adjust for parallax */
+            transform: translate(-50%, -50%);
+            will-change: transform;
+            /* Prevent any gaps during scroll */
+            background-clip: border-box;
+        }
+        
+        .parallax-content {
+            position: relative;
+            z-index: 3;
+            padding: 4rem 2rem;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            /* Ensure content takes full height */
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Ensure content is readable over background */
+        .parallax-content h1,
+        .parallax-content h2,
+        .parallax-content h3,
+        .parallax-content h4,
+        .parallax-content h5,
+        .parallax-content h6 {
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.9);
+            color: white !important;
+        }
+        
+        .parallax-content p {
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
+            color: white !important;
+        }
+        
+        .parallax-content a {
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
+            color: white !important;
+        }
+        
+        /* Support for inline HTML elements like span, strong, em, etc. */
+        .parallax-content span,
+        .parallax-content strong,
+        .parallax-content em,
+        .parallax-content code,
+        .parallax-content mark {
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
+            color: white !important;
+        }
+        
+        /* Ensure content is properly spaced */
+        .parallax-content > *:first-child {
+            margin-top: 0;
+        }
+        
+        .parallax-content > *:last-child {
+            margin-bottom: 0;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .parallax-section {
+                min-height: 400px;
+            }
+            
+            .parallax-content {
+                padding: 2rem 1rem;
+                min-height: 300px;
+            }
+            
+            .parallax-background {
+                top: 60% !important;
+                width: 130%;
+                height: 130%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .parallax-section {
+                min-height: 350px;
+            }
+            
+            .parallax-content {
+                padding: 1.5rem 1rem;
+                min-height: 250px;
+            }
+            
+            .parallax-background {
+                top: 60% !important;
+                width: 140%;
+                height: 140%;
+            }
+        }
+        
+        /* Ensure sections maintain proper aspect ratio */
+        .parallax-section {
+            box-sizing: border-box;
+        }
+        
+        /* Fix for content overflow */
+        .parallax-content > * {
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        
+        /* Ensure background images always cover the full section */
+        .parallax-background {
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            /* Enhanced coverage for scrolling */
+            background-clip: border-box !important;
+            /* Ensure background extends beyond section boundaries during scroll */
+            transform-origin: center center !important;
+        }
+        
+        /* Additional rules for better background coverage during scroll */
+        .parallax-section {
+            /* Ensure section maintains proper dimensions during scroll */
+            transform: translateZ(0);
+            backface-visibility: hidden;
+        }
+        
+        /* Enhanced background coverage - no pseudo-elements needed */
+        
+        /* Ensure background covers everything - simplified approach */
+        
+        /* Clean, unified background coverage rules */
+        .parallax-section {
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* Ensure smooth scrolling and prevent background gaps */
+        .parallax-section {
+            /* Hardware acceleration */
+            transform: translateZ(0);
+            /* Prevent background clipping */
+            clip-path: none;
+            /* Ensure proper stacking context */
+            isolation: isolate;
+        }
+        
+        /* Ensure background images are fully loaded before display */
+        .parallax-background {
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        
+        .parallax-background.loaded {
+            opacity: 1;
+        }
+        
+        /* Fallback for images that fail to load */
+        .parallax-background:not([style*="background-image"]) {
+            background-color: #f0f0f0;
+        }
+        
+        /* Styling for regular content sections between parallax */
+        .parallax-section + h2 {
+            margin-top: 4rem;
+            margin-bottom: 2rem;
+        }
+        
+        h2 + p {
+            margin-top: 1rem;
+            margin-bottom: 3rem;
+        }
+        
+        /* Professional section headers */
+        h2 {
+            color: #1a202c;
+            font-size: 2.8rem;
+            font-weight: 800;
+            text-align: center;
+            margin: 3rem 0 1.5rem 0;
+            padding: 0;
+            border: none;
+            background: none;
+            position: relative;
+            letter-spacing: -0.025em;
+        }
+        
+        /* Add elegant underline to section headers */
+        h2 {
+            border-bottom: 4px solid transparent;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6) bottom;
+            background-size: 60px 4px;
+            background-repeat: no-repeat;
+            background-position: center bottom;
+            padding-bottom: 20px;
+        }
+        
+        /* Section descriptions */
+        h2 + p {
+            text-align: center;
+            font-size: 1.25rem;
+            color: #4a5568;
+            max-width: 900px;
+            margin: 0 auto 3rem auto;
+            line-height: 1.7;
+            padding: 0 2rem;
+            font-weight: 400;
+        }
+        
+        /* Feature Cards - Responsive Grid Layout - High Specificity */
+        .features .features-grid,
+        section.features .features-grid,
+        .features-grid {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 1rem !important;
+            width: 100% !important;
+            margin: 2rem 0 !important;
+        }
+        
+        .features .feature-card,
+        section.features .feature-card,
+        .features-grid .feature-card,
+        .feature-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 16px !important;
+            padding: 1.5rem !important;
+            margin: 0 !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            position: relative !important;
+            overflow: hidden !important;
+            box-sizing: border-box !important;
+            width: 100% !important;
+            min-height: 120px !important;
+            border-top: 4px solid transparent !important;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899) top, linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+            background-size: 100% 4px, 100% 100% !important;
+            background-repeat: no-repeat !important;
+            background-position: center top, center center !important;
+            padding-top: 20px !important;
+        }
+        
+        /* Style the h3 headers within feature cards */
+        .feature-card h3 {
+            background: none !important;
+            border: none !important;
+            padding: 0 0 1rem 0 !important;
+            margin: 0 0 1rem 0 !important;
+            box-shadow: none !important;
+            font-size: 1.3rem !important;
+            font-weight: 700 !important;
+            line-height: 1.4 !important;
+            color: #1e293b !important;
+            text-align: center !important;
+            min-height: auto !important;
+            width: 100% !important;
+            display: block !important;
+        }
+        
+        /* Style the description text within feature cards */
+        .feature-card p {
+            margin: 0 !important;
+            padding: 0 !important;
+            color: #4a5568 !important;
+            font-size: 1rem !important;
+            line-height: 1.6 !important;
+            text-align: center !important;
+        }
+        
+        /* Hover effects for feature cards */
+        .feature-card:hover {
+            transform: translateY(-4px) !important;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+            border-color: #cbd5e1 !important;
+        }
+        
+        /* Create a container for the features that will force the grid layout */
+        .parallax-section + h2 + p {
+            display: block !important;
+            clear: both !important;
+            margin-bottom: 2rem !important;
+        }
+        
+
+        
+        /* Responsive grid adjustments - High Specificity */
+        @media (max-width: 900px) {
+            .features .features-grid,
+            section.features .features-grid,
+            .features-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+        }
+        
+        @media (max-width: 560px) {
+            .features .features-grid,
+            section.features .features-grid,
+            .features-grid {
+                grid-template-columns: 1fr !important;
+            }
+        }
+</style><script>
+        function initParallax() {
+            const parallaxSections = document.querySelectorAll(".parallax-section");
+            
+            if (parallaxSections.length === 0) {
+                console.log("No parallax sections found");
+                return;
+            }
+            
+            console.log("Found " + parallaxSections.length + " parallax sections");
+            
+            // Set up scroll event listener for parallax effect
+            window.addEventListener("scroll", function() {
+                parallaxSections.forEach(function(section) {
+                    const rect = section.getBoundingClientRect();
+                    const speed = parseFloat(section.dataset.speed) || 0.5;
+                    const effect = section.dataset.effect || "scroll";
+                    
+                    // Apply parallax to visible sections
+                    if (rect.top < window.innerHeight && rect.bottom > 0) {
+                        const background = section.querySelector(".parallax-background");
+                        if (background) {
+                            const scrolled = window.pageYOffset;
+                            const sectionTop = section.offsetTop;
+                            
+                            // Simple parallax calculation relative to section position
+                            const relativeScroll = scrolled - sectionTop;
+                            const rate = relativeScroll * speed * 0.5;
+                            
+                            // Apply transform while maintaining centering
+                            background.style.transform = "translate(-50%, calc(-50% + " + rate + "px))";
+                        }
+                    }
+                });
+            });
+        }
+        
+        // Function to set overlay colors and opacity
+        function setOverlayStyles() {
+            console.log("Setting overlay styles...");
+            const parallaxSections = document.querySelectorAll(".parallax-section");
+            console.log("Found " + parallaxSections.length + " parallax sections");
+            
+            parallaxSections.forEach(function(section, index) {
+                const overlayColor = section.dataset.overlayColor || "rgba(0,0,0,0.4)";
+                const overlayOpacity = section.dataset.overlayOpacity || "0.4";
+                
+                console.log("Section " + index + " - Color: " + overlayColor + ", Opacity: " + overlayOpacity);
+                
+                // Convert color names to hex if needed
+                let finalColor = overlayColor;
+                if (overlayColor.startsWith("rgba")) {
+                    finalColor = overlayColor;
+                } else if (overlayColor.startsWith("#")) {
+                    finalColor = hexToRgba(overlayColor, overlayOpacity);
+                } else {
+                    finalColor = colorNameToRgba(overlayColor, overlayOpacity);
+                }
+                
+                console.log("Final color: " + finalColor);
+                
+                // Apply the overlay color directly to the ::before pseudo-element
+                const overlayDiv = document.createElement("div");
+                overlayDiv.className = "parallax-overlay";
+                overlayDiv.style.cssText = "position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: " + finalColor + "; z-index: 1;";
+                
+                // Remove existing overlay if any
+                const existingOverlay = section.querySelector(".parallax-overlay");
+                if (existingOverlay) {
+                    existingOverlay.remove();
+                }
+                
+                // Insert the overlay before the content
+                const content = section.querySelector(".parallax-content");
+                if (content) {
+                    section.insertBefore(overlayDiv, content);
+                    console.log("Overlay added to section " + index);
+                } else {
+                    console.log("No content found in section " + index);
+                }
+            });
+        }
+        
+        // Helper function to convert hex to rgba
+        function hexToRgba(hex, opacity) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return "rgba(" + r + "," + g + "," + b + "," + opacity + ")";
+        }
+        
+        // Helper function to convert color names to rgba
+        function colorNameToRgba(colorName, opacity) {
+            const colors = {
+                "black": "0,0,0",
+                "white": "255,255,255",
+                "red": "255,0,0",
+                "green": "0,128,0",
+                "blue": "0,0,255",
+                "yellow": "255,255,0",
+                "purple": "128,0,128",
+                "orange": "255,165,0",
+                "pink": "255,192,203",
+                "brown": "165,42,42",
+                "gray": "128,128,128",
+                "grey": "128,128,128"
+            };
+            
+            const rgb = colors[colorName.toLowerCase()] || "0,0,0";
+            return "rgba(" + rgb + "," + opacity + ")";
+        }
+        
+        // Initialize parallax when DOM is ready
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", initParallax);
+        } else {
+            initParallax();
+        }
+        
+        // Also initialize on window load for images
+        window.addEventListener("load", function() {
+            // Ensure all background images are loaded
+            const parallaxSections = document.querySelectorAll(".parallax-section");
+            parallaxSections.forEach(function(section) {
+                const background = section.querySelector(".parallax-background");
+                if (background) {
+                    const bgImage = background.style.backgroundImage;
+                    if (bgImage && bgImage !== "none") {
+                        const imgUrl = bgImage.replace(/url\(["\']?([^"\']+)["\']?\)/, "$1");
+                        const img = new Image();
+                        img.onload = function() {
+                            background.classList.add("loaded");
+                        };
+                        img.onerror = function() {
+                            console.warn("Failed to load parallax background image:", imgUrl);
+                        };
+                        img.src = imgUrl;
+                    } else {
+                        background.classList.add("loaded");
+                    }
+                }
+            });
+            
+            // Initialize overlays after images are loaded
+            setOverlayStyles();
+        });
+</script><?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>FearlessCMS - Blog</title>
+    <link>http://localhost:8000/blog</link>
+    <description>Fast and Fearless Content Managment</description>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 25 Aug 2025 19:37:49 +0000</lastBuildDate>
+    <atom:link href="http://localhost:8000/blog/rss" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Website re-design, Parallax plugin, Switch from Markdown to HTML and Quill.js</title>
+      <link>http://localhost:8000/blog/website-re-design-parallax-plugin-switch-from-markdown-to-html-and-quill-js</link>
+      <guid>http://localhost:8000/blog/website-re-design-parallax-plugin-switch-from-markdown-to-html-and-quill-js</guid>
+      <pubDate>Mon, 25 Aug 2025 00:00:00 +0000</pubDate>
+      <description>&lt;p&gt;I&#039;ve re-designed the website. I wanted something more visually pleasing, and I feel this is that. I will probably be making some tweaks, of course.&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;I&#039;ve created a simple parallax plugin, which is being used on this website.&lt;/p&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;Due to problems with Markdown in the sy...</description>
+    </item>
+    <item>
+      <title>Funding Needed, Fearless Sites, Looking For Clients</title>
+      <link>http://localhost:8000/blog/funding-needed-fearless-sites-looking-for-clients</link>
+      <guid>http://localhost:8000/blog/funding-needed-fearless-sites-looking-for-clients</guid>
+      <pubDate>Mon, 04 Aug 2025 00:00:00 +0000</pubDate>
+      <description>&lt;p&gt;Funding is important for an open source project, particularly one that&#039;s on a larger scale such as this. I recently lost the only remaining client I had, and I was already homeless. So right now, FearlessCMS is in need of funding. Please consider sponsoring FearlessCMS on &lt;a href=&quot;https://ko-fi.c...</description>
+    </item>
+    <item>
+      <title>Custom admin path, Whisperwind theme, Pay what you want web design/development</title>
+      <link>http://localhost:8000/blog/custom-admin-path-whisperwind-theme-pay-what-you-want-web-design-development</link>
+      <guid>http://localhost:8000/blog/custom-admin-path-whisperwind-theme-pay-what-you-want-web-design-development</guid>
+      <pubDate>Mon, 02 Jun 2025 00:00:00 +0000</pubDate>
+      <description>&lt;h1&gt;Custom admin path, Whisperwind theme, Pay what you want web design/development&lt;/h1&gt;&lt;p&gt;&lt;br&gt;&lt;/p&gt;&lt;p&gt;We have added an important security feature to the CMS. The admin path is now customizable. This is a big deal. It means that the admin path can be changed to something other than /admin. This is imp...</description>
+    </item>
+    <item>
+      <title>Export Sites to Static HTML -- EXPERIMENTAL!!!</title>
+      <link>http://localhost:8000/blog/export-sites-to-static-html-experimental</link>
+      <guid>http://localhost:8000/blog/export-sites-to-static-html-experimental</guid>
+      <pubDate>Tue, 13 May 2025 00:00:00 +0000</pubDate>
+      <description>&lt;p&gt;I have included a script with 0.0.2-8, export.js. It&#039;s a Node JS script that will export the site to a static HTML file. I thought to myself &quot;Wouldn&#039;t it be great if we could somehow have sites on Jamstack platforms like Vercel or Netlify?&quot;. You don&#039;t have PHP on those services, so having the opt...</description>
+    </item>
+    <item>
+      <title>FearlessCMS Alpha 2 Released</title>
+      <link>http://localhost:8000/blog/fearlesscms-alpha-2-released</link>
+      <guid>http://localhost:8000/blog/fearlesscms-alpha-2-released</guid>
+      <pubDate>Fri, 02 May 2025 00:00:00 +0000</pubDate>
+      <description>&lt;p&gt;All of the features of the development roadmap for Alpha 2 have been completed and we have released Alpha 2 today.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

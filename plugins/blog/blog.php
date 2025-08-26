@@ -1,4 +1,9 @@
-<?php error_log("Blog plugin - POST request received"); error_log("Blog plugin - POST data: " . print_r($_POST, true)); ?>
+<?php
+if (getenv('FCMS_DEBUG') === 'true') {
+    error_log("Blog plugin - POST request received");
+    error_log("Blog plugin - POST data: " . print_r($_POST, true));
+}
+?>
 <?php
 /*
 Plugin Name: Blog
@@ -16,16 +21,22 @@ function blog_load_posts() {
 }
 
 function blog_save_posts($posts) {
-    error_log("Blog plugin - blog_save_posts called");
-    error_log("Blog plugin - Saving to file: " . BLOG_POSTS_FILE);
-    error_log("Blog plugin - Posts to save: " . print_r($posts, true));
-    
+    if (getenv('FCMS_DEBUG') === 'true') {
+        error_log("Blog plugin - blog_save_posts called");
+        error_log("Blog plugin - Saving to file: " . BLOG_POSTS_FILE);
+        error_log("Blog plugin - Posts to save: " . print_r($posts, true));
+    }
+
     $json = json_encode($posts, JSON_PRETTY_PRINT);
-    error_log("Blog plugin - JSON to write: " . $json);
-    
+    if (getenv('FCMS_DEBUG') === 'true') {
+        error_log("Blog plugin - JSON to write: " . $json);
+    }
+
     $result = file_put_contents(BLOG_POSTS_FILE, $json);
-    error_log("Blog plugin - Save result: " . ($result !== false ? "success" : "failed"));
-    
+    if (getenv('FCMS_DEBUG') === 'true') {
+        error_log("Blog plugin - Save result: " . ($result !== false ? "success" : "failed"));
+    }
+
     return $result;
 }
 
@@ -41,7 +52,7 @@ function blog_create_slug($text) {
     $text = preg_replace('~-+~', '-', $text);
     // Lowercase
     $text = strtolower($text);
-    
+
     return $text;
 }
 
@@ -50,19 +61,19 @@ function blog_generate_rss() {
     $posts = blog_load_posts();
     $published = array_filter($posts, fn($p) => $p['status'] === 'published');
     usort($published, fn($a, $b) => strcmp($b['date'], $a['date']));
-    
+
     // Get site configuration
     $configFile = CONFIG_DIR . '/config.json';
     $siteName = 'FearlessCMS';
     $siteDescription = '';
     $siteUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]";
-    
+
     if (file_exists($configFile)) {
         $config = json_decode(file_get_contents($configFile), true);
         $siteName = $config['site_name'] ?? $siteName;
         $siteDescription = $config['site_description'] ?? $siteDescription;
     }
-    
+
     // Generate RSS XML
     $rss = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
     $rss .= '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">' . "\n";
@@ -73,38 +84,38 @@ function blog_generate_rss() {
     $rss .= '    <language>en-us</language>' . "\n";
     $rss .= '    <lastBuildDate>' . date(DATE_RSS) . '</lastBuildDate>' . "\n";
     $rss .= '    <atom:link href="' . htmlspecialchars($siteUrl) . '/blog/rss" rel="self" type="application/rss+xml" />' . "\n";
-    
+
     foreach ($published as $post) {
         $postUrl = $siteUrl . '/blog/' . urlencode($post['slug']);
         $pubDate = date(DATE_RSS, strtotime($post['date']));
-        
+
         // Convert markdown to plain text for better RSS readability
         $content = $post['content'];
-        
+
         // Remove markdown headers
         $content = preg_replace('/^#{1,6}\s+/m', '', $content);
-        
+
         // Remove markdown links but keep the text
         $content = preg_replace('/\[([^\]]+)\]\([^)]+\)/', '$1', $content);
-        
+
         // Remove markdown formatting
         $content = preg_replace('/\*\*([^*]+)\*\*/', '$1', $content);
         $content = preg_replace('/\*([^*]+)\*/', '$1', $content);
         $content = preg_replace('/`([^`]+)`/', '$1', $content);
-        
+
         // Remove code blocks
         $content = preg_replace('/```[\s\S]*?```/', '', $content);
-        
+
         // Clean up whitespace
         $content = preg_replace('/\n\s*\n/', "\n\n", $content);
         $content = trim($content);
-        
+
         // Create description (first 300 characters)
         $description = substr($content, 0, 300);
         if (strlen($content) > 300) {
             $description .= '...';
         }
-        
+
         $rss .= '    <item>' . "\n";
         $rss .= '      <title>' . htmlspecialchars($post['title']) . '</title>' . "\n";
         $rss .= '      <link>' . htmlspecialchars($postUrl) . '</link>' . "\n";
@@ -113,10 +124,10 @@ function blog_generate_rss() {
         $rss .= '      <description>' . htmlspecialchars($description) . '</description>' . "\n";
         $rss .= '    </item>' . "\n";
     }
-    
+
     $rss .= '  </channel>' . "\n";
     $rss .= '</rss>';
-    
+
     return $rss;
 }
 
@@ -128,75 +139,124 @@ fcms_register_admin_section('blog', [
         ob_start();
         $posts = blog_load_posts();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if (isset($_POST['action']) && $_POST['action'] === 'save_post') {
-                error_log("Blog plugin - Starting save_post action");
-                error_log("Blog plugin - POST data: " . print_r($_POST, true));
-                
-                $id = $_POST['id'] ?? null;
-                $title = trim($_POST['title'] ?? '');
-                $slug = trim($_POST['slug'] ?? '');
-                
-                error_log("Blog plugin - ID: " . $id);
-                error_log("Blog plugin - Title: " . $title);
-                error_log("Blog plugin - Slug: " . $slug);
-                
-                // Auto-generate slug if empty
-                if (empty($slug) && !empty($title)) {
-                    $slug = blog_create_slug($title);
-                    error_log("Blog plugin - Generated slug: " . $slug);
-                } else {
-                    // Ensure slug is URL-friendly
-                    $slug = blog_create_slug($slug);
-                    error_log("Blog plugin - URL-friendly slug: " . $slug);
-                }
-                
-                $date = trim($_POST['date'] ?? date('Y-m-d'));
-                $content = $_POST['content'] ?? '';
-                $status = $_POST['status'] ?? 'draft';
-                
-                error_log("Blog plugin - Date: " . $date);
-                error_log("Blog plugin - Status: " . $status);
-                error_log("Blog plugin - Content length: " . strlen($content));
-                
-                if ($title && $slug) {
-                    if ($id) {
-                        foreach ($posts as &$post) {
-                            if ($post['id'] == $id) {
-                                $post['title'] = $title;
-                                $post['slug'] = $slug;
-                                $post['date'] = $date;
-                                $post['content'] = $content;
-                                $post['status'] = $status;
-                                $post['featured_image'] = $_POST['featured_image'] ?? '';
-                            }
+            // Validate CSRF token first
+            if (!function_exists('validate_csrf_token') || !validate_csrf_token()) {
+                error_log("Blog plugin - CSRF token validation failed");
+                echo '<div class="bg-red-100 text-red-700 p-4 rounded mb-4">Invalid security token. Please refresh the page and try again.</div>';
+            } else {
+                if (isset($_POST['action']) && $_POST['action'] === 'save_post') {
+                    if (getenv('FCMS_DEBUG') === 'true') {
+                        error_log("Blog plugin - Starting save_post action");
+                        error_log("Blog plugin - POST data: " . print_r($_POST, true));
+                    }
+
+                    $id = $_POST['id'] ?? null;
+                    $title = trim($_POST['title'] ?? '');
+                    $slug = trim($_POST['slug'] ?? '');
+
+                    if (getenv('FCMS_DEBUG') === 'true') {
+                        error_log("Blog plugin - ID: " . $id);
+                        error_log("Blog plugin - Title: " . $title);
+                        error_log("Blog plugin - Slug: " . $slug);
+                    }
+
+                    // Auto-generate slug if empty
+                    if (empty($slug) && !empty($title)) {
+                        $slug = blog_create_slug($title);
+                        if (getenv('FCMS_DEBUG') === 'true') {
+                            error_log("Blog plugin - Generated slug: " . $slug);
                         }
                     } else {
-                        $posts[] = [
-                            'id' => time(),
-                            'title' => $title,
-                            'slug' => $slug,
-                            'date' => $date,
-                            'content' => $content,
-                            'status' => $status,
-                            'featured_image' => $_POST['featured_image'] ?? ''
-                        ];
+                        // Ensure slug is URL-friendly
+                        $slug = blog_create_slug($slug);
+                        if (getenv('FCMS_DEBUG') === 'true') {
+                            error_log("Blog plugin - URL-friendly slug: " . $slug);
+                        }
                     }
+
+                    $date = trim($_POST['date'] ?? date('Y-m-d'));
+                    $content = $_POST['content'] ?? '';
+                    $status = $_POST['status'] ?? 'draft';
+
+                    if (getenv('FCMS_DEBUG') === 'true') {
+                        error_log("Blog plugin - Date: " . $date);
+                        error_log("Blog plugin - Status: " . $status);
+                        error_log("Blog plugin - Content length: " . strlen($content));
+                    }
+
+                    if ($title && $slug) {
+                        if ($id) {
+                            foreach ($posts as &$post) {
+                                if ($post['id'] == $id) {
+                                    $post['title'] = $title;
+                                    $post['slug'] = $slug;
+                                    $post['date'] = $date;
+                                    $post['content'] = $content;
+                                    $post['status'] = $status;
+                                    $post['featured_image'] = $_POST['featured_image'] ?? '';
+                                }
+                            }
+                        } else {
+                            $posts[] = [
+                                'id' => time(),
+                                'title' => $title,
+                                'slug' => $slug,
+                                'date' => $date,
+                                'content' => $content,
+                                'status' => $status,
+                                'featured_image' => $_POST['featured_image'] ?? ''
+                            ];
+                        }
+                        blog_save_posts($posts);
+                        // Set success message in session and let admin system handle the flow
+                        if (getenv('FCMS_DEBUG') === 'true') {
+                            error_log("Blog plugin - Post saved successfully");
+                        }
+                        // Set session message for the admin system to display
+                        if (function_exists('session_start') && session_status() === PHP_SESSION_NONE) {
+                            session_start();
+                        }
+                        $_SESSION['blog_success'] = 'Blog post saved successfully!';
+                        // Redirect back to blog page to show success message
+                        echo '<script>window.location.href = "?action=blog";</script>';
+                        return ob_get_clean();
+                    } else {
+                        if (getenv('FCMS_DEBUG') === 'true') {
+                            error_log("Blog plugin - Invalid title or slug, skipping save");
+                        }
+                    }
+                } elseif (isset($_POST['action']) && $_POST['action'] === 'delete_post' && isset($_POST['id'])) {
+                    $posts = array_filter($posts, fn($p) => $p['id'] != $_POST['id']);
                     blog_save_posts($posts);
-                    header('Location: ?action=blog');
-                    exit;
-                } else {
-                    error_log("Blog plugin - Invalid title or slug, skipping save");
+                    // Set success message in session and let admin system handle the flow
+                    if (getenv('FCMS_DEBUG') === 'true') {
+                        error_log("Blog plugin - Post deleted successfully");
+                    }
+                    // Set session message for the admin system to display
+                    if (function_exists('session_start') && session_status() === PHP_SESSION_NONE) {
+                        session_start();
+                    }
+                    $_SESSION['blog_deleted'] = 'Blog post deleted successfully!';
+                    // Redirect back to blog page to show success message
+                    echo '<script>window.location.href = "?action=blog";</script>';
+                    return ob_get_clean();
                 }
-            } elseif (isset($_POST['action']) && $_POST['action'] === 'delete_post' && isset($_POST['id'])) {
-                $posts = array_filter($posts, fn($p) => $p['id'] != $_POST['id']);
-                blog_save_posts($posts);
-                header('Location: ?action=blog');
-                exit;
             }
         }
         echo '<h2 class="text-2xl font-bold mb-6 fira-code">Blog Posts</h2>';
-        echo '<a href="?action=blog&new=1" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">New Post</a><br><br>';
         
+        // Display success messages
+        if (isset($_SESSION['blog_success'])) {
+            echo '<div class="bg-green-100 text-green-700 p-4 rounded mb-4">' . htmlspecialchars($_SESSION['blog_success']) . '</div>';
+            unset($_SESSION['blog_success']);
+        }
+        if (isset($_SESSION['blog_deleted'])) {
+            echo '<div class="bg-blue-100 text-blue-700 p-4 rounded mb-4">' . htmlspecialchars($_SESSION['blog_deleted']) . '</div>';
+            unset($_SESSION['blog_deleted']);
+        }
+        
+        echo '<a href="?action=blog&new=1" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">New Post</a><br><br>';
+
         // Add file manager script only if file management is allowed
         if (isset($GLOBALS['cmsModeManager']) && $GLOBALS['cmsModeManager']->canManageFiles()) {
             echo '<script>
@@ -221,6 +281,29 @@ fcms_register_admin_section('blog', [
             </script>';
         }
 
+        // Add Quill.js styling
+        echo '<style>
+        .ql-editor {
+            min-height: 400px;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        .ql-toolbar {
+            border: 1px solid #ccc;
+            border-radius: 4px 4px 0 0;
+            background: #f8f9fa;
+        }
+        .ql-container {
+            border: 1px solid #ccc;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+        }
+        #blog-toast-editor {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        </style>';
+        
         if (isset($_GET['edit'])) {
             $edit = null;
             foreach ($posts as $p) if ($p['id'] == $_GET['edit']) $edit = $p;
@@ -231,6 +314,7 @@ fcms_register_admin_section('blog', [
                 echo '<form method="POST" class="space-y-4" id="blog-post-form" data-ajax="false">';
                 echo '<input type="hidden" name="action" value="save_post">';
                 echo '<input type="hidden" name="id" value="' . htmlspecialchars($edit['id']) . '">';
+                if (function_exists('csrf_token_field')) echo csrf_token_field();
                 echo '<div><label>Title:</label><input name="title" value="' . htmlspecialchars($edit['title']) . '" class="border rounded px-2 py-1 w-full"></div>';
                 echo '<div><label>Slug:</label><input name="slug" value="' . htmlspecialchars($edit['slug']) . '" class="border rounded px-2 py-1 w-full"></div>';
                 echo '<div class="text-sm text-gray-500">The slug should be URL-friendly (lowercase, no spaces). Example: my-blog-post</div>';
@@ -252,24 +336,98 @@ fcms_register_admin_section('blog', [
                 echo '<input type="hidden" name="content" id="blog-editor-content">';
                 echo '<button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Save</button>';
                 echo '</form>';
-                echo '<form method="POST" class="mt-4"><input type="hidden" name="action" value="delete_post"><input type="hidden" name="id" value="' . htmlspecialchars($edit['id']) . '"><button type="submit" onclick="return confirm(\'Delete this post?\')" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Delete</button></form>';
+                echo '<form method="POST" class="mt-4"><input type="hidden" name="action" value="delete_post"><input type="hidden" name="id" value="' . htmlspecialchars($edit['id']) . '">';
+                if (function_exists('csrf_token_field')) echo csrf_token_field();
+                echo '<button type="submit" onclick="return confirm(\'Delete this post?\')" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Delete</button></form>';
                 echo '<a href="?action=blog" class="inline-block mt-4 text-blue-600 hover:underline">Back to list</a>';
-                
-                // Toast UI Editor initialization
+
+                // Quill.js Editor initialization
                 echo '<script>
                 document.addEventListener("DOMContentLoaded", function() {
                     var initialContent = ' . json_encode($edit['content']) . ';
-                    var editor = new toastui.Editor({
-                        el: document.querySelector("#blog-toast-editor"),
-                        height: "500px",
-                        initialEditType: "markdown",
-                        previewStyle: "vertical",
-                        initialValue: initialContent,
-                        usageStatistics: false
+                    // Create a simple toolbar without problematic modules
+                    var toolbarOptions = [
+                        [{ "header": [1, 2, 3, false] }],
+                        ["bold", "italic", "underline", "strike"],
+                        [{ "list": "ordered"}, { "list": "bullet" }],
+                        [{ "color": [] }, { "background": [] }],
+                        [{ "align": [] }],
+                        ["link"],
+                        ["clean"]
+                    ];
+
+                    var editor = new Quill("#blog-toast-editor", {
+                        theme: "snow",
+                        modules: {
+                            toolbar: toolbarOptions,
+                            clipboard: {
+                                matchVisual: false
+                            }
+                        },
+                        placeholder: "Start writing your blog post here...",
+                        height: "500px"
+                    });
+
+                    // Add custom image handling after Quill is initialized
+                    var imageButton = document.createElement("button");
+                    imageButton.innerHTML = \'<svg viewBox="0 0 18 18"><rect class="ql-stroke" height="10" width="12" x="3" y="4"></rect><circle class="ql-fill" cx="6" cy="6" r="1"></circle><polyline class="ql-even ql-fill" points="5 8,9 4,13 8,13 14,5 14"></polyline></svg>\';
+                    imageButton.type = "button";
+                    imageButton.className = "ql-image";
+                    imageButton.setAttribute("aria-label", "Insert image");
+                    
+                    // Add click handler for image upload
+                    imageButton.addEventListener("click", function() {
+                        var input = document.createElement("input");
+                        input.setAttribute("type", "file");
+                        input.setAttribute("accept", "image/*");
+                        input.click();
+                        
+                        input.onchange = function() {
+                            var file = input.files[0];
+                            if (file) {
+                                var formData = new FormData();
+                                formData.append("action", "upload_image");
+                                formData.append("image", file);
+                                
+                                fetch("?action=upload_image", {
+                                    method: "POST",
+                                    body: formData
+                                })
+                                .then(function(response) { return response.json(); })
+                                .then(function(data) {
+                                    if (data.success) {
+                                        var range = editor.getSelection();
+                                        editor.insertEmbed(range.index, "image", data.url);
+                                    } else {
+                                        alert("Upload failed: " + (data.error || "Unknown error"));
+                                    }
+                                })
+                                .catch(function(error) {
+                                    alert("Upload failed: " + error);
+                                });
+                            }
+                        };
                     });
                     
+                    // Add the custom image button to the toolbar
+                    var toolbar = editor.getModule("toolbar");
+                    toolbar.addHandler("image", function() {
+                        imageButton.click();
+                    });
+                    
+                    // Insert the image button into the toolbar
+                    var toolbarContainer = document.querySelector(".ql-toolbar");
+                    if (toolbarContainer) {
+                        toolbarContainer.appendChild(imageButton);
+                    }
+
+                    // Set initial content if editing
+                    if (initialContent) {
+                        editor.root.innerHTML = initialContent;
+                    }
+
                     document.getElementById("blog-post-form").addEventListener("submit", function(e) {
-                        var content = editor.getMarkdown();
+                        var content = editor.root.innerHTML;
                         console.log("Editor content before save:", content);
                         document.getElementById("blog-editor-content").value = content;
                         console.log("Form content after setting:", document.getElementById("blog-editor-content").value);
@@ -280,6 +438,7 @@ fcms_register_admin_section('blog', [
         } elseif (isset($_GET['new'])) {
             echo '<form method="POST" class="space-y-4" id="blog-post-form" data-ajax="false">';
             echo '<input type="hidden" name="action" value="save_post">';
+            if (function_exists('csrf_token_field')) echo csrf_token_field();
             echo '<div><label>Title:</label><input name="title" class="border rounded px-2 py-1 w-full"></div>';
             echo '<div><label>Slug:</label><input name="slug" class="border rounded px-2 py-1 w-full" placeholder="auto-generated-if-empty"></div>';
             echo '<div class="text-sm text-gray-500">The slug should be URL-friendly (lowercase, no spaces). Example: my-blog-post</div>';
@@ -299,21 +458,88 @@ fcms_register_admin_section('blog', [
             echo '<button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Save</button>';
             echo '</form>';
             echo '<a href="?action=blog" class="inline-block mt-4 text-blue-600 hover:underline">Back to list</a>';
-            
-            // Toast UI Editor initialization for new post
+
+            // Quill.js Editor initialization for new post
             echo '<script>
             document.addEventListener("DOMContentLoaded", function() {
-                var editor = new toastui.Editor({
-                    el: document.querySelector("#blog-toast-editor"),
-                    height: "500px",
-                    initialEditType: "markdown",
-                    previewStyle: "vertical",
-                    initialValue: "# New Blog Post\n\nStart writing your content here...",
-                    usageStatistics: false
+                // Create a simple toolbar without problematic modules
+                var toolbarOptions = [
+                    [{ "header": [1, 2, 3, false] }],
+                    ["bold", "italic", "underline", "strike"],
+                    [{ "list": "ordered"}, { "list": "bullet" }],
+                    [{ "color": [] }, { "background": [] }],
+                    [{ "align": [] }],
+                    ["link"],
+                    ["clean"]
+                ];
+
+                var editor = new Quill("#blog-toast-editor", {
+                    theme: "snow",
+                    modules: {
+                        toolbar: toolbarOptions,
+                        clipboard: {
+                            matchVisual: false
+                        }
+                    },
+                    placeholder: "Start writing your blog post here...",
+                    height: "500px"
+                });
+
+                // Add custom image handling after Quill is initialized
+                var imageButton = document.createElement("button");
+                imageButton.innerHTML = \'<svg viewBox="0 0 18 18"><rect class="ql-stroke" height="10" width="12" x="3" y="4"></rect><circle class="ql-fill" cx="6" cy="6" r="1"></circle><polyline class="ql-even ql-fill" points="5 8,9 4,13 8,13 14,5 14"></polyline></svg>\';
+                imageButton.type = "button";
+                imageButton.className = "ql-image";
+                imageButton.setAttribute("aria-label", "Insert image");
+                
+                // Add click handler for image upload
+                imageButton.addEventListener("click", function() {
+                    var input = document.createElement("input");
+                    input.setAttribute("type", "file");
+                    input.setAttribute("accept", "image/*");
+                    input.click();
+                    
+                    input.onchange = function() {
+                        var file = input.files[0];
+                        if (file) {
+                            var formData = new FormData();
+                            formData.append("action", "upload_image");
+                            formData.append("image", file);
+                            
+                            fetch("?action=upload_image", {
+                                method: "POST",
+                                body: formData
+                            })
+                            .then(function(response) { return response.json(); })
+                            .then(function(data) {
+                                if (data.success) {
+                                    var range = editor.getSelection();
+                                    editor.insertEmbed(range.index, "image", data.url);
+                                } else {
+                                    alert("Upload failed: " + (data.error || "Unknown error"));
+                                }
+                            })
+                            .catch(function(error) {
+                                alert("Upload failed: " + error);
+                            });
+                        }
+                    };
                 });
                 
+                // Add the custom image button to the toolbar
+                var toolbar = editor.getModule("toolbar");
+                toolbar.addHandler("image", function() {
+                    imageButton.click();
+                });
+                
+                // Insert the image button into the toolbar
+                var toolbarContainer = document.querySelector(".ql-toolbar");
+                if (toolbarContainer) {
+                    toolbarContainer.appendChild(imageButton);
+                }
+
                 document.getElementById("blog-post-form").addEventListener("submit", function(e) {
-                    var content = editor.getMarkdown();
+                    var content = editor.root.innerHTML;
                     console.log("Editor content before save:", content);
                     document.getElementById("blog-editor-content").value = content;
                     console.log("Form content after setting:", document.getElementById("blog-editor-content").value);
@@ -333,8 +559,9 @@ fcms_register_admin_section('blog', [
                     <a href="/blog/' . urlencode($p['slug']) . '" target="_blank" class="text-green-600 hover:underline mr-2">View</a>
                     <form method="POST" class="inline">
                         <input type="hidden" name="action" value="delete_post">
-                        <input type="hidden" name="id" value="' . htmlspecialchars($p['id']) . '">
-                        <button type="submit" onclick="return confirm(\'Are you sure you want to delete this post?\')" class="text-red-600 hover:underline">Delete</button>
+                        <input type="hidden" name="id" value="' . htmlspecialchars($p['id']) . '">';
+                        if (function_exists('csrf_token_field')) echo csrf_token_field();
+                        echo '<button type="submit" onclick="return confirm(\'Are you sure you want to delete this post?\')" class="text-red-600 hover:underline">Delete</button>
                     </form>
                 </td>';
                 echo '</tr>';
@@ -354,13 +581,13 @@ fcms_add_hook('route', function (&$handled, &$title, &$content, $path) {
         $handled = true;
         exit; // Exit immediately to prevent any additional processing
     }
-    
+
     if (preg_match('#^blog(?:/([^/]+))?$#', $path, $m)) {
         $posts = blog_load_posts();
-        
+
         if (!empty($m[1])) {
             $slug = urldecode($m[1]);
-            
+
             foreach ($posts as $post) {
                 if ($post['slug'] === $slug && $post['status'] === 'published') {
                     $title = $post['title'];
@@ -377,7 +604,7 @@ fcms_add_hook('route', function (&$handled, &$title, &$content, $path) {
                     return;
                 }
             }
-            
+
             $title = 'Post Not Found';
             $content = '<p>Sorry, that blog post does not exist.</p>';
             $handled = true;
@@ -420,7 +647,7 @@ fcms_add_hook('before_render', function(&$template, $path = null) {
     } else if (preg_match('#^blog(?:/([^/]+))?$#', $path)) {
         $template = 'blog';
     }
-    
+
     // Don't use template for RSS feed
     if ($path === 'blog/rss' || (isset($_SERVER['REQUEST_URI']) && trim($_SERVER['REQUEST_URI'], '/') === 'blog/rss')) {
         $template = null;

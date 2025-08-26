@@ -1,9 +1,6 @@
 admin/config/users.json
 serve-log.tmp
-themes/whisperwind
-themes/punk_rock
-themes/nightfall
-plugins/advanced-seo
+sessions
 
 # External documentation directory (outside project)
 ~/fcmsdocs/
@@ -12,3 +9,15 @@ plugins/advanced-seo
 content/mariadb-connector/
 content/*/config.json
 cache/
+.crush/
+content/
+uploads/
+
+# AI Analysis and Audit Reports
+SCALABILITY_*.md
+SECURITY_AUDIT_*.md
+SESSION_COMPATIBILITY_FIX.md
+
+# Sandbox and development directories
+sandbox_home/
+sandbox_home/*

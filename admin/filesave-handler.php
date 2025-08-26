@@ -4,17 +4,21 @@
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_file') {
     if (!isLoggedIn()) {
         $error = 'You must be logged in to edit files';
+    } elseif (!validate_csrf_token()) {
+        $error = 'Invalid security token. Please refresh the page and try again.';
     } else {
-        $fileName = $_POST['file_name'] ?? '';
+        $fileName = sanitize_input($_POST['file_name'] ?? '', 'path');
         $content = $_POST['content'] ?? '';
-        $pageTitle = $_POST['page_title'] ?? '';
-        $parentPage = $_POST['parent_page'] ?? '';
-        $editorMode = $_POST['editor_mode'] ?? 'easy';
-        $template = $_POST['template'] ?? 'page';
+        $pageTitle = sanitize_input($_POST['page_title'] ?? '', 'string');
+        $parentPage = sanitize_input($_POST['parent_page'] ?? '', 'path');
+        $editorMode = sanitize_input($_POST['editor_mode'] ?? 'easy', 'string');
+        $template = sanitize_input($_POST['template'] ?? 'page', 'string');
 
         // Validate filename: allow slashes for subfolders
         if (empty($fileName) || !preg_match('/^[a-zA-Z0-9_\/-]+\.md$/', $fileName)) {
             $error = 'Invalid filename';
+        } elseif (strpos($fileName, '../') !== false || strpos($fileName, './') === 0) {
+            $error = 'Invalid file path - path traversal detected';
         } else {
             $filePath = CONTENT_DIR . '/' . $fileName;
 

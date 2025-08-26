@@ -9,5 +9,5 @@
         --accent-color: {{accentColor}};
         --vintage-mode: {{vintageMode}};
     }
-    {{custom_css}}
+    
 </style> 

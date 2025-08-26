@@ -1,13 +1,27 @@
 <?php
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+// Set error reporting based on debug mode
+ini_set('log_errors', 1);
+
+// Only enable debug mode if explicitly requested
+if (getenv('FCMS_DEBUG') === 'true') {
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
+} else {
+    ini_set('display_errors', 0);
+    ini_set('display_startup_errors', 0);
+    error_reporting(E_ERROR | E_WARNING | E_PARSE);
+}
 
 // Initialize session first
 require_once __DIR__ . '/includes/session.php';
-error_log("Main index - Session ID: " . session_id());
-error_log("Main index - Session data: " . print_r($_SESSION, true));
-error_log("Main index - Cookies: " . print_r($_COOKIE, true));
+
+// Only log debug info in debug mode
+if (getenv('FCMS_DEBUG') === 'true') {
+    error_log("Main index - Session ID: " . (function_exists('session_id') ? session_id() : 'function_not_available'));
+    // Session debugging removed for security
+    // Cookie debugging removed for security
+}
 
 require_once __DIR__ . '/includes/config.php';
 require_once PROJECT_ROOT . '/includes/ThemeManager.php';
@@ -18,13 +32,17 @@ require_once PROJECT_ROOT . '/includes/plugins.php';
 
 // --- Routing: get the requested path ---
 $requestPath = trim($_SERVER['REQUEST_URI'], '/');
-error_log("Request path: " . $requestPath);
-error_log("Raw REQUEST_URI: " . $_SERVER['REQUEST_URI']);
+if (getenv('FCMS_DEBUG') === 'true') {
+    error_log("Request path: " . $requestPath);
+    error_log("Raw REQUEST_URI: " . $_SERVER['REQUEST_URI']);
+}
 
 // Remove query parameters from the path
 if (($queryPos = strpos($requestPath, '?')) !== false) {
     $requestPath = substr($requestPath, 0, $queryPos);
-    error_log("Path after removing query parameters: " . $requestPath);
+    if (getenv('FCMS_DEBUG') === 'true') {
+        error_log("Path after removing query parameters: " . $requestPath);
+    }
 }
 
 // Remove any subdomain prefix if present
@@ -34,48 +52,9 @@ $configFile = CONFIG_DIR . "/config.json";
 $config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
 $adminPath = $config["admin_path"] ?? "admin";
 
-// Handle admin routes
-if (strpos($requestPath, $adminPath) === 0) {
-    error_log("Admin route detected: " . $requestPath);
-    error_log("Admin path from config: " . $adminPath);
-    error_log("Request URI: " . $_SERVER['REQUEST_URI']);
-    error_log("Session status: " . session_status());
-    error_log("Session ID: " . session_id());
-    error_log("Session data: " . print_r($_SESSION, true));
-    error_log("Cookies: " . print_r($_COOKIE, true));
-    require_once PROJECT_ROOT . "/includes/auth.php";
-    
-    // Route /admin/login directly
-    if ($requestPath === $adminPath . "/login") {
-        error_log("Routing to login page");
-        require PROJECT_ROOT . "/admin/login.php";
-        exit;
-    }
-    
-    // Route /admin/anything else to /admin/index.php (but not /admin/login)
-    if (strpos($requestPath, $adminPath . "/") === 0 && $requestPath !== $adminPath . "/login") {
-        error_log("Routing admin subpath to index.php");
-        require PROJECT_ROOT . "/admin/index.php";
-        exit;
-    }
-    
-    // Route /admin or /admin/ to login if not logged in
-    if ($requestPath === $adminPath || $requestPath === $adminPath . "/") {
-        error_log("Checking login status for /" . $adminPath);
-        error_log("Request path: " . $requestPath . ", Admin path: " . $adminPath);
-        error_log("Is logged in: " . (isLoggedIn() ? "YES" : "NO"));
-        if (!isLoggedIn()) {
-            error_log("Not logged in, redirecting to login");
-            $redirectUrl = "/" . $adminPath . "/login";
-            error_log("Redirect URL: " . $redirectUrl);
-            header("Location: " . $redirectUrl);
-            exit;
-        }
-        error_log("Logged in, loading admin index");
-        require PROJECT_ROOT . "/admin/index.php";
-        exit;
-    }
-}
+// Admin routes are now handled by router.php, so we don't need this logic here
+// The router.php will send admin routes to admin/index.php or admin/login.php as appropriate
+
 if (strpos($requestPath, 'fearlesscms.hstn.me/') === 0) {
     $requestPath = substr($requestPath, strlen('fearlesscms.hstn.me/'));
 }
@@ -84,14 +63,14 @@ if (strpos($requestPath, 'fearlesscms.hstn.me/') === 0) {
 if (strpos($requestPath, '_preview/') === 0) {
     $previewPath = substr($requestPath, 9); // Remove '_preview/' prefix
     $previewFile = CONTENT_DIR . '/_preview/' . $previewPath . '.md';
-    
+
     error_log("Looking for preview file: " . $previewFile);
-    
+
     if (file_exists($previewFile)) {
         error_log("Preview file found");
         $contentData = file_get_contents($previewFile);
         error_log("Preview content loaded: " . substr($contentData, 0, 100) . "...");
-        
+
         $metadata = [];
         if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $contentData, $matches)) {
             $metadata = json_decode($matches[1], true);
@@ -101,13 +80,13 @@ if (strpos($requestPath, '_preview/') === 0) {
             error_log("No metadata found in preview file");
             $content = $contentData;
         }
-        
+
         // Set page title
         $pageTitle = $metadata['title'] ?? 'Preview';
-        
+
         // Check editor mode to determine content processing
         $editorMode = $metadata['editor_mode'] ?? 'markdown';
-        
+
         // Convert markdown to HTML or use HTML directly
         if ($editorMode === 'easy' || $editorMode === 'html') {
             // Use content as-is for HTML mode
@@ -115,10 +94,11 @@ if (strpos($requestPath, '_preview/') === 0) {
         } else {
             // Convert markdown to HTML
             require_once PROJECT_ROOT . '/includes/Parsedown.php';
-            $Parsedown = new Parsedown();
-            $pageContentHtml = $Parsedown->text($content);
+                    $Parsedown = new Parsedown();
+        $Parsedown->setMarkupEscaped(false); // Allow HTML in markdown
+        $pageContentHtml = $Parsedown->text($content);
         }
-        
+
         // Get site name from config
         $configFile = CONFIG_DIR . '/config.json';
         $siteName = 'FearlessCMS';
@@ -132,21 +112,21 @@ if (strpos($requestPath, '_preview/') === 0) {
                 $siteDescription = $config['site_description'];
             }
         }
-        
+
         // Load theme options
         $themeOptionsFile = CONFIG_DIR . '/theme_options.json';
         $themeOptions = file_exists($themeOptionsFile) ? json_decode(file_get_contents($themeOptionsFile), true) : [];
-        
+
         // Initialize managers
         require_once PROJECT_ROOT . '/includes/ThemeManager.php';
         require_once PROJECT_ROOT . '/includes/MenuManager.php';
         require_once PROJECT_ROOT . '/includes/WidgetManager.php';
         require_once PROJECT_ROOT . '/includes/TemplateRenderer.php';
-        
+
         $themeManager = new ThemeManager();
         $menuManager = new MenuManager();
         $widgetManager = new WidgetManager();
-        
+
         // Initialize template renderer
         $templateRenderer = new TemplateRenderer(
             $themeManager->getActiveTheme(),
@@ -154,7 +134,7 @@ if (strpos($requestPath, '_preview/') === 0) {
             $menuManager,
             $widgetManager
         );
-        
+
         // Prepare template data
         $templateData = [
             'title' => $pageTitle,
@@ -167,40 +147,41 @@ if (strpos($requestPath, '_preview/') === 0) {
             'mainMenu' => $menuManager->renderMenu('main'),
 
         ];
-        
+
         // Add custom variables from JSON frontmatter
         if (isset($metadata) && is_array($metadata)) {
             foreach ($metadata as $key => $value) {
                 $templateData[$key] = $value;
             }
         }
-        
+
         // Process template variables in the content
         $pageContentHtml = $templateRenderer->replaceVariables($pageContentHtml, $templateData);
-        
+
         // Update the content in template data
         $templateData['content'] = $pageContentHtml;
-        
+
         // Debug: Check if content has curly braces
         if (strpos($pageContentHtml, '{') !== false || strpos($pageContentHtml, '}') !== false) {
             error_log("CONTENT HAS CURLY BRACES: " . substr($pageContentHtml, 0, 200));
         }
-        
+
         // Render template
         $templateName = $metadata['template'] ?? 'page';
         fcms_do_hook_ref('before_render', $templateName);
         $template = $templateRenderer->render($templateName, $templateData);
-        
+
         // Output the preview
         echo $template;
         exit;
     } else {
         error_log("Preview file not found: " . $previewFile);
         // If preview file doesn't exist, show 404
+        fcms_flush_output(); // Flush output buffer before setting headers
         http_response_code(404);
         $pageTitle = 'Preview Not Found';
         $pageContent = '<p>The preview you requested could not be found.</p>';
-        
+
         require_once PROJECT_ROOT . '/includes/ThemeManager.php';
         $themeManager = new ThemeManager();
         $template = $themeManager->getTemplate('404', 'page');
@@ -213,16 +194,16 @@ if (strpos($requestPath, '_preview/') === 0) {
 }
 
 error_log("DEBUG: Reached top of index.php");
-// --- File-based page cache for public pages ---
+// --- Advanced page caching using CacheManager ---
 // Only cache GET requests, non-admin, non-logged-in
 $cacheEnabled = false;
-$cacheDir = __DIR__ . '/cache';
-$cacheLifetime = 300; // 5 minutes
+$cacheFile = null;
 
 // Ensure session and config are loaded before checking login status
 require_once __DIR__ . '/includes/session.php';
 require_once __DIR__ . '/includes/config.php';
 require_once PROJECT_ROOT . '/includes/auth.php';
+require_once PROJECT_ROOT . '/includes/CacheManager.php';
 
 // Determine if this is a public page (not admin, not logged in, GET request)
 $requestPath = trim($_SERVER['REQUEST_URI'], '/');
@@ -231,27 +212,44 @@ $config = file_exists($configFile) ? json_decode(file_get_contents($configFile),
 $adminPath = $config["admin_path"] ?? "admin";
 $isAdminRoute = (strpos($requestPath, $adminPath) === 0);
 $isLoggedIn = function_exists('isLoggedIn') ? isLoggedIn() : false;
+
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !$isAdminRoute && !$isLoggedIn) {
-    $cacheEnabled = true;
-    if (!is_dir($cacheDir)) {
-        mkdir($cacheDir, 0755, true);
+    // Initialize CacheManager
+    $cacheManager = new CacheManager();
+    
+    // Check if caching is enabled and configured for pages
+    if ($cacheManager->isEnabled() && ($cacheManager->getConfig()['cache_pages'] ?? false)) {
+        $cacheEnabled = true;
+        
+        // Generate cache key for this request
+        $cacheKey = md5($_SERVER['REQUEST_URI']);
+        $cacheFile = $cacheManager->getCacheDir() . '/page_' . $cacheKey . '.html';
+        
+        // Check if cached version exists and is still valid
+        if (file_exists($cacheFile)) {
+            $cacheAge = time() - filemtime($cacheFile);
+            $cacheDuration = $cacheManager->getCacheDuration();
+            
+            if ($cacheAge < $cacheDuration) {
+                // Serve cached file and record hit
+                $cacheManager->recordHit();
+                readfile($cacheFile);
+                exit;
+            }
+        }
+        
+        // Start output buffering to capture output for caching
+        ob_start();
     }
-    $cacheKey = md5($_SERVER['REQUEST_URI']);
-    $cacheFile = "$cacheDir/page_$cacheKey.html";
-    if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < $cacheLifetime)) {
-        // Serve cached file
-        readfile($cacheFile);
-        exit;
-    }
-    // Start output buffering to capture output
-    ob_start();
 }
 
 // Default to home if root
 if ($requestPath === '') {
     $path = 'home';
+    $templateName = 'home'; // Set template to home for root path
 } else {
     $path = $requestPath;
+    $templateName = 'page'; // Default to page template for other paths
 }
 error_log("Processed path: " . $path);
 
@@ -278,21 +276,21 @@ if ($handled) {
             $siteDescription = $config['site_description'];
         }
     }
-    
+
     // Load theme options
     $themeOptionsFile = CONFIG_DIR . '/theme_options.json';
     $themeOptions = file_exists($themeOptionsFile) ? json_decode(file_get_contents($themeOptionsFile), true) : [];
-    
+
     // Initialize managers
     require_once PROJECT_ROOT . '/includes/ThemeManager.php';
     require_once PROJECT_ROOT . '/includes/MenuManager.php';
     require_once PROJECT_ROOT . '/includes/WidgetManager.php';
     require_once PROJECT_ROOT . '/includes/TemplateRenderer.php';
-    
+
     $themeManager = new ThemeManager();
     $menuManager = new MenuManager();
     $widgetManager = new WidgetManager();
-    
+
     // Initialize template renderer
     $templateRenderer = new TemplateRenderer(
         $themeManager->getActiveTheme(),
@@ -300,11 +298,11 @@ if ($handled) {
         $menuManager,
         $widgetManager
     );
-    
+
     // Let plugins determine the template
     $template = 'page';
     fcms_do_hook_ref('before_render', $template, $path);
-    
+
     // Prepare template data
     $templateData = [
         'title' => $title,
@@ -317,17 +315,17 @@ if ($handled) {
         'mainMenu' => $menuManager->renderMenu('main'),
 
     ];
-    
+
     // Add custom variables from JSON frontmatter
     if (isset($metadata) && is_array($metadata)) {
         foreach ($metadata as $key => $value) {
             $templateData[$key] = $value;
         }
     }
-    
+
     // Debug: Log the template data
     error_log("TEMPLATE DATA: " . json_encode($templateData));
-    
+
     // Render template
     echo $templateRenderer->render($template, $templateData);
     exit;
@@ -345,7 +343,7 @@ if (!file_exists($contentFile)) {
         $childPath = array_pop($parts);
         $parentPath = implode('/', $parts);
         error_log("Parent path: " . $parentPath . ", Child path: " . $childPath);
-        
+
         // Check if parent exists
         $parentFile = CONTENT_DIR . '/' . $parentPath . '.md';
         error_log("Looking for parent file: " . $parentFile);
@@ -356,7 +354,7 @@ if (!file_exists($contentFile)) {
             if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $parentContent, $matches)) {
                 $parentMetadata = json_decode($matches[1], true);
             }
-            
+
             // Check if this is a child page
             $childFile = CONTENT_DIR . '/' . $childPath . '.md';
             error_log("Looking for child file: " . $childFile);
@@ -367,7 +365,7 @@ if (!file_exists($contentFile)) {
                 if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $childContent, $matches)) {
                     $childMetadata = json_decode($matches[1], true);
                 }
-                
+
                 // If child has this parent, use it
                 if (isset($childMetadata['parent']) && $childMetadata['parent'] === $parentPath) {
                     $contentFile = $childFile;
@@ -381,11 +379,12 @@ if (!file_exists($contentFile)) {
 // 404 fallback
 if (!file_exists($contentFile)) {
     error_log("No content file found, showing 404");
+    fcms_flush_output(); // Flush output buffer before setting headers
     http_response_code(404);
-    
+
     // Trigger 404 error hook for monitoring
     fcms_do_hook('404_error', $_SERVER['REQUEST_URI']);
-    
+
     $contentFile = CONTENT_DIR . '/404.md';
     error_log("Looking for 404 file: " . $contentFile);
     if (!file_exists($contentFile)) {
@@ -393,16 +392,16 @@ if (!file_exists($contentFile)) {
         // If no 404.md, show a default message
         $pageTitle = 'Page Not Found';
         $pageContent = '<p>The page you requested could not be found.</p>';
-        
+
         // Initialize managers
         $themeManager = new ThemeManager();
         $menuManager = new MenuManager();
         $widgetManager = new WidgetManager();
-        
+
         // Load theme options
         $themeOptionsFile = CONFIG_DIR . '/theme_options.json';
         $themeOptions = file_exists($themeOptionsFile) ? json_decode(file_get_contents($themeOptionsFile), true) : [];
-        
+
         // Initialize template renderer
         $templateRenderer = new TemplateRenderer(
             $themeManager->getActiveTheme(),
@@ -410,20 +409,34 @@ if (!file_exists($contentFile)) {
             $menuManager,
             $widgetManager
         );
-        
+
+        // Get site name and description from config
+        $configFile = CONFIG_DIR . '/config.json';
+        $siteName = 'FearlessCMS';
+        $siteDescription = '';
+        if (file_exists($configFile)) {
+            $config = json_decode(file_get_contents($configFile), true);
+            if (isset($config['site_name'])) {
+                $siteName = $config['site_name'];
+            }
+            if (isset($config['site_description'])) {
+                $siteDescription = $config['site_description'];
+            }
+        }
+
         // Prepare template data
         $templateData = [
             'title' => $pageTitle,
             'content' => $pageContent,
-            'siteName' => 'FearlessCMS',
-            'siteDescription' => '',
+            'siteName' => $siteName,
+            'siteDescription' => $siteDescription,
             'currentYear' => date('Y'),
             'logo' => $themeOptions['logo'] ?? null,
             'heroBanner' => $themeOptions['herobanner'] ?? null,
             'mainMenu' => $menuManager->renderMenu('main'),
 
         ];
-        
+
         // Render template
         echo $templateRenderer->render('404', $templateData);
         exit;
@@ -456,25 +469,49 @@ if (!$pageTitle) {
 // Check editor mode to determine content processing
 $editorMode = $metadata['editor_mode'] ?? 'markdown';
 
-if ($editorMode === 'easy' || $editorMode === 'html') {
-    // Use content as-is for HTML mode
+// Load plugins BEFORE markdown processing to handle shortcodes
+fcms_load_plugins();
+
+// Process shortcodes in raw content first
+$pageContent = fcms_apply_filter('content', $pageContent);
+
+if ($editorMode === 'html') {
+    // Use content as-is for HTML mode only
     $pageContentHtml = $pageContent;
 } else {
-    // Convert markdown to HTML
-    if (!class_exists('Parsedown')) {
-        require_once PROJECT_ROOT . '/includes/Parsedown.php';
-    }
-    $Parsedown = new Parsedown();
-    $pageContentHtml = $Parsedown->text($pageContent);
+    // Convert markdown to HTML (default for both 'easy' and 'markdown' modes)
+            if (!class_exists('Parsedown')) {
+            require_once PROJECT_ROOT . '/includes/Parsedown.php';
+        }
+        $Parsedown = new Parsedown();
+        $Parsedown->setMarkupEscaped(false); // Allow HTML in markdown
+        $pageContentHtml = $Parsedown->text($pageContent);
 }
+
+// Apply after_content filters to the final HTML content
+$pageContentHtml = fcms_apply_filter('after_content', $pageContentHtml);
 
 // Debug: Check if content has curly braces
 if (strpos($pageContentHtml, '{') !== false || strpos($pageContentHtml, '}') !== false) {
     error_log("CONTENT HAS CURLY BRACES: " . substr($pageContentHtml, 0, 200));
 }
 
-// Apply content filters
-$pageContentHtml = fcms_apply_filter('content', $pageContentHtml);
+// Debug: Check if content contains parallax shortcodes
+if (strpos($pageContentHtml, '[parallax_section') !== false) {
+    error_log("CONTENT CONTAINS PARALLAX SHORTCODES");
+    error_log("Content before filter: " . substr($pageContentHtml, 0, 500));
+} else {
+    error_log("Content does not contain parallax shortcodes");
+}
+
+// Content filters already applied before markdown processing
+
+// Debug: Check content after filter
+if (strpos($pageContentHtml, '[parallax_section') !== false) {
+    error_log("Content still contains parallax shortcodes after filter - plugin not working!");
+} else {
+    error_log("Content processed successfully by plugins");
+}
 
 // --- Theme and template ---
 $themeManager = new ThemeManager();
@@ -500,9 +537,11 @@ $themeOptions = file_exists($themeOptionsFile) ? json_decode(file_get_contents($
 require_once PROJECT_ROOT . '/includes/MenuManager.php';
 require_once PROJECT_ROOT . '/includes/WidgetManager.php';
 require_once PROJECT_ROOT . '/includes/TemplateRenderer.php';
+require_once PROJECT_ROOT . '/includes/CMSModeManager.php';
 
 $menuManager = new MenuManager();
 $widgetManager = new WidgetManager();
+$cmsModeManager = new CMSModeManager();
 $templateRenderer = new TemplateRenderer(
     $themeManager->getActiveTheme(),
     $themeOptions,
@@ -520,7 +559,9 @@ $templateData = [
     'logo' => $themeOptions['logo'] ?? null,
     'heroBanner' => $themeOptions['herobanner'] ?? null,
     'mainMenu' => $menuManager->renderMenu('main'),
-
+    'cmsMode' => $cmsModeManager->getCurrentMode(),
+    'isHostingServiceMode' => $cmsModeManager->isRestricted(),
+    'cmsModeName' => $cmsModeManager->getModeName(),
 ];
 
 // Add custom variables from JSON frontmatter
@@ -540,8 +581,18 @@ $template = $templateRenderer->render($templateName, $templateData);
 
 // --- Output ---
 echo $template;
+
 // --- Save to cache if enabled ---
-if (isset($cacheEnabled) && $cacheEnabled) {
-    file_put_contents($cacheFile, ob_get_contents());
+if (isset($cacheEnabled) && $cacheEnabled && isset($cacheManager) && $cacheFile) {
+    // Get the buffered content
+    $cachedContent = ob_get_contents();
+    
+    // Save to cache file
+    if (file_put_contents($cacheFile, $cachedContent) !== false) {
+        // Record cache miss (since we had to generate the content)
+        $cacheManager->recordMiss();
+    }
+    
+    // End output buffering
     ob_end_flush();
 }

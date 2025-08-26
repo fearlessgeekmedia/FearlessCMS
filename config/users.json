@@ -1,19 +1,18 @@
 [
     {
-        "id": "admin",
-        "username": "admin",
-        "password": "$2y$12$8WRyMNqzhsS9hkMvb5yHYuw1toNj6Mlpq2pb9r125RsFfxp9JRzp.",
+        "id": "Will",
+        "username": "Will",
+        "password": "$2y$10$WLWXA0tQFCjBO.3BPS9HDubrTkpNwHCOZ1KuqufTENWZ2N3\/OIF7S",
         "role": "admin",
-        "permissions": []
+        "permissions": ["manage_users", "manage_content", "manage_plugins", "manage_themes", "manage_menus", "manage_settings", "manage_updates"],
+        "created_at": "2025-08-22 00:56:30"
     },
     {
-        "id": "bob",
-        "username": "bob_updated",
-        "password": "$2y$12$ZtzsnnW7CqaacbhqJTe2w.QcD8h0IeskSeooN5XCJa4Ql0tE8gWUK",
-        "role": "editor",
-        "permissions": [
-            "manage_content",
-            "manage_themes"
-        ]
+        "id": "test",
+        "username": "test",
+        "password": "$2y$10$NqLQGjMtwqg2mRqtqiotROc/GFvros.JJsISX3RIB9uCQZeDGiMS6",
+        "role": "admin",
+        "permissions": ["manage_users", "manage_content", "manage_plugins", "manage_themes", "manage_menus", "manage_settings", "manage_updates"],
+        "created_at": "2025-08-26 12:55:00"
     }
 ]

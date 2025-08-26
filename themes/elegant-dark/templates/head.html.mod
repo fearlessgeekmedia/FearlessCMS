@@ -10,5 +10,5 @@
         --show-animations: {{showAnimations}};
         --elegant-mode: {{elegantMode}};
     }
-    {{custom_css}}
+    
 </style> 

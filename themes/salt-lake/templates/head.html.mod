@@ -2,7 +2,7 @@
 <title>{{title}}</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="/themes/salt-lake/templates/style.css">
-{{custom_css}}
+
 {{#if meta_description}}
 <meta name="description" content="{{meta_description}}">
 {{/if}}

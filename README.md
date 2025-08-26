@@ -65,19 +65,41 @@ With these policies in place, FearlessCMS seeks to create a platform that is lig
 - Default admin password: `changeme123`
 - Please change this password immediately after first login
 
+### Installation
+
+- Web installer: visit `install.php` in your browser and follow the prompts to verify directories, initialize defaults, and optionally install export tool dependencies.
+- CLI installer:
+
+```bash
+php install.php --check               # show environment and directory status
+php install.php --create-dirs         # create required directories and default configs
+php install.php --install-export-deps # install Node deps for export.js (fs-extra, handlebars, marked)
+php install.php --create-admin=<username> --password=<pwd>
+# or use a file for the password:
+php install.php --create-admin=<username> --password-file=/path/to/secret
+```
+
 ### Static Site Export
 
-Like the rest of the CMS, the export script is experimental, but even more so than the CMS. It may not work properly for every situation.
+FearlessCMS includes powerful export functionality that converts your dynamic PHP site to static HTML for deployment on any static hosting service.
 
-To export your site to static HTML, you'll need to install the following Node.js dependencies:
+#### Export System
+
+FearlessCMS includes a streamlined export system that automatically crawls your running site, ensuring full compatibility with all plugins and themes:
 
 ```bash
-npm install fs-extra handlebars marked
+# Start your development server
+nix-shell -p php81 --run "export FCMS_DEBUG=true && ./serve.sh"
+
+# In another terminal, export your site
+./export-robust.sh
 ```
 
-Then run the export script:
-```bash
-node export.js
-```
+**Features:**
+- ✅ **Zero maintenance** - automatically works with new plugins/themes
+- ✅ **Full compatibility** - whatever renders in browser gets exported
+- ✅ **Deploy anywhere** - Netlify, Vercel, GitHub Pages, AWS S3, etc.
+- ✅ **Simple commands** - just run the script and export
+- ✅ **Complete assets** - CSS, JS, images, and all dependencies included
 
-The exported static site will be available in the `export` directory.
+For complete export documentation, visit: [Export to Static HTML Guide](https://fearlesscms.online/documentation/export-sites-to-static-html/)
