@@ -121,11 +121,34 @@ FearlessCMS is a lightweight, file-based content management system built in PHP.
   - **User management:** user-handler.php, newuser-handler.php, edituser-handler.php, deluser-handler.php, pchange-handler.php
   - **System management:** updater-handler.php, role-handler.php, menu-handler.php
   - **Widget management:** widget-handler.php, widgets-handler.php
-  - **File handling:** toastui-upload-handler.php
+  - **File handling:** toastui-upload-handler.php, filemanager.php (with bulk operations and pagination)
 - **Action-to-template mapping:** Admin actions are mapped to templates (dashboard.php, content-management.php, plugins.php, themes.php, menus.php, site-settings.html, edit_content.php, new_content.php, file_manager.php, users.php, role-management.html, widgets.php, etc).
 - **Dynamic admin sections:** Plugins can register admin sections dynamically; navigation and permissions are updated accordingly.
 - **Navigation and permissions:** Admin navigation is built dynamically, and access is controlled by CMS mode and user permissions.
 - **UI:** Built with Tailwind CSS, modular, and extensible.
+
+### Admin Section System Issues (2025-08)
+- **Known Problems:** The admin section registration system has persistent issues with certain actions, particularly the `files` action
+- **Symptoms:** Admin sections registered via `fcms_register_admin_section()` may not be recognized by the admin routing system
+- **Current Workarounds:** Direct template inclusion and fallback handlers are used for critical functionality
+- **Technical Details:** 
+  - Admin sections registered in `includes/plugins.php` may not be available when `admin/index.php` processes requests
+  - Output buffering conflicts between admin section callbacks and the main admin system
+  - Template mapping system can override admin section registrations
+- **Impact:** Some admin functionality requires direct template inclusion rather than the intended admin section system
+- **Future Work:** Admin section system needs architectural review and refactoring for reliability
+
+### File Manager Implementation Challenges (2025-08)
+- **Bulk Operations:** Successfully implemented bulk file deletion with checkbox selection and confirmation modals
+- **Pagination:** Added 10-item pagination system for file listings with navigation controls
+- **Admin Section Integration:** Attempted to integrate with admin section system but encountered persistent routing issues
+- **Fallback Implementation:** Implemented direct function calls as workaround for admin section system failures
+- **Technical Implementation:** 
+  - File operations: upload, delete, bulk delete, rename with comprehensive security validation
+  - UI components: grid/list views, bulk action bars, file previews, responsive design
+  - Security: CSRF protection, file type validation, path traversal prevention, MIME type checking
+- **Current Status:** Functionality implemented but admin section integration remains problematic
+- **Lessons Learned:** Admin section system requires more robust error handling and fallback mechanisms
 
 ## 9. Widget and Menu Systems
 

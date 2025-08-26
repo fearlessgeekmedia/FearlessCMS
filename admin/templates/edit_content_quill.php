@@ -93,14 +93,19 @@ foreach ($contentFiles as $file) {
         <input type="hidden" name="content" id="content">
         <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
 
-        <div class="grid grid-cols-2 gap-6">
+        <div class="grid grid-cols-3 gap-6">
             <div>
-                <label class="block mb-2">Title</label>
-                <input type="text" name="title" value="<?php echo htmlspecialchars($title); ?>" class="w-full px-3 py-2 border border-gray-300 rounded">
+                <label class="block mb-2 text-sm font-medium text-gray-700">Title</label>
+                <input type="text" name="title" value="<?php echo htmlspecialchars($title); ?>" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             </div>
             <div>
-                <label class="block mb-2">Parent Page</label>
-                <select name="parent" class="w-full px-3 py-2 border border-gray-300 rounded">
+                <label class="block mb-2 text-sm font-medium text-gray-700">URL Slug</label>
+                <input type="text" name="new_slug" value="<?php echo htmlspecialchars($path); ?>" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="page-url-slug">
+                <p class="text-xs text-gray-500 mt-1">Use lowercase letters, numbers, dashes, and underscores only</p>
+            </div>
+            <div>
+                <label class="block mb-2 text-sm font-medium text-gray-700">Parent Page</label>
+                <select name="parent" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     <option value="">None (Top Level)</option>
                     <?php foreach ($pages as $pagePath => $pageTitle): ?>
                         <?php if ($pagePath !== $path): // Don't allow self as parent ?>
@@ -352,58 +357,84 @@ let editor;
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Quill.js
     if (typeof Quill !== 'undefined') {
-        editor = new Quill('#richEditorContainer', { // Initialize with rich editor container
+        // Create a simple toolbar without problematic modules
+        var toolbarOptions = [
+            ['bold', 'italic', 'underline', 'strike'],
+            ['blockquote'],
+            [{ 'header': 1 }, { 'header': 2 }],
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            [{ 'indent': '-1' }, { 'indent': '+1' }],
+            [{ 'color': [] }, { 'background': [] }],
+            [{ 'align': [] }],
+            ['clean'],
+            ['link']
+        ];
+
+        // Initialize Quill with minimal configuration
+        editor = new Quill('#richEditorContainer', {
             theme: 'snow',
-            // Disable Quill's built-in sanitization to preserve HTML structure
-            sanitize: false,
             modules: {
-                toolbar: [
-                    ['bold', 'italic', 'underline', 'strike'],
-                    ['blockquote', 'code-block'],
-                    [{ 'header': 1 }, { 'header': 2 }],
-                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                    [{ 'script': 'sub' }, { 'script': 'super' }],
-                    [{ 'indent': '-1' }, { 'indent': '+1' }],
-                    [{ 'direction': 'rtl' }],
-                    [{ 'size': ['small', false, 'large', 'huge'] }],
-                    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-                    [{ 'color': [] }, { 'background': [] }],
-                    [{ 'font': [] }],
-                    [{ 'align': [] }],
-                    ['clean'],
-                    ['link', 'image', 'video']
-                ],
+                toolbar: toolbarOptions,
                 clipboard: {
-                    matchVisual: false,
-                    // Allow more HTML elements and preserve styling
-                    matchers: []
-                },
-                keyboard: {
-                    bindings: {
-                        tab: {
-                            key: 'Tab',
-                            handler: function(range, context) {
-                                Quill.insertText(range, '    ', Quill.sources.api.format('indent', -1));
-                            }
-                        }
-                    }
+                    matchVisual: false
                 }
             },
-            placeholder: 'Start writing your content in HTML...',
-            readOnly: false,
-            bounds: '.quill-editor',
-            // Allow more HTML elements including div tags
-            formats: [
-                'header', 'font', 'size',
-                'bold', 'italic', 'underline', 'strike', 'blockquote',
-                'list', 'bullet', 'indent',
-                'link', 'image', 'video',
-                'color', 'background',
-                'align', 'direction',
-                'code', 'script', 'formula',
-                'div', 'span'
-            ]
+            placeholder: 'Start writing your content...',
+            readOnly: false
         });
+
+        // Add custom image handling after Quill is initialized
+        var imageButton = document.createElement('button');
+        imageButton.innerHTML = '<svg viewBox="0 0 18 18"><rect class="ql-stroke" height="10" width="12" x="3" y="4"></rect><circle class="ql-fill" cx="6" cy="6" r="1"></circle><polyline class="ql-even ql-fill" points="5 8,9 4,13 8,13 14,5 14"></polyline></svg>';
+        imageButton.type = 'button';
+        imageButton.className = 'ql-image';
+        imageButton.setAttribute('aria-label', 'Insert image');
+        
+        // Add click handler for image upload
+        imageButton.addEventListener('click', function() {
+            var input = document.createElement('input');
+            input.setAttribute('type', 'file');
+            input.setAttribute('accept', 'image/*');
+            input.click();
+            
+            input.onchange = function() {
+                var file = input.files[0];
+                if (file) {
+                    var formData = new FormData();
+                    formData.append('action', 'upload_image');
+                    formData.append('image', file);
+                    
+                    fetch('?action=upload_image', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
+                        if (data.success) {
+                            var range = editor.getSelection();
+                            editor.insertEmbed(range.index, 'image', data.url);
+                        } else {
+                            alert('Upload failed: ' + (data.error || 'Unknown error'));
+                        }
+                    })
+                    .catch(function(error) {
+                        alert('Upload failed: ' + error);
+                    });
+                }
+            };
+        });
+        
+        // Add the custom image button to the toolbar
+        var toolbar = editor.getModule('toolbar');
+        toolbar.addHandler('image', function() {
+            imageButton.click();
+        });
+        
+        // Insert the image button into the toolbar
+        var toolbarContainer = document.querySelector('.ql-toolbar');
+        if (toolbarContainer) {
+            toolbarContainer.appendChild(imageButton);
+        }
 
         // Configure Quill to preserve article tags (which Quill allows)
         editor.clipboard.addMatcher('article', function(node, delta) {
@@ -430,41 +461,57 @@ document.addEventListener('DOMContentLoaded', function() {
         // Set initial content
         const initialContent = <?php echo json_encode($contentWithoutMetadata, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
         
-        if (initialContent && initialContent.trim()) {
-            // Check if content contains complex HTML that Quill might strip
-            // Detect complex HTML including div tags, grid layouts, custom classes, and complex structures
-            const hasComplexHTML = /<div[^>]*style=|<div[^>]*class=|grid|parallax|shortcode|\[.*?\]/i.test(initialContent);
+        // Debug: Log what content we're working with
+        console.log('DEBUG: initialContent:', initialContent);
+        console.log('DEBUG: initialContent length:', initialContent ? initialContent.length : 0);
+        console.log('DEBUG: initialContent trimmed:', initialContent ? initialContent.trim() : '');
+        console.log('DEBUG: initialContent has content:', initialContent && initialContent.trim());
+        
+        // Function to load content into editor
+        function loadContentIntoEditor() {
+            console.log('DEBUG: Loading content into editor...');
             
-            if (hasComplexHTML) {
-                // For complex HTML, use a different approach - store in a hidden field and show in code view
-                document.getElementById('richEditorContainer').classList.add('hidden');
-                document.getElementById('codeEditorContainer').classList.remove('hidden');
-                document.getElementById('codeEditor').value = initialContent;
-            } else {
-                // For simple content, use Quill with article tag conversion
-                const quillCompatibleContent = convertDivToArticle(initialContent);
+            if (initialContent && initialContent.trim()) {
+                console.log('DEBUG: Using initialContent, length:', initialContent.length);
                 
+                // For now, always use Quill editor for content
                 try {
-                    editor.clipboard.dangerouslyPasteHTML(quillCompatibleContent);
+                    // Use setHTML for better compatibility
+                    editor.root.innerHTML = initialContent;
+                    console.log('DEBUG: Content loaded into Quill editor');
+                    
+                    // Show rich editor
+                    document.getElementById('richEditorContainer').classList.remove('hidden');
+                    document.getElementById('codeEditorContainer').classList.add('hidden');
                 } catch (e) {
-                    // Fallback to setContents if dangerouslyPasteHTML fails
-                    const delta = editor.clipboard.convert(quillCompatibleContent);
-                    editor.setContents(delta);
+                    console.error('DEBUG: Error loading content into Quill:', e);
+                    // Fallback to code editor
+                    document.getElementById('richEditorContainer').classList.add('hidden');
+                    document.getElementById('codeEditorContainer').classList.remove('hidden');
+                    document.getElementById('codeEditor').value = initialContent;
+                }
+            } else {
+                // Try to load from the full content data as fallback
+                const fullContent = <?php echo json_encode($contentData ?? '', JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
+                console.log('DEBUG: Using fallback fullContent:', fullContent);
+                console.log('DEBUG: fullContent length:', fullContent ? fullContent.length : 0);
+                
+                if (fullContent && fullContent.trim()) {
+                    console.log('DEBUG: Setting editor content with fullContent');
+                    try {
+                        editor.root.innerHTML = fullContent;
+                        console.log('DEBUG: Fallback content loaded successfully');
+                    } catch (e) {
+                        console.error('DEBUG: Error loading fallback content:', e);
+                    }
+                } else {
+                    console.log('DEBUG: No content available to load');
                 }
             }
-            
-            // Ensure Quill editor is visible for simple content
-            if (!hasComplexHTML) {
-                document.getElementById('richEditorContainer').classList.remove('hidden');
-                document.getElementById('codeEditorContainer').classList.add('hidden');
-            }
-        } else {
-            // Try to load from the full content data as fallback
-            const fullContent = <?php echo json_encode($contentData ?? '', JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
-            if (fullContent && fullContent.trim()) {
-                editor.root.innerHTML = fullContent;
-            }
         }
+        
+        // Load content after a short delay to ensure Quill.js is fully initialized
+        setTimeout(loadContentIntoEditor, 100);
         
         // Toggle between rich editor and code editor with content sync
         document.getElementById('toggleMode').addEventListener('click', function() {

@@ -20,13 +20,13 @@ if (getenv('FCMS_DEBUG') === 'true') {
     error_reporting(E_ERROR | E_WARNING | E_PARSE);
 }
 
-// Generate CSRF token for the form
-generate_csrf_token();
-
 // Load configuration
 $configFile = CONFIG_DIR . '/config.json';
 $config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
 $adminPath = $config['admin_path'] ?? 'admin';
+
+// Generate CSRF token for the form
+generate_csrf_token();
 
 // If already logged in, redirect to dashboard
 if (isLoggedIn()) {

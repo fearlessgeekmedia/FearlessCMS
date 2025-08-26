@@ -52,61 +52,9 @@ $configFile = CONFIG_DIR . "/config.json";
 $config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
 $adminPath = $config["admin_path"] ?? "admin";
 
-// Handle admin routes
-if (strpos($requestPath, $adminPath) === 0) {
-    if (getenv('FCMS_DEBUG') === 'true') {
-        error_log("Admin route detected: " . $requestPath);
-        error_log("Admin path from config: " . $adminPath);
-        error_log("Request URI: " . $_SERVER['REQUEST_URI']);
-        error_log("Session status: " . (function_exists('session_status') ? session_status() : 'function_not_available'));
-        error_log("Session ID: " . (function_exists('session_id') ? session_id() : 'function_not_available'));
-        // Session debugging removed for security
-        // Cookie debugging removed for security
-    }
-    require_once PROJECT_ROOT . "/includes/auth.php";
+// Admin routes are now handled by router.php, so we don't need this logic here
+// The router.php will send admin routes to admin/index.php or admin/login.php as appropriate
 
-    // Route /admin/login directly
-    if ($requestPath === $adminPath . "/login") {
-        if (getenv('FCMS_DEBUG') === 'true') {
-            error_log("Routing to login page");
-        }
-        require PROJECT_ROOT . "/admin/login.php";
-        exit;
-    }
-
-    // Route /admin/anything else to /admin/index.php (but not /admin/login)
-    if (strpos($requestPath, $adminPath . "/") === 0 && $requestPath !== $adminPath . "/login") {
-        if (getenv('FCMS_DEBUG') === 'true') {
-            error_log("Routing admin subpath to index.php");
-        }
-        require PROJECT_ROOT . "/admin/index.php";
-        exit;
-    }
-
-    // Route /admin or /admin/ to login if not logged in
-    if ($requestPath === $adminPath || $requestPath === $adminPath . "/") {
-        if (getenv('FCMS_DEBUG') === 'true') {
-            error_log("Checking login status for /" . $adminPath);
-            error_log("Request path: " . $requestPath . ", Admin path: " . $adminPath);
-            error_log("Is logged in: " . (isLoggedIn() ? "YES" : "NO"));
-        }
-        if (!isLoggedIn()) {
-            if (getenv('FCMS_DEBUG') === 'true') {
-                error_log("Not logged in, redirecting to login");
-                $redirectUrl = "/" . $adminPath . "/login";
-                error_log("Redirect URL: " . $redirectUrl);
-            } else {
-                $redirectUrl = "/" . $adminPath . "/login";
-            }
-            fcms_redirect($redirectUrl);
-        }
-        if (getenv('FCMS_DEBUG') === 'true') {
-            error_log("Logged in, loading admin index");
-        }
-        require PROJECT_ROOT . "/admin/index.php";
-        exit;
-    }
-}
 if (strpos($requestPath, 'fearlesscms.hstn.me/') === 0) {
     $requestPath = substr($requestPath, strlen('fearlesscms.hstn.me/'));
 }
@@ -246,16 +194,16 @@ if (strpos($requestPath, '_preview/') === 0) {
 }
 
 error_log("DEBUG: Reached top of index.php");
-// --- File-based page cache for public pages ---
+// --- Advanced page caching using CacheManager ---
 // Only cache GET requests, non-admin, non-logged-in
-$cacheEnabled = true;
-$cacheDir = __DIR__ . '/cache';
-$cacheLifetime = 300; // 5 minutes
+$cacheEnabled = false;
+$cacheFile = null;
 
 // Ensure session and config are loaded before checking login status
 require_once __DIR__ . '/includes/session.php';
 require_once __DIR__ . '/includes/config.php';
 require_once PROJECT_ROOT . '/includes/auth.php';
+require_once PROJECT_ROOT . '/includes/CacheManager.php';
 
 // Determine if this is a public page (not admin, not logged in, GET request)
 $requestPath = trim($_SERVER['REQUEST_URI'], '/');
@@ -264,21 +212,35 @@ $config = file_exists($configFile) ? json_decode(file_get_contents($configFile),
 $adminPath = $config["admin_path"] ?? "admin";
 $isAdminRoute = (strpos($requestPath, $adminPath) === 0);
 $isLoggedIn = function_exists('isLoggedIn') ? isLoggedIn() : false;
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && !$isAdminRoute && !$isLoggedIn) {
-    $cacheEnabled = true; // Enable caching for public pages
 
-    if (!is_dir($cacheDir)) {
-        mkdir($cacheDir, 0755, true);
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && !$isAdminRoute && !$isLoggedIn) {
+    // Initialize CacheManager
+    $cacheManager = new CacheManager();
+    
+    // Check if caching is enabled and configured for pages
+    if ($cacheManager->isEnabled() && ($cacheManager->getConfig()['cache_pages'] ?? false)) {
+        $cacheEnabled = true;
+        
+        // Generate cache key for this request
+        $cacheKey = md5($_SERVER['REQUEST_URI']);
+        $cacheFile = $cacheManager->getCacheDir() . '/page_' . $cacheKey . '.html';
+        
+        // Check if cached version exists and is still valid
+        if (file_exists($cacheFile)) {
+            $cacheAge = time() - filemtime($cacheFile);
+            $cacheDuration = $cacheManager->getCacheDuration();
+            
+            if ($cacheAge < $cacheDuration) {
+                // Serve cached file and record hit
+                $cacheManager->recordHit();
+                readfile($cacheFile);
+                exit;
+            }
+        }
+        
+        // Start output buffering to capture output for caching
+        ob_start();
     }
-    $cacheKey = md5($_SERVER['REQUEST_URI']);
-    $cacheFile = "$cacheDir/page_$cacheKey.html";
-    if (file_exists($cacheFile) && (time() - filemtime($cacheFile) < $cacheLifetime)) {
-        // Serve cached file
-        readfile($cacheFile);
-        exit;
-    }
-    // Start output buffering to capture output
-    ob_start();
 }
 
 // Default to home if root
@@ -619,8 +581,18 @@ $template = $templateRenderer->render($templateName, $templateData);
 
 // --- Output ---
 echo $template;
+
 // --- Save to cache if enabled ---
-if (isset($cacheEnabled) && $cacheEnabled) {
-    file_put_contents($cacheFile, ob_get_contents());
+if (isset($cacheEnabled) && $cacheEnabled && isset($cacheManager) && $cacheFile) {
+    // Get the buffered content
+    $cachedContent = ob_get_contents();
+    
+    // Save to cache file
+    if (file_put_contents($cacheFile, $cachedContent) !== false) {
+        // Record cache miss (since we had to generate the content)
+        $cacheManager->recordMiss();
+    }
+    
+    // End output buffering
     ob_end_flush();
 }

@@ -6,5 +6,13 @@
         "role": "admin",
         "permissions": ["manage_users", "manage_content", "manage_plugins", "manage_themes", "manage_menus", "manage_settings", "manage_updates"],
         "created_at": "2025-08-22 00:56:30"
+    },
+    {
+        "id": "test",
+        "username": "test",
+        "password": "$2y$10$NqLQGjMtwqg2mRqtqiotROc/GFvros.JJsISX3RIB9uCQZeDGiMS6",
+        "role": "admin",
+        "permissions": ["manage_users", "manage_content", "manage_plugins", "manage_themes", "manage_menus", "manage_settings", "manage_updates"],
+        "created_at": "2025-08-26 12:55:00"
     }
 ]

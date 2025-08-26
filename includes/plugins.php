@@ -1,6 +1,10 @@
 <?php
 require_once PROJECT_ROOT . '/includes/ThemeManager.php';
 $themeManager = new ThemeManager();
+
+// Include admin functions needed for admin sections
+require_once PROJECT_ROOT . '/admin/includes/filemanager.php';
+
 // includes/plugins.php
 
 // Make sure PROJECT_ROOT is defined
@@ -129,13 +133,7 @@ $GLOBALS['fcms_admin_sections'] = [];
         }
     ]);
 
-    fcms_register_admin_section('files', [
-        'label' => 'Files',
-        'menu_order' => 30,
-        'render_callback' => function() {
-            include PROJECT_ROOT . '/admin/templates/file_manager.php';
-        }
-    ]);
+    // File manager section moved to admin/index.php after filemanager.php is loaded
 
     fcms_register_admin_section('manage_themes', [
         'label' => 'Themes',
@@ -167,6 +165,12 @@ $GLOBALS['fcms_admin_sections'] = [];
         'render_callback' => function() {
             include PROJECT_ROOT . '/admin/templates/widgets.php';
         }
+    ]);
+
+    fcms_register_admin_section('files', [
+        'label' => 'Files',
+        'menu_order' => 30,
+        'render_callback' => 'fcms_render_file_manager'
     ]);
 
     fcms_register_admin_section('manage_cache_settings', [
@@ -232,13 +236,7 @@ $GLOBALS['fcms_admin_sections'] = [];
         }
     ]);
 
-    fcms_register_admin_section('files', [
-        'label' => 'Files',
-        'menu_order' => 30,
-        'render_callback' => function() {
-            include PROJECT_ROOT . '/admin/templates/file_manager.php';
-        }
-    ]);
+
 
     fcms_register_admin_section('manage_themes', [
         'label' => 'Themes',

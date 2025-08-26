@@ -65,8 +65,9 @@ else
     echo "Using custom PHP configuration for proper session handling"
 fi
 
-# run server and log output
-php $php_config -S localhost:$port router.php > serve-log.tmp 2>&1 &
+# Always use nix-shell with custom config for consistent session handling
+echo "Using nix-shell with php81 and custom configuration for proper session support..."
+nix-shell -p php81 --pure --run "php $php_config -S localhost:$port router.php" > serve-log.tmp 2>&1 &
 pid=$!
 echo "Server started on port $port with PID $pid"
 echo "To stop the server, run: kill $pid"

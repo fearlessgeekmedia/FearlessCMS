@@ -89,11 +89,11 @@
                     <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
                         <div>
                             <div class="font-medium">Status</div>
-                            <div class="text-sm text-gray-500"><?php echo $cacheStatus ?? 'Unknown'; ?></div>
+                            <div class="text-sm text-gray-500" data-cache-status><?php echo $cacheStatus ?? 'Unknown'; ?></div>
                         </div>
                         <div class="text-right">
                             <div class="text-sm text-gray-500">Size</div>
-                            <div class="font-medium"><?php echo $cacheSize ?? '0 B'; ?></div>
+                            <div class="font-medium" data-cache-size><?php echo $cacheSize ?? '0 B'; ?></div>
                         </div>
                     </div>
                     
@@ -115,7 +115,7 @@
                     </div>
                     
                     <div class="text-xs text-gray-500 text-center">
-                        Last cleared: <?php echo $cacheLastCleared ?? 'Never'; ?>
+                        Last cleared: <span data-last-cleared><?php echo $cacheLastCleared ?? 'Never'; ?></span>
                     </div>
                 </div>
             </div>
@@ -155,4 +155,133 @@
             </div>
         </div>
     </div>
-</div> 
+</div>
+
+<script>
+// Handle cache clearing with real-time updates
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle cache clear form submission
+    const clearCacheForm = document.querySelector('form input[name="action"][value="clear_cache"]')?.closest('form');
+    if (clearCacheForm) {
+        clearCacheForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalText = submitButton.textContent;
+            
+            // Disable button and show loading state
+            submitButton.disabled = true;
+            submitButton.textContent = 'Clearing...';
+            
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(html => {
+                // Create a temporary div to parse the response
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
+                
+                // Extract updated cache statistics
+                const newCacheSize = tempDiv.querySelector('[data-cache-size]')?.textContent || '0 B';
+                const newCacheStatus = tempDiv.querySelector('[data-cache-status]')?.textContent || 'Unknown';
+                const newLastCleared = tempDiv.querySelector('[data-last-cleared]')?.textContent || 'Never';
+                
+                // Update the display
+                const cacheSizeElement = document.querySelector('[data-cache-size]');
+                const cacheStatusElement = document.querySelector('[data-cache-status]');
+                const lastClearedElement = document.querySelector('[data-last-cleared]');
+                
+                if (cacheSizeElement) cacheSizeElement.textContent = newCacheSize;
+                if (cacheStatusElement) cacheStatusElement.textContent = newCacheStatus;
+                if (lastClearedElement) lastClearedElement.textContent = newLastCleared;
+                
+                // Show success message
+                showToast('Cache cleared successfully!', 'success');
+            })
+            .catch(error => {
+                console.error('Error clearing cache:', error);
+                showToast('Error clearing cache', 'error');
+            })
+            .finally(() => {
+                // Re-enable button
+                submitButton.disabled = false;
+                submitButton.textContent = originalText;
+            });
+        });
+    }
+    
+    // Handle cache stats clear form submission
+    const clearStatsForm = document.querySelector('form input[name="action"][value="clear_cache_stats"]')?.closest('form');
+    if (clearStatsForm) {
+        clearStatsForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalText = submitButton.textContent;
+            
+            // Disable button and show loading state
+            submitButton.disabled = true;
+            submitButton.textContent = 'Clearing...';
+            
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(html => {
+                // Create a temporary div to parse the response
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
+                
+                // Extract updated cache statistics
+                const newCacheSize = tempDiv.querySelector('[data-cache-size]')?.textContent || '0 B';
+                const newCacheStatus = tempDiv.querySelector('[data-cache-status]')?.textContent || 'Unknown';
+                const newLastCleared = tempDiv.querySelector('[data-last-cleared]')?.textContent || 'Never';
+                
+                // Update the display
+                const cacheSizeElement = document.querySelector('[data-cache-size]');
+                const cacheStatusElement = document.querySelector('[data-cache-status]');
+                const lastClearedElement = document.querySelector('[data-last-cleared]');
+                
+                if (cacheSizeElement) cacheSizeElement.textContent = newCacheSize;
+                if (cacheStatusElement) cacheStatusElement.textContent = newCacheStatus;
+                if (lastClearedElement) lastClearedElement.textContent = newLastCleared;
+                
+                // Show success message
+                showToast('Cache statistics cleared successfully!', 'success');
+            })
+            .catch(error => {
+                console.error('Error clearing cache stats:', error);
+                showToast('Error clearing cache statistics', 'error');
+            })
+            .finally(() => {
+                // Re-enable button
+                submitButton.disabled = false;
+                submitButton.textContent = originalText;
+            });
+        });
+    }
+    
+    // Simple toast notification function
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white z-50 transition-all duration-300 ${
+            type === 'success' ? 'bg-green-500' : 
+            type === 'error' ? 'bg-red-500' : 
+            'bg-blue-500'
+        }`;
+        toast.textContent = message;
+        
+        document.body.appendChild(toast);
+        
+        // Remove toast after 3 seconds
+        setTimeout(() => {
+            toast.remove();
+        }, 3000);
+    }
+});
+</script> 

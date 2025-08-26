@@ -67,6 +67,13 @@ class CacheManager {
     }
     
     /**
+     * Get cache directory path
+     */
+    public function getCacheDir() {
+        return $this->cacheDir;
+    }
+    
+    /**
      * Update cache configuration
      */
     public function updateConfig($newConfig) {

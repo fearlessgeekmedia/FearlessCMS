@@ -1,4 +1,13 @@
 <?php
+// Handle image uploads for Quill.js editor FIRST - before any headers or output
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'upload_image') {
+    require_once dirname(__DIR__) . '/includes/config.php';
+    require_once dirname(__DIR__) . '/includes/auth.php';
+    require_once dirname(__DIR__) . '/includes/session.php';
+    require_once __DIR__ . '/quill-upload-handler.php';
+    exit;
+}
+
 if ($_SERVER['REQUEST_URI'] === '/admin/serve-js.php') {
     require_once __DIR__ . '/serve-js.php';
     exit;
@@ -8,6 +17,13 @@ if ($_SERVER['REQUEST_URI'] === '/admin/serve-js.php') {
 
 require_once dirname(__DIR__) . '/includes/config.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
+require_once dirname(__DIR__) . '/includes/session.php';
+
+// Check authentication FIRST - redirect to login if not authenticated
+if (!isLoggedIn()) {
+    header('Location: /admin/login');
+    exit;
+}
 
 // Apply security headers for admin interface
 set_security_headers();
@@ -30,9 +46,9 @@ if (getenv('FCMS_DEBUG') === 'true') {
     ini_set('display_startup_errors', 1);
     error_reporting(E_ALL);
 } else {
-    ini_set('display_errors', 0);
-    ini_set('display_startup_errors', 0);
-    error_reporting(E_ERROR | E_WARNING | E_PARSE);
+    ini_set('display_errors', 1); // Temporarily enable for debugging
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
 }
 
 // Log admin access for security monitoring
@@ -45,6 +61,9 @@ require_once dirname(__DIR__) . '/includes/ThemeManager.php';
 require_once dirname(__DIR__) . '/includes/plugins.php';
 require_once dirname(__DIR__) . '/includes/CMSModeManager.php';
 require_once dirname(__DIR__) . '/includes/CacheManager.php';
+
+// Load admin includes
+require_once __DIR__ . '/includes/filemanager.php';
 
 // Generate CSRF token for forms
 generate_csrf_token();
@@ -66,17 +85,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && in_array
     exit;
 }
 
-// Handle image uploads for ToastUI editor
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'upload_image') {
-    require_once __DIR__ . '/toastui-upload-handler.php';
-    exit;
-}
+// Image uploads are now handled at the beginning of the file
 
 require_once __DIR__ . '/widget-handler.php';
 require_once __DIR__ . '/theme-handler.php';
 require_once __DIR__ . '/store-handler.php';
 require_once __DIR__ . '/newpage-handler.php';
-require_once __DIR__ . '/filedel-handler.php';
 require_once __DIR__ . '/widgets-handler.php';
 require_once __DIR__ . '/user-handler.php';
 require_once __DIR__ . '/newuser-handler.php';
@@ -124,6 +138,222 @@ error_log("DEBUG: Script name: " . $_SERVER['SCRIPT_NAME']);
 // Security logging for admin actions
 if (getenv('FCMS_DEBUG') === 'true') {
     error_log("Admin action: " . $action . " by user: " . ($_SESSION['username'] ?? 'anonymous'));
+}
+
+// Handle content deletion
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && in_array($_POST['action'], ['delete_page', 'delete_content'])) {
+    error_log("DEBUG: Content deletion handler triggered!");
+    error_log("DEBUG: POST data: " . print_r($_POST, true));
+    
+    // Clear any existing output buffers
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
+    
+    if (!isLoggedIn()) {
+        error_log("DEBUG: User not logged in");
+        $_SESSION['error'] = 'You must be logged in to delete pages';
+    } elseif (!validate_csrf_token()) {
+        error_log("DEBUG: CSRF token validation failed");
+        $_SESSION['error'] = 'Invalid security token. Please refresh the page and try again.';
+    } elseif (!check_operation_rate_limit('delete_content', $_SESSION['username'], 10, 60)) {
+        error_log("DEBUG: Rate limit exceeded");
+        $_SESSION['error'] = 'Too many deletion attempts. Please wait before trying again.';
+    } else {
+        // Handle both old and new parameter names with sanitization
+        $fileName = sanitize_input($_POST['file_name'] ?? $_POST['path'] ?? '', 'path');
+
+        // If path is provided without .md extension, add it
+        if (!empty($fileName) && !str_ends_with($fileName, '.md')) {
+            $fileName .= '.md';
+        }
+
+        // Validate filename: allow slashes for subfolders
+        if (empty($fileName) || !preg_match('/^[a-zA-Z0-9_\/-]+\.md$/', $fileName)) {
+            $_SESSION['error'] = 'Invalid filename';
+        } elseif (strpos($fileName, '../') !== false || strpos($fileName, './') === 0) {
+            $_SESSION['error'] = 'Invalid file path - path traversal detected';
+        } else {
+            $filePath = CONTENT_DIR . '/' . $fileName;
+
+            // Ensure we're only deleting files within the content directory
+            $realFilePath = realpath($filePath);
+            $realContentDir = realpath(CONTENT_DIR);
+
+            if ($realFilePath === false || strpos($realFilePath, $realContentDir) !== 0) {
+                $_SESSION['error'] = 'Invalid file path';
+            } else if (!file_exists($filePath)) {
+                $_SESSION['error'] = 'File not found';
+            } else {
+                            // Delete the file
+            error_log("DEBUG: Attempting to delete file: " . $filePath);
+            if (unlink($filePath)) {
+                error_log("DEBUG: File deleted successfully");
+                $_SESSION['success'] = 'Page deleted successfully';
+
+                // Clear page cache after content deletion
+                $cacheDir = dirname(__DIR__) . '/cache';
+                if (is_dir($cacheDir)) {
+                    foreach (glob($cacheDir . '/*.html') as $cacheFile) {
+                        @unlink($cacheFile);
+                    }
+                }
+
+                // Log security event
+                error_log("SECURITY: Content file '{$fileName}' deleted by '{$_SESSION['username']}' from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
+            } else {
+                error_log("DEBUG: Failed to delete file");
+                $_SESSION['error'] = 'Failed to delete file';
+            }
+            }
+        }
+    }
+    
+    // Redirect back to the content management page
+    $redirectUrl = $_SERVER['HTTP_REFERER'] ?? 'index.php?action=manage_content';
+    error_log("DEBUG: Redirecting to: " . $redirectUrl);
+    error_log("DEBUG: Session error: " . ($_SESSION['error'] ?? 'none'));
+    error_log("DEBUG: Session success: " . ($_SESSION['success'] ?? 'none'));
+    
+    // Check if headers can still be sent
+    if (headers_sent($file, $line)) {
+        error_log("DEBUG: Headers already sent in $file:$line");
+        // Use JavaScript redirect as fallback
+        echo '<script>window.location.href = "' . htmlspecialchars($redirectUrl) . '";</script>';
+        echo '<p>Redirecting... <a href="' . htmlspecialchars($redirectUrl) . '">Click here if not redirected automatically</a></p>';
+        exit;
+    }
+    
+    header('Location: ' . $redirectUrl);
+    exit;
+}
+
+// Handle bulk content deletion
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'bulk_delete_content') {
+    error_log("DEBUG: Bulk content deletion handler triggered!");
+    error_log("DEBUG: POST data: " . print_r($_POST, true));
+    
+    // Clear any existing output buffers
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
+    
+    if (!isLoggedIn()) {
+        error_log("DEBUG: User not logged in");
+        $_SESSION['error'] = 'You must be logged in to delete pages';
+    } elseif (!validate_csrf_token()) {
+        error_log("DEBUG: CSRF token validation failed");
+        $_SESSION['error'] = 'Invalid security token. Please refresh the page and try again.';
+    } elseif (!check_operation_rate_limit('delete_content', $_SESSION['username'], 20, 60)) {
+        error_log("DEBUG: Rate limit exceeded");
+        $_SESSION['error'] = 'Too many deletion attempts. Please wait before trying again.';
+    } else {
+        $selectedItems = $_POST['selected_items'] ?? '';
+        
+        if (empty($selectedItems)) {
+            $_SESSION['error'] = 'No items selected for deletion';
+        } else {
+            $itemPaths = explode(',', $selectedItems);
+            $deletedCount = 0;
+            $errorCount = 0;
+            $errors = [];
+            
+            foreach ($itemPaths as $itemPath) {
+                $itemPath = trim($itemPath);
+                if (empty($itemPath)) continue;
+                
+                // If path is provided without .md extension, add it
+                if (!str_ends_with($itemPath, '.md')) {
+                    $itemPath .= '.md';
+                }
+                
+                // Validate filename: allow slashes for subfolders
+                if (!preg_match('/^[a-zA-Z0-9_\/-]+\.md$/', $itemPath)) {
+                    $errors[] = "Invalid filename: $itemPath";
+                    $errorCount++;
+                    continue;
+                }
+                
+                if (strpos($itemPath, '../') !== false || strpos($itemPath, './') === 0) {
+                    $errors[] = "Invalid file path - path traversal detected: $itemPath";
+                    $errorCount++;
+                    continue;
+                }
+                
+                $filePath = CONTENT_DIR . '/' . $itemPath;
+                
+                // Ensure we're only deleting files within the content directory
+                $realFilePath = realpath($filePath);
+                $realContentDir = realpath(CONTENT_DIR);
+                
+                if ($realFilePath === false || strpos($realFilePath, $realContentDir) !== 0) {
+                    $errors[] = "Invalid file path: $itemPath";
+                    $errorCount++;
+                    continue;
+                }
+                
+                if (!file_exists($filePath)) {
+                    $errors[] = "File not found: $itemPath";
+                    $errorCount++;
+                    continue;
+                }
+                
+                // Delete the file
+                error_log("DEBUG: Attempting to delete file: " . $filePath);
+                if (unlink($filePath)) {
+                    error_log("DEBUG: File deleted successfully");
+                    $deletedCount++;
+                    
+                    // Log security event
+                    error_log("SECURITY: Content file '{$itemPath}' deleted by '{$_SESSION['username']}' from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
+                } else {
+                    error_log("DEBUG: Failed to delete file: " . $filePath);
+                    $errors[] = "Failed to delete: $itemPath";
+                    $errorCount++;
+                }
+            }
+            
+            // Clear page cache after content deletion
+            $cacheDir = dirname(__DIR__) . '/cache';
+            if (is_dir($cacheDir)) {
+                foreach (glob($cacheDir . '/*.html') as $cacheFile) {
+                    @unlink($cacheFile);
+                }
+            }
+            
+            // Set success/error messages
+            if ($deletedCount > 0) {
+                if ($errorCount > 0) {
+                    $_SESSION['success'] = "Successfully deleted $deletedCount item(s). $errorCount item(s) failed to delete.";
+                    if (!empty($errors)) {
+                        $_SESSION['error'] = "Errors: " . implode('; ', $errors);
+                    }
+                } else {
+                    $_SESSION['success'] = "Successfully deleted $deletedCount item(s).";
+                }
+            } else {
+                $_SESSION['error'] = "No items were deleted. Errors: " . implode('; ', $errors);
+            }
+        }
+    }
+    
+    // Redirect back to the content management page
+    $redirectUrl = $_SERVER['HTTP_REFERER'] ?? 'index.php?action=manage_content';
+    error_log("DEBUG: Redirecting to: " . $redirectUrl);
+    error_log("DEBUG: Session error: " . ($_SESSION['error'] ?? 'none'));
+    error_log("DEBUG: Session success: " . ($_SESSION['success'] ?? 'none'));
+    
+    // Check if headers can still be sent
+    if (headers_sent($file, $line)) {
+        error_log("DEBUG: Headers already sent in $file:$line");
+        // Use JavaScript redirect as fallback
+        echo '<script>window.location.href = "' . htmlspecialchars($redirectUrl) . '";</script>';
+        echo '<p>Redirecting... <a href="' . htmlspecialchars($redirectUrl) . '">Click here if not redirected automatically</a></p>';
+        exit;
+    }
+    
+    header('Location: ' . $redirectUrl);
+    exit;
 }
 
 // Handle AJAX requests for menu management
@@ -657,7 +887,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $action = 'dashboard'; // Redirect to dashboard on CSRF failure
     } else {
         // Check if this is a file manager action
-    if (in_array($postAction, ['upload_file', 'delete_file'])) {
+    if (in_array($postAction, ['upload_file', 'delete_file', 'bulk_delete_files'])) {
         $action = 'files'; // Set the action to 'files' to use the file manager's render callback
     }
     // Check if this is a blog action
@@ -895,6 +1125,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     } else {
         $cleared = $cacheManager->clearCache();
         $success = "Cache cleared successfully. {$cleared} files removed.";
+        
+        // Refresh cache statistics after clearing
+        $cacheStats = $cacheManager->getStats();
+        $cacheStatus = $cacheManager->getCacheStatus();
+        $cacheSize = $cacheManager->getCacheSize();
+        $cacheLastCleared = $cacheManager->getLastCleared();
     }
 }
 
@@ -907,6 +1143,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     } else {
         $cacheManager->clearCacheStats();
         $success = 'Cache statistics cleared successfully.';
+        
+        // Refresh cache statistics after clearing stats
+        $cacheStats = $cacheManager->getStats();
+        $cacheStatus = $cacheManager->getCacheStatus();
+        $cacheSize = $cacheManager->getCacheSize();
+        $cacheLastCleared = $cacheManager->getLastCleared();
     }
 }
 
@@ -926,8 +1168,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     } elseif (!validate_csrf_token()) {
         $error = 'Invalid security token. Please refresh the page and try again.';
     } else {
-        $fileName = $_POST['path'] ?? '';
-        error_log("DEBUG: fileName from POST: " . $fileName);
+        $oldFileName = $_POST['path'] ?? '';
+        $newSlug = $_POST['new_slug'] ?? '';
+        $fileName = $newSlug; // Use the new slug as the filename
+        
+        error_log("DEBUG: oldFileName from POST: " . $oldFileName);
+        error_log("DEBUG: newSlug from POST: " . $newSlug);
+        
         // Check for content from either text mode or editor mode
         $content = $_POST['text_content'] ?? $_POST['editor_content'] ?? $_POST['content'] ?? '';
         $pageTitle = $_POST['title'] ?? '';
@@ -941,7 +1188,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         if (empty($fileName) || !preg_match('/^[a-zA-Z0-9_\\-\/]+$/', $fileName)) {
             $error = 'Invalid filename';
         } else {
-            $filePath = CONTENT_DIR . '/' . $fileName . '.md';
+            $oldFilePath = CONTENT_DIR . '/' . $oldFileName . '.md';
+            $newFilePath = CONTENT_DIR . '/' . $fileName . '.md';
+            
+            // Check if slug has changed and handle file renaming
+            if ($oldFileName !== $fileName && file_exists($oldFilePath)) {
+                // Check if new filename already exists
+                if (file_exists($newFilePath)) {
+                    $error = 'A page with that URL slug already exists. Please choose a different slug.';
+                    error_log("DEBUG: New filename already exists: " . $newFilePath);
+                } else {
+                    // Create directory for new path if needed
+                    $dir = dirname($newFilePath);
+                    if (!is_dir($dir)) {
+                        mkdir($dir, 0755, true);
+                    }
+                    
+                    // Rename the file
+                    if (rename($oldFilePath, $newFilePath)) {
+                        error_log("DEBUG: File renamed from " . $oldFilePath . " to " . $newFilePath);
+                    } else {
+                        $error = 'Failed to rename file. Please try again.';
+                        error_log("DEBUG: Failed to rename file from " . $oldFilePath . " to " . $newFilePath);
+                    }
+                }
+            } else {
+                // No slug change, use original file path
+                $newFilePath = $oldFilePath;
+            }
+            
+            $filePath = $newFilePath;
             $dir = dirname($filePath);
             if (!is_dir($dir)) {
                 mkdir($dir, 0755, true);
@@ -1008,7 +1284,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 error_log("DEBUG: About to redirect to: ?action=edit_content&path=" . urlencode($redirectPath));
                 error_log("DEBUG: Save path: " . $filePath);
                 error_log("DEBUG: Redirect path: " . $redirectPath);
-                error_log("DEBUG: Original fileName: " . $fileName);
+                error_log("DEBUG: New fileName: " . $fileName);
                 
                 // Always use redirect for admin area to ensure fresh content
                 $timestamp = time();
@@ -1092,7 +1368,7 @@ $template_map = [
     'edit_content' => 'edit_content_quill.php',
     'new_content' => 'new_content.php',
     'create_page' => 'new_content.php', // Redirect create_page to new_content template
-    'files' => 'file_manager.php',
+    // 'files' => 'file_manager.php', // Handled by admin section system
     'manage_users' => 'users.php',
     'manage_roles' => 'role-management.html',
     'manage_widgets' => 'widgets.php'
@@ -1101,174 +1377,175 @@ $template_map = [
 // Get the correct template file name
 $templateFile = ADMIN_TEMPLATE_DIR . '/' . ($template_map[$action] ?? $action . '.php');
 
-// Special handling for file manager
-if ($action === 'files') {
-    $uploadsDir = dirname(__DIR__) . '/uploads';
-    $webUploadsDir = '/uploads';
-    $allowedExts = ['jpg','jpeg','png','gif','webp','pdf','zip','svg','txt','md'];
-    $maxFileSize = 10 * 1024 * 1024; // 10MB
+// File manager is now handled by the admin section system via fcms_render_file_manager()
+// if ($action === 'files') {
+//     $uploadsDir = dirname(__DIR__) . '/uploads';
+//     $webUploadsDir = '/uploads';
+//     $allowedExts = ['jpg','jpeg','png','gif','webp','pdf','zip','svg','txt','md'];
+//     $maxFileSize = 10 * 1024 * 1024; // 10MB
+//     
+//     // Ensure uploads directory exists
+//     if (!is_dir($uploadsDir)) {
+//         mkdir($uploadsDir, 0755, true);
+//     }
+//     
+//     $error = '';
+//     $success = '';
     
-    // Ensure uploads directory exists
-    if (!is_dir($uploadsDir)) {
-        mkdir($uploadsDir, 0755, true);
-    }
+//     // Handle file upload
+//     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'upload_file') {
+//         if (!empty($_FILES['files']['name'][0])) {
+//             $uploadedFiles = $_FILES['files'];
+//             $successCount = 0;
+//             $errorCount = 0;
+//             $errors = [];
+//             
+//             // Process each uploaded file
+//             for ($i = 0; $i < count($uploadedFiles['name']); $i++) {
+//                 $file = [
+//                     'name' => $uploadedFiles['name'][$i],
+//                     'type' => $uploadedFiles['type'][$i],
+//                     'tmp_name' => $uploadedFiles['tmp_name'][$i],
+//                     'error' => $uploadedFiles['error'][$i],
+//                     'size' => $uploadedFiles['size'][$i]
+//                 ];
+//                 
+//                 $originalName = $file['name'];
+//                 $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+//                 $tmpName = $file['tmp_name'];
+//                 
+//                 // Check for upload errors
+//                 if ($file['error'] !== UPLOAD_ERR_OK) {
+//                     $errors[] = $originalName . ': Upload error occurred.';
+//                     $errorCount++;
+//                     continue;
+//                 }
+//                 
+//                 // Validate file extension
+//                 if (!in_array($ext, $allowedExts)) {
+//                     $errors[] = $originalName . ': File type not allowed. Allowed types: ' . implode(', ', $allowedExts);
+//                     $errorCount++;
+//                     continue;
+//                 }
+//                 
+//                 // Validate file size
+//                 if ($file['size'] > $maxFileSize) {
+//                     $errors[] = $originalName . ': File is too large. Maximum size: ' . round($maxFileSize/1024/1024) . 'MB';
+//                     $errorCount++;
+//                     continue;
+//                 }
+//                 
+//                 // Sanitize filename
+//                 $safeName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $originalName);
+//                 $safeName = preg_replace('/_{2,}/', '_', $safeName);
+//                 
+//                 if (strpos($safeName, '.') === 0) {
+//                     $safeName = 'file' . $safeName;
+//                 }
+//                 
+//                 // Add timestamp to prevent conflicts
+//                 $pathInfo = pathinfo($safeName);
+//                 $finalName = $pathInfo['filename'] . '_' . time() . '_' . $i . '.' . $pathInfo['extension'];
+//                 
+//                 $target = $uploadsDir . '/' . $finalName;
+//                 
+//                 if (move_uploaded_file($tmpName, $target)) {
+//                     $successCount++;
+//                 } else {
+//                     $errors[] = $originalName . ': Failed to save file.';
+//                     $errorCount++;
+//                 }
+//             }
+//             
+//             if ($successCount > 0) {
+//                 $success = "Successfully uploaded $successCount file(s).";
+//             }
+//             if ($errorCount > 0) {
+//                 $error = implode('<br>', $errors);
+//             }
+//         }
+//     }
     
-    $error = '';
-    $success = '';
+//     // Handle file deletion
+//     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_file') {
+//         $filename = $_POST['filename'] ?? '';
+//         $filepath = realpath($uploadsDir . '/' . $filename);
+//         if ($filename && $filepath && strpos($filepath, realpath($uploadsDir)) === 0 && is_file($filepath)) {
+//             if (unlink($filepath)) {
+//                 $success = 'File deleted successfully.';
+//             } else {
+//                 $error = 'Failed to delete file.';
+//             }
+//         } else {
+//             $error = 'Invalid file.';
+//         }
+//     }
     
-    // Handle file upload
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'upload_file') {
-        if (!empty($_FILES['files']['name'][0])) {
-            $uploadedFiles = $_FILES['files'];
-            $successCount = 0;
-            $errorCount = 0;
-            $errors = [];
-            
-            // Process each uploaded file
-            for ($i = 0; $i < count($uploadedFiles['name']); $i++) {
-                $file = [
-                    'name' => $uploadedFiles['name'][$i],
-                    'type' => $uploadedFiles['type'][$i],
-                    'tmp_name' => $uploadedFiles['tmp_name'][$i],
-                    'error' => $uploadedFiles['error'][$i],
-                    'size' => $uploadedFiles['size'][$i]
-                ];
-                
-                $originalName = $file['name'];
-                $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
-                $tmpName = $file['tmp_name'];
-                
-                // Check for upload errors
-                if ($file['error'] !== UPLOAD_ERR_OK) {
-                    $errors[] = $originalName . ': Upload error occurred.';
-                    $errorCount++;
-                    continue;
-                }
-                
-                // Validate file extension
-                if (!in_array($ext, $allowedExts)) {
-                    $errors[] = $originalName . ': File type not allowed. Allowed types: ' . implode(', ', $allowedExts);
-                    $errorCount++;
-                    continue;
-                }
-                
-                // Validate file size
-                if ($file['size'] > $maxFileSize) {
-                    $errors[] = $originalName . ': File is too large. Maximum size: ' . round($maxFileSize/1024/1024) . 'MB';
-                    $errorCount++;
-                    continue;
-                }
-                
-                // Sanitize filename
-                $safeName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $originalName);
-                $safeName = preg_replace('/_{2,}/', '_', $safeName);
-                
-                if (strpos($safeName, '.') === 0) {
-                    $safeName = 'file' . $safeName;
-                }
-                
-                // Add timestamp to prevent conflicts
-                $pathInfo = pathinfo($safeName);
-                $finalName = $pathInfo['filename'] . '_' . time() . '_' . $i . '.' . $pathInfo['extension'];
-                
-                $target = $uploadsDir . '/' . $finalName;
-                
-                if (move_uploaded_file($tmpName, $target)) {
-                    $successCount++;
-                } else {
-                    $errors[] = $originalName . ': Failed to save file.';
-                    $errorCount++;
-                }
-            }
-            
-            if ($successCount > 0) {
-                $success = "Successfully uploaded $successCount file(s).";
-            }
-            if ($errorCount > 0) {
-                $error = implode('<br>', $errors);
-            }
-        }
-    }
+//     // Handle file rename
+//     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'rename_file') {
+//         $oldFilename = $_POST['old_filename'] ?? '';
+//         $newFilename = $_POST['new_filename'] ?? '';
+//         
+//         if (empty($oldFilename) || empty($newFilename)) {
+//             $error = 'Both old and new filenames are required.';
+//         } else {
+//             // Sanitize new filename
+//             $newFilename = preg_replace('/[^a-zA-Z0-9._-]/', '_', $newFilename);
+//             $newFilename = preg_replace('/_{2,}/', '_', $newFilename);
+//             
+//             if (strpos($newFilename, '.') === 0) {
+//                 $newFilename = 'file' . $newFilename;
+//             }
+//             
+//             $oldPath = $uploadsDir . '/' . $oldFilename;
+//             $newPath = $uploadsDir . '/' . $newFilename;
+//             
+//             // Check if old file exists and is within uploads directory
+//             if (file_exists($oldPath) && strpos(realpath($oldPath), realpath($uploadsDir)) === 0) {
+//                 // Check if new filename already exists
+//                 if (file_exists($newPath)) {
+//                     $error = 'A file with that name already exists.';
+//                 } else {
+//                     if (rename($oldPath, $newPath)) {
+//                         $success = 'File renamed successfully.';
+//                         
+//                         // Update theme options if this was the hero banner
+//                         if ($oldFilename === 'herobanner_1755845067.png') {
+//                             $themeOptionsFile = dirname(__DIR__) . '/config/theme_options.json';
+//                             if (file_exists($themeOptionsFile)) {
+//                                 $themeOptions = json_decode(file_get_contents($themeOptionsFile), true) ?: [];
+//                                 $themeOptions['herobanner'] = 'uploads/' . $newFilename;
+//                                 file_put_contents($themeOptionsFile, json_encode($themeOptions, JSON_PRETTY_PRINT));
+//                             }
+//                         }
+//                     } else {
+//                         $error = 'Failed to rename file.';
+//                     }
+//                 }
+//             } else {
+//                 $error = 'Invalid file.';
+//             }
+//         }
+//     }
     
-    // Handle file deletion
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_file') {
-        $filename = $_POST['filename'] ?? '';
-        $filepath = realpath($uploadsDir . '/' . $filename);
-        if ($filename && $filepath && strpos($filepath, realpath($uploadsDir)) === 0 && is_file($filepath)) {
-            if (unlink($filepath)) {
-                $success = 'File deleted successfully.';
-            } else {
-                $error = 'Failed to delete file.';
-            }
-        } else {
-            $error = 'Invalid file.';
-        }
-    }
-    
-    // Handle file rename
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'rename_file') {
-        $oldFilename = $_POST['old_filename'] ?? '';
-        $newFilename = $_POST['new_filename'] ?? '';
-        
-        if (empty($oldFilename) || empty($newFilename)) {
-            $error = 'Both old and new filenames are required.';
-        } else {
-            // Sanitize new filename
-            $newFilename = preg_replace('/[^a-zA-Z0-9._-]/', '_', $newFilename);
-            $newFilename = preg_replace('/_{2,}/', '_', $newFilename);
-            
-            if (strpos($newFilename, '.') === 0) {
-                $newFilename = 'file' . $newFilename;
-            }
-            
-            $oldPath = $uploadsDir . '/' . $oldFilename;
-            $newPath = $uploadsDir . '/' . $newFilename;
-            
-            // Check if old file exists and is within uploads directory
-            if (file_exists($oldPath) && strpos(realpath($oldPath), realpath($uploadsDir)) === 0) {
-                // Check if new filename already exists
-                if (file_exists($newPath)) {
-                    $error = 'A file with that name already exists.';
-                } else {
-                    if (rename($oldPath, $newPath)) {
-                        $success = 'File renamed successfully.';
-                        
-                        // Update theme options if this was the hero banner
-                        if ($oldFilename === 'herobanner_1755845067.png') {
-                            $themeOptionsFile = dirname(__DIR__) . '/config/theme_options.json';
-                            if (file_exists($themeOptionsFile)) {
-                                $themeOptions = json_decode(file_get_contents($themeOptionsFile), true) ?: [];
-                                $themeOptions['herobanner'] = 'uploads/' . $newFilename;
-                                file_put_contents($themeOptionsFile, json_encode($themeOptions, JSON_PRETTY_PRINT));
-                            }
-                        }
-                    } else {
-                        $error = 'Failed to rename file.';
-                    }
-                }
-            } else {
-                $error = 'Invalid file.';
-            }
-        }
-    }
-    
-    // List files
-    $files = [];
-    if (is_dir($uploadsDir)) {
-        foreach (scandir($uploadsDir) as $f) {
-            if ($f === '.' || $f === '..') continue;
-            $full = $uploadsDir . '/' . $f;
-            if (is_file($full)) {
-                $files[] = [
-                    'name' => $f,
-                    'size' => filesize($full),
-                    'type' => mime_content_type($full),
-                    'url'  => $webUploadsDir . '/' . rawurlencode($f)
-                ];
-            }
-        }
-    }
-}
+//     // List files
+//     $files = [];
+//     if (is_dir($uploadsDir)) {
+//         foreach (scandir($uploadsDir) as $f) {
+//             if ($f === '.' || $f === '..') continue;
+//             $full = $uploadsDir . '/' . $f;
+//             if (is_file($full)) {
+//                 $files[] = [
+//                     'name' => $f,
+//                     'size' => filesize($full),
+//                     'type' => mime_content_type($full),
+//                     'url'  => $webUploadsDir . '/' . rawurlencode($f)
+//                 ];
+//             }
+//         }
+//     }
+// }
+// }
 
 // Try .php first, then .html if .php doesn't exist
 if (!file_exists($templateFile) && str_ends_with($templateFile, '.php')) {
@@ -1280,6 +1557,9 @@ if (!file_exists($templateFile) && str_ends_with($templateFile, '.php')) {
 
 // Check if this is a registered admin section
 $admin_sections = fcms_get_admin_sections();
+error_log("DEBUG: Admin section loading - action: " . $action);
+error_log("DEBUG: Admin section loading - available sections: " . print_r(array_keys($admin_sections), true));
+error_log("DEBUG: Admin section loading - looking for section: " . $action);
 $section_found = false;
 
 // First check direct sections
@@ -1319,6 +1599,8 @@ if (isset($admin_sections[$action])) {
         }
     }
 }
+
+
 
 // If no admin section was found, try to load the template file
 if (!$section_found) {

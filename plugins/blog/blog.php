@@ -345,22 +345,81 @@ fcms_register_admin_section('blog', [
                 echo '<script>
                 document.addEventListener("DOMContentLoaded", function() {
                     var initialContent = ' . json_encode($edit['content']) . ';
+                    // Create a simple toolbar without problematic modules
+                    var toolbarOptions = [
+                        [{ "header": [1, 2, 3, false] }],
+                        ["bold", "italic", "underline", "strike"],
+                        [{ "list": "ordered"}, { "list": "bullet" }],
+                        [{ "color": [] }, { "background": [] }],
+                        [{ "align": [] }],
+                        ["link"],
+                        ["clean"]
+                    ];
+
                     var editor = new Quill("#blog-toast-editor", {
                         theme: "snow",
                         modules: {
-                            toolbar: [
-                                [{ "header": [1, 2, 3, false] }],
-                                ["bold", "italic", "underline", "strike"],
-                                [{ "list": "ordered"}, { "list": "bullet" }],
-                                [{ "color": [] }, { "background": [] }],
-                                [{ "align": [] }],
-                                ["link", "image"],
-                                ["clean"]
-                            ]
+                            toolbar: toolbarOptions,
+                            clipboard: {
+                                matchVisual: false
+                            }
                         },
                         placeholder: "Start writing your blog post here...",
                         height: "500px"
                     });
+
+                    // Add custom image handling after Quill is initialized
+                    var imageButton = document.createElement("button");
+                    imageButton.innerHTML = \'<svg viewBox="0 0 18 18"><rect class="ql-stroke" height="10" width="12" x="3" y="4"></rect><circle class="ql-fill" cx="6" cy="6" r="1"></circle><polyline class="ql-even ql-fill" points="5 8,9 4,13 8,13 14,5 14"></polyline></svg>\';
+                    imageButton.type = "button";
+                    imageButton.className = "ql-image";
+                    imageButton.setAttribute("aria-label", "Insert image");
+                    
+                    // Add click handler for image upload
+                    imageButton.addEventListener("click", function() {
+                        var input = document.createElement("input");
+                        input.setAttribute("type", "file");
+                        input.setAttribute("accept", "image/*");
+                        input.click();
+                        
+                        input.onchange = function() {
+                            var file = input.files[0];
+                            if (file) {
+                                var formData = new FormData();
+                                formData.append("action", "upload_image");
+                                formData.append("image", file);
+                                
+                                fetch("?action=upload_image", {
+                                    method: "POST",
+                                    body: formData
+                                })
+                                .then(function(response) { return response.json(); })
+                                .then(function(data) {
+                                    if (data.success) {
+                                        var range = editor.getSelection();
+                                        editor.insertEmbed(range.index, "image", data.url);
+                                    } else {
+                                        alert("Upload failed: " + (data.error || "Unknown error"));
+                                    }
+                                })
+                                .catch(function(error) {
+                                    alert("Upload failed: " + error);
+                                });
+                            }
+                        };
+                    });
+                    
+                    // Add the custom image button to the toolbar
+                    var toolbar = editor.getModule("toolbar");
+                    toolbar.addHandler("image", function() {
+                        imageButton.click();
+                    });
+                    
+                    // Insert the image button into the toolbar
+                    var toolbarContainer = document.querySelector(".ql-toolbar");
+                    if (toolbarContainer) {
+                        toolbarContainer.appendChild(imageButton);
+                    }
 
                     // Set initial content if editing
                     if (initialContent) {
@@ -403,22 +462,81 @@ fcms_register_admin_section('blog', [
             // Quill.js Editor initialization for new post
             echo '<script>
             document.addEventListener("DOMContentLoaded", function() {
+                // Create a simple toolbar without problematic modules
+                var toolbarOptions = [
+                    [{ "header": [1, 2, 3, false] }],
+                    ["bold", "italic", "underline", "strike"],
+                    [{ "list": "ordered"}, { "list": "bullet" }],
+                    [{ "color": [] }, { "background": [] }],
+                    [{ "align": [] }],
+                    ["link"],
+                    ["clean"]
+                ];
+
                 var editor = new Quill("#blog-toast-editor", {
                     theme: "snow",
                     modules: {
-                        toolbar: [
-                            [{ "header": [1, 2, 3, false] }],
-                            ["bold", "italic", "underline", "strike"],
-                            [{ "list": "ordered"}, { "list": "bullet" }],
-                            [{ "color": [] }, { "background": [] }],
-                            [{ "align": [] }],
-                            ["link", "image"],
-                            ["clean"]
-                        ]
+                        toolbar: toolbarOptions,
+                        clipboard: {
+                            matchVisual: false
+                        }
                     },
                     placeholder: "Start writing your blog post here...",
                     height: "500px"
                 });
+
+                // Add custom image handling after Quill is initialized
+                var imageButton = document.createElement("button");
+                imageButton.innerHTML = \'<svg viewBox="0 0 18 18"><rect class="ql-stroke" height="10" width="12" x="3" y="4"></rect><circle class="ql-fill" cx="6" cy="6" r="1"></circle><polyline class="ql-even ql-fill" points="5 8,9 4,13 8,13 14,5 14"></polyline></svg>\';
+                imageButton.type = "button";
+                imageButton.className = "ql-image";
+                imageButton.setAttribute("aria-label", "Insert image");
+                
+                // Add click handler for image upload
+                imageButton.addEventListener("click", function() {
+                    var input = document.createElement("input");
+                    input.setAttribute("type", "file");
+                    input.setAttribute("accept", "image/*");
+                    input.click();
+                    
+                    input.onchange = function() {
+                        var file = input.files[0];
+                        if (file) {
+                            var formData = new FormData();
+                            formData.append("action", "upload_image");
+                            formData.append("image", file);
+                            
+                            fetch("?action=upload_image", {
+                                method: "POST",
+                                body: formData
+                            })
+                            .then(function(response) { return response.json(); })
+                            .then(function(data) {
+                                if (data.success) {
+                                    var range = editor.getSelection();
+                                    editor.insertEmbed(range.index, "image", data.url);
+                                } else {
+                                    alert("Upload failed: " + (data.error || "Unknown error"));
+                                }
+                            })
+                            .catch(function(error) {
+                                alert("Upload failed: " + error);
+                            });
+                        }
+                    };
+                });
+                
+                // Add the custom image button to the toolbar
+                var toolbar = editor.getModule("toolbar");
+                toolbar.addHandler("image", function() {
+                    imageButton.click();
+                });
+                
+                // Insert the image button into the toolbar
+                var toolbarContainer = document.querySelector(".ql-toolbar");
+                if (toolbarContainer) {
+                    toolbarContainer.appendChild(imageButton);
+                }
 
                 document.getElementById("blog-post-form").addEventListener("submit", function(e) {
                     var content = editor.root.innerHTML;
