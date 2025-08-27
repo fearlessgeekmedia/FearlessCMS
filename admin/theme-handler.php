@@ -1,10 +1,16 @@
 <?php
+require_once dirname(__DIR__) . '/includes/config.php';
 
 // Set upload limits
 ini_set('upload_max_filesize', '10M');
 ini_set('post_max_size', '10M');
 ini_set('max_execution_time', '300');
 ini_set('max_input_time', '300');
+
+// Load config to get admin path
+$configFile = dirname(__DIR__) . '/config/config.json';
+$config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
+$adminPath = $config['admin_path'] ?? 'admin';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if (!isLoggedIn()) {
@@ -25,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
                 $config['active_theme'] = $theme;
                 if (file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT))) {
-                    header('Location: /admin?action=manage_themes&success=Theme activated successfully');
+                    header('Location: /' . $adminPath . '?action=manage_themes&success=Theme activated successfully');
                     exit;
                 } else {
                     $error = 'Failed to activate theme';

@@ -11,6 +11,10 @@
     </style>
 </head>
 <body class="bg-gray-100">
+    <?php
+    require_once __DIR__ . '/includes/config.php';
+    ?>
+    
     <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div class="max-w-md w-full space-y-8">
             <div>
@@ -34,7 +38,7 @@
             // Session debugging removed for security
             ?>
 
-            <form class="mt-8 space-y-6" method="POST" action="/admin/login">
+            <form class="mt-8 space-y-6" method="POST" action="/<?php echo htmlspecialchars($adminPath); ?>/login">
                 <input type="hidden" name="action" value="login">
                 <div class="rounded-md shadow-sm -space-y-px">
                     <div>

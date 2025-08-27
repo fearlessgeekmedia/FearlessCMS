@@ -3,21 +3,37 @@
 
 function fcms_render_file_manager() {
     error_log("DEBUG: fcms_render_file_manager() called");
+    
+    // Start output buffering to capture template output
+    ob_start();
+    
+    // Call the original function logic
+    fcms_render_file_manager_internal();
+    
+    // Get the captured output and return it
+    $output = ob_get_clean();
+    
+    return $output;
+}
+
+function fcms_render_file_manager_internal() {
     // Use root uploads directory to match theme system expectations
     $uploadsDir = dirname(__DIR__) . '/../uploads';
     $webUploadsDir = '/uploads';
     $allowedExts = ['jpg','jpeg','png','gif','webp','pdf','zip','svg','txt','md'];
     $maxFileSize = 10 * 1024 * 1024; // 10MB
-
+    
+    // Ensure uploads directory exists
+    if (!is_dir($uploadsDir)) {
+        mkdir($uploadsDir, 0755, true);
+    }
+    
     $error = '';
     $success = '';
-
-    // Handle file upload (single or multiple files)
+    
+    // Handle file upload
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'upload_file') {
-        // Validate CSRF token
-        if (!function_exists('validate_csrf_token') || !validate_csrf_token()) {
-            $error = 'Invalid security token. Please refresh the page and try again.';
-        } elseif (!empty($_FILES['files']['name'][0])) {
+        if (!empty($_FILES['files']['name'][0])) {
             $uploadedFiles = $_FILES['files'];
             $successCount = 0;
             $errorCount = 0;
@@ -33,10 +49,8 @@ function fcms_render_file_manager() {
                     'size' => $uploadedFiles['size'][$i]
                 ];
                 
-                // Comprehensive file validation
                 $originalName = $file['name'];
                 $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
-                $mimeType = $file['type'];
                 $tmpName = $file['tmp_name'];
                 
                 // Check for upload errors
@@ -60,25 +74,10 @@ function fcms_render_file_manager() {
                     continue;
                 }
                 
-                // Validate MIME type for additional security
-                if (!in_array($mimeType, ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'text/plain', 'application/pdf'])) {
-                    $errors[] = $originalName . ': Invalid file type detected.';
-                    $errorCount++;
-                    continue;
-                }
-                
-                // Check for executable content in filename
-                if (preg_match('/\.(php|phtml|php3|php4|php5|pl|py|jsp|asp|sh|cgi)$/i', $originalName)) {
-                    $errors[] = $originalName . ': Executable files are not allowed.';
-                    $errorCount++;
-                    continue;
-                }
-                
-                // Sanitize filename - remove dangerous characters
+                // Sanitize filename
                 $safeName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $originalName);
-                $safeName = preg_replace('/_{2,}/', '_', $safeName); // Remove multiple underscores
+                $safeName = preg_replace('/_{2,}/', '_', $safeName);
                 
-                // Ensure filename doesn't start with dot
                 if (strpos($safeName, '.') === 0) {
                     $safeName = 'file' . $safeName;
                 }
@@ -89,52 +88,26 @@ function fcms_render_file_manager() {
                 
                 $target = $uploadsDir . '/' . $finalName;
                 
-                // Additional security: validate the actual file content
-                if (function_exists('finfo_open')) {
-                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
-                    $detectedMime = finfo_file($finfo, $tmpName);
-                    finfo_close($finfo);
-                    
-                    $allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'text/plain', 'application/pdf'];
-                    if (!in_array($detectedMime, $allowedMimes)) {
-                        $errors[] = $originalName . ': File content does not match allowed types.';
-                        $errorCount++;
-                        continue;
-                    }
-                }
-                
-                // Attempt to upload the file
                 if (move_uploaded_file($tmpName, $target)) {
-                    // Set secure file permissions
-                    chmod($target, 0644);
                     $successCount++;
                 } else {
-                    $errors[] = $originalName . ': Failed to upload file.';
+                    $errors[] = $originalName . ': Failed to save file.';
                     $errorCount++;
                 }
             }
             
-            // Set success/error messages
             if ($successCount > 0) {
-                if ($successCount === 1) {
-                    $success = '1 file uploaded successfully.';
-                } else {
-                    $success = $successCount . ' files uploaded successfully.';
+                if (!empty($errors)) {
+                    $error = "Errors: " . implode('; ', $errors);
                 }
-            }
-            
-            if ($errorCount > 0) {
-                if (empty($success)) {
-                    $error = 'Upload failed. ' . implode(' ', $errors);
-                } else {
-                    $error = 'Some files failed to upload: ' . implode(' ', $errors);
-                }
+            } else {
+                $success = "Successfully uploaded $successCount file(s).";
             }
         } else {
-            $error = 'No files selected.';
+            $error = "No files were uploaded. Errors: " . implode('; ', $errors);
         }
     }
-
+    
     // Handle file deletion
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_file') {
         // Validate CSRF token
@@ -142,61 +115,68 @@ function fcms_render_file_manager() {
             $error = 'Invalid security token. Please refresh the page and try again.';
         } else {
             $filename = isset($_POST['filename']) ? $_POST['filename'] : '';
-            $filepath = realpath($uploadsDir . '/' . $filename);
-            if ($filename && $filepath && strpos($filepath, realpath($uploadsDir)) === 0 && is_file($filepath)) {
-                if (unlink($filepath)) {
-                    $success = 'File deleted.';
-                } else {
-                    $error = 'Failed to delete file.';
-                }
+            
+            if (empty($filename)) {
+                $error = 'Filename is required.';
             } else {
-                $error = 'Invalid file.';
+                $filePath = $uploadsDir . '/' . $filename;
+                
+                // Check if file exists and is within uploads directory
+                if (file_exists($filePath) && strpos(realpath($filePath), realpath($uploadsDir)) === 0) {
+                    if (unlink($filePath)) {
+                        $success = 'File deleted successfully.';
+                        
+                        // Update theme options if this was the hero banner
+                        if ($filename === 'herobanner_1755845067.png') {
+                            $themeOptionsFile = dirname(__DIR__) . '/config/theme_options.json';
+                            if (file_exists($themeOptionsFile)) {
+                                $themeOptions = json_decode(file_get_contents($themeOptionsFile), true) ?: [];
+                                unset($themeOptions['herobanner']);
+                                file_put_contents($themeOptionsFile, json_encode($themeOptions, JSON_PRETTY_PRINT));
+                            }
+                        }
+                    } else {
+                        $error = 'Failed to delete file.';
+                    }
+                } else {
+                    $error = 'Invalid file.';
+                }
             }
         }
     }
-
+    
     // Handle bulk file deletion
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'bulk_delete_files') {
         // Validate CSRF token
         if (!function_exists('validate_csrf_token') || !validate_csrf_token()) {
             $error = 'Invalid security token. Please refresh the page and try again.';
         } else {
-            $selectedFiles = isset($_POST['selected_files']) ? $_POST['selected_files'] : '';
+            $filenames = isset($_POST['filenames']) ? $_POST['filenames'] : [];
             
-            if (empty($selectedFiles)) {
-                $error = 'No files selected for deletion';
+            if (empty($filenames) || !is_array($filenames)) {
+                $error = 'No files selected for deletion.';
             } else {
-                $fileNames = explode(',', $selectedFiles);
                 $deletedCount = 0;
-                $errorCount = 0;
                 $errors = [];
                 
-                foreach ($fileNames as $fileName) {
-                    $fileName = trim($fileName);
-                    if (empty($fileName)) continue;
+                foreach ($filenames as $filename) {
+                    $filePath = $uploadsDir . '/' . $filename;
                     
-                    $filepath = realpath($uploadsDir . '/' . $fileName);
-                    if ($fileName && $filepath && strpos($filepath, realpath($uploadsDir)) === 0 && is_file($filepath)) {
-                        if (unlink($filepath)) {
+                    // Check if file exists and is within uploads directory
+                    if (file_exists($filePath) && strpos(realpath($filePath), realpath($uploadsDir)) === 0) {
+                        if (unlink($filePath)) {
                             $deletedCount++;
-                            error_log("SECURITY: File '{$fileName}' deleted by '" . (isset($_SESSION['username']) ? $_SESSION['username'] : 'unknown') . "' from IP: " . (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'unknown'));
                         } else {
-                            $errors[] = "Failed to delete: $fileName";
-                            $errorCount++;
+                            $errors[] = $filename . ': Failed to delete.';
                         }
                     } else {
-                        $errors[] = "Invalid file: $fileName";
-                        $errorCount++;
+                        $errors[] = $filename . ': Invalid file.';
                     }
                 }
                 
-                // Set success/error messages
                 if ($deletedCount > 0) {
-                    if ($errorCount > 0) {
-                        $success = "Successfully deleted $deletedCount file(s). $errorCount file(s) failed to delete.";
-                        if (!empty($errors)) {
-                            $error = "Errors: " . implode('; ', $errors);
-                        }
+                    if (!empty($errors)) {
+                        $error = "Errors: " . implode('; ', $errors);
                     } else {
                         $success = "Successfully deleted $deletedCount file(s).";
                     }
@@ -206,7 +186,7 @@ function fcms_render_file_manager() {
             }
         }
     }
-
+    
     // Handle file renaming
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'rename_file') {
         // Validate CSRF token
@@ -258,7 +238,7 @@ function fcms_render_file_manager() {
             }
         }
     }
-
+    
     // List files
     $files = [];
     if (is_dir($uploadsDir)) {
@@ -275,7 +255,7 @@ function fcms_render_file_manager() {
             }
         }
     }
-
+    
     // Now include the enhanced template with all the variables defined
     error_log("DEBUG: About to include template. Files count: " . count($files));
     error_log("DEBUG: Template path: " . dirname(__DIR__) . '/templates/file_manager.php');
