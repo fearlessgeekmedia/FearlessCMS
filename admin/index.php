@@ -8,10 +8,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     exit;
 }
 
-if ($_SERVER['REQUEST_URI'] === '/admin/serve-js.php') {
-    require_once __DIR__ . '/serve-js.php';
-    exit;
-}
 // Session is already started by main index.php, no need to start again
 // Just ensure we have access to the required functions
 
@@ -19,9 +15,15 @@ require_once dirname(__DIR__) . '/includes/config.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
 require_once dirname(__DIR__) . '/includes/session.php';
 
+// Check for serve-js.php route
+if ($_SERVER['REQUEST_URI'] === '/' . $adminPath . '/serve-js.php') {
+    require_once __DIR__ . '/serve-js.php';
+    exit;
+}
+
 // Check authentication FIRST - redirect to login if not authenticated
 if (!isLoggedIn()) {
-    header('Location: /admin/login');
+    header('Location: /' . $adminPath . '/login');
     exit;
 }
 

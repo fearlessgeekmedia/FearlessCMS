@@ -4,6 +4,7 @@
 // Just ensure we have access to the required functions
 
 require_once dirname(__DIR__) . '/includes/config.php';
+require_once dirname(__DIR__) . '/includes/session.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
 
 // Apply security headers

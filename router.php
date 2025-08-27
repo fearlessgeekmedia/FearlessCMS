@@ -2,10 +2,15 @@
 // Router for PHP development server
 $uri = urldecode(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
 
+// Load config to get admin path
+$configFile = __DIR__ . '/config/config.json';
+$config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
+$adminPath = $config['admin_path'] ?? 'admin';
+
 // Special handling for admin routes
-if (strpos($uri, '/admin') === 0) {
+if (strpos($uri, '/' . $adminPath) === 0) {
     // Handle login route separately to avoid redirect loops
-    if ($uri === '/admin/login') {
+    if ($uri === '/' . $adminPath . '/login') {
         // Ensure session is started before including login.php
         require_once __DIR__ . '/includes/session.php';
         require_once __DIR__ . '/admin/login.php';
