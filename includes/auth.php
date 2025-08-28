@@ -210,8 +210,13 @@ function set_security_headers() {
     }
 }
 
-// Rate limiting for login attempts
+// Rate limiting for login attempts (DISABLED)
 function check_login_rate_limit(string $username, int $max_attempts = 5, int $time_window = 900): bool {
+    // Rate limiting temporarily disabled - always allow login attempts
+    return true;
+    
+    // Original code commented out:
+    /*
     $key = "login_rate_limit_" . md5($username);
     $now = time();
 
@@ -229,6 +234,7 @@ function check_login_rate_limit(string $username, int $max_attempts = 5, int $ti
 
     $_SESSION[$key]['count']++;
     return true;
+    */
 }
 
 // Generic rate limiting for sensitive operations

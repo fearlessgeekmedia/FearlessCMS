@@ -99,6 +99,102 @@ main > * {
   margin-right: 0;
 }
 
+/* Parallax Plugin Custom Styles */
+.parallax-section {
+  margin: 0;
+  padding: 0;
+}
+
+.parallax-content {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.parallax-content h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.parallax-content h2 {
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.parallax-content h3 {
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.parallax-content p {
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Custom overlay styles */
+.dark-overlay .parallax-content {
+  color: #ffffff;
+}
+
+.light-overlay .parallax-content {
+  color: #333333;
+}
+
+.custom-overlay .parallax-content {
+  background: rgba(0,0,0,0.6);
+  border-radius: 10px;
+  padding: 2rem;
+  margin: 2rem;
+}
+
+.minimal-overlay .parallax-content {
+  background: rgba(255,255,255,0.9);
+  color: #333333;
+  border-radius: 10px;
+  padding: 2rem;
+  margin: 2rem;
+}
+
+/* Features grid styling */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  padding: 4rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.feature-card {
+  background: var(--color-surface);
+  padding: 2rem;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(17, 24, 39, 0.15);
+}
+
+.feature-card h3 {
+  color: var(--color-accent);
+  margin-bottom: 1rem;
+  font-size: 1.3rem;
+}
+
+.feature-card p {
+  color: var(--color-muted);
+  line-height: 1.6;
+}
+
 h2 {
   line-height: 3rem !important;
 }
