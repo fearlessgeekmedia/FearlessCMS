@@ -1,9 +1,12 @@
 <?php
-// Dedicated AJAX handler for menu operations
-// This avoids the output issues from the main admin index.php
+/**
+ * Dedicated AJAX handler for menu operations
+ * This avoids the output issues from the main admin index.php
+ */
 
-// Start output buffering immediately
+// Start output buffering immediately and clean any existing output
 ob_start();
+ob_clean();
 
 // Basic configuration
 define('PROJECT_ROOT', __DIR__);
@@ -12,14 +15,17 @@ define('CONFIG_DIR', PROJECT_ROOT . '/config');
 // Simple session check without heavy dependencies
 session_start();
 if (empty($_SESSION['username'])) {
+    ob_end_clean();
     http_response_code(401);
+    header('Content-Type: application/json');
     echo json_encode(['success' => false, 'error' => 'You must be logged in to perform this action']);
     exit;
 }
 
 // Handle load_menu action (GET)
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'load_menu') {
-    // Set JSON headers
+    // Clean any output and set JSON headers
+    ob_end_clean();
     header('Content-Type: application/json');
     header('Cache-Control: no-cache, must-revalidate');
     
@@ -48,7 +54,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
 
 // Handle POST actions (save_menu, create_menu, delete_menu)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Set JSON headers
+    // Clean any output and set JSON headers
+    ob_end_clean();
     header('Content-Type: application/json');
     header('Cache-Control: no-cache, must-revalidate');
     
@@ -139,7 +146,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // If we get here, it's an invalid request
+ob_end_clean();
 http_response_code(400);
+header('Content-Type: application/json');
 echo json_encode(['success' => false, 'error' => 'Invalid request method']);
-exit;
-?> 
+exit; 

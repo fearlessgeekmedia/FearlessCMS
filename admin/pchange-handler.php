@@ -1,4 +1,14 @@
 <?php
+/**
+ * Password Change Handler for FearlessCMS
+ * Handles user password changes with proper validation and security
+ */
+
+// Define the users file path if not already defined
+if (!isset($usersFile)) {
+    $usersFile = CONFIG_DIR . '/users.json';
+}
+
 // Handle password change
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'change_password') {
     if (!isLoggedIn()) {
@@ -19,18 +29,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         } elseif ($newPassword !== $confirmPassword) {
             $error = 'New passwords do not match';
         } else {
-            $users = json_decode(file_get_contents($usersFile), true);
-            $userIndex = array_search($_SESSION['username'], array_column($users, 'username'));
-
-            if ($userIndex !== false && password_verify($currentPassword, $users[$userIndex]['password'])) {
-                $users[$userIndex]['password'] = password_hash($newPassword, PASSWORD_DEFAULT);
-                file_put_contents($usersFile, json_encode($users, JSON_PRETTY_PRINT));
-                $success = 'Password changed successfully';
-
-                // Log security event
-                error_log("SECURITY: Password changed for user '{$_SESSION['username']}' from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
+            // Load existing users
+            if (!file_exists($usersFile)) {
+                $error = 'Users file not found';
             } else {
-                $error = 'Current password is incorrect';
+                $usersData = file_get_contents($usersFile);
+                if ($usersData === false) {
+                    $error = 'Failed to read users file';
+                } else {
+                    $users = json_decode($usersData, true) ?: [];
+                    $userIndex = array_search($_SESSION['username'], array_column($users, 'username'));
+
+                    if ($userIndex !== false && password_verify($currentPassword, $users[$userIndex]['password'])) {
+                        $users[$userIndex]['password'] = password_hash($newPassword, PASSWORD_DEFAULT);
+                        $users[$userIndex]['password_changed_at'] = date('Y-m-d H:i:s');
+                        $users[$userIndex]['password_changed_by'] = $_SESSION['username'];
+                        
+                        if (file_put_contents($usersFile, json_encode($users, JSON_PRETTY_PRINT)) !== false) {
+                            $success = 'Password changed successfully';
+
+                            // Log security event
+                            error_log("SECURITY: Password changed for user '{$_SESSION['username']}' from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
+                        } else {
+                            $error = 'Failed to update password';
+                        }
+                    } else {
+                        $error = 'Current password is incorrect';
+                    }
+                }
             }
         }
     }

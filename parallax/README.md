@@ -130,22 +130,6 @@ Background zooms in/out during scroll.
 [/parallax_section]
 ```
 
-## Fade-In Effect Parameters
-
-When using `effect="fade-in"`, you can configure additional parameters:
-
-- `fade_start_percent`: When to start fade-in effect (0-100, default: 25)
-- `fade_distance`: Distance over which to complete fade-in (10-100, default: 50)
-- `start_opacity`: Initial opacity of content (0.0-1.0, default: 0.1)
-- `start_offset`: Initial vertical offset in pixels (0-100, default: 20)
-
-Example:
-```
-[parallax_section id="fade-demo" background_image="/demo.jpg" effect="fade-in" fade_start_percent="30" fade_distance="60" start_opacity="0.2" start_offset="30"]
-    Content that fades in gradually
-[/parallax_section]
-```
-
 ## Customization
 
 ### CSS Styling
@@ -157,7 +141,7 @@ The plugin automatically generates CSS classes for each parallax section. You ca
     min-height: 600px;
 }
 
-/* Dark theme styling */
+/* Custom styling for dark theme */
 .dark-theme .parallax-content {
     background: rgba(0,0,0,0.7);
 }
@@ -165,11 +149,6 @@ The plugin automatically generates CSS classes for each parallax section. You ca
 /* Custom spacing for specific sections */
 .custom-spacing .parallax-content {
     padding: 4rem 2rem;
-}
-
-/* Premium theme styling */
-.premium-theme .parallax-content {
-    background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,140,0,0.1));
 }
 ```
 
@@ -187,12 +166,6 @@ const heroSections = document.querySelectorAll('.hero-parallax');
 heroSection.addEventListener('click', function() {
     console.log('Hero section clicked!');
 });
-
-// Apply custom animations to premium themes
-const premiumSections = document.querySelectorAll('.premium-theme');
-premiumSections.forEach(section => {
-    section.style.border = '2px solid gold';
-});
 ```
 
 ## Performance Tips
@@ -200,7 +173,7 @@ premiumSections.forEach(section => {
 1. **Image Optimization**: Use compressed, appropriately sized images
 2. **Limit Sections**: Don't use more than 3-4 parallax sections per page
 3. **Speed Values**: Use lower speed values (0.3-0.5) for better performance
-4. **Mobile Testing**: Test on mobile devices as parallax effects may behave differently
+4. **Mobile Testing**: Test on mobile devices as effects may behave differently
 
 ## Browser Support
 
@@ -246,4 +219,4 @@ For issues or questions, please check the documentation or create an issue in th
 
 ## License
 
-This plugin is part of FearlessCMS and follows the same licensing terms.
+This plugin is part of FearlessCMS and follows the same licensing terms. 

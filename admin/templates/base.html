@@ -8,39 +8,146 @@
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
     <style>
         .fira-code { font-family: 'Fira Code', monospace; }
-
+        
+        /* Skip links for accessibility */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 6px;
+            background: #000;
+            color: #fff;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 4px;
+            z-index: 1000;
+            font-weight: 500;
+            transition: top 0.2s ease;
+        }
+        
+        .skip-link:focus {
+            top: 6px;
+            outline: 3px solid #2563eb;
+            outline-offset: 2px;
+        }
+        
+        /* Enhanced focus indicators */
+        button:focus,
+        input:focus,
+        select:focus,
+        textarea:focus,
+        a:focus {
+            outline: 3px solid #2563eb;
+            outline-offset: 2px;
+            border-color: #2563eb;
+        }
+        
+        /* Screen reader only class */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
     </style>
 </head>
 <body class="bg-gray-100">
-    <nav class="bg-green-600 text-white p-4">
+    <!-- Skip links for accessibility -->
+    <a href="#main-navigation" class="skip-link">Skip to navigation</a>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <nav id="main-navigation" class="bg-green-600 text-white p-4" role="navigation" aria-label="Main navigation">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-4">
-                <h1 class="text-xl font-bold fira-code"><a href="admin">Mission Control</a></h1>
-                <span class="text-sm">Welcome, {{username}}</span>
-                <a href="/" target="_blank">Your site</a>
+                <h1 class="text-xl font-bold fira-code"><a href="admin" aria-label="Go to Mission Control dashboard">Mission Control</a></h1>
+                <span class="text-sm">Welcome, <span aria-label="Current user">{{username}}</span></span>
+                <a href="/" target="_blank" aria-label="View your website (opens in new tab)">Your site</a>
             </div>
-            <div class="flex items-center space-x-4">
-                <a href="?action=manage_users" class="hover:text-green-200">Users</a>
-                <a href="?action=files" class="hover:text-green-200">Files</a>
-                <a href="?action=manage_themes" class="hover:text-green-200">Themes</a>
-                <a href="?action=manage_menus" class="hover:text-green-200">Menus</a>
-                <a href="?action=manage_widgets" class="hover:text-green-200">Widgets</a>
-                <a href="?action=manage_plugins" class="hover:text-green-200">{{plugins_menu_label}}</a>
+            <div class="flex items-center space-x-4" role="menubar">
+                <a href="?action=manage_users" class="hover:text-green-200" role="menuitem">Users</a>
+                <a href="?action=files" class="hover:text-green-200" role="menuitem">Files</a>
+                <a href="?action=manage_themes" class="hover:text-green-200" role="menuitem">Themes</a>
+                <a href="?action=manage_menus" class="hover:text-green-200" role="menuitem">Menus</a>
+                <a href="?action=manage_widgets" class="hover:text-green-200" role="menuitem">Widgets</a>
+                <a href="?action=manage_plugins" class="hover:text-green-200" role="menuitem">{{plugins_menu_label}}</a>
                 {{plugin_nav_items}}
-                <a href="?action=logout" class="hover:text-green-200">Logout</a>
+                <a href="?action=logout" class="hover:text-green-200" role="menuitem">Logout</a>
             </div>
         </div>
     </nav>
+    
+    <!-- Status messages for screen readers -->
+    <div id="status-messages" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+    
     {{error}}
     {{success}}
 
-    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <main id="main-content" class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div class="bg-white shadow rounded-lg p-6">
             <h2 class="text-2xl font-bold mb-6 fira-code">{{page_title}}</h2>
             {{content}}
         </div>
-    </div>
+    </main>
 
-
+    <script>
+        // Accessibility enhancement: Announce page changes to screen readers
+        function announceToScreenReader(message, type = 'polite') {
+            const liveRegion = document.getElementById('status-messages');
+            if (liveRegion) {
+                liveRegion.setAttribute('aria-live', type);
+                liveRegion.textContent = message;
+                
+                // Clear message after announcement
+                setTimeout(() => {
+                    liveRegion.textContent = '';
+                }, 1000);
+            }
+        }
+        
+        // Enhanced focus management
+        document.addEventListener('DOMContentLoaded', function() {
+            // Announce page load to screen readers
+            const pageTitle = document.querySelector('h2');
+            if (pageTitle) {
+                announceToScreenReader(`Loaded ${pageTitle.textContent} page`);
+            }
+            
+            // Improve keyboard navigation
+            const focusableElements = document.querySelectorAll(
+                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            );
+            
+            // Add keyboard shortcuts for common actions
+            document.addEventListener('keydown', function(e) {
+                // Ctrl+S to save (if save button exists)
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    const saveButton = document.querySelector('button[type="submit"]');
+                    if (saveButton && saveButton.textContent.toLowerCase().includes('save')) {
+                        saveButton.click();
+                        announceToScreenReader('Saving content...');
+                    }
+                }
+                
+                // Escape key to close modals
+                if (e.key === 'Escape') {
+                    const modals = document.querySelectorAll('[role="dialog"]');
+                    modals.forEach(modal => {
+                        if (modal.classList.contains('flex') || !modal.classList.contains('hidden')) {
+                            const closeButton = modal.querySelector('button[onclick*="close"], button[onclick*="cancel"]');
+                            if (closeButton) {
+                                closeButton.click();
+                                announceToScreenReader('Modal closed');
+                            }
+                        }
+                    });
+                }
+            });
+        });
+    </script>
 </body>
 </html> 

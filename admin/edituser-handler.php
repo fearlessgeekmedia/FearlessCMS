@@ -1,4 +1,14 @@
 <?php
+/**
+ * Edit User Handler for FearlessCMS
+ * Handles editing users with proper validation and security
+ */
+
+// Define the users file path if not already defined
+if (!isset($usersFile)) {
+    $usersFile = CONFIG_DIR . '/users.json';
+}
+
 // Handle editing user
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'edit_user') {
     if (!isLoggedIn()) {
@@ -16,52 +26,72 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         } elseif (!empty($newPassword) && !validate_password($newPassword)) {
             $error = 'Password must be at least 8 characters with letters and numbers';
         } else {
-            $users = json_decode(file_get_contents($usersFile), true);
-            $userIndex = -1;
-
-            // Find the user
-            foreach ($users as $index => $user) {
-                if ($user['username'] === $username) {
-                    $userIndex = $index;
-                    break;
-                }
-            }
-
-            if ($userIndex === -1) {
-                $error = 'User not found';
+            // Load existing users
+            if (!file_exists($usersFile)) {
+                $error = 'Users file not found';
             } else {
-                // Don't allow changing admin user's role
-                if ($username === 'admin') {
-                    $newRole = 'administrator';
-                }
+                $usersData = file_get_contents($usersFile);
+                if ($usersData === false) {
+                    $error = 'Failed to read users file';
+                } else {
+                    $users = json_decode($usersData, true) ?: [];
+                    $userIndex = -1;
 
-                // Only allow administrators to change roles
-                if (!empty($newRole) && $username !== 'admin') {
-                    $users[$userIndex]['role'] = $newRole;
-                }
-
-                // Update username if provided
-                if (!empty($newUsername) && $newUsername !== $username) {
-                    // Check if new username already exists
-                    foreach ($users as $user) {
-                        if ($user['username'] === $newUsername) {
-                            $error = 'Username already exists';
+                    // Find the user
+                    foreach ($users as $index => $user) {
+                        if ($user['username'] === $username) {
+                            $userIndex = $index;
                             break;
                         }
                     }
-                    if (!isset($error)) {
-                        $users[$userIndex]['username'] = $newUsername;
+
+                    if ($userIndex === -1) {
+                        $error = 'User not found';
+                    } else {
+                        // Don't allow changing admin user's role
+                        if ($username === 'admin') {
+                            $newRole = 'administrator';
+                        }
+
+                        // Only allow administrators to change roles
+                        if (!empty($newRole) && $username !== 'admin') {
+                            $users[$userIndex]['role'] = $newRole;
+                        }
+
+                        // Update username if provided
+                        if (!empty($newUsername) && $newUsername !== $username) {
+                            // Check if new username already exists
+                            foreach ($users as $user) {
+                                if ($user['username'] === $newUsername) {
+                                    $error = 'Username already exists';
+                                    break;
+                                }
+                            }
+                            if (!isset($error)) {
+                                $users[$userIndex]['username'] = $newUsername;
+                            }
+                        }
+
+                        // Update password if provided
+                        if (!empty($newPassword)) {
+                            $users[$userIndex]['password'] = password_hash($newPassword, PASSWORD_DEFAULT);
+                        }
+
+                        if (!isset($error)) {
+                            // Add metadata
+                            $users[$userIndex]['updated_at'] = date('Y-m-d H:i:s');
+                            $users[$userIndex]['updated_by'] = $_SESSION['username'];
+                            
+                            if (file_put_contents($usersFile, json_encode($users, JSON_PRETTY_PRINT)) !== false) {
+                                $success = 'User "' . htmlspecialchars($username) . '" updated successfully';
+                                
+                                // Log security event
+                                error_log("SECURITY: User '{$username}' updated by '{$_SESSION['username']}' from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
+                            } else {
+                                $error = 'Failed to update user';
+                            }
+                        }
                     }
-                }
-
-                // Update password if provided
-                if (!empty($newPassword)) {
-                    $users[$userIndex]['password'] = password_hash($newPassword, PASSWORD_DEFAULT);
-                }
-
-                if (!isset($error)) {
-                    file_put_contents($usersFile, json_encode($users, JSON_PRETTY_PRINT));
-                    $success = 'User updated successfully';
                 }
             }
         }

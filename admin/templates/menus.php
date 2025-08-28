@@ -86,10 +86,95 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+// Load Sortable.js with fallback
+(function loadSortable() {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js';
+    script.onload = function() {
+        console.log('Sortable.js loaded successfully from primary CDN');
+    };
+    script.onerror = function() {
+        console.warn('Primary CDN failed, trying fallback...');
+        const fallbackScript = document.createElement('script');
+        fallbackScript.src = 'https://unpkg.com/sortablejs@1.15.0/Sortable.min.js';
+        fallbackScript.onload = function() {
+            console.log('Sortable.js loaded successfully from fallback CDN');
+        };
+        fallbackScript.onerror = function() {
+            console.error('Both CDNs failed to load Sortable.js');
+        };
+        document.head.appendChild(fallbackScript);
+    };
+    document.head.appendChild(script);
+})();
+</script>
 <script>
 let currentMenu = null;
 let menuData = { items: [] };
+let sortableInstance = null;
+
+// Check if Sortable is available
+function isSortableAvailable() {
+    return typeof Sortable !== 'undefined';
+}
+
+// Initialize Sortable with error handling
+function initSortable() {
+    const container = document.getElementById('menu-items');
+    if (!container) {
+        console.warn('Menu items container not found for Sortable initialization');
+        return;
+    }
+    
+    // Check if Sortable is available
+    if (!isSortableAvailable()) {
+        console.warn('Sortable library not loaded, retrying in 500ms...');
+        // Retry after a delay
+        setTimeout(() => {
+            if (isSortableAvailable()) {
+                initSortable();
+            } else {
+                console.warn('Sortable library still not loaded, drag-and-drop functionality disabled');
+                // Show a user-friendly message
+                const warningDiv = document.createElement('div');
+                warningDiv.className = 'text-yellow-600 text-sm p-2 bg-yellow-50 border border-yellow-200 rounded mb-2';
+                warningDiv.innerHTML = '⚠️ Drag-and-drop reordering is temporarily unavailable. Please refresh the page to try again.';
+                container.parentNode.insertBefore(warningDiv, container);
+            }
+        }, 500);
+        return;
+    }
+    
+    try {
+        // Destroy existing instance if it exists
+        if (sortableInstance) {
+            sortableInstance.destroy();
+        }
+        
+        sortableInstance = new Sortable(container, {
+            animation: 150,
+            handle: '.cursor-move',
+            onEnd: function(evt) {
+                const items = Array.from(container.children).map(div => {
+                    const id = div.getAttribute('data-id');
+                    return menuData.items.find(item => item.id === id);
+                }).filter(Boolean);
+                menuData.items = items;
+                updatePreview();
+            }
+        });
+        
+        console.log('Sortable initialized successfully');
+    } catch (error) {
+        console.error('Error initializing Sortable:', error);
+        // Show user-friendly error message
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'text-red-600 text-sm p-2 bg-red-50 border border-red-200 rounded mb-2';
+        errorDiv.innerHTML = '❌ Failed to initialize drag-and-drop functionality. Menu editing will still work.';
+        container.parentNode.insertBefore(errorDiv, container);
+    }
+}
 
 function showNewMenuModal() {
     document.getElementById('new-menu-modal').classList.remove('hidden');
@@ -112,10 +197,36 @@ function loadMenu(menuId) {
     document.getElementById('menu-preview').style.display = 'block';
     document.getElementById('delete-menu-btn').style.display = 'block';
 
+    // Show loading state
+    const menuItemsContainer = document.getElementById('menu-items');
+    menuItemsContainer.innerHTML = '<div class="text-center py-4 text-gray-500">Loading menu...</div>';
+
     // Load menu data from server
     fetch(`../menu-ajax-handler.php?action=load_menu&menu_id=${menuId}`)
-        .then(response => response.json())
-        .then(data => {
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.text(); // Get response as text first for debugging
+        })
+        .then(text => {
+            console.log('Raw response:', text); // Debug: log the raw response
+            
+            // Try to parse as JSON
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch (parseError) {
+                console.error('JSON parse error:', parseError);
+                console.error('Response text:', text);
+                throw new Error('Invalid JSON response from server');
+            }
+            
+            // Check if the response indicates an error
+            if (data.success === false) {
+                throw new Error(data.error || 'Unknown error from server');
+            }
+            
             menuData = data;
             // Ensure items array exists and has IDs
             if (!menuData.items) {
@@ -129,11 +240,31 @@ function loadMenu(menuId) {
             document.getElementById('menu-class').value = menuData.menu_class || '';
             renderMenuItems();
             updatePreview();
-            initSortable();
+            
+            // Initialize Sortable with a small delay to ensure the library is fully loaded
+            setTimeout(() => {
+                initSortable();
+            }, 100);
+            
+            console.log('Menu loaded successfully:', menuData);
         })
         .catch(error => {
             console.error('Error loading menu:', error);
-            alert('Failed to load menu');
+            
+            // Show user-friendly error message
+            const menuItemsContainer = document.getElementById('menu-items');
+            menuItemsContainer.innerHTML = `
+                <div class="text-center py-4">
+                    <div class="text-red-600 mb-2">Failed to load menu</div>
+                    <div class="text-sm text-gray-500">${error.message}</div>
+                    <button onclick="loadMenu('${menuId}')" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                        Retry
+                    </button>
+                </div>
+            `;
+            
+            // Don't show alert - it's annoying and the error is already displayed
+            // alert('Failed to load menu');
         });
 }
 
@@ -225,24 +356,6 @@ function renderSubItems(item) {
             </div>
         </div>
     `).join('');
-}
-
-function initSortable() {
-    const container = document.getElementById('menu-items');
-    if (!container) return;
-    
-    new Sortable(container, {
-        animation: 150,
-        handle: '.cursor-move',
-        onEnd: function(evt) {
-            const items = Array.from(container.children).map(div => {
-                const id = div.getAttribute('data-id');
-                return menuData.items.find(item => item.id === id);
-            }).filter(Boolean);
-            menuData.items = items;
-            updatePreview();
-        }
-    });
 }
 
 function addSubMenuItem(parentId) {

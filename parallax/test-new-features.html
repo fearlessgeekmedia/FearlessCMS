@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parallax Plugin - New Features Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .test-section {
+            margin: 40px 0;
+            padding: 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        
+        .test-section h3 {
+            color: #333;
+            margin-top: 0;
+        }
+        
+        .code-block {
+            background: #f4f4f4;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+        
+        .feature-highlight {
+            background: #e8f5e8;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Parallax Plugin - New Features Test</h1>
+        <p>This page demonstrates the new CSS class and custom ID features added to the parallax shortcode.</p>
+        
+        <div class="test-section">
+            <h3>1. CSS Class Support</h3>
+            <p>The new <code>class</code> attribute allows you to add custom CSS classes to parallax sections:</p>
+            
+            <div class="code-block">[parallax_section id="hero-section" background_image="/uploads/hero-bg.jpg" speed="0.3" effect="scroll" class="hero-parallax dark-theme custom-spacing"]
+    <div style="text-align: center; padding: 150px 0; color: white;">
+        <h1>Welcome to Our Website</h1>
+        <p>Experience stunning parallax effects</p>
+    </div>
+[/parallax_section]</div>
+            
+            <div class="feature-highlight">
+                <strong>Benefits:</strong>
+                <ul>
+                    <li>Add multiple CSS classes separated by spaces</li>
+                    <li>Customize styling for specific sections</li>
+                    <li>Create theme variations (dark-theme, light-theme, etc.)</li>
+                    <li>Apply responsive design classes</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>2. Custom ID Support</h3>
+            <p>The new <code>custom_id</code> attribute provides an additional identifier for JavaScript and CSS targeting:</p>
+            
+            <div class="code-block">[parallax_section id="contact-section" background_image="/uploads/contact-bg.jpg" speed="0.6" effect="fixed" class="contact-section" custom_id="main-contact-form"]
+    <div style="text-align: center; padding: 100px 0;">
+        <h2>Get In Touch</h2>
+        <p>Ready to start your next project?</p>
+    </div>
+[/parallax_section]</div>
+            
+            <div class="feature-highlight">
+                <strong>Benefits:</strong>
+                <ul>
+                    <li>Separate from the required <code>id</code> attribute</li>
+                    <li>Stored as a <code>data-custom-id</code> attribute</li>
+                    <li>Perfect for JavaScript event handling</li>
+                    <li>CSS targeting without conflicting with existing IDs</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>3. Combined Usage Example</h3>
+            <p>You can use both features together for maximum flexibility:</p>
+            
+            <div class="code-block">[parallax_section id="services" background_image="/uploads/services-bg.jpg" speed="0.4" effect="fade-in" class="services-section light-overlay premium-theme" custom_id="main-services-grid"]
+    <div style="text-align: center; padding: 120px 0;">
+        <h2>Our Services</h2>
+        <div class="services-grid">
+            <div class="service-card">Web Design</div>
+            <div class="service-card">Development</div>
+            <div class="service-card">Consulting</div>
+        </div>
+    </div>
+[/parallax_section]</div>
+        </div>
+        
+        <div class="test-section">
+            <h3>4. CSS Styling Examples</h3>
+            <p>Here's how you can use the custom classes in your CSS:</p>
+            
+            <div class="code-block">/* Custom styling for hero parallax sections */
+.hero-parallax {
+    min-height: 600px;
+}
+
+/* Dark theme styling */
+.dark-theme .parallax-content {
+    background: rgba(0,0,0,0.7);
+}
+
+/* Custom spacing for specific sections */
+.custom-spacing .parallax-content {
+    padding: 4rem 2rem;
+}
+
+/* Premium theme styling */
+.premium-theme .parallax-content {
+    background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,140,0,0.1));
+}</div>
+        </div>
+        
+        <div class="test-section">
+            <h3>5. JavaScript Usage Examples</h3>
+            <p>Target parallax sections using the new attributes:</p>
+            
+            <div class="code-block">// Target by custom ID
+const heroSection = document.querySelector('[data-custom-id="main-hero-section"]');
+
+// Target by custom class
+const heroSections = document.querySelectorAll('.hero-parallax');
+
+// Add custom event listeners
+heroSection.addEventListener('click', function() {
+    console.log('Hero section clicked!');
+});
+
+// Apply custom animations to premium themes
+const premiumSections = document.querySelectorAll('.premium-theme');
+premiumSections.forEach(section => {
+    section.style.border = '2px solid gold';
+});</div>
+        </div>
+        
+        <div class="warning">
+            <strong>Important Notes:</strong>
+            <ul>
+                <li>The <code>id</code> attribute is still required and must be unique</li>
+                <li>The <code>class</code> attribute supports multiple classes separated by spaces</li>
+                <li>The <code>custom_id</code> attribute is stored as <code>data-custom-id</code> in the HTML</li>
+                <li>Custom classes are combined with the default generated classes</li>
+                <li>All existing parallax functionality remains unchanged</li>
+            </ul>
+        </div>
+        
+        <div class="test-section">
+            <h3>6. Migration Guide</h3>
+            <p>Existing parallax shortcodes will continue to work without modification. To add the new features:</p>
+            
+            <div class="code-block">// Before (still works)
+[parallax_section id="section1" background_image="/image.jpg" speed="0.5"]
+    Content here
+[/parallax_section]
+
+// After (with new features)
+[parallax_section id="section1" background_image="/image.jpg" speed="0.5" class="my-custom-class" custom_id="unique-identifier"]
+    Content here
+[/parallax_section]</div>
+        </div>
+        
+        <div class="feature-highlight">
+            <h3>🎉 New Features Summary</h3>
+            <ul>
+                <li><strong>CSS Class Support:</strong> Add custom styling classes to parallax sections</li>
+                <li><strong>Custom ID Support:</strong> Additional identifiers for JavaScript and CSS targeting</li>
+                <li><strong>Backward Compatible:</strong> All existing shortcodes continue to work</li>
+                <li><strong>Enhanced Flexibility:</strong> More customization options for developers</li>
+                <li><strong>Better Maintainability:</strong> Semantic class names for cleaner code</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html> 
