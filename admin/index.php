@@ -107,7 +107,9 @@ require_once __DIR__ . '/widgets-handler.php';
 // require_once __DIR__ . '/newuser-handler.php';
 // require_once __DIR__ . '/edituser-handler.php';
 // require_once __DIR__ . '/deluser-handler.php';
-require_once __DIR__ . '/updater-handler.php';
+// Updater handler - only include when needed
+// // Updater handler - only include when needed
+// require_once __DIR__ . '/updater-handler.php';
 
 // Check if a page was just created and redirect to editor (BEFORE any other includes)
 error_log("DEBUG: Checking session variables - just_created_page: " . ($_SESSION['just_created_page'] ?? 'not set') . ", just_created_message: " . ($_SESSION['just_created_message'] ?? 'not set'));
@@ -888,12 +890,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         exit;
     }
 
-    // Validate CSRF token for all other POST actions EXCEPT delete operations
-    if (!in_array($postAction, ['delete_content', 'delete_page']) && !validate_csrf_token()) {
+    // Validate CSRF token for all other POST actions EXCEPT delete operations and updates
+    if (!in_array($postAction, ['delete_content', 'delete_page', 'updates']) && !validate_csrf_token()) {
         error_log("CSRF token validation failed for action: " . $postAction);
         $error = 'Invalid security token. Please refresh the page and try again.';
         $action = 'dashboard'; // Redirect to dashboard on CSRF failure
     } else {
+        // Debug logging for updates action
+        if ($postAction === 'updates') {
+            error_log("Updates action detected - bypassing main admin CSRF validation");
+            error_log("POST data for updates: " . print_r($_POST, true));
+        }
+        
         // Check if this is a file manager action
     if (in_array($postAction, ['upload_file', 'delete_file', 'bulk_delete_files', 'rename_file'])) {
         $action = 'files'; // Set the action to 'files' to use the file manager's render callback
@@ -1565,7 +1573,9 @@ $template_map = [
     // 'files' => 'file_manager.php', // Handled by admin section system
     'manage_users' => 'users.php',
     'manage_roles' => 'role-management.html',
-    'manage_widgets' => 'widgets.php'
+    'manage_widgets' => 'widgets.php',
+    'updates' => 'updater.php',
+    'updates' => 'updater.php'
 ];
 
 // Get the correct template file name

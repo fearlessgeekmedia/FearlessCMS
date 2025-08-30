@@ -72,9 +72,8 @@ With these policies in place, FearlessCMS seeks to create a platform that is lig
 
 ## Quick Start
 
-### Admin Access
-- Default admin password: `changeme123`
-- Please change this password immediately after first login
+* Note: At this time, this is only being tested on Linux, Unix-like systems, and MacOS. 
+Windows is not supported, but may be in the future. But this will likely work with Windows Subsystem for Linux. *
 
 ### Installation
 
@@ -107,7 +106,7 @@ nix-shell -p php81 --run "export FCMS_DEBUG=true && ./serve.sh"
 ```
 
 **Features:**
-- ✅ **Zero maintenance** - automatically works with new plugins/themes
+- ✅ **Zero maintenance** - automatically works with most new plugins/themes
 - ✅ **Full compatibility** - whatever renders in browser gets exported
 - ✅ **Deploy anywhere** - Netlify, Vercel, GitHub Pages, AWS S3, etc.
 - ✅ **Simple commands** - just run the script and export
