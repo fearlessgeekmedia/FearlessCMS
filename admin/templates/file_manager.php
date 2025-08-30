@@ -455,7 +455,7 @@ $currentPageItems = array_slice($files, $offset, $itemsPerPage);
                 <form id="bulkDeleteForm" method="POST" class="inline-block" data-no-ajax="true">
                     <input type="hidden" name="action" value="bulk_delete_files">
                     <input type="hidden" name="selected_files" id="bulkDeleteFiles">
-                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(generate_csrf_token()); ?>">
+                    <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
                     <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">Delete Selected</button>
                 </form>
                 <button type="button" onclick="closeBulkDeleteModal()" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm">Cancel</button>

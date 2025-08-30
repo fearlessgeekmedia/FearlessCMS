@@ -3,7 +3,7 @@ require_once PROJECT_ROOT . '/includes/ThemeManager.php';
 $themeManager = new ThemeManager();
 
 // Include admin functions needed for admin sections
-require_once PROJECT_ROOT . '/admin/includes/filemanager.php';
+// require_once PROJECT_ROOT . '/admin/includes/filemanager.php'; // Temporarily disabled to fix header issues
 
 // includes/plugins.php
 
@@ -167,10 +167,15 @@ $GLOBALS['fcms_admin_sections'] = [];
         }
     ]);
 
+    // File manager admin section
     fcms_register_admin_section('files', [
         'label' => 'Files',
         'menu_order' => 30,
-        'render_callback' => 'fcms_render_file_manager'
+        'render_callback' => function() {
+            // Include file manager functions when needed
+            require_once PROJECT_ROOT . '/admin/includes/filemanager.php';
+            include PROJECT_ROOT . '/admin/templates/files.php';
+        }
     ]);
 
     fcms_register_admin_section('manage_cache_settings', [

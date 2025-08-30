@@ -496,22 +496,7 @@ if (strpos($pageContentHtml, '{') !== false || strpos($pageContentHtml, '}') !==
     error_log("CONTENT HAS CURLY BRACES: " . substr($pageContentHtml, 0, 200));
 }
 
-// Debug: Check if content contains parallax shortcodes
-if (strpos($pageContentHtml, '[parallax_section') !== false) {
-    error_log("CONTENT CONTAINS PARALLAX SHORTCODES");
-    error_log("Content before filter: " . substr($pageContentHtml, 0, 500));
-} else {
-    error_log("Content does not contain parallax shortcodes");
-}
-
 // Content filters already applied before markdown processing
-
-// Debug: Check content after filter
-if (strpos($pageContentHtml, '[parallax_section') !== false) {
-    error_log("Content still contains parallax shortcodes after filter - plugin not working!");
-} else {
-    error_log("Content processed successfully by plugins");
-}
 
 // --- Theme and template ---
 $themeManager = new ThemeManager();

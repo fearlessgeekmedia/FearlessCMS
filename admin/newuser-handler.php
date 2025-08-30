@@ -1,4 +1,14 @@
 <?php
+/**
+ * New User Handler for FearlessCMS
+ * Handles adding new users with proper validation and security
+ */
+
+// Define the users file path if not already defined
+if (!isset($usersFile)) {
+    $usersFile = CONFIG_DIR . '/users.json';
+}
+
 // Handle adding new user
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_user') {
     if (!isLoggedIn()) {
@@ -18,22 +28,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         } elseif (!validate_password($newUserPassword)) {
             $error = 'Password must be at least 8 characters with letters and numbers';
         } else {
-            $users = json_decode(file_get_contents($usersFile), true);
-
-            // Check if username already exists
-            if (array_search($newUsername, array_column($users, 'username')) !== false) {
-                $error = 'Username already exists';
+            // Load existing users
+            if (!file_exists($usersFile)) {
+                $users = [];
             } else {
-                $users[] = [
-                    'username' => $newUsername,
-                    'password' => password_hash($newUserPassword, PASSWORD_DEFAULT),
-                    'role' => 'editor' // Default role for new users
-                ];
-                file_put_contents($usersFile, json_encode($users, JSON_PRETTY_PRINT));
-                $success = 'User added successfully';
+                $usersData = file_get_contents($usersFile);
+                if ($usersData === false) {
+                    $error = 'Failed to read users file';
+                } else {
+                    $users = json_decode($usersData, true) ?: [];
+                }
+            }
+            
+            if (!isset($error)) {
+                // Check if username already exists
+                if (array_search($newUsername, array_column($users, 'username')) !== false) {
+                    $error = 'Username already exists';
+                } else {
+                    $users[] = [
+                        'id' => uniqid(),
+                        'username' => $newUsername,
+                        'password' => password_hash($newUserPassword, PASSWORD_DEFAULT),
+                        'role' => 'editor', // Default role for new users
+                        'created_at' => date('Y-m-d H:i:s'),
+                        'created_by' => $_SESSION['username']
+                    ];
+                    
+                    if (file_put_contents($usersFile, json_encode($users, JSON_PRETTY_PRINT)) !== false) {
+                        $success = 'User "' . htmlspecialchars($newUsername) . '" added successfully';
 
-                // Log security event
-                error_log("SECURITY: User '{$newUsername}' created by '{$_SESSION['username']}' from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
+                        // Log security event
+                        error_log("SECURITY: User '{$newUsername}' created by '{$_SESSION['username']}' from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
+                    } else {
+                        $error = 'Failed to add user';
+                    }
+                }
             }
         }
     }
