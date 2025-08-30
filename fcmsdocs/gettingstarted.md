@@ -7,6 +7,7 @@ Welcome to FearlessCMS! This guide will walk you through the installation and in
 - [System Requirements](#system-requirements)
 - [Installation Methods](#installation-methods)
 - [Initial Setup](#initial-setup)
+- [Content Editing Modes](#content-editing-modes)
 - [First Steps](#first-steps)
 - [Configuration](#configuration)
 - [Troubleshooting](#troubleshooting)
@@ -119,6 +120,30 @@ php install.php --create-admin=admin --password=securepassword123
 ```
 
 **Security Note**: Use a strong, unique password!
+
+## ✍️ Content Editing Modes
+
+FearlessCMS supports **dual-mode content editing** to accommodate different user preferences and use cases:
+
+### HTML Mode (Default)
+- **Rich WYSIWYG Editor** - Full-featured visual editor with formatting toolbar
+- **Code View Toggle** - Switch to raw HTML editing when needed
+- **Advanced Layout Control** - Perfect for complex layouts and feature cards
+- **No Escaping Issues** - Shortcodes work perfectly without special characters
+
+### Markdown Support
+- **External Markdown Editing** - Use your preferred Markdown editor (VS Code, Typora, etc.)
+- **Version Control Friendly** - Easy to track changes and collaborate
+- **Lightweight** - Fast editing for simple content
+- **Backwards Compatible** - All existing Markdown content continues to work
+
+### Key Benefits
+- **User Choice** - Choose the content creation method that works best for your workflow
+- **Backwards Compatibility** - Existing content works without conversion
+- **Flexible Workflow** - Create HTML in CMS or upload Markdown from external editors
+- **Mixed Content Support** - Both formats can coexist in the same site
+
+For detailed information about content editing modes, see the [HTML Editor Guide](html-editor-guide.md).
 
 ## 🎯 First Steps
 

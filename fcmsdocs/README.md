@@ -34,22 +34,30 @@ Welcome to the FearlessCMS documentation. Here you will find guides and referenc
 
 ## 🆕 Recent Updates
 
-### HTML Editor System (Latest)
-FearlessCMS has transitioned from Markdown to HTML editing, providing:
+### HTML Editing with Markdown Support (Latest)
+FearlessCMS now features **HTML content creation** with **Markdown content compatibility**:
+
+- **HTML Editor (Default)** - Rich WYSIWYG editor with code view
+- **Markdown Support** - Can read and display Markdown files created externally
+- **Backwards Compatibility** - All existing Markdown content continues to work
+- **Flexible Workflow** - Create HTML in CMS or upload Markdown from external editors
+
+### HTML Editor System
+The new HTML editor provides:
 - **Dual-mode editing** - Rich WYSIWYG + Code view
 - **Better layout control** - Preserves feature cards and complex structures
 - **No escaping issues** - Shortcodes work perfectly
 - **Export support** - Full static site generation with parallax effects
 
 ### Export System Enhancements
-- **HTML content support** - No more Markdown conversion
+- **Dual-mode support** - Works with both HTML and Markdown content
 - **Parallax plugin integration** - Automatic CSS/JS generation
 - **Asset management** - Smart inclusion of required resources
 - **Performance optimized** - Production-ready static sites
 
 ## 🚀 Quick Start
 
-1. **Read the [HTML Editor Guide](html-editor-guide.md)** to understand the new system
+1. **Read the [HTML Editor Guide](html-editor-guide.md)** to understand the dual-mode system
 2. **Check [Installation](install.md)** for setup instructions
 3. **Explore [Theme Development](theme-development-index.md)** for customization
 4. **Review [Plugin Development](plugin-development-guide.md)** for extensions

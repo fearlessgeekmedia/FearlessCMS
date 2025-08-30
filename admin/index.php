@@ -18,6 +18,11 @@ require_once dirname(__DIR__) . '/includes/config.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
 require_once dirname(__DIR__) . '/includes/session.php';
 
+// Load admin path from config early
+$configFile = CONFIG_DIR . '/config.json';
+$config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
+$adminPath = $config['admin_path'] ?? 'admin';
+
 // Check for serve-js.php route
 if ($_SERVER['REQUEST_URI'] === '/' . $adminPath . '/serve-js.php') {
     require_once __DIR__ . '/serve-js.php';
@@ -460,10 +465,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'manage_menus') {
 
 
 
-// Load admin path from config
-$configFile = CONFIG_DIR . '/config.json';
-$config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
-$adminPath = $config['admin_path'] ?? 'admin';
+// Admin path already loaded at the top of the file
 
 // Validate session for security
 if (isset($_SESSION['username']) && getenv('FCMS_DEBUG') === 'true') {
@@ -819,7 +821,7 @@ if (
         
         $title = '';
         $editorMode = 'markdown'; // Default to markdown
-        $currentTemplate = 'page'; // Default to page template
+        $currentTemplate = 'page-with-sidebar'; // Default to page template
         if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $contentData, $matches)) {
             $metadata = json_decode($matches[1], true);
             if ($metadata) {
@@ -1071,6 +1073,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     // Check if this is a widget action
     else if (in_array($postAction, ['save_widget', 'delete_widget', 'add_sidebar', 'delete_sidebar', 'reorder_widgets', 'save_sidebar'])) {
         error_log("Admin index.php - Widget action detected: " . $postAction);
+        error_log("Admin index.php - POST action: " . $postAction);
+        error_log("Admin index.php - All POST data: " . print_r($_POST, true));
+        
+        // For AJAX requests, handle them directly with the widgets handler
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+            error_log("Admin index.php - Widget AJAX request detected, routing to widgets handler");
+            error_log("Admin index.php - POST data: " . print_r($_POST, true));
+            error_log("Admin index.php - HTTP_X_REQUESTED_WITH: " . ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? 'not set'));
+            
+            // Clear any output buffer before including the handler
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            
+            require_once __DIR__ . '/widgets-handler.php';
+            exit;
+        }
+        
         $action = 'manage_widgets'; // Set the action to 'manage_widgets' to use the widgets handler
     }
     // Check if this is a plugin action
@@ -1353,7 +1373,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $content = $_POST['text_content'] ?? $_POST['editor_content'] ?? $_POST['content'] ?? '';
         $pageTitle = $_POST['title'] ?? '';
         $parentPage = $_POST['parent'] ?? '';
-        $template = $_POST['template'] ?? 'page';
+        $template = $_POST['template'] ?? 'page-with-sidebar';
         $editorMode = $_POST['editor_mode'] ?? 'easy';
         
 

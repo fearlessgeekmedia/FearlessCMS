@@ -17,8 +17,27 @@ foreach ($contentFiles as $file) {
     $pages[basename($file, '.md')] = $pageTitle;
 }
 
-// Get available templates
-$templates = ['page', 'home', 'blog', 'documentation'];
+// Get available templates dynamically from the active theme
+$templates = [];
+$templateDir = PROJECT_ROOT . '/themes/' . ($themeManager->getActiveTheme() ?? 'default') . '/templates';
+if (is_dir($templateDir)) {
+    foreach (glob($templateDir . '/*.html') as $template) {
+        $templateName = basename($template, '.html');
+        if ($templateName !== '404' && !str_ends_with($template, '.html.mod')) {
+            $templates[] = $templateName;
+        }
+    }
+}
+
+// If no templates found, fall back to defaults
+if (empty($templates)) {
+    $templates = ['page-with-sidebar', 'page', 'home', 'blog', 'documentation'];
+}
+
+// Ensure page-with-sidebar is always first in the list
+if (in_array('page-with-sidebar', $templates)) {
+    $templates = array_merge(['page-with-sidebar'], array_filter($templates, function($t) { return $t !== 'page-with-sidebar'; }));
+}
 ?>
 
 <div class="bg-white shadow rounded-lg p-6">
@@ -66,7 +85,9 @@ $templates = ['page', 'home', 'blog', 'documentation'];
                 <label class="block mb-2 text-sm font-medium text-gray-700">Template</label>
                 <select name="template" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     <?php foreach ($templates as $template): ?>
-                        <option value="<?php echo htmlspecialchars($template); ?>"><?php echo ucfirst(htmlspecialchars($template)); ?></option>
+                        <option value="<?php echo htmlspecialchars($template); ?>" <?php echo $template === 'page-with-sidebar' ? 'selected' : ''; ?>>
+                            <?php echo ucfirst(htmlspecialchars($template)); ?>
+                        </option>
                     <?php endforeach; ?>
                 </select>
             </div>

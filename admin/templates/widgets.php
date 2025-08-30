@@ -15,7 +15,7 @@ $sidebar_selection = '<select id="sidebar-select" class="w-full px-3 py-2 border
 $sidebar_selection .= '<option value="">Select a sidebar...</option>';
 foreach ($widgets as $sidebarId => $sidebar) {
     $selected = ($sidebarId === $current_sidebar) ? 'selected' : '';
-    $sidebar_selection .= '<option value="' . htmlspecialchars($sidebarId) . '" ' . $selected . '>' . htmlspecialchars($sidebar['name'] ?? $sidebarId) . '</option>';
+    $sidebar_selection .= '<option value="' . htmlspecialchars($sidebarId) . '" ' . $selected . '>' . htmlspecialchars($sidebar['id'] ?? $sidebarId) . '</option>';
 }
 $sidebar_selection .= '</select>';
 
@@ -57,9 +57,9 @@ if (!empty($current_sidebar) && isset($widgets[$current_sidebar])) {
     if (empty($sidebarWidgets)) {
         $widget_list = '<p class="text-gray-500 text-center py-8">No widgets in this sidebar yet. Add one above!</p>';
     } else {
-        foreach ($sidebarWidgets as $index => $widget) {
+        foreach ($sidebarWidgets as $widgetId => $widget) {
             error_log("Widgets template - Processing widget: " . print_r($widget, true));
-            $widget_list .= '<div class="widget-item" data-id="' . htmlspecialchars($widget['id'] ?? $index) . '" data-content="' . htmlspecialchars($widget['content'] ?? '') . '" data-classes="' . htmlspecialchars($widget['classes'] ?? '') . '">';
+            $widget_list .= '<div class="widget-item" data-id="' . htmlspecialchars($widget['id'] ?? $widgetId) . '" data-content="' . htmlspecialchars($widget['content'] ?? '') . '" data-classes="' . htmlspecialchars($widget['classes'] ?? '') . '">';
             $widget_list .= '<div class="widget-header">';
             $widget_list .= '<div class="widget-drag-handle">';
             $widget_list .= '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">';
@@ -71,8 +71,8 @@ if (!empty($current_sidebar) && isset($widgets[$current_sidebar])) {
             $widget_list .= '</div>';
             $widget_list .= '<div class="widget-content">' . htmlspecialchars(substr($widget['content'] ?? '', 0, 100)) . (strlen($widget['content'] ?? '') > 100 ? '...' : '') . '</div>';
             $widget_list .= '<div class="widget-actions">';
-            $widget_list .= '<button class="edit-widget" data-id="' . htmlspecialchars($widget['id'] ?? $index) . '">Edit</button>';
-            $widget_list .= '<button class="delete-widget" data-id="' . htmlspecialchars($widget['id'] ?? $index) . '">Delete</button>';
+            $widget_list .= '<button class="edit-widget" data-id="' . htmlspecialchars($widget['id'] ?? $widgetId) . '">Edit</button>';
+            $widget_list .= '<button class="delete-widget" data-id="' . htmlspecialchars($widget['id'] ?? $widgetId) . '">Delete</button>';
             $widget_list .= '</div>';
             $widget_list .= '</div>';
         }
@@ -468,6 +468,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     sidebarId: sidebarId,
                     action: 'delete_widget'
                 });
+                console.log('Sending request to:', window.location.href);
 
                 fetch(window.location.href, {
                     method: 'POST',
@@ -476,13 +477,25 @@ document.addEventListener('DOMContentLoaded', function() {
                     },
                     body: formData
                 })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Delete response:', data);
-                    if (data.success) {
-                        e.target.closest('.widget-item').remove();
-                    } else {
-                        showError(data.error || 'Failed to delete widget');
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', response.headers);
+                    return response.text();
+                })
+                .then(responseText => {
+                    console.log('Raw response:', responseText);
+                    try {
+                        const data = JSON.parse(responseText);
+                        console.log('Parsed response:', data);
+                        if (data.success) {
+                            e.target.closest('.widget-item').remove();
+                        } else {
+                            showError(data.error || 'Failed to delete widget');
+                        }
+                    } catch (error) {
+                        console.error('JSON parse error:', error);
+                        console.error('Response was:', responseText);
+                        showError('Server returned invalid response: ' + responseText.substring(0, 100));
                     }
                 })
                 .catch(error => {

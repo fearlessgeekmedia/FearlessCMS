@@ -13,7 +13,7 @@ if (is_dir($templateDir)) {
 }
 
 // Get current template from metadata
-$currentTemplate = 'page'; // Default template
+$currentTemplate = 'page-with-sidebar'; // Default template
 $contentWithoutMetadata = $contentData;
 if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $contentData, $matches)) {
     $metadata = json_decode($matches[1], true);

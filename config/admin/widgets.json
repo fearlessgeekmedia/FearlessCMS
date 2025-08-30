@@ -1,17 +1,20 @@
 {
     "main": {
-        "name": "Main Sidebar",
-        "widgets": [
-            {
+        "id": "main",
+        "classes": "main-sidebar",
+        "widgets": {}
+    },
+    "right-sidebar": {
+        "id": "right-sidebar",
+        "classes": "right-sidebar",
+        "widgets": {
+            "widget-68b285a6893b0": {
+                "id": "widget-68b285a6893b0",
+                "title": "test widget",
                 "type": "text",
-                "title": "About Us",
-                "content": "Welcome to our website! We're dedicated to providing the best service to our customers."
-            },
-            {
-                "type": "text",
-                "title": "Contact Info",
-                "content": "Email: info@example.com<br>Phone: (555) 123-4567"
+                "content": "test",
+                "classes": ""
             }
-        ]
+        }
     }
 } 

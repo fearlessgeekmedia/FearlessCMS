@@ -29,7 +29,7 @@ $previewFile = $previewDir . '/' . $filename;
 // Create metadata
 $metadata = [
     'title' => $data['title'],
-    'template' => $data['template'] ?? 'page'
+            'template' => $data['template'] ?? 'page-with-sidebar'
 ];
 
 // Format content with metadata
