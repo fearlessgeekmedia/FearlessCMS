@@ -188,16 +188,6 @@ $GLOBALS['fcms_admin_sections'] = [];
         }
     ]);
 
-    fcms_register_admin_section('updates', [
-        'label' => 'Updates',
-        'menu_order' => 75,
-        'render_callback' => function() {
-            // Include updater handler for logic
-            require_once PROJECT_ROOT . '/admin/updater-handler.php';
-            include PROJECT_ROOT . '/admin/templates/updater.php';
-        }
-    ]);
-
     fcms_register_admin_section('manage_cache_settings', [
         'label' => 'Cache Settings',
         'menu_order' => 80,
