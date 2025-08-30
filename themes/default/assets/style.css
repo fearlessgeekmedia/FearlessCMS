@@ -1394,3 +1394,125 @@ h2 + p:has(.btn-secondary) {
         line-height: 1.5 !important;
     }
 }
+
+/* Sidebar Layout Styles */
+.page-layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.main-content {
+    min-width: 0; /* Prevents content from overflowing grid */
+}
+
+.sidebar {
+    background: var(--color-surface);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    height: fit-content;
+    position: sticky;
+    top: 2rem;
+}
+
+.sidebar-nav h3,
+.sidebar-widgets h3,
+.sidebar-pages h3 {
+    color: var(--color-text);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--color-border);
+}
+
+.sidebar-nav ul,
+.sidebar-widgets ul,
+.sidebar-pages ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-nav li,
+.sidebar-widgets li,
+.sidebar-pages li {
+    margin-bottom: 0.5rem;
+}
+
+.sidebar-nav a,
+.sidebar-widgets a,
+.sidebar-pages a {
+    color: var(--color-muted);
+    text-decoration: none;
+    padding: 0.5rem 0;
+    display: block;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.sidebar-nav a:hover,
+.sidebar-widgets a:hover,
+.sidebar-pages a:hover {
+    color: var(--color-accent);
+    background: rgba(108, 99, 255, 0.05);
+    padding-left: 0.5rem;
+}
+
+.widget {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.widget:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.widget-title {
+    color: var(--color-text);
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+}
+
+.widget-content {
+    color: var(--color-muted);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+/* Responsive sidebar */
+@media (max-width: 1024px) {
+    .page-layout {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .sidebar {
+        position: static;
+        order: -1; /* Move sidebar above content on mobile */
+    }
+}
+
+@media (max-width: 768px) {
+    .page-layout {
+        padding: 0 0.75rem;
+    }
+    
+    .sidebar {
+        padding: 1rem;
+    }
+    
+    .sidebar-nav h3,
+    .sidebar-widgets h3,
+    .sidebar-pages h3 {
+        font-size: 1rem;
+        margin-bottom: 0.75rem;
+    }
+}

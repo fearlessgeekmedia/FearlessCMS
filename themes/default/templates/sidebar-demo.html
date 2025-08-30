@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    {{module=head.html}}
+    <title>Sidebar Demo - {{siteName}}</title>
+  </head>
+  <body>
+    {{module=header.html}}
+    {{include=ad-area.html}}
+    
+    <div class="page-layout">
+      <main class="main-content">
+        <h1>Sidebar Template Demo</h1>
+        
+        <p>This page demonstrates the sidebar template functionality in the default theme. The sidebar will appear on the right side of the content on desktop devices and above the content on mobile devices.</p>
+        
+        <h2>Features</h2>
+        <ul>
+          <li><strong>Responsive Layout:</strong> Sidebar stacks above content on mobile devices</li>
+          <li><strong>Widget Support:</strong> Displays widgets from the left-sidebar configuration</li>
+          <li><strong>Navigation:</strong> Shows sidebar menu items if configured</li>
+          <li><strong>Related Pages:</strong> Displays child pages if they exist</li>
+          <li><strong>Sticky Positioning:</strong> Sidebar stays in view while scrolling on desktop</li>
+        </ul>
+        
+        <h2>How to Use</h2>
+        <p>To use this template:</p>
+        <ol>
+          <li>Select "Sidebar Demo" as your page template in the admin interface</li>
+          <li>Configure widgets in the left-sidebar section</li>
+          <li>Add a sidebar menu if desired</li>
+          <li>The template will automatically handle the layout and responsiveness</li>
+        </ol>
+        
+        <h2>Customization</h2>
+        <p>You can customize the sidebar by:</p>
+        <ul>
+          <li>Modifying the <code>sidebar.html.mod</code> file to change sidebar content</li>
+          <li>Adjusting CSS variables in <code>style.css</code> for colors and spacing</li>
+          <li>Adding new widget types to the sidebar module</li>
+          <li>Creating additional sidebar variations for different page types</li>
+        </ul>
+      </main>
+      
+      {{module=sidebar.html}}
+    </div>
+    
+    {{module=footer.html}}
+  </body>
+</html> 

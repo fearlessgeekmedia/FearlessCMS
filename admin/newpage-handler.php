@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 // Add JSON frontmatter with title and parent if provided
                 $metadata = [
                     'title' => $pageTitle,
-                    'template' => $_POST['template'] ?? 'page' // Use selected template or default to page
+                    'template' => $_POST['template'] ?? 'page-with-sidebar' // Use selected template or default to page-with-sidebar
                 ];
                 if (!empty($parentPage)) {
                     $metadata['parent'] = $parentPage;

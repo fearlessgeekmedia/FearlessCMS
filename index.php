@@ -167,7 +167,7 @@ if (strpos($requestPath, '_preview/') === 0) {
         }
 
         // Render template
-        $templateName = $metadata['template'] ?? 'page';
+        $templateName = $metadata['template'] ?? 'page-with-sidebar';
         fcms_do_hook_ref('before_render', $templateName);
         $template = $templateRenderer->render($templateName, $templateData);
 
@@ -249,7 +249,7 @@ if ($requestPath === '') {
     $templateName = 'home'; // Set template to home for root path
 } else {
     $path = $requestPath;
-    $templateName = 'page'; // Default to page template for other paths
+    $templateName = 'page-with-sidebar'; // Default to page-with-sidebar template for other paths
 }
 error_log("Processed path: " . $path);
 
@@ -560,7 +560,7 @@ if (isset($metadata) && is_array($metadata)) {
 error_log("TEMPLATE DATA: " . json_encode($templateData));
 
 // --- Render template ---
-$templateName = $metadata['template'] ?? 'page';
+    $templateName = $metadata['template'] ?? 'page-with-sidebar';
 fcms_do_hook_ref('before_render', $templateName);
 $template = $templateRenderer->render($templateName, $templateData);
 

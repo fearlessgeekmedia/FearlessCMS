@@ -138,7 +138,7 @@ Customize how content is organized and displayed:
 
 **Content Fields:**
 - **Title**: Page/post title
-- **Content**: Main content (Markdown supported)
+- **Content**: Main content (HTML editing in CMS, Markdown support for externally-created content)
 - **Meta**: Custom metadata
 - **Tags**: Content categorization
 - **Published Date**: Publication timing

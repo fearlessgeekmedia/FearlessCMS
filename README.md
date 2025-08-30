@@ -7,6 +7,17 @@ More at <a href="https://ko-fi.com/post/Funding-Required-For-FearelessCMS-Develo
 
 Welcome to FearlessCMS, a new content management system centered around simplicity and respect for the open source community. The project is currently in alpha testing stages, so don't expect it to be fully functional just yet. But you can make a simple website.
 
+## ✍️ HTML Editing with Markdown Support
+
+FearlessCMS now features **HTML content creation** with **Markdown content compatibility** to accommodate different user preferences:
+
+- **HTML Editor (Default)** - Rich WYSIWYG editor with code view toggle for complex layouts
+- **Markdown Support** - Can read and display Markdown files created in external editors
+- **Backwards Compatibility** - All existing Markdown content continues to work perfectly
+- **Flexible Workflow** - Create HTML in CMS or upload Markdown from external editors
+
+This approach gives you the best of both worlds: the power and precision of HTML editing when you need it, and the flexibility to use external Markdown editors when you prefer it.
+
 View documentation at <a href="https://fearlesscms.online/documentation/" target="_blank">https://fearlesscms.online/documentation/</a> to get started.
 
 # FearlessCMS Manifesto

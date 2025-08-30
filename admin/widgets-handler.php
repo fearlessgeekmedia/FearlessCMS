@@ -93,9 +93,13 @@ function fcms_render_widget_manager() {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
     error_log("Widget Handler: Processing AJAX request");
     error_log("Widget Handler: POST data: " . print_r($_POST, true));
+    error_log("Widget Handler: HTTP_X_REQUESTED_WITH: " . ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? 'not set'));
+    error_log("Widget Handler: REQUEST_METHOD: " . $_SERVER['REQUEST_METHOD']);
 
     // Clear any previous output and set JSON header
-    ob_clean();
+    if (ob_get_level()) {
+        ob_end_clean();
+    }
     header('Content-Type: application/json');
 
     // Ensure user is logged in
