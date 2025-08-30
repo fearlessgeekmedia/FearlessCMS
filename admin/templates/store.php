@@ -49,7 +49,7 @@ $news = fetch_github_content($news_url);
 $featured = fetch_github_content($featured_url);
 
 // Parse markdown content
-require_once __DIR__ . '/../../includes/Parsedown.php';
+require_once dirname(dirname(__DIR__)) . '/includes/Parsedown.php';
 $parsedown = new Parsedown();
 $news_html = $parsedown->text($news);
 $featured_html = $parsedown->text($featured);
