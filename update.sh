@@ -102,10 +102,10 @@ download_update() {
     rm -rf "${UPDATE_DIR}"
     mkdir -p "${UPDATE_DIR}"
     
-    # Clone the repository with better error handling
-    log "Running: ${GIT_CMD} clone --depth 1 --branch ${BRANCH} ${REPO_URL} ${UPDATE_DIR}"
+    # Clone the repository with better error handling and SSL verification bypass
+    log "Running: ${GIT_CMD} -c http.sslVerify=false clone --depth 1 --branch ${BRANCH} ${REPO_URL} ${UPDATE_DIR}"
     
-    if "${GIT_CMD}" clone --depth 1 --branch "${BRANCH}" "${REPO_URL}" "${UPDATE_DIR}"; then
+    if "${GIT_CMD}" -c http.sslVerify=false clone --depth 1 --branch "${BRANCH}" "${REPO_URL}" "${UPDATE_DIR}"; then
         success "Latest version downloaded successfully"
     else
         error "Failed to download latest version"

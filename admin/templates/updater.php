@@ -122,7 +122,20 @@ $csrfToken = generate_updater_csrf_token();
 
     <!-- Version Comparison -->
     <div class="bg-white shadow rounded-lg p-6">
-        <h2 class="text-lg font-medium text-gray-900 mb-4">Version Information</h2>
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-medium text-gray-900">Version Information</h2>
+            <form method="POST" class="inline">
+                <input type="hidden" name="action" value="updates">
+                <input type="hidden" name="subaction" value="check_version">
+                <input type="hidden" name="updater_csrf_token" value="<?php echo htmlspecialchars($csrfToken); ?>">
+                <button type="submit" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    Check for Updates
+                </button>
+            </form>
+        </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Current Version -->
             <div class="bg-gray-50 p-4 rounded-lg">
@@ -155,20 +168,27 @@ $csrfToken = generate_updater_csrf_token();
                 <h3 class="text-sm font-medium text-blue-700 mb-2">Available Version</h3>
                 <div class="text-2xl font-bold text-blue-900">
                     <?php
-                    // Try to get available version from GitHub
-                    $available_version = 'Checking...';
-                    if (!empty($update_repo)) {
-                        try {
-                            // Simple check - we'll show a message that the version will be checked during update
-                            $available_version = 'Will check during update';
-                        } catch (Exception $e) {
-                            $available_version = 'Error checking';
-                        }
+                    // Get available version from repository
+                    $available_version_result = get_available_version($update_repo, $update_branch);
+                    
+                    if (isset($available_version_result['version'])) {
+                        $available_version = $available_version_result['version'];
+                        $version_class = 'text-blue-900';
+                        $status_icon = '✅';
+                    } elseif (isset($available_version_result['error'])) {
+                        $available_version = $available_version_result['error'];
+                        $version_class = 'text-red-600';
+                        $status_icon = '❌';
                     } else {
-                        $available_version = 'Repository not configured';
+                        $available_version = 'Unknown';
+                        $version_class = 'text-gray-500';
+                        $status_icon = '❓';
                     }
-                    echo htmlspecialchars($available_version);
                     ?>
+                    <div class="flex items-center space-x-2">
+                        <span class="<?php echo $version_class; ?>"><?php echo htmlspecialchars($available_version); ?></span>
+                        <span class="text-lg"><?php echo $status_icon; ?></span>
+                    </div>
                 </div>
                 <p class="text-sm text-blue-500 mt-1">Latest from repository</p>
             </div>
@@ -177,10 +197,84 @@ $csrfToken = generate_updater_csrf_token();
         <!-- Update Status -->
         <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
             <p class="text-sm text-yellow-800">
-                <strong>Note:</strong> The available version will be checked when you perform the update. 
-                This ensures you always get the most current version information.
+                <strong>Note:</strong> The available version is checked in real-time from the repository. 
+                You can now see exactly what version you'll be updating to before proceeding.
             </p>
         </div>
+        
+        <!-- Version Comparison Status -->
+        <?php
+        // Get current version for comparison
+        $current_version = '';
+        if (defined('FCMS_VERSION')) {
+            $current_version = FCMS_VERSION;
+        } else {
+            $version_file = dirname(dirname(__DIR__)) . '/version.php';
+            if (file_exists($version_file)) {
+                $content = file_get_contents($version_file);
+                if (preg_match("/define\('APP_VERSION', '([^']+)'/", $content, $matches)) {
+                    $current_version = $matches[1];
+                }
+            }
+        }
+        
+        // Compare versions if we have both
+        if (!empty($current_version) && isset($available_version_result['version'])) {
+            $available_version = $available_version_result['version'];
+            if (version_compare($current_version, $available_version, '<')) {
+                // Update available
+                echo '<div class="mt-4 p-4 bg-green-50 border border-green-200 rounded">';
+                echo '<div class="flex items-center">';
+                echo '<div class="flex-shrink-0">';
+                echo '<svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">';
+                echo '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />';
+                echo '</svg>';
+                echo '</div>';
+                echo '<div class="ml-3">';
+                echo '<h3 class="text-sm font-medium text-green-800">Update Available!</h3>';
+                echo '<div class="mt-2 text-sm text-green-700">';
+                echo '<p>Your current version <strong>' . htmlspecialchars($current_version) . '</strong> can be updated to <strong>' . htmlspecialchars($available_version) . '</strong>.</p>';
+                echo '</div>';
+                echo '</div>';
+                echo '</div>';
+                echo '</div>';
+            } elseif (version_compare($current_version, $available_version, '>')) {
+                // Current version is newer (shouldn't happen normally)
+                echo '<div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded">';
+                echo '<div class="flex items-center">';
+                echo '<div class="flex-shrink-0">';
+                echo '<svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">';
+                echo '<path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />';
+                echo '</svg>';
+                echo '</div>';
+                echo '<div class="ml-3">';
+                echo '<h3 class="text-sm font-medium text-blue-800">Up to Date</h3>';
+                echo '<div class="mt-2 text-sm text-blue-700">';
+                echo '<p>Your current version <strong>' . htmlspecialchars($current_version) . '</strong> is newer than the repository version <strong>' . htmlspecialchars($available_version) . '</strong>.</p>';
+                echo '</div>';
+                echo '</div>';
+                echo '</div>';
+                echo '</div>';
+            } else {
+                // Versions are the same
+                echo '<div class="mt-4 p-4 bg-green-50 border border-green-200 rounded">';
+                echo '<div class="flex items-center">';
+                echo '<div class="flex-shrink-0">';
+                echo '<svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">';
+                echo '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />';
+                echo '</svg>';
+                echo '</div>';
+                echo '<div class="ml-3">';
+                echo '<h3 class="text-sm font-medium text-green-800">Up to Date</h3>';
+                echo '<div class="mt-2 text-sm text-green-700">';
+                echo '<p>Your system is already running the latest version <strong>' . htmlspecialchars($current_version) . '</strong>.</p>';
+                echo '</div>';
+                echo '</div>';
+                echo '</div>';
+                echo '</div>';
+            }
+        }
+        ?>
     </div>
 
     <!-- System Information -->

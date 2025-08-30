@@ -29,6 +29,91 @@ function validate_updater_csrf_token($token) {
            hash_equals($_SESSION['updater_csrf_token'], $token);
 }
 
+// Function to check available version from repository
+function get_available_version($repo_url, $branch = 'main') {
+    if (empty($repo_url)) {
+        return ['error' => 'Repository not configured'];
+    }
+    
+    try {
+        // Use the known working git path on NixOS
+        $git_cmd = '/run/current-system/sw/bin/git';
+        
+        // Verify git exists and is executable
+        if (!file_exists($git_cmd) || !is_executable($git_cmd)) {
+            error_log("Git not found at expected path: $git_cmd");
+            return ['error' => 'Git command not found at expected location. Please ensure git is installed.'];
+        }
+        
+        error_log("Using git command: $git_cmd");
+        
+        // Create a temporary directory for checking
+        $temp_dir = sys_get_temp_dir() . '/fcms_version_check_' . uniqid();
+        if (!mkdir($temp_dir, 0755, true)) {
+            return ['error' => 'Failed to create temporary directory'];
+        }
+        
+        // Clone the repository to check version using full path to git
+        $cmd = sprintf('%s -c http.sslVerify=false clone --depth 1 --branch %s %s %s 2>&1', 
+                      escapeshellarg($git_cmd), 
+                      escapeshellarg($branch), 
+                      escapeshellarg($repo_url), 
+                      escapeshellarg($temp_dir));
+        
+        error_log("Executing git command: $cmd");
+        
+        $output = [];
+        $return_code = 0;
+        exec($cmd, $output, $return_code);
+        
+        error_log("Git clone output: " . print_r($output, true));
+        error_log("Git clone return code: $return_code");
+        
+        if ($return_code !== 0) {
+            // Clean up temp dir
+            if (is_dir($temp_dir)) {
+                exec('rm -rf ' . escapeshellarg($temp_dir));
+            }
+            return ['error' => 'Failed to clone repository: ' . implode(' ', $output)];
+        }
+        
+        // Check if version.php exists and read the version
+        $version_file = $temp_dir . '/version.php';
+        if (!file_exists($version_file)) {
+            // Clean up temp dir
+            if (is_dir($temp_dir)) {
+                exec('rm -rf ' . escapeshellarg($temp_dir));
+            }
+            return ['error' => 'Version file not found in repository'];
+        }
+        
+        $content = file_get_contents($version_file);
+        if (preg_match("/define\('APP_VERSION', '([^']+)'/", $content, $matches)) {
+            $version = $matches[1];
+            error_log("Found version: $version");
+            
+            // Clean up
+            exec('rm -rf ' . escapeshellarg($temp_dir));
+            
+            return ['version' => $version];
+        } else {
+            // Clean up temp dir
+            if (is_dir($temp_dir)) {
+                exec('rm -rf ' . escapeshellarg($temp_dir));
+            }
+            return ['error' => 'Version not found in version.php'];
+        }
+        
+    } catch (Exception $e) {
+        // Clean up temp dir if it exists
+        if (isset($temp_dir) && is_dir($temp_dir)) {
+            exec('rm -rf ' . escapeshellarg($temp_dir));
+        }
+        error_log("Exception in get_available_version: " . $e->getMessage());
+        return ['error' => 'Error checking version: ' . $e->getMessage()];
+    }
+}
+
 // Handle POST requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'updates') {
     
@@ -145,6 +230,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         } catch (Exception $e) {
             error_log("Update error: " . $e->getMessage());
             $_SESSION['error'] = 'Update failed: ' . $e->getMessage();
+        }
+        
+        header('Location: ' . $_SERVER['REQUEST_URI']);
+        exit;
+        
+    } elseif ($subaction === 'check_version') {
+        // Check for available version updates
+        $configFile = CONFIG_DIR . '/config.json';
+        $config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
+        $repo = $config['update_repo_url'] ?? '';
+        $branch = $config['update_branch'] ?? 'main';
+        
+        if (empty($repo)) {
+            $_SESSION['error'] = 'Repository not configured. Please configure the update repository first.';
+        } else {
+            $version_result = get_available_version($repo, $branch);
+            if (isset($version_result['version'])) {
+                $_SESSION['success'] = 'Version check completed. Available version: ' . $version_result['version'];
+            } else {
+                $_SESSION['error'] = 'Version check failed: ' . ($version_result['error'] ?? 'Unknown error');
+            }
         }
         
         header('Location: ' . $_SERVER['REQUEST_URI']);
