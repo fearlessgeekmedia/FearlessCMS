@@ -1775,6 +1775,13 @@ if (isset($admin_sections[$action])) {
         error_log("Admin index.php - Render callback returned: " . (is_string($section_content) ? 'string of length ' . strlen($section_content) : gettype($section_content)));
         $content = ob_get_clean();
         error_log("Admin index.php - Content buffer length: " . strlen($content));
+        
+        // If the function returned content but buffer is empty, use the returned content
+        if (empty($content) && !empty($section_content) && is_string($section_content)) {
+            error_log("Admin index.php - Using returned content for section: " . strlen($section_content));
+            $content = $section_content;
+        }
+        
         $section_found = true;
     } else {
         error_log("Admin index.php - Invalid render callback for section: " . $action);
@@ -1785,9 +1792,23 @@ if (isset($admin_sections[$action])) {
         if (isset($parent['children']) && isset($parent['children'][$action])) {
             error_log("Admin index.php - Loading child section: " . $action);
             if (isset($parent['children'][$action]['render_callback']) && is_callable($parent['children'][$action]['render_callback'])) {
+                error_log("Admin index.php - Calling render callback for child section: " . $action);
+                error_log("Admin index.php - Render callback function: " . $parent['children'][$action]['render_callback']);
+                error_log("Admin index.php - Function exists check: " . (function_exists($parent['children'][$action]['render_callback']) ? 'YES' : 'NO'));
+                
                 ob_start();
                 $section_content = call_user_func($parent['children'][$action]['render_callback']);
+                error_log("Admin index.php - Child section render callback returned: " . (is_string($section_content) ? 'string of length ' . strlen($section_content) : gettype($section_content)));
                 $content = ob_get_clean();
+                error_log("Admin index.php - Child section content buffer length: " . strlen($content));
+                
+                // If the function returned content but buffer is empty, use the returned content
+                if (empty($content) && !empty($section_content) && is_string($section_content)) {
+                    error_log("Admin index.php - Using returned content for child section: " . strlen($section_content));
+                    $content = $section_content;
+                }
+                
+                error_log("Admin index.php - Final content length: " . strlen($content));
                 $section_found = true;
                 break;
             } else {

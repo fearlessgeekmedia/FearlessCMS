@@ -64,29 +64,16 @@ function generate_csrf_token() {
 
 // Enhanced CSRF token validation with development fallback
 function validate_csrf_token() {
-    error_log('CSRF Validation - Session token: ' . ($_SESSION['csrf_token'] ?? 'not set'));
-    error_log('CSRF Validation - POST token: ' . ($_POST['csrf_token'] ?? 'not set'));
-    error_log('CSRF Validation - POST data: ' . print_r($_POST, true));
-    error_log('CSRF Validation - Session ID: ' . (function_exists('session_id') ? session_id() : 'function_not_available'));
-    error_log('CSRF Validation - Session status: ' . (function_exists('session_status') ? session_status() : 'function_not_available'));
-    
     // Try normal session-based validation first
     if (isset($_POST['csrf_token']) && isset($_SESSION['csrf_token'])) {
-        $isValid = $_SESSION['csrf_token'] === $_POST['csrf_token'];
-        error_log('CSRF Validation - Token comparison result: ' . ($isValid ? 'MATCH' : 'MISMATCH'));
-        error_log('CSRF Validation - Session token length: ' . strlen($_SESSION['csrf_token']));
-        error_log('CSRF Validation - POST token length: ' . strlen($_POST['csrf_token']));
-        return $isValid;
+        return $_SESSION['csrf_token'] === $_POST['csrf_token'];
     }
     
     // Fallback to development mode validation
     if (is_development_mode() && isset($_POST['csrf_token'])) {
-        $devValid = validate_development_csrf_token($_POST['csrf_token']);
-        error_log('CSRF Validation - Development mode validation: ' . ($devValid ? 'PASS' : 'FAIL'));
-        return $devValid;
+        return validate_development_csrf_token($_POST['csrf_token']);
     }
     
-    error_log('CSRF Validation - Missing token: POST=' . (isset($_POST['csrf_token']) ? 'yes' : 'no') . ', SESSION=' . (isset($_SESSION['csrf_token']) ? 'yes' : 'no'));
     return false;
 }
 
@@ -259,14 +246,10 @@ function check_operation_rate_limit(string $operation, string $identifier = '', 
 }
 
 function isLoggedIn() {
-    $logged_in = !empty($_SESSION['username']);
-    error_log("Checking login status: " . ($logged_in ? "Logged in as " . $_SESSION['username'] : "Not logged in"));
-    return $logged_in;
+    return !empty($_SESSION['username']);
 }
 
 function login($username, $password) {
-    error_log("Login attempt for user: " . $username);
-
     // Validate and sanitize inputs
     if (!validate_username($username)) {
         error_log("Invalid username format: " . $username);
@@ -282,7 +265,6 @@ function login($username, $password) {
     }
 
     $users_file = CONFIG_DIR . '/users.json';
-    error_log("Looking for users file at: " . $users_file);
 
     if (!file_exists($users_file)) {
         error_log("Users file not found at: " . $users_file);
@@ -290,7 +272,6 @@ function login($username, $password) {
     }
 
     $users = json_decode(file_get_contents($users_file), true);
-    error_log("Loaded users data: " . print_r($users, true));
 
     if (!$users) {
         error_log("Failed to decode users.json");
@@ -307,10 +288,7 @@ function login($username, $password) {
     }
 
     if ($user) {
-        error_log("Found user: " . print_r($user, true));
         if (password_verify($password, $user['password'])) {
-            error_log("Password verified for user: " . $username);
-
             // Regenerate session ID to prevent session fixation attacks
             if (function_exists('session_regenerate_id') && !headers_sent()) {
                 session_regenerate_id(false);
@@ -326,7 +304,6 @@ function login($username, $password) {
                     $roles = json_decode(file_get_contents($rolesFile), true);
                     if (isset($roles[$user['role']])) {
                         $_SESSION['permissions'] = $roles[$user['role']]['capabilities'];
-                        error_log("Set permissions for user: " . print_r($roles[$user['role']]['capabilities'], true));
                     }
                 }
             }
