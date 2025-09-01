@@ -55,6 +55,13 @@ download_page() {
     
     # Download the page
     local html_file="$output_dir/index.html"
+    
+    # Check if this is an RSS feed
+    if [[ "$url" == *"/rss"* ]]; then
+        html_file="$output_dir/rss.xml"
+        echo -e "${YELLOW}Detected RSS feed, saving as rss.xml${NC}"
+    fi
+    
     curl -s "$url" > "$html_file"
     
     if [ ! -s "$html_file" ]; then
@@ -156,6 +163,14 @@ echo ""
 
 # Download starting from the home page
 download_page "$BASE_URL" "$EXPORT_DIR"
+
+# Ensure RSS feed is properly exported
+echo -e "${BLUE}Exporting RSS feed...${NC}"
+if [ -d "$EXPORT_DIR/blog" ]; then
+    mkdir -p "$EXPORT_DIR/blog"
+    curl -s "$BASE_URL/blog/rss" > "$EXPORT_DIR/blog/rss.xml"
+    echo -e "${GREEN}✓ RSS feed exported as blog/rss.xml${NC}"
+fi
 
 # Copy theme assets directly
 echo -e "${BLUE}Copying theme assets...${NC}"
