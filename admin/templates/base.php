@@ -19,20 +19,98 @@ global $cmsModeManager;
     <style>
         .fira-code { font-family: 'Fira Code', monospace; }
         
-        /* Improved submenu navigation */
-        .submenu {
+        /* Override theme CSS for admin navigation - use very specific selectors */
+        body > nav.bg-green-600,
+        body > nav.admin-nav {
+            background-color: #16a34a !important; /* bg-green-600 - proper Tailwind green */
+            color: white !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 1.5rem !important;
+        }
+        
+        body > nav.bg-green-600 a,
+        body > nav.admin-nav a,
+        body > nav.bg-green-600 .admin-nav a {
+            color: white !important;
+            text-decoration: none !important;
+            font-weight: 500 !important;
+            padding: 0.5rem 0.75rem !important;
+            border-radius: 0.5rem !important;
+            transition: all 0.2s !important;
+            background: transparent !important;
+        }
+        
+        body > nav.bg-green-600 a:hover,
+        body > nav.admin-nav a:hover,
+        body > nav.bg-green-600 .admin-nav a:hover {
+            color: #bbf7d0 !important; /* text-green-200 */
+            background: rgba(255, 255, 255, 0.1) !important;
+        }
+        
+        /* Override theme submenu styles */
+        body > nav.bg-green-600 .submenu,
+        body > nav.admin-nav .submenu {
             margin-top: 0 !important;
-            border-top: 2px solid transparent;
+            border-top: 2px solid transparent !important;
+            background-color: #15803d !important; /* bg-green-700 - proper Tailwind green */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+            border-radius: 0.375rem !important;
+            z-index: 50 !important;
+            border: none !important;
         }
         
         /* Ensure no gap between parent and submenu */
-        .relative.group {
-            padding-bottom: 2px;
+        body > nav.bg-green-600 .relative.group,
+        body > nav.admin-nav .relative.group {
+            padding-bottom: 2px !important;
+        }
+        
+        /* Ensure submenu items have proper hover states */
+        body > nav.bg-green-600 .submenu a,
+        body > nav.admin-nav .submenu a {
+            display: block !important;
+            padding: 0.5rem 1rem !important;
+            color: white !important;
+            text-decoration: none !important;
+            background: transparent !important;
+        }
+        
+        body > nav.bg-green-600 .submenu a:hover,
+        body > nav.admin-nav .submenu a:hover {
+            background-color: #166534 !important; /* bg-green-800 - proper Tailwind green */
+            color: white !important;
+        }
+        
+        /* Override any other theme navigation styles */
+        body > nav.bg-green-600 *,
+        body > nav.admin-nav * {
+            color: inherit !important;
+        }
+        
+        /* Ensure navigation styles work on function callback pages (like SEO) */
+        body > nav,
+        body > nav.bg-green-600,
+        body > nav.admin-nav {
+            background-color: #16a34a !important; /* bg-green-600 - proper Tailwind green */
+            color: white !important;
+        }
+        
+        body > nav a,
+        body > nav.bg-green-600 a,
+        body > nav.admin-nav a {
+            color: white !important;
+        }
+        
+        body > nav a:hover,
+        body > nav.bg-green-600 a:hover,
+        body > nav.admin-nav a:hover {
+            color: #bbf7d0 !important; /* text-green-200 */
         }
     </style>
 </head>
 <body class="bg-gray-100">
-    <nav class="bg-green-600 text-white p-4">
+    <nav class="bg-green-600 text-white p-4 admin-nav">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-4">
                 <h1 class="text-xl font-bold fira-code"><a href="<?php echo BASE_URL; ?>?action=dashboard">Mission Control</a></h1>
@@ -48,9 +126,9 @@ global $cmsModeManager;
                     if ($hasChildren) {
                         echo '<div class="relative group" onmouseenter="showSubmenu(this)" onmouseleave="hideSubmenu(this)">';
                         echo '<a href="' . BASE_URL . '?action=' . htmlspecialchars($id) . '" class="hover:text-green-200">' . htmlspecialchars($section['label']) . '</a>';
-                        echo '<div class="absolute hidden bg-green-700 text-white shadow-lg rounded-md mt-0 py-2 w-48 z-10 submenu">';
+                        echo '<div class="absolute hidden bg-green-700 text-white shadow-lg rounded-md mt-0 py-2 w-48 z-50 submenu" style="top: 100%; left: 0;">';
                         foreach ($section['children'] as $child_id => $child_section) {
-                            echo '<a href="' . BASE_URL . '?action=' . htmlspecialchars($child_id) . '" class="block px-4 py-2 hover:bg-green-800">' . htmlspecialchars($child_section['label']) . '</a>';
+                            echo '<a href="' . BASE_URL . '?action=' . htmlspecialchars($child_id) . '" class="block px-4 py-2 hover:bg-green-800 text-white no-underline">' . htmlspecialchars($child_section['label']) . '</a>';
                         }
                         echo '</div>';
                         echo '</div>';
@@ -118,6 +196,7 @@ global $cmsModeManager;
         const submenu = element.querySelector('.submenu');
         if (submenu) {
             submenu.classList.remove('hidden');
+            submenu.style.display = 'block';
         }
     }
     
@@ -128,8 +207,9 @@ global $cmsModeManager;
             setTimeout(() => {
                 if (!element.matches(':hover') && !submenu.matches(':hover')) {
                     submenu.classList.add('hidden');
+                    submenu.style.display = 'none';
                 }
-            }, 100);
+            }, 150);
         }
     }
     
@@ -138,10 +218,12 @@ global $cmsModeManager;
         document.querySelectorAll('.submenu').forEach(submenu => {
             submenu.addEventListener('mouseenter', function() {
                 this.classList.remove('hidden');
+                this.style.display = 'block';
             });
             
             submenu.addEventListener('mouseleave', function() {
                 this.classList.add('hidden');
+                this.style.display = 'none';
             });
         });
     });

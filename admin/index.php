@@ -1793,8 +1793,8 @@ if (isset($admin_sections[$action])) {
             error_log("Admin index.php - Loading child section: " . $action);
             if (isset($parent['children'][$action]['render_callback']) && is_callable($parent['children'][$action]['render_callback'])) {
                 error_log("Admin index.php - Calling render callback for child section: " . $action);
-                error_log("Admin index.php - Render callback function: " . $parent['children'][$action]['render_callback']);
-                error_log("Admin index.php - Function exists check: " . (function_exists($parent['children'][$action]['render_callback']) ? 'YES' : 'NO'));
+                error_log("Admin index.php - Render callback function: " . (is_callable($parent['children'][$action]['render_callback']) ? (is_string($parent['children'][$action]['render_callback']) ? $parent['children'][$action]['render_callback'] : 'Closure') : 'Invalid'));
+                error_log("Admin index.php - Function exists check: " . (is_string($parent['children'][$action]['render_callback']) && function_exists($parent['children'][$action]['render_callback']) ? 'YES' : 'NO'));
                 
                 ob_start();
                 $section_content = call_user_func($parent['children'][$action]['render_callback']);
