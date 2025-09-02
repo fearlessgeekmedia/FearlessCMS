@@ -168,6 +168,34 @@ function output_parallax_assets() {
     }
     $output_done = true;
     
+    // Comprehensive admin context checks to prevent header issues
+    if (defined('ADMIN_MODE') && ADMIN_MODE) {
+        return;
+    }
+    
+    // Check for admin paths in the request URI
+    if (isset($_SERVER['REQUEST_URI'])) {
+        $requestPath = $_SERVER['REQUEST_URI'];
+        if (strpos($requestPath, '/admin') !== false ||
+            strpos($requestPath, '/login') !== false ||
+            strpos($requestPath, '/logout') !== false ||
+            strpos($requestPath, 'updater-handler') !== false ||
+            strpos($requestPath, 'updater.php') !== false) {
+            return;
+        }
+    }
+    
+    // Check if headers have already been sent (to prevent output in wrong contexts)
+    if (headers_sent()) {
+        return;
+    }
+    
+    // Check if we're in an AJAX request or similar that shouldn't have CSS/JS output
+    if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+        strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+        return;
+    }
+    
     // CSS for parallax effects
     $css = <<<CSS
 .parallax-section {
