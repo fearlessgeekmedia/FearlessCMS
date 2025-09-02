@@ -24,7 +24,7 @@ if (!defined('PLUGIN_DIR')) {
 
 // Define PLUGIN_CONFIG if not already defined
 if (!defined('PLUGIN_CONFIG')) {
-    define('PLUGIN_CONFIG', CONFIG_DIR . '/plugins.json');
+    define('PLUGIN_CONFIG', CONFIG_DIR . '/active_plugins.json');
 }
 
 // --- Hook system ---

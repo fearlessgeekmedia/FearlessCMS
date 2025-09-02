@@ -1,0 +1,5 @@
+# RSS Feed redirect
+/blog/rss /blog/rss.xml 200
+
+# Ensure RSS feed is served with correct content type
+/blog/rss.xml /blog/rss.xml 200 

@@ -474,21 +474,40 @@ document.addEventListener('DOMContentLoaded', function() {
             if (initialContent && initialContent.trim()) {
                 console.log('DEBUG: Using initialContent, length:', initialContent.length);
                 
-                // For now, always use Quill editor for content
-                try {
-                    // Use setHTML for better compatibility
-                    editor.root.innerHTML = initialContent;
-                    console.log('DEBUG: Content loaded into Quill editor');
-                    
-                    // Show rich editor
-                    document.getElementById('richEditorContainer').classList.remove('hidden');
-                    document.getElementById('codeEditorContainer').classList.add('hidden');
-                } catch (e) {
-                    console.error('DEBUG: Error loading content into Quill:', e);
-                    // Fallback to code editor
+                // Check if content contains complex HTML that Quill will strip
+                // Detect complex HTML including div tags, grid layouts, custom classes, and complex structures
+                const hasComplexHTML = /<div[^>]*style=|<div[^>]*class=|grid|parallax|shortcode|\[.*?\]|<form|<input|<textarea|<select|<button|<table|<tr|<td|<th|<thead|<tbody|<tfoot|<colgroup|<col|<caption|<fieldset|<legend|<label|<optgroup|<option|<datalist|<output|<progress|<meter|<details|<summary|<dialog|<menu|<menuitem|<slot|<template|<svg|<canvas|<video|<audio|<iframe|<embed|<object|<param|<source|<track|<map|<area|<picture|<figure|<figcaption|<nav|<header|<footer|<main|<section|<article|<aside|<hgroup|<address|<blockquote|<pre|<kbd|<samp|<var|<time|<mark|<ruby|<rt|<rp|<bdi|<bdo|<span[^>]*style=|<span[^>]*class=/i.test(initialContent);
+                
+                if (hasComplexHTML) {
+                    console.log('DEBUG: Complex HTML detected, starting in code view mode');
+                    // Start in code view mode for complex HTML
                     document.getElementById('richEditorContainer').classList.add('hidden');
                     document.getElementById('codeEditorContainer').classList.remove('hidden');
                     document.getElementById('codeEditor').value = initialContent;
+                    document.getElementById('modeIndicator').textContent = 'Code View Mode (Complex HTML Detected)';
+                    document.getElementById('toggleMode').textContent = 'Switch to Rich Editor';
+                    document.getElementById('toggleMode').className = 'px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600 transition-colors';
+                } else {
+                    console.log('DEBUG: Simple content detected, starting in rich editor mode');
+                    // For simple content, use Quill editor
+                    try {
+                        // Use setHTML for better compatibility
+                        editor.root.innerHTML = initialContent;
+                        console.log('DEBUG: Content loaded into Quill editor');
+                        
+                        // Show rich editor
+                        document.getElementById('richEditorContainer').classList.remove('hidden');
+                        document.getElementById('codeEditorContainer').classList.add('hidden');
+                        document.getElementById('modeIndicator').textContent = 'Rich Editor Mode';
+                        document.getElementById('toggleMode').textContent = 'Switch to Code View';
+                        document.getElementById('toggleMode').className = 'px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors';
+                    } catch (e) {
+                        console.error('DEBUG: Error loading content into Quill:', e);
+                        // Fallback to code editor
+                        document.getElementById('richEditorContainer').classList.add('hidden');
+                        document.getElementById('codeEditorContainer').classList.remove('hidden');
+                        document.getElementById('codeEditor').value = initialContent;
+                    }
                 }
             } else {
                 // Try to load from the full content data as fallback
@@ -527,7 +546,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Check if content contains complex HTML that Quill will strip
                 // Detect complex HTML including div tags, grid layouts, custom classes, and complex structures
-                const hasComplexHTML = /<div[^>]*style=|<div[^>]*class=|grid|parallax|shortcode|\[.*?\]/i.test(htmlContent);
+                const hasComplexHTML = /<div[^>]*style=|<div[^>]*class=|grid|parallax|shortcode|\[.*?\]|<form|<input|<textarea|<select|<button|<table|<tr|<td|<th|<thead|<tbody|<tfoot|<colgroup|<col|<caption|<fieldset|<legend|<label|<optgroup|<option|<datalist|<output|<progress|<meter|<details|<summary|<dialog|<menu|<menuitem|<slot|<template|<svg|<canvas|<video|<audio|<iframe|<embed|<object|<param|<source|<track|<map|<area|<picture|<figure|<figcaption|<nav|<header|<footer|<main|<section|<article|<aside|<hgroup|<address|<blockquote|<pre|<kbd|<samp|<var|<time|<mark|<ruby|<rt|<rp|<bdi|<bdo|<span[^>]*style=|<span[^>]*class=/i.test(htmlContent);
                 if (hasComplexHTML) {
                     alert('Complex HTML detected! This content contains complex structures (grids, parallax, shortcodes, or custom styling) that will be stripped by the rich text editor. Staying in code view to preserve your HTML.');
                     return; // Don't switch modes

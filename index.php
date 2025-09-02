@@ -455,9 +455,13 @@ if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $fileContent, $matches)) {
     if ($metadata) {
         if (isset($metadata['title'])) $pageTitle = $metadata['title'];
         if (isset($metadata['description'])) $pageDescription = $metadata['description'];
+    } else {
+        $metadata = [];
     }
     // Remove frontmatter from content
     $pageContent = preg_replace('/^<!--\s*json\s*.*?\s*-->\s*/s', '', $fileContent);
+} else {
+    $metadata = [];
 }
 
 // Fallback to filename as title if not set
@@ -472,24 +476,26 @@ $editorMode = $metadata['editor_mode'] ?? 'markdown';
 // Load plugins BEFORE markdown processing to handle shortcodes
 fcms_load_plugins();
 
-// Process shortcodes in raw content first
-$pageContent = fcms_apply_filter('content', $pageContent);
-
 if ($editorMode === 'html') {
-    // Use content as-is for HTML mode only
+    // Use content as-is for HTML mode - no processing needed
     $pageContentHtml = $pageContent;
 } else {
+    // Process shortcodes in raw content first for markdown/easy modes
+    $pageContent = fcms_apply_filter('content', $pageContent);
+    
     // Convert markdown to HTML (default for both 'easy' and 'markdown' modes)
-            if (!class_exists('Parsedown')) {
-            require_once PROJECT_ROOT . '/includes/Parsedown.php';
-        }
-        $Parsedown = new Parsedown();
-        $Parsedown->setMarkupEscaped(false); // Allow HTML in markdown
-        $pageContentHtml = $Parsedown->text($pageContent);
+    if (!class_exists('Parsedown')) {
+        require_once PROJECT_ROOT . '/includes/Parsedown.php';
+    }
+    $Parsedown = new Parsedown();
+    $Parsedown->setMarkupEscaped(false); // Allow HTML in markdown
+    $pageContentHtml = $Parsedown->text($pageContent);
 }
 
-// Apply after_content filters to the final HTML content
-$pageContentHtml = fcms_apply_filter('after_content', $pageContentHtml);
+// Apply after_content filters only to non-HTML content to prevent form interference
+if ($editorMode !== 'html') {
+    $pageContentHtml = fcms_apply_filter('after_content', $pageContentHtml);
+}
 
 // Debug: Check if content has curly braces
 if (strpos($pageContentHtml, '{') !== false || strpos($pageContentHtml, '}') !== false) {
