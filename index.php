@@ -478,6 +478,8 @@ fcms_load_plugins();
 
 if ($editorMode === 'html') {
     // Use content as-is for HTML mode - no processing needed
+    // Process shortcodes in HTML content
+    $pageContent = fcms_apply_filter('content', $pageContent);
     $pageContentHtml = $pageContent;
 } else {
     // Process shortcodes in raw content first for markdown/easy modes

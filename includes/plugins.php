@@ -1,5 +1,6 @@
 <?php
 require_once PROJECT_ROOT . '/includes/ThemeManager.php';
+require_once PROJECT_ROOT . "/includes/config.php";
 $themeManager = new ThemeManager();
 
 // Include admin functions needed for admin sections
