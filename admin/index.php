@@ -1574,6 +1574,7 @@ $template_map = [
     'manage_users' => 'users.php',
     'manage_roles' => 'role-management.html',
     'manage_widgets' => 'widgets.php',
+    'site_settings' => 'site-settings.php',
     'updates' => 'updater.php'
 ];
 

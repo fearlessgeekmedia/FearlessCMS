@@ -253,6 +253,14 @@ $GLOBALS['fcms_admin_sections'] = [];
     ]);
 
 
+    fcms_register_admin_section('site_settings', [
+        'label' => 'Site Settings',
+        'menu_order' => 25,
+        'render_callback' => function() {
+            include PROJECT_ROOT . '/admin/templates/site-settings.php';
+        }
+    ]);
+
 
     fcms_register_admin_section('manage_themes', [
         'label' => 'Themes',
