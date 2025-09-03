@@ -1,10 +1,11 @@
 {
-    "active_theme": "fearlessgeekmedia",
+    "active_theme": "default",
     "site_name": "FearlessCMS",
     "site_description": "Fast and Fearless Content Management",
     "site_url": "",
     "admin_path": "admin",
-    "store_url": "https://raw.githubusercontent.com/fearlessgeekmedia/FearlessCMS-Store/main/store.json",
-    "update_repo_url": "https://github.com/fearlessgeekmedia/FearlessCMS.git",
-    "update_branch": "main"
+    "store_url": "https:\/\/raw.githubusercontent.com\/fearlessgeekmedia\/FearlessCMS-Store\/main\/store.json",
+    "update_repo_url": "https:\/\/github.com\/fearlessgeekmedia\/FearlessCMS.git",
+    "update_branch": "main",
+    "favicon": "uploads\/favicon_io\/favicon.ico"
 }
