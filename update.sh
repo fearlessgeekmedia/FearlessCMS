@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# FearlessCMS Bash Updater
-# Simple, reliable updater that bypasses all PHP/CSRF issues
+# FearlessCMS Bash Updater with Complete Theme Preservation
+# Preserves ALL existing themes and only adds new ones from repository
 
 set -e  # Exit on any error
 
@@ -27,6 +27,7 @@ REPO_URL="https://github.com/fearlessgeekmedia/FearlessCMS.git"
 BRANCH="main"
 BACKUP_DIR="./backups"
 UPDATE_DIR="./update_temp"
+THEMES_BACKUP_DIR="./themes_backup_temp"
 
 # Logging function
 log() {
@@ -64,6 +65,76 @@ check_environment() {
     log "Git location: $(which $GIT_CMD 2>/dev/null || echo 'not found')"
 }
 
+# Backup ALL existing themes
+backup_all_themes() {
+    log "Backing up ALL existing themes..."
+    
+    if [[ ! -d "themes" ]]; then
+        log "No themes directory found, skipping theme backup"
+        return 0
+    fi
+    
+    # Create temporary backup directory
+    rm -rf "${THEMES_BACKUP_DIR}"
+    mkdir -p "${THEMES_BACKUP_DIR}"
+    
+    # Simple approach: copy entire themes directory
+    log "Copying all themes to backup directory"
+    cp -r themes/* "${THEMES_BACKUP_DIR}/" 2>/dev/null || {
+        log "No themes found to backup"
+        return 0
+    }
+    
+    local theme_count=$(ls -1 "${THEMES_BACKUP_DIR}" | wc -l)
+    if [[ $theme_count -gt 0 ]]; then
+        success "Backed up $theme_count themes to ${THEMES_BACKUP_DIR}"
+    else
+        log "No themes found to backup"
+    fi
+}
+
+# Restore ALL themes and add new ones from repository
+restore_and_merge_themes() {
+    log "Restoring themes and merging with new ones from repository..."
+    
+    # First, restore all backed up themes
+    if [[ -d "${THEMES_BACKUP_DIR}" ]] && [[ "$(ls -A "${THEMES_BACKUP_DIR}" 2>/dev/null)" ]]; then
+        log "Restoring all backed up themes"
+        cp -r "${THEMES_BACKUP_DIR}"/* themes/
+        local restored_count=$(ls -1 "${THEMES_BACKUP_DIR}" | wc -l)
+        success "Restored $restored_count existing themes"
+    else
+        log "No themes to restore"
+    fi
+    
+    # Now add any new themes from the repository that don't exist locally
+    if [[ -d "${UPDATE_DIR}/themes" ]]; then
+        local new_themes_added=0
+        
+        for repo_theme in "${UPDATE_DIR}/themes"/*; do
+            if [[ -d "$repo_theme" ]]; then
+                repo_theme_name=$(basename "$repo_theme")
+                
+                # Check if this theme already exists locally
+                if [[ ! -d "themes/$repo_theme_name" ]]; then
+                    log "Adding new theme from repository: $repo_theme_name"
+                    cp -r "$repo_theme" themes/
+                    ((new_themes_added++))
+                else
+                    log "Theme '$repo_theme_name' already exists locally, preserving local version"
+                fi
+            fi
+        done
+        
+        if [[ $new_themes_added -gt 0 ]]; then
+            success "Added $new_themes_added new themes from repository"
+        fi
+    fi
+    
+    # Clean up temporary backup
+    rm -rf "${THEMES_BACKUP_DIR}"
+}
+
 # Create backup
 create_backup() {
     local timestamp=$(date '+%Y%m%d_%H%M%S')
@@ -83,6 +154,7 @@ create_backup() {
               --exclude='.git/' \
               --exclude='backups/' \
               --exclude='update_temp/' \
+              --exclude='themes_backup_temp/' \
               --exclude='*.log' \
               --exclude='*.tmp' \
               ./ "${backup_path}/" > /dev/null 2>&1 || {
@@ -118,9 +190,12 @@ download_update() {
     fi
 }
 
-# Perform the update
+# Perform the update with complete theme preservation
 perform_update() {
     log "Performing update..."
+    
+    # Backup ALL existing themes before removing themes directory
+    backup_all_themes
     
     # Remove old core files (keeping content, config, uploads, etc.)
     rm -rf admin/ includes/ themes/ plugins/ parallax/
@@ -130,7 +205,6 @@ perform_update() {
     # Copy new files
     cp -r "${UPDATE_DIR}/admin/" ./admin/
     cp -r "${UPDATE_DIR}/includes/" ./includes/
-    cp -r "${UPDATE_DIR}/themes/" ./themes/
     cp -r "${UPDATE_DIR}/plugins/" ./plugins/
     cp -r "${UPDATE_DIR}/parallax/" ./parallax/
     cp "${UPDATE_DIR}/index.php" ./index.php
@@ -144,10 +218,16 @@ perform_update() {
     cp "${UPDATE_DIR}/"*.json ./ 2>/dev/null || true
     cp "${UPDATE_DIR}/package*" ./ 2>/dev/null || true
     
+    # Create themes directory
+    mkdir -p themes/
+    
+    # Restore all themes and merge with new ones
+    restore_and_merge_themes
+    
     # Set proper permissions
-    chmod 644 *.php *.md *.txt *.nix *.json package*
-    chmod 755 admin/ includes/ themes/ plugins/ parallax/
-    chmod 755 admin/*.php includes/*.php
+    chmod 644 *.php *.md *.txt *.nix *.json package* 2>/dev/null || true
+    chmod 755 admin/ includes/ themes/ plugins/ parallax/ 2>/dev/null || true
+    chmod 755 admin/*.php includes/*.php 2>/dev/null || true
     
     success "Update completed successfully"
 }
@@ -156,6 +236,7 @@ perform_update() {
 cleanup() {
     log "Cleaning up temporary files"
     rm -rf "${UPDATE_DIR}"
+    rm -rf "${THEMES_BACKUP_DIR}"
     success "Cleanup completed"
 }
 
@@ -190,7 +271,7 @@ update_cms() {
     local dry_run=${1:-false}
     local create_backup=${2:-true}
     
-    log "Starting FearlessCMS update process"
+    log "Starting FearlessCMS update process with complete theme preservation"
     log "Repository: ${REPO_URL}"
     log "Branch: ${BRANCH}"
     log "Dry run: ${dry_run}"
@@ -210,6 +291,30 @@ update_cms() {
     
     if [[ "${dry_run}" == "true" ]]; then
         warning "DRY RUN MODE - No files will be changed"
+        backup_all_themes
+        log "Would preserve the following themes:"
+        if [[ -d "${THEMES_BACKUP_DIR}" ]] && [[ "$(ls -A "${THEMES_BACKUP_DIR}" 2>/dev/null)" ]]; then
+            for theme in "${THEMES_BACKUP_DIR}"/*; do
+                if [[ -d "$theme" ]]; then
+                    theme_name=$(basename "$theme")
+                    log "  - $theme_name (existing theme)"
+                fi
+            done
+        fi
+        
+        # Check for new themes in repository
+        if [[ -d "${UPDATE_DIR}/themes" ]]; then
+            log "New themes available from repository:"
+            for repo_theme in "${UPDATE_DIR}/themes"/*; do
+                if [[ -d "$repo_theme" ]]; then
+                    repo_theme_name=$(basename "$repo_theme")
+                    if [[ ! -d "themes/$repo_theme_name" ]]; then
+                        log "  - $repo_theme_name (would be added)"
+                    fi
+                fi
+            done
+        fi
+        
         log "Update simulation completed successfully"
         cleanup
         return 0
@@ -227,7 +332,7 @@ update_cms() {
     # Cleanup
     cleanup
     
-    success "FearlessCMS has been updated successfully!"
+    success "FearlessCMS has been updated successfully with ALL themes preserved!"
     if [[ -n "${backup_path}" ]]; then
         log "Backup is available at: ${backup_path}"
     fi
@@ -237,7 +342,7 @@ update_cms() {
 
 # Show usage
 show_usage() {
-    echo "FearlessCMS Bash Updater"
+    echo "FearlessCMS Bash Updater with Complete Theme Preservation"
     echo ""
     echo "Usage: $0 [OPTIONS]"
     echo ""
@@ -248,10 +353,16 @@ show_usage() {
     echo "  -r, --repo URL      Set repository URL (default: ${REPO_URL})"
     echo "  -b, --branch BRANCH Set branch (default: ${BRANCH})"
     echo ""
+    echo "Features:"
+    echo "  - Preserves ALL existing themes (custom and modified defaults)"
+    echo "  - Adds new themes from repository that don't exist locally"
+    echo "  - Never overwrites existing theme files"
+    echo "  - Creates backups before updating"
+    echo ""
     echo "Examples:"
-    echo "  $0                    # Normal update with backup"
-    echo "  $0 --dry-run         # Simulate update"
-    echo "  $0 --no-backup       # Update without backup"
+    echo "  $0                    # Normal update with complete theme preservation"
+    echo "  $0 --dry-run         # Simulate update and show which themes would be preserved/added"
+    echo "  $0 --no-backup       # Update without backup but preserve all themes"
     echo "  $0 -r https://github.com/user/repo.git -b develop"
     echo ""
 }
