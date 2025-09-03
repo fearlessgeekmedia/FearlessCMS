@@ -18,18 +18,28 @@ A favicon (favorite icon) is a small icon that appears in:
 ### Method 1: Through Admin Interface (Recommended)
 
 1. **Upload Your Favicon**
-   - Upload your favicon file to the `uploads/` directory
-   - Supported formats: `.ico`, `.png`, `.jpg`, `.gif`, `.svg`
-
-2. **Configure in Admin Panel**
    - Go to **Admin > Site Management > Site Settings**
-   - Enter your favicon path in the "Favicon" field
+   - Use the "Choose File" button to upload your favicon
+   - Supported formats: `.ico`, `.png`, `.jpg`, `.gif`, `.svg` (max 1MB)
+   - The file will be automatically uploaded to the `uploads/` directory
+
+2. **Alternative: Manual Path Entry**
+   - If you prefer to upload manually, enter the path in the "Or enter path manually" field
    - Examples:
      - `/uploads/favicon.ico`
      - `/uploads/favicon.png`
      - `https://example.com/favicon.ico`
 
 3. **Save Settings**
+   - Click "Save Settings"
+   - Your favicon will immediately be available on your site
+
+**Features:**
+- ✅ **File Upload**: Direct upload through admin interface
+- ✅ **File Preview**: See current favicon before uploading
+- ✅ **Format Validation**: Automatic validation of file types and size
+- ✅ **Fallback Support**: Manual path entry as alternative
+- ✅ **Auto-naming**: Files are automatically named with timestamp
    - Click "Save Settings"
    - Your favicon will immediately be available on your site
 
