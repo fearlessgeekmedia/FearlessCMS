@@ -2,15 +2,6 @@
 <title>{{site_name}} - {{title}}</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light dark">
-
-<!-- Favicon -->
-{{#if favicon}}
-<link rel="icon" type="image/x-icon" href="{{favicon}}">
-<link rel="apple-touch-icon" href="{{favicon}}">
-{{else}}
-<link rel="icon" type="image/x-icon" href="/favicon.ico">
-{{/if}}
-
 <link rel="stylesheet" href="/themes/default/assets/style.css">
 <script src="https://cdn.tailwindcss.com"></script>
 <style>

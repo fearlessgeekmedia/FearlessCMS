@@ -5,6 +5,8 @@ Welcome to the FearlessCMS documentation. Here you will find guides and referenc
 ## 📚 Documentation Index
 
 ### Getting Started
+
+- [Favicon Management](favicon-management.md) - Complete guide to setting up and managing website favicons
 - [HTML Editor Guide](html-editor-guide.md) - **NEW!** Complete guide to the new HTML editor system
 - [Installation and Setup](gettingstarted.md)
 - [CMS Modes Guide](cms-modes.md)

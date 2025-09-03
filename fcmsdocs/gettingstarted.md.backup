@@ -179,8 +179,6 @@ Edit `config/config.json`:
 {
     "site_name": "My Awesome Site",
     "site_description": "A great website built with FearlessCMS",
-    "site_url": "https://yourdomain.com",
-    "favicon": "/favicon.ico",
     "admin_path": "admin",
     "default_theme": "default"
 }

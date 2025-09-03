@@ -103,7 +103,6 @@ if (strpos($requestPath, '_preview/') === 0) {
         $configFile = CONFIG_DIR . '/config.json';
         $siteName = 'FearlessCMS';
         $siteDescription = '';
-        $favicon = "";
         if (file_exists($configFile)) {
             $config = json_decode(file_get_contents($configFile), true);
             if (isset($config['site_name'])) {
@@ -111,9 +110,6 @@ if (strpos($requestPath, '_preview/') === 0) {
             }
             if (isset($config['site_description'])) {
                 $siteDescription = $config['site_description'];
-            }
-            if (isset($config["favicon"])) {
-                $favicon = $config["favicon"];
             }
         }
 
@@ -145,7 +141,6 @@ if (strpos($requestPath, '_preview/') === 0) {
             'content' => $pageContentHtml,
             'siteName' => $siteName,
             'siteDescription' => $siteDescription,
-            'favicon' => $favicon,
             'currentYear' => date('Y'),
             'logo' => $themeOptions['logo'] ?? null,
             'heroBanner' => $themeOptions['herobanner'] ?? null,
@@ -273,7 +268,6 @@ if ($handled) {
     $siteName = 'FearlessCMS';
     $siteDescription = '';
     if (file_exists($configFile)) {
-    $favicon = "";
         $config = json_decode(file_get_contents($configFile), true);
         if (isset($config['site_name'])) {
             $siteName = $config['site_name'];
@@ -282,9 +276,6 @@ if ($handled) {
             $siteDescription = $config['site_description'];
         }
     }
-        if (isset($config["favicon"])) {
-            $favicon = $config["favicon"];
-        }
 
     // Load theme options
     $themeOptionsFile = CONFIG_DIR . '/theme_options.json';
@@ -319,7 +310,6 @@ if ($handled) {
         'siteName' => $siteName,
         'siteDescription' => $siteDescription,
         'currentYear' => date('Y'),
-        'favicon' => $favicon,
         'logo' => $themeOptions['logo'] ?? null,
         'heroBanner' => $themeOptions['herobanner'] ?? null,
         'mainMenu' => $menuManager->renderMenu('main'),
@@ -523,7 +513,6 @@ $themeManager = new ThemeManager();
 $configFile = CONFIG_DIR . '/config.json';
 $siteName = 'FearlessCMS';
 $siteDescription = '';
-$favicon = "";
 if (file_exists($configFile)) {
     $config = json_decode(file_get_contents($configFile), true);
     if (isset($config['site_name'])) {
@@ -531,9 +520,6 @@ if (file_exists($configFile)) {
     }
     if (isset($config['site_description'])) {
         $siteDescription = $config['site_description'];
-    }
-    if (isset($config["favicon"])) {
-        $favicon = $config["favicon"];
     }
 }
 
@@ -562,7 +548,6 @@ $templateData = [
     'content' => $pageContentHtml,
     'siteName' => $siteName,
     'siteDescription' => $siteDescription,
-    'favicon' => $favicon,
     'currentYear' => date('Y'),
     'logo' => $themeOptions['logo'] ?? null,
     'heroBanner' => $themeOptions['herobanner'] ?? null,

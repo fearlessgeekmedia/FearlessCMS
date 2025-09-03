@@ -60,45 +60,6 @@ Allow users to customize themes without editing code:
 </div>
 ```
 
-
-## ⚙️ Site Settings
-
-### Global Site Configuration
-FearlessCMS provides a comprehensive site settings system accessible through the admin panel:
-
-**Access:** Admin > Site Management > Site Settings
-
-**Available Settings:**
-- **Site Name**: Your website's title (used in page titles and meta tags)
-- **Site Description**: Brief description of your site (used in meta tags and RSS feeds)
-- **Site URL**: Full URL of your website (used in RSS feeds, sitemaps, and structured data)
-- **Favicon**: Path or URL to your website's favicon (displayed in browser tabs and bookmarks)
-
-### Favicon Management
-
-**Setting Your Favicon:**
-1. Upload your favicon file to the `uploads/` directory
-2. Go to **Admin > Site Management > Site Settings**
-3. Enter the favicon path (e.g., `/uploads/favicon.ico`) or full URL
-4. Save settings
-
-**Favicon Best Practices:**
-- Use `.ico` format for maximum browser compatibility
-- Recommended sizes: 16x16, 32x32, or 48x48 pixels
-- All themes automatically support the favicon setting
-- Fallback to `/favicon.ico` if no custom favicon is set
-
-**Template Usage:**
-The favicon setting is automatically available in all templates as `{{favicon}}`:
-```html
-{{#if favicon}}
-<link rel="icon" type="image/x-icon" href="{{favicon}}">
-<link rel="apple-touch-icon" href="{{favicon}}">
-{{else}}
-<link rel="icon" type="image/x-icon" href="/favicon.ico">
-{{/if}}
-```
-
 ## 🔌 Plugin Development
 
 ### Creating Custom Plugins
