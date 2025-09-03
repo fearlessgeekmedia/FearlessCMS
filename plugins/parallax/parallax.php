@@ -1,79 +1,47 @@
 <?php
-/**
- * Parallax Plugin for FearlessCMS
- * 
- * This plugin provides parallax scrolling effects for website content.
- * It supports multiple parallax effects including scroll, fixed, scale, rotate, fade, blur, slide, and zoom.
- * 
- * Features:
- * - Multiple parallax effects
- * - Customizable speed and overlay options
- * - Responsive design support
- * - Performance optimized
- * - Dark mode support
- * 
- * @version 2.0
- * @author FearlessCMS
- * @license MIT
- */
+/*
+Plugin Name: Parallax Sections
+Description: Adds parallax scrolling effects for website sections using shortcodes
+Version: 2.1
+Author: Fearless Geek
+*/
 
 // Prevent direct access
 if (!defined('PROJECT_ROOT')) {
-    exit('Direct access not allowed');
+    die('Direct access not allowed');
 }
 
-// Immediately exit if we're in an admin context to prevent header issues
-if (isset($_SERVER['REQUEST_URI']) && (
-    strpos($_SERVER['REQUEST_URI'], '/admin') !== false ||
-    strpos($_SERVER['REQUEST_URI'], '/login') !== false ||
-    strpos($_SERVER['REQUEST_URI'], '/logout') !== false
-)) {
-    return; // Exit early without defining any functions or hooks
-}
-
-// Initialize parallax functionality
-function parallax_init() {
-    // This function is called by the hook system
-    // No immediate output here to prevent header issues
-}
-
-// Process parallax shortcodes in content
-function parallax_process_shortcode($content) {
-    // Only process if we're not in an admin context that might need headers
-    if (defined('ADMIN_MODE') && ADMIN_MODE) {
-        return $content;
+// Initialize plugin
+function parallaxPluginInit() {
+    // Register the parallax_section shortcode
+    fcms_add_hook('content', 'process_parallax_shortcodes');
+    fcms_add_hook('after_content', 'process_parallax_shortcodes');
+    
+    // Add CSS and JS to pages that use parallax
+    fcms_add_hook('before_render', 'add_parallax_assets');
+    
+    if (getenv('FCMS_DEBUG') === 'true') {
+        error_log("Parallax plugin initialized");
     }
-    
-    // Additional check: look for admin paths in the request
-    if (isset($_SERVER['REQUEST_URI']) && (
-        strpos($_SERVER['REQUEST_URI'], '/admin') !== false ||
-        strpos($_SERVER['REQUEST_URI'], '/login') !== false ||
-        strpos($_SERVER['REQUEST_URI'], '/logout') !== false
-    )) {
-        return $content;
-    }
-    
-    // Process parallax shortcodes
-    $content = process_parallax_shortcodes($content);
-    
-    // Output assets only when processing content
-    output_parallax_assets();
-    
-    return $content;
 }
 
 // Process parallax shortcodes in content
 function process_parallax_shortcodes($content) {
-    // Define the shortcode pattern
+    if (strpos($content, '[parallax_section') === false) {
+        return $content;
+    }
+    
+    // Pattern to match parallax shortcodes
     $pattern = '/\[parallax_section\s+([^\]]*)\](.*?)\[\/parallax_section\]/s';
     
-    // Replace shortcodes with HTML
     $content = preg_replace_callback($pattern, function($matches) {
-        $attributes = parse_shortcode_attributes($matches[1]);
-        $inner_content = $matches[2];
+        $attributes_string = $matches[1];
+        $inner_content = trim($matches[2]);
         
-
+        // Parse attributes
+        $attributes = parse_shortcode_attributes($attributes_string);
         
+        // Generate parallax section HTML
         return generate_parallax_section($attributes, $inner_content);
     }, $content);
     
@@ -81,23 +49,14 @@ function process_parallax_shortcodes($content) {
 }
 
 // Parse shortcode attributes
-function parse_shortcode_attributes($attribute_string) {
+function parse_shortcode_attributes($attributes_string) {
     $attributes = [];
     
-    // Parse key="value" pairs
-    preg_match_all('/(\w+)\s*=\s*["\']([^"\']*)["\']/', $attribute_string, $matches, PREG_SET_ORDER);
+    // Match key="value" or key='value' patterns
+    preg_match_all('/(\w+)=["\']([^"\']*)["\']/', $attributes_string, $matches, PREG_SET_ORDER);
     
     foreach ($matches as $match) {
         $attributes[$match[1]] = $match[2];
-    }
-    
-    // Parse key=value pairs (without quotes)
-    preg_match_all('/(\w+)\s*=\s*([^\s]+)/', $attribute_string, $matches, PREG_SET_ORDER);
-    
-    foreach ($matches as $match) {
-        if (!isset($attributes[$match[1]])) {
-            $attributes[$match[1]] = $match[2];
-        }
     }
     
     return $attributes;
@@ -105,342 +64,260 @@ function parse_shortcode_attributes($attribute_string) {
 
 // Generate parallax section HTML
 function generate_parallax_section($attributes, $content) {
-    // Extract attributes with defaults
-    $id = $attributes['id'] ?? 'parallax-' . uniqid();
-    $background_image = $attributes['background_image'] ?? '';
-    $speed = $attributes['speed'] ?? '0.5';
-    $effect = $attributes['effect'] ?? 'scroll';
-    $class = $attributes['class'] ?? '';
-    $custom_id = $attributes['custom_id'] ?? '';
-    $overlay_color = $attributes['overlay_color'] ?? 'rgba(0,0,0,0.4)';
-    $overlay_opacity = $attributes['overlay_opacity'] ?? '0.4';
+    // Required attributes
+    if (empty($attributes['id']) || empty($attributes['background_image'])) {
+        return '<div class="parallax-error">Parallax section requires id and background_image attributes</div>';
+    }
     
-    // Additional effect-specific attributes
-    $fade_start_percent = $attributes['fade_start_percent'] ?? '30';
-    $fade_distance = $attributes['fade_distance'] ?? '60';
-    $start_opacity = $attributes['start_opacity'] ?? '0.2';
-    $start_offset = $attributes['start_offset'] ?? '30';
+    $id = sanitize_id($attributes['id']);
+    $background_image = htmlspecialchars($attributes['background_image']);
+    $speed = isset($attributes['speed']) ? floatval($attributes['speed']) : 0.5;
+    $effect = isset($attributes['effect']) ? $attributes['effect'] : 'scroll';
+    $overlay_color = isset($attributes['overlay_color']) ? $attributes['overlay_color'] : 'rgba(0,0,0,0.4)';
+    $overlay_opacity = isset($attributes['overlay_opacity']) ? floatval($attributes['overlay_opacity']) : 0.4;
+    $class = isset($attributes['class']) ? htmlspecialchars($attributes['class']) : '';
+    $custom_id = isset($attributes['custom_id']) ? htmlspecialchars($attributes['custom_id']) : '';
+    
+    // Validate speed (allow higher speeds for more dramatic effect)
+    $speed = max(0.0, $speed);
+    
+    // Validate opacity
+    $overlay_opacity = max(0.0, min(1.0, $overlay_opacity));
     
     // Build CSS classes
-    $css_classes = ['parallax-section', 'parallax-' . $effect];
+    $css_classes = ['parallax-section'];
     if ($class) {
         $css_classes = array_merge($css_classes, explode(' ', $class));
     }
+    $css_classes[] = 'parallax-effect-' . $effect;
     
-    // Build data attributes
-    $data_attrs = [
-        'data-speed="' . htmlspecialchars($speed) . '"',
-        'data-effect="' . htmlspecialchars($effect) . '"',
-        'data-overlay-color="' . htmlspecialchars($overlay_color) . '"',
-        'data-overlay-opacity="' . htmlspecialchars($overlay_opacity) . '"'
-    ];
+    // Build HTML
+    $html = '<div class="' . implode(' ', $css_classes) . '"';
+    $html .= ' id="' . $id . '"';
+    if ($custom_id) {
+        $html .= ' data-custom-id="' . $custom_id . '"';
+    }
+    $html .= ' data-parallax-speed="' . $speed . '"';
+    $html .= ' data-parallax-effect="' . $effect . '"';
+    $html .= '">';
     
-    // Add effect-specific data attributes
-    if ($effect === 'fade-in') {
-        $data_attrs[] = 'data-fade-start-percent="' . htmlspecialchars($fade_start_percent) . '"';
-        $data_attrs[] = 'data-fade-distance="' . htmlspecialchars($fade_distance) . '"';
-        $data_attrs[] = 'data-start-opacity="' . htmlspecialchars($start_opacity) . '"';
-        $data_attrs[] = 'data-start-offset="' . htmlspecialchars($start_offset) . '"';
+    // Add parallax background element
+    $html .= '<div class="parallax-background" style="background-image: url(\'' . $background_image . '\');"></div>';
+    
+    // Add overlay if specified
+    if ($overlay_color && $overlay_opacity > 0) {
+        $html .= '<div class="parallax-overlay" style="background-color: ' . $overlay_color . '; opacity: ' . $overlay_opacity . ';"></div>';
     }
     
-    // Build the HTML
-    $html = '<div class="' . implode(' ', $css_classes) . '" id="' . htmlspecialchars($custom_id ?: $id) . '" ' . implode(' ', $data_attrs) . '>';
-    
-    // Add background image if specified
-    if ($background_image) {
-        $html .= '<div class="parallax-background" style="background-image: url(\'' . htmlspecialchars($background_image) . '\');"></div>';
-    }
-    
-    // Add content wrapper
+    // Add content
     $html .= '<div class="parallax-content">' . $content . '</div>';
     
     $html .= '</div>';
     
+    // Mark that this page uses parallax
+    $GLOBALS['parallax_used'] = true;
+    
     return $html;
 }
 
-// Output CSS and JavaScript only when needed
-function output_parallax_assets() {
-    // Only output once
-    static $output_done = false;
-    if ($output_done) {
+// Sanitize ID for HTML
+function sanitize_id($id) {
+    return preg_replace('/[^a-zA-Z0-9_-]/', '', $id);
+}
+
+// Add parallax CSS and JS assets
+function add_parallax_assets() {
+    if (!isset($GLOBALS['parallax_used']) || !$GLOBALS['parallax_used']) {
         return;
     }
-    $output_done = true;
     
-    // CSS for parallax effects
-    $css = <<<CSS
+    // Add CSS
+    echo '<style>' . get_parallax_css() . '</style>';
+    
+    // Add JavaScript
+    echo '<script>' . get_parallax_js() . '</script>';
+}
+
+// Generate parallax CSS
+function get_parallax_css() {
+    return '
 .parallax-section {
     position: relative;
+    min-height: 200px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    box-sizing: border-box;
     overflow: hidden;
-    min-height: 300px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.parallax-background {
+/* Ensure no gaps between sections */
+.parallax-section + .parallax-section {
+    margin-top: 0;
+}
+
+.parallax-section .parallax-overlay {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    transition: transform 0.1s ease-out;
-    z-index: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
 }
 
-.parallax-content {
+.parallax-section .parallax-content {
     position: relative;
     z-index: 2;
     text-align: center;
     color: white;
-    padding: 2rem;
+    padding: 4rem;
     max-width: 800px;
     margin: 0 auto;
 }
 
-.parallax-content h1,
-.parallax-content h2,
-.parallax-content h3,
-.parallax-content h4,
-.parallax-content h5,
-.parallax-content h6 {
-    margin-bottom: 1rem;
+.parallax-section .parallax-content h1,
+.parallax-section .parallax-content h2,
+.parallax-section .parallax-content h3,
+.parallax-section .parallax-content h4,
+.parallax-section .parallax-content h5,
+.parallax-section .parallax-content h6 {
+    color: white;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
 }
 
-.parallax-content p {
-    margin-bottom: 1.5rem;
+.parallax-section .parallax-content p {
     text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
-    line-height: 1.6;
 }
 
-.parallax-content a {
+.parallax-error {
+    background: #ff6b6b;
     color: white;
-    text-decoration: none;
-    border-bottom: 2px solid white;
-    transition: border-color 0.3s ease;
+    padding: 4rem;
+    border-radius: 4px;
+    margin: 1rem 0;
 }
 
-.parallax-content span,
-.parallax-content strong,
-.parallax-content em,
-.parallax-content code,
-.parallax-content mark {
-    display: inline-block;
-    margin: 0 0.2rem;
+
+/* Smooth transitions for fade-in effect */
+.parallax-section {
+    transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-.parallax-content > *:first-child {
-    margin-top: 0;
+.parallax-section .parallax-background {
+    position: absolute;
+    top: -50%;
+    left: 0;
+    right: 0;
+    height: 200%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 0;
+    will-change: transform;
+    transition: transform 0.1s ease-out;
 }
-
-/* Effect-specific styles */
-.parallax-fixed .parallax-background {
-    position: fixed;
-}
-
-.parallax-scale .parallax-background {
-    transform: scale(1.1);
-}
-
-.parallax-rotate .parallax-background {
-    transform: rotate(1deg);
-}
-
-.parallax-fade-in .parallax-content {
-    opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.8s ease, transform 0.8s ease;
-}
-
-.parallax-fade-in.visible .parallax-content {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.parallax-blur .parallax-background {
-    filter: blur(2px);
-}
-
-.parallax-slide .parallax-content {
-    transform: translateX(-100px);
-    transition: transform 0.6s ease;
-}
-
-.parallax-slide.visible .parallax-content {
-    transform: translateX(0);
-}
-
-.parallax-zoom .parallax-background {
-    transform: scale(1.2);
-    transition: transform 0.8s ease;
-}
-
-.parallax-zoom.visible .parallax-background {
-    transform: scale(1);
-}
-
-/* Responsive adjustments */
+/* Responsive design */
 @media (max-width: 768px) {
     .parallax-section {
+        background-attachment: scroll;
         min-height: 200px;
+    margin: 0;
+    padding: 0;
+    border: none;
+    box-sizing: border-box;
+    vertical-align: top;
+    margin: 0;
+    padding: 0;
     }
     
-    .parallax-content {
-        padding: 1rem;
-    }
-    
-    .parallax-content h1 {
-        font-size: 1.8rem;
-    }
-    
-    .parallax-content h2 {
-        font-size: 1.5rem;
+    .parallax-section .parallax-content {
+        padding: 4rem;
     }
 }
 
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
-    .parallax-content {
-        color: #f0f0f0;
-    }
-    
-    .parallax-content a {
-        color: #f0f0f0;
-        border-bottom-color: #f0f0f0;
+    .parallax-section .parallax-content {
+        color: #ffffff;
     }
 }
-CSS;
+';
+}
 
-    // JavaScript for parallax effects
-    $js = <<<JS
-function initParallax() {
+// Generate parallax JavaScript
+function get_parallax_js() {
+    return '
+document.addEventListener("DOMContentLoaded", function() {
     const parallaxSections = document.querySelectorAll(".parallax-section");
     
     if (parallaxSections.length === 0) return;
     
-    // Set up scroll event listener for parallax effect
-    window.addEventListener('scroll', function() {
-        // Apply parallax to visible sections
+    let ticking = false;
+    
+    function updateParallax() {
+        const scrollTop = window.pageYOffset;
+        
         parallaxSections.forEach(function(section) {
+            const speed = parseFloat(section.dataset.parallaxSpeed) || parseFloat(section.dataset.speed) || 2.0;
+            const effect = section.dataset.effect || section.dataset.parallaxEffect || "scroll";
             const rect = section.getBoundingClientRect();
-            const background = section.querySelector(".parallax-background");
+            const sectionTop = rect.top + scrollTop;
             
-            if (background && rect.top < window.innerHeight && rect.bottom > 0) {
-                // Calculate parallax relative to section position, not total page scroll
-                const speed = parseFloat(section.dataset.speed) || 0.5;
-                const sectionTop = rect.top;
-                const sectionHeight = rect.height;
-                const windowHeight = window.innerHeight;
-                
-                // Only apply parallax when section is actually visible in viewport
-                if (sectionTop < windowHeight && sectionTop > -sectionHeight) {
-                    // Calculate how much this specific section should move based on its visibility
-                    const visibleHeight = Math.min(windowHeight, sectionHeight);
-                    const scrollProgress = Math.max(0, Math.min(1, (windowHeight - sectionTop) / visibleHeight));
-                    const maxMove = sectionHeight * 0.15; // Limit movement to 15% of section height
-                    const moveAmount = scrollProgress * maxMove * speed;
-                    
-                    // Apply the transform only to this section's background
-                    background.style.transform = 'translateY(' + moveAmount + 'px)';
-                } else {
-                    // Reset transform when section is not visible
-                    background.style.transform = 'translateY(0px)';
+            if (effect === "scroll") {
+                // Only animate if section is in viewport
+                if (rect.bottom >= 0 && rect.top <= window.innerHeight) {
+                    const yPos = -(scrollTop - sectionTop) * speed;
+                    const background = section.querySelector(".parallax-background");
+                    if (background) {
+                        background.style.transform = "translateY(" + yPos + "px)";
+                    }
                 }
+            } else if (effect === "fade-in") {
+                // Fade-in effect: fade in as section enters viewport
+                const sectionTop = rect.top;
+                const sectionBottom = rect.bottom;
+                const viewportHeight = window.innerHeight;
+                
+                let opacity = 0;
+                let translateY = 20;
+                
+                if (sectionTop < viewportHeight && sectionBottom > 0) {
+                    // Section is in viewport
+                    const visibleHeight = Math.min(sectionBottom, viewportHeight) - Math.max(sectionTop, 0);
+                    const totalHeight = rect.height;
+                    const visibilityRatio = visibleHeight / totalHeight;
+                    
+                    // Fade in as more of the section becomes visible
+                    opacity = Math.min(1, visibilityRatio * 2);
+                    translateY = 20 * (1 - visibilityRatio);
+                }
+                
+                section.style.opacity = opacity;
+                section.style.transform = "translateY(" + translateY + "px)";
             }
         });
-    });
-    
-    // Initialize overlays
-    setOverlayStyles();
-}
-
-function setOverlayStyles() {
-    const parallaxSections = document.querySelectorAll(".parallax-section");
-    console.log("Found " + parallaxSections.length + " parallax sections");
-    
-    parallaxSections.forEach(function(section, index) {
-        const overlayColor = section.dataset.overlayColor || "rgba(0,0,0,0.4)";
-        const overlayOpacity = section.dataset.overlayOpacity || "0.4";
         
-        // Create overlay div
-        const overlayDiv = document.createElement("div");
-        overlayDiv.className = "parallax-overlay";
-        overlayDiv.style.cssText = "position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: " + overlayColor + "; z-index: 1;";
-        
-        // Remove existing overlay if any
-        const existingOverlay = section.querySelector(".parallax-overlay");
-        if (existingOverlay) {
-            existingOverlay.remove();
-        }
-        
-        // Insert the overlay before the content
-        const content = section.querySelector(".parallax-content");
-        if (content) {
-            section.insertBefore(overlayDiv, content);
-            console.log("Overlay added to section " + index);
-        } else {
-            console.log("No content found in section " + index);
-        }
-    });
-}
-
-// Initialize parallax when DOM is ready
-if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initParallax);
-} else {
-    initParallax();
-}
-
-// Also initialize on window load for images
-window.addEventListener("load", function() {
-    // Ensure all background images are loaded
-    const parallaxSections = document.querySelectorAll(".parallax-section");
-    parallaxSections.forEach(function(section) {
-        const background = section.querySelector(".parallax-background");
-        if (background) {
-            const bgImage = background.style.backgroundImage;
-            if (bgImage && bgImage !== "none") {
-                const imgUrl = bgImage.replace(/url\(["\']?([^"\']+)["\']?\)/, "$1");
-                const img = new Image();
-                img.onload = function() {
-                    background.classList.add("loaded");
-                };
-                img.onerror = function() {
-                    console.warn("Failed to load parallax background image:", imgUrl);
-                };
-                img.src = imgUrl;
-            } else {
-                background.classList.add("loaded");
-            }
-        }
-    });
-    
-    // Initialize overlays after images are loaded
-    setOverlayStyles();
-});
-JS;
-
-    // Output the CSS and JavaScript
-    echo '<style>' . $css . '</style>';
-    echo '<script>' . $js . '</script>';
-}
-
-// Register hooks only when this plugin is loaded through the plugin system
-// This prevents immediate execution that causes header issues
-if (function_exists('fcms_add_hook')) {
-    // Only register hooks if we're not in an admin context
-    if (!isset($_SERVER['REQUEST_URI']) || (
-        strpos($_SERVER['REQUEST_URI'], '/admin') === false &&
-        strpos($_SERVER['REQUEST_URI'], '/login') === false &&
-        strpos($_SERVER['REQUEST_URI'], '/logout') === false
-    )) {
-        fcms_add_hook('init', 'parallax_init');
-        fcms_add_hook('content', 'parallax_process_shortcode');
+        ticking = false;
     }
+    
+    function requestTick() {
+        if (!ticking) {
+            requestAnimationFrame(updateParallax);
+            ticking = true;
+        }
+    }
+    
+    // Throttled scroll event
+    window.addEventListener("scroll", requestTick, { passive: true });
+    
+    // Initial call
+    updateParallax();
+});
+';
 }
-?> 
+
+// Initialize the plugin
+parallaxPluginInit();
