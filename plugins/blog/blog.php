@@ -257,29 +257,55 @@ fcms_register_admin_section('blog', [
         
         echo '<a href="?action=blog&new=1" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">New Post</a><br><br>';
 
-        // Add file manager script only if file management is allowed
-        if (isset($GLOBALS['cmsModeManager']) && $GLOBALS['cmsModeManager']->canManageFiles()) {
-            echo '<script>
-            function openFileManager() {
-                window.open("/admin?action=files", "filemanager", "width=800,height=600");
-                window.addEventListener("message", function(event) {
-                    if (event.data.type === "file_selected") {
-                        document.querySelector("input[name=\'featured_image\']").value = event.data.url;
-                        // Update preview if it exists
-                        const previewContainer = document.querySelector("input[name=\'featured_image\']").closest("div").nextElementSibling;
-                        if (previewContainer) {
-                            previewContainer.innerHTML = `<img src="${event.data.url}" alt="Featured image preview" class="max-w-xs h-auto">`;
+        // Add direct upload functionality for featured images
+        echo '<script>
+        function uploadFeaturedImage() {
+            const input = document.createElement("input");
+            input.setAttribute("type", "file");
+            input.setAttribute("accept", "image/*");
+            input.click();
+            
+            input.onchange = function() {
+                const file = input.files[0];
+                if (file) {
+                    // Show loading state
+                    const uploadBtn = document.querySelector("#featured-image-upload-btn");
+                    const originalText = uploadBtn.textContent;
+                    uploadBtn.textContent = "Uploading...";
+                    uploadBtn.disabled = true;
+                    
+                    const formData = new FormData();
+                    formData.append("action", "upload_featured_image");
+                    formData.append("image", file);
+                    
+                    fetch("?action=upload_featured_image", {
+                        method: "POST",
+                        body: formData
+                    })
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
+                        if (data.success) {
+                            document.querySelector("input[name=\'featured_image\']").value = data.url;
+                            // Update preview
+                            const previewContainer = document.querySelector("#featured-image-preview");
+                            if (previewContainer) {
+                                previewContainer.innerHTML = `<img src="${data.url}" alt="Featured image preview" class="max-w-xs h-auto rounded">`;
+                            }
                         } else {
-                            const newPreview = document.createElement("div");
-                            newPreview.className = "mt-2";
-                            newPreview.innerHTML = `<img src="${event.data.url}" alt="Featured image preview" class="max-w-xs h-auto">`;
-                            document.querySelector("input[name=\'featured_image\']").closest("div").after(newPreview);
+                            alert("Upload failed: " + (data.error || "Unknown error"));
                         }
-                    }
-                });
-            }
-            </script>';
+                    })
+                    .catch(function(error) {
+                        alert("Upload failed: " + error);
+                    })
+                    .finally(function() {
+                        uploadBtn.textContent = originalText;
+                        uploadBtn.disabled = false;
+                    });
+                }
+            };
         }
+        </script>';
 
         // Add Quill.js styling
         echo '<style>
@@ -322,14 +348,14 @@ fcms_register_admin_section('blog', [
                 echo '<div><label>Status:</label><select name="status" class="border rounded px-2 py-1 w-full"><option value="published"' . ($edit['status'] === 'published' ? ' selected' : '') . '>Published</option><option value="draft"' . ($edit['status'] === 'draft' ? ' selected' : '') . '>Draft</option></select></div>';
                 echo '<div><label>Featured Image:</label>';
                 echo '<div class="flex items-center space-x-4">';
-                echo '<input type="text" name="featured_image" value="' . htmlspecialchars($edit['featured_image'] ?? '') . '" class="border rounded px-2 py-1 flex-grow" placeholder="Image URL or path">';
-                if (isset($GLOBALS['cmsModeManager']) && $GLOBALS['cmsModeManager']->canManageFiles()) {
-                    echo '<button type="button" onclick="openFileManager()" class="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600">Select Image</button>';
+                echo '<input type="text" name="featured_image" value="' . htmlspecialchars($edit['featured_image'] ?? '') . '" class="border rounded px-2 py-1 flex-grow" placeholder="Image URL or upload using button">';
+                echo '<button type="button" id="featured-image-upload-btn" onclick="uploadFeaturedImage()" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">Upload Image</button>';
+                echo '</div>';
+                echo '<div id="featured-image-preview" class="mt-2">';
+                if (!empty($edit['featured_image'])) {
+                    echo '<img src="' . htmlspecialchars($edit['featured_image']) . '" alt="Featured image preview" class="max-w-xs h-auto rounded">';
                 }
                 echo '</div>';
-                if (!empty($edit['featured_image'])) {
-                    echo '<div class="mt-2"><img src="' . htmlspecialchars($edit['featured_image']) . '" alt="Featured image preview" class="max-w-xs h-auto"></div>';
-                }
                 echo '</div>';
                 echo '<div><label>Content:</label></div>';
                 echo '<div id="blog-toast-editor"></div>';
@@ -446,11 +472,10 @@ fcms_register_admin_section('blog', [
             echo '<div><label>Status:</label><select name="status" class="border rounded px-2 py-1 w-full"><option value="published">Published</option><option value="draft">Draft</option></select></div>';
             echo '<div><label>Featured Image:</label>';
             echo '<div class="flex items-center space-x-4">';
-            echo '<input type="text" name="featured_image" class="border rounded px-2 py-1 flex-grow" placeholder="Image URL or path">';
-            if (isset($GLOBALS['cmsModeManager']) && $GLOBALS['cmsModeManager']->canManageFiles()) {
-                echo '<button type="button" onclick="openFileManager()" class="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600">Select Image</button>';
-            }
+            echo '<input type="text" name="featured_image" class="border rounded px-2 py-1 flex-grow" placeholder="Image URL or upload using button">';
+            echo '<button type="button" id="featured-image-upload-btn" onclick="uploadFeaturedImage()" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">Upload Image</button>';
             echo '</div>';
+            echo '<div id="featured-image-preview" class="mt-2"></div>';
             echo '</div>';
             echo '<div><label>Content:</label></div>';
             echo '<div id="blog-toast-editor"></div>';
