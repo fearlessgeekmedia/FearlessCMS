@@ -17,6 +17,7 @@ function forms_settings_page() {
             'smtp_username' => $_POST['smtp_username'] ?? '',
             'smtp_password' => $_POST['smtp_password'] ?? '',
             'smtp_encryption' => $_POST['smtp_encryption'] ?? 'none',
+            'smtp_verify_ssl' => $_POST['smtp_verify_ssl'] ?? '0',
             'from_email' => $_POST['from_email'] ?? '',
             'from_name' => $_POST['from_name'] ?? ''
         ];
@@ -84,8 +85,32 @@ function forms_settings_page() {
                     
                     // Enable TLS on the existing connection
                     forms_log("Enabling TLS on existing connection");
+                    
+                    // Create SSL context with options based on settings
+                    $verify_ssl = ($settings['smtp_verify_ssl'] ?? '0') === '1';
+                    forms_log("SSL verification setting: " . ($verify_ssl ? 'enabled' : 'disabled'));
+                    
+                    $context = stream_context_create([
+                        'ssl' => [
+                            'verify_peer' => $verify_ssl,
+                            'verify_peer_name' => $verify_ssl,
+                            'allow_self_signed' => !$verify_ssl,
+                            'crypto_method' => STREAM_CRYPTO_METHOD_TLS_CLIENT
+                        ]
+                    ]);
+                    
+                    // Set the context on the stream
+                    stream_context_set_option($smtp, 'ssl', 'verify_peer', $verify_ssl);
+                    stream_context_set_option($smtp, 'ssl', 'verify_peer_name', $verify_ssl);
+                    stream_context_set_option($smtp, 'ssl', 'allow_self_signed', !$verify_ssl);
+                    
                     if (!stream_socket_enable_crypto($smtp, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
-                        $error = "Failed to enable TLS encryption";
+                        $ssl_error = error_get_last();
+                        $error = "Failed to enable TLS encryption. This may be due to SSL certificate verification issues.";
+                        if ($ssl_error) {
+                            $error .= " Error details: " . $ssl_error['message'];
+                            forms_log("SSL Error details: " . print_r($ssl_error, true));
+                        }
                         forms_log($error);
                         fclose($smtp);
                         return;
@@ -112,7 +137,20 @@ function forms_settings_page() {
                 } elseif ($settings['smtp_encryption'] === 'ssl') {
                     // For SSL, connect directly with SSL
                     fclose($smtp);
-                    $smtp = @fsockopen('ssl://' . $settings['smtp_host'], $settings['smtp_port'], $errno, $errstr, 30);
+                    
+                    // Create SSL context with options based on settings
+                    $verify_ssl = ($settings['smtp_verify_ssl'] ?? '0') === '1';
+                    forms_log("SSL verification setting: " . ($verify_ssl ? 'enabled' : 'disabled'));
+                    
+                    $context = stream_context_create([
+                        'ssl' => [
+                            'verify_peer' => $verify_ssl,
+                            'verify_peer_name' => $verify_ssl,
+                            'allow_self_signed' => !$verify_ssl
+                        ]
+                    ]);
+                    
+                    $smtp = @stream_socket_client('ssl://' . $settings['smtp_host'] . ':' . $settings['smtp_port'], $errno, $errstr, 30, STREAM_CLIENT_CONNECT, $context);
                     if (!$smtp) {
                         $error = "Failed to establish SSL connection: $errstr ($errno)";
                         forms_log($error);
@@ -262,6 +300,7 @@ function forms_settings_page() {
             'smtp_username' => $_POST['smtp_username'] ?? '',
             'smtp_password' => $_POST['smtp_password'] ?? '',
             'smtp_encryption' => $_POST['smtp_encryption'] ?? 'none',
+            'smtp_verify_ssl' => $_POST['smtp_verify_ssl'] ?? '0',
             'from_email' => $_POST['from_email'] ?? '',
             'from_name' => $_POST['from_name'] ?? '',
             'success_message' => $_POST['success_message'] ?? '',
@@ -375,6 +414,16 @@ function forms_settings_page() {
                             <option value="tls" <?php echo ($settings['smtp_encryption'] ?? '') === 'tls' ? 'selected' : ''; ?>>TLS</option>
                             <option value="ssl" <?php echo ($settings['smtp_encryption'] ?? '') === 'ssl' ? 'selected' : ''; ?>>SSL</option>
                         </select>
+                    </div>
+                    
+                    <div>
+                        <label for="smtp_verify_ssl" class="block text-sm font-medium text-gray-700">SSL Certificate Verification</label>
+                        <select name="smtp_verify_ssl" id="smtp_verify_ssl" 
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option value="0" <?php echo ($settings['smtp_verify_ssl'] ?? '0') === '0' ? 'selected' : ''; ?>>Disabled (for testing)</option>
+                            <option value="1" <?php echo ($settings['smtp_verify_ssl'] ?? '0') === '1' ? 'selected' : ''; ?>>Enabled (recommended for production)</option>
+                        </select>
+                        <p class="mt-1 text-sm text-gray-500">Disable SSL certificate verification only for testing purposes. Keep enabled for production use.</p>
                     </div>
                     
                     <div>
