@@ -15,7 +15,7 @@ global $cmsModeManager;
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
     <!-- Quill.js Editor (replaces Toast UI) -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js?v=1756935904"></script>
     <style>
         .fira-code { font-family: 'Fira Code', monospace; }
         

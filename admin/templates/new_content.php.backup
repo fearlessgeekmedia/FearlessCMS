@@ -228,6 +228,8 @@ if (in_array('page-with-sidebar', $templates)) {
 </style>
 
 <script>
+    // CACHE BUST: 1756936089 - FORCE REFRESH
+// Initialize Quill.js editor
 let quill;
 let isRichMode = true;
 
@@ -257,8 +259,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add custom image handling after Quill is initialized
     setTimeout(function() {
+        console.log("Custom image handling starting...");
+        console.log("TEST: This should show up in console");
         var imageButton = document.createElement("button");
-        imageButton.innerHTML = '<svg viewBox="0 0 18 18"><rect class="ql-stroke" height="10" width="12" x="3" y="4"></rect><circle class="ql-fill" cx="6" cy="6" r="1"></circle><polyline class="ql-even ql-fill" points="5 8,9 4,13 8,13 14,5 14"></polyline></svg>';
+        imageButton.innerHTML = "<svg viewBox=\"0 0 18 18\"><rect class=\"ql-stroke\" height=\"10\" width=\"12\" x=\"3\" y=\"4\"></rect><circle class=\"ql-fill\" cx=\"6\" cy=\"6\" r=\"1\"></circle><polyline class=\"ql-even ql-fill\" points=\"5 8,9 4,13 8,13 14,5 14\"></polyline></svg>";
         imageButton.type = "button";
         imageButton.className = "ql-image";
         imageButton.setAttribute("aria-label", "Insert image");
@@ -284,10 +288,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     .then(function(response) { return response.json(); })
                     .then(function(data) {
                         if (data.success) {
-                            var range = quill.getSelection(); 
-                            if (!range) { 
-                                range = { index: quill.getLength() }; 
-                            }
+                            var range = quill.getSelection();
                             quill.insertEmbed(range.index, "image", data.url);
                         } else {
                             alert("Upload failed: " + (data.error || "Unknown error"));
@@ -311,7 +312,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (toolbarContainer) {
             toolbarContainer.appendChild(imageButton);
         }
+        console.log("Custom image handling completed");
     }, 100);
+    }
 
     // Handle form submission
     document.getElementById('newPageForm').addEventListener('submit', function(e) {
@@ -325,17 +328,21 @@ document.addEventListener('DOMContentLoaded', function() {
             content = document.getElementById('codeEditor').value;
         }
         
-        // Set the content in the hidden textarea
-        document.getElementById('codeEditor').value = content;
+        // Create a hidden input for the content
+        let contentInput = document.createElement('input');
+        contentInput.type = 'hidden';
+        contentInput.name = 'new_page_content';
+        contentInput.value = content;
+        this.appendChild(contentInput);
         
         // Submit the form
         this.submit();
     });
 
-    // Handle mode toggle
+    // Editor mode toggle
     document.getElementById('toggleMode').addEventListener('click', function() {
         if (isRichMode) {
-            // Switch to code editor
+            // Switch to code view
             document.getElementById('richEditorContainer').classList.add('hidden');
             document.getElementById('codeEditorContainer').classList.remove('hidden');
             document.getElementById('codeEditor').value = quill.root.innerHTML;
@@ -362,7 +369,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Preview function
 function previewContent() {
     let content;
     if (isRichMode) {

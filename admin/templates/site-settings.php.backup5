@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     $config['favicon'] = '/uploads/' . $fileName;
                     $faviconUploaded = true;
                 } else {
-                    $error_message = 'Favicon upload completed successfully! (Note: This message may appear due to form double-processing, but your file was uploaded correctly.)';
+                    $error_message = 'Failed to upload favicon file.';
                 }
             } else {
                 $error_message = 'Invalid favicon file. Please upload a valid ICO, PNG, JPG, GIF, or SVG file (max 1MB).';
@@ -507,10 +507,10 @@ document.addEventListener("DOMContentLoaded", function() {
                     </label>
                     <input type="text" 
                            id="favicon_path" 
-                       name="favicon" 
-                       value="<?= htmlspecialchars($favicon) ?>" 
+                           name="favicon" 
+                           value="<?= htmlspecialchars($favicon) ?>" 
                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       placeholder="/favicon.ico or https://example.com/favicon.ico">
+                           placeholder="/favicon.ico or https://example.com/favicon.ico">
                 </div>
 
 <script>

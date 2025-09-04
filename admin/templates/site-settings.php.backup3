@@ -12,7 +12,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         // Update settings
 
         // Handle favicon upload
-        $faviconUploaded = false;
         if (isset($_FILES['favicon_upload']) && $_FILES['favicon_upload']['error'] === UPLOAD_ERR_OK) {
             $uploadDir = PROJECT_ROOT . '/uploads/';
             $allowedTypes = ['image/x-icon', 'image/png', 'image/jpeg', 'image/gif', 'image/svg+xml'];
@@ -28,16 +27,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 
                 if (move_uploaded_file($fileInfo['tmp_name'], $uploadPath)) {
                     $config['favicon'] = '/uploads/' . $fileName;
-                    $faviconUploaded = true;
                 } else {
-                    $error_message = 'Favicon upload completed successfully! (Note: This message may appear due to form double-processing, but your file was uploaded correctly.)';
+                    $error_message = 'Failed to upload favicon file.';
                 }
             } else {
                 $error_message = 'Invalid favicon file. Please upload a valid ICO, PNG, JPG, GIF, or SVG file (max 1MB).';
             }
         } else {
             // Use manual path if no upload
-            $config['favicon'] = trim($_POST['favicon'] ?? '');
         }
         $config['site_name'] = trim($_POST['site_name'] ?? '');
         $config['site_description'] = trim($_POST['site_description'] ?? '');
@@ -48,9 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         
         // Save config
         if (file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT))) {
-            if (!isset($error_message)) {
-            $success_message = $faviconUploaded ? 'Site settings and favicon uploaded successfully!' : 'Site settings saved successfully!';
-        }
+            $success_message = 'Site settings saved successfully!';
         } else {
             $error_message = 'Failed to save site settings. Please check file permissions.';
         }
@@ -507,10 +502,10 @@ document.addEventListener("DOMContentLoaded", function() {
                     </label>
                     <input type="text" 
                            id="favicon_path" 
-                       name="favicon" 
-                       value="<?= htmlspecialchars($favicon) ?>" 
+                           name="favicon" 
+                           value="<?= htmlspecialchars($favicon) ?>" 
                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       placeholder="/favicon.ico or https://example.com/favicon.ico">
+                           placeholder="/favicon.ico or https://example.com/favicon.ico">
                 </div>
 
 <script>
