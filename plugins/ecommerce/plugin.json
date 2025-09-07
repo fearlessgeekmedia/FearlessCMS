@@ -1,7 +1,0 @@
-{
-    "name": "E-commerce",
-    "description": "A basic e-commerce plugin for FearlessCMS.",
-    "version": "1.0.0",
-    "author": "Fearless Geek",
-    "dependencies": ["mariadb-connector"]
-}

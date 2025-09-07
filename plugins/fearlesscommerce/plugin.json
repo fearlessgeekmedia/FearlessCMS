@@ -1,0 +1,7 @@
+{
+    "name": "FearlessCommerce",
+    "description": "A comprehensive e-commerce plugin for FearlessCMS with Stripe and PayPal integration.",
+    "version": "2.0.0",
+    "author": "Fearless Geek",
+    "dependencies": ["mariadb-connector"]
+}
