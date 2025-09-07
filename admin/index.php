@@ -91,11 +91,7 @@ if ($_SERVER['REQUEST_URI'] === '/' . $adminPath . '/serve-js.php') {
     exit;
 }
 
-// Check authentication FIRST - redirect to login if not authenticated
-if (!isLoggedIn()) {
-    header('Location: /' . $adminPath . '/login');
-    exit;
-}
+// Authentication check will be done later after session is fully loaded
 
 // Apply security headers for admin interface
 set_security_headers();

@@ -11,10 +11,18 @@ if (getenv('FCMS_DEBUG') === 'true') {
 }
 ini_set('log_errors', 1);
 
-// Check if session extension is available and start session for CSRF protection
-$csrf_token = null;
-if (function_exists('session_start')) {
+// Include proper session configuration for macOS compatibility
+require_once __DIR__ . '/includes/session.php';
+
+// Ensure session is started and available
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    error_log("Warning: Session not active, attempting to start");
     session_start();
+}
+
+// Generate CSRF token using the proper session handling
+$csrf_token = null;
+if (isset($_SESSION)) {
     // Generate CSRF token if not exists
     if (!isset($_SESSION['csrf_token'])) {
         // Use random_bytes() if available (PHP 7.0+), otherwise fallback
@@ -28,8 +36,8 @@ if (function_exists('session_start')) {
     }
     $csrf_token = $_SESSION['csrf_token'];
 } else {
-    // Session extension not available - use simple token fallback
-    error_log("Warning: PHP session extension not available, using fallback CSRF protection");
+    // Session not available - use simple token fallback
+    error_log("Warning: Session not available, using fallback CSRF protection");
     if (function_exists('random_bytes')) {
         $csrf_token = bin2hex(random_bytes(32));
     } elseif (function_exists('openssl_random_pseudo_bytes')) {
@@ -42,14 +50,25 @@ if (function_exists('session_start')) {
 // CSRF validation function
 function validate_csrf_token(): bool {
     if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token'])) {
+        if (getenv('FCMS_DEBUG') === 'true') {
+            error_log("CSRF validation failed: POST token=" . ($_POST['csrf_token'] ?? 'NOT SET') . ", SESSION token=" . ($_SESSION['csrf_token'] ?? 'NOT SET'));
+        }
         return false;
     }
     // Use hash_equals() if available (PHP 5.6+), otherwise fallback to comparison
     if (function_exists('hash_equals')) {
-        return hash_equals($_SESSION['csrf_token'], $_POST['csrf_token']);
+        $valid = hash_equals($_SESSION['csrf_token'], $_POST['csrf_token']);
+        if (getenv('FCMS_DEBUG') === 'true') {
+            error_log("CSRF validation result: " . ($valid ? 'VALID' : 'INVALID'));
+        }
+        return $valid;
     } else {
         // Fallback comparison (less secure against timing attacks)
-        return $_SESSION['csrf_token'] === $_POST['csrf_token'];
+        $valid = $_SESSION['csrf_token'] === $_POST['csrf_token'];
+        if (getenv('FCMS_DEBUG') === 'true') {
+            error_log("CSRF validation result: " . ($valid ? 'VALID' : 'INVALID'));
+        }
+        return $valid;
     }
 }
 
