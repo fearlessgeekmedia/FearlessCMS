@@ -192,8 +192,8 @@ class TemplateRenderer {
         }
 
         // Add Tailwind CSS if not already included
-        if (strpos($content, 'tailwindcss') === false) {
-            $tailwindLink = '<script src="https://cdn.tailwindcss.com"></script>';
+        if (strpos($content, 'tailwindcss') === false && strpos($content, '/public/css/output.css') === false) {
+            $tailwindLink = '<link href="/public/css/output.css" rel="stylesheet">';
             $content = str_replace('</head>', $tailwindLink . "\n</head>", $content);
         }
 

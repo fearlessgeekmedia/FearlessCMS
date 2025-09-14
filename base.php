@@ -8,7 +8,7 @@ require_once dirname(dirname(__DIR__)) . '/version.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mission Control - <?php echo htmlspecialchars($pageTitle ?? ''); ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="/public/css/output.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
     <!-- Toast UI Editor -->
     <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />

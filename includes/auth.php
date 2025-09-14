@@ -183,8 +183,8 @@ function set_security_headers() {
 
         // Content Security Policy (restrictive but functional)
     $csp = "default-src 'self'; " .
-           "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com https://uicdn.toast.com https://cdn.quilljs.com; " .
-           "style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://fonts.googleapis.com https://uicdn.toast.com https://cdn.quilljs.com; " .
+           "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://uicdn.toast.com https://cdn.quilljs.com; " .
+           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://uicdn.toast.com https://cdn.quilljs.com; " .
            "font-src 'self' https://fonts.gstatic.com; " .
            "img-src 'self' data: https:; " .
            "connect-src 'self'; " .

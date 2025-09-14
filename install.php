@@ -115,7 +115,8 @@ $ALLOWED_COMMANDS = [
     'which' => ['which'],
     'npm' => ['npm', 'init', '-y'],
     'npm_install' => ['npm', 'install', 'fs-extra', 'handlebars', 'marked', '--save'],
-    'npm_install_dev' => ['npm', 'install', 'sass', '--save-dev']
+    'npm_install_dev' => ['npm', 'install', 'sass', '--save-dev'],
+    'npm_install_tailwind' => ['npm', 'install', 'tailwindcss@^3.4.0', '--save-dev']
 ];
 
 function check_extension(string $ext): array {
@@ -171,7 +172,7 @@ function run_cmd(array $cmd, ?string $cwd = null): array {
 
 // CLI mode support
 if (PHP_SAPI === 'cli') {
-    $options = getopt('', ['check', 'create-dirs', 'install-export-deps', 'create-admin:', 'password:', 'password-file:']);
+    $options = getopt('', ['check', 'create-dirs', 'install-export-deps', 'install-tailwind', 'create-admin:', 'password:', 'password-file:']);
     $exitCode = 0;
 
     if (isset($options['check'])) {
@@ -282,6 +283,27 @@ if (PHP_SAPI === 'cli') {
         }
     }
 
+    if (isset($options['install-tailwind'])) {
+        $node = run_cmd(['which', 'node']);
+        $npm = run_cmd(['which', 'npm']);
+        if ($node['code'] !== 0 || $npm['code'] !== 0) {
+            echo "Node.js or npm not found in PATH. Please install Node.js and npm first.\n";
+            $exitCode = 1;
+        } else {
+            // Initialize package.json if missing
+            if (!file_exists($projectRoot . '/package.json')) {
+                $init = run_cmd(['npm', 'init', '-y'], $projectRoot);
+                echo 'npm init: exit ' . $init['code'] . (trim($init['err']) ? ' (' . strip_tags($init['err']) . ')' : '') . "\n";
+                if ($init['code'] !== 0) $exitCode = 1;
+            }
+            $install = run_cmd(['npm', 'install', 'tailwindcss@^3.4.0', '--save-dev'], $projectRoot);
+            echo 'Tailwind CSS install: exit ' . $install['code'] . "\n";
+            if (trim($install['out'])) echo strip_tags($install['out']) . "\n";
+            if (trim($install['err'])) echo strip_tags($install['err']) . "\n";
+            if ($install['code'] !== 0) $exitCode = 1;
+        }
+    }
+
     if (isset($options['create-admin'])) {
         $username = trim($options['create-admin']);
         $password = '';
@@ -339,7 +361,7 @@ if (PHP_SAPI === 'cli') {
     }
 
     if (empty($options)) {
-        echo "Usage: php install.php [--check] [--create-dirs] [--install-export-deps] [--install-dev-deps] [--create-admin=<username> --password=<pwd>|--password-file=<file>]\n";
+        echo "Usage: php install.php [--check] [--create-dirs] [--install-export-deps] [--install-dev-deps] [--install-tailwind] [--create-admin=<username> --password=<pwd>|--password-file=<file>]\n";
     }
 
     // Security warning for CLI users
@@ -409,6 +431,26 @@ if ($action === 'install_dev_deps') {
         // Install SASS compiler as dev dependency
         $install = run_cmd(['npm', 'install', 'sass', '--save-dev'], $projectRoot);
         $resultMessages[] = 'SASS install: exit ' . $install['code'];
+        if (trim($install['out'])) $resultMessages[] = '<pre class="text-xs whitespace-pre-wrap">' . htmlspecialchars($install['out']) . '</pre>';
+        if (trim($install['err'])) $resultMessages[] = '<pre class="text-xs text-red-700 whitespace-pre-wrap">' . htmlspecialchars($install['err']) . '</pre>';
+    }
+}
+
+if ($action === 'install_tailwind') {
+    // Detect node and npm
+    $node = run_cmd(['which', 'node']);
+    $npm = run_cmd(['which', 'npm']);
+    if ($node['code'] !== 0 || $npm['code'] !== 0) {
+        $resultMessages[] = 'Node.js or npm not found in PATH. Please install Node.js and npm first.';
+    } else {
+        // Initialize package.json if missing
+        if (!file_exists($projectRoot . '/package.json')) {
+            $init = run_cmd(['npm', 'init', '-y'], $projectRoot);
+            $resultMessages[] = 'npm init: exit ' . $init['code'] . (trim($init['err']) ? ' (' . htmlspecialchars($init['err']) . ')' : '');
+        }
+        // Install Tailwind CSS as dev dependency
+        $install = run_cmd(['npm', 'install', 'tailwindcss@^3.4.0', '--save-dev'], $projectRoot);
+        $resultMessages[] = 'Tailwind CSS install: exit ' . $install['code'];
         if (trim($install['out'])) $resultMessages[] = '<pre class="text-xs whitespace-pre-wrap">' . htmlspecialchars($install['out']) . '</pre>';
         if (trim($install['err'])) $resultMessages[] = '<pre class="text-xs text-red-700 whitespace-pre-wrap">' . htmlspecialchars($install['err']) . '</pre>';
     }
@@ -528,7 +570,7 @@ if ($action === 'create_admin') {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FearlessCMS Installer</title>
-<script src="https://cdn.tailwindcss.com"></script>
+<link href="/public/css/output.css" rel="stylesheet">
 </head>
 <body class="bg-gray-100">
     <div class="max-w-4xl mx-auto my-10 bg-white shadow rounded p-6">
@@ -637,13 +679,21 @@ if ($action === 'create_admin') {
                 
                 <div class="mt-4">
                     <h3 class="font-medium mb-2">Optional Development Dependencies</h3>
-                                    <p class="text-sm text-gray-600 mb-2">For theme development with SASS/SCSS support:</p>
-                <form method="POST">
-                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
-                    <input type="hidden" name="action" value="install_dev_deps">
-                    <button class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">Install SASS Compiler</button>
-                </form>
-                <p class="text-xs text-gray-600 mt-2">Installs <code>sass</code> as a development dependency for compiling SASS/SCSS files.</p>
+                    <p class="text-sm text-gray-600 mb-2">For theme development with SASS/SCSS support:</p>
+                    <form method="POST" class="mb-3">
+                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
+                        <input type="hidden" name="action" value="install_dev_deps">
+                        <button class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">Install SASS Compiler</button>
+                    </form>
+                    <p class="text-xs text-gray-600 mb-3">Installs <code>sass</code> as a development dependency for compiling SASS/SCSS files.</p>
+                    
+                    <p class="text-sm text-gray-600 mb-2">For modern CSS framework with Tailwind CSS:</p>
+                    <form method="POST" class="mb-3">
+                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
+                        <input type="hidden" name="action" value="install_tailwind">
+                        <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Install Tailwind CSS</button>
+                    </form>
+                    <p class="text-xs text-gray-600 mb-3">Installs <code>tailwindcss@^3.4.0</code> as a development dependency for utility-first CSS framework.</p>
                 
                 <div class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
                     <h4 class="font-medium text-yellow-800 mb-2">Installation Process:</h4>
@@ -726,6 +776,7 @@ if ($action === 'create_admin') {
                             <li><code>php install.php --create-dirs</code> - Create required directories</li>
                             <li><code>php install.php --install-export-deps</code> - Install Node.js dependencies</li>
                             <li><code>php install.php --install-dev-deps</code> - Install development dependencies</li>
+                            <li><code>php install.php --install-tailwind</code> - Install Tailwind CSS</li>
                             <li><code>php install.php --create-admin=username --password=password</code> - Create admin user</li>
                         </ul>
                     </div>

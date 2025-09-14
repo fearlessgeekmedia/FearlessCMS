@@ -10,7 +10,7 @@
 {{/if}}
 <title>{{title}} - {{siteName}}</title>
 <link rel="stylesheet" href="/themes/{{theme}}/style.css">
-<script src="https://cdn.tailwindcss.com"></script>
+<link href="/public/css/output.css" rel="stylesheet">
 <style>
   
 </style> 

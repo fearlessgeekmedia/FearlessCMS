@@ -1,6 +1,13 @@
 {
+  "scripts": {
+    "build-css": "tailwindcss -i ./src/input.css -o ./public/css/output.css --watch",
+    "build-css-prod": "tailwindcss -i ./src/input.css -o ./public/css/output.css --minify"
+  },
   "dependencies": {
     "fs-extra": "^11.3.0",
     "handlebars": "^4.7.8"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
   }
 }
