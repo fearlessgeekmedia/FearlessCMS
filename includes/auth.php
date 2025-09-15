@@ -264,6 +264,40 @@ function login($username, $password) {
         return false;
     }
 
+    // Check for demo mode authentication - always handle demo user specially
+    if ($username === 'demo' && $password === 'demo') {
+        require_once PROJECT_ROOT . '/includes/DemoModeManager.php';
+        $demoManager = new DemoModeManager();
+        
+        // Regenerate session ID to prevent session fixation attacks
+        if (function_exists('session_regenerate_id') && !headers_sent()) {
+            session_regenerate_id(false);
+        }
+
+        // Set session variables with demo permissions
+        $_SESSION['username'] = $username;
+        $_SESSION['permissions'] = [
+            'manage_users', 'manage_themes', 'manage_plugins', 'manage_updates', 
+            'manage_menus', 'manage_widgets', 'edit_content', 'delete_content', 
+            'manage_roles', 'create_content', 'upload_files', 'manage_files',
+            'manage_content'
+        ];
+        
+        // Debug: Log session data
+        error_log("DEBUG LOGIN: Demo user session set - username: " . $_SESSION['username']);
+        error_log("DEBUG LOGIN: Demo user permissions: " . json_encode($_SESSION['permissions']));
+        
+        // Start demo session if demo mode is enabled
+        if ($demoManager->isEnabled()) {
+            $demoManager->startDemoSession($username);
+            error_log("Demo user login successful with demo mode: " . $username);
+        } else {
+            error_log("Demo user login successful without demo mode: " . $username);
+        }
+        
+        return true;
+    }
+
     $users_file = CONFIG_DIR . '/users.json';
 
     if (!file_exists($users_file)) {
@@ -320,6 +354,22 @@ function login($username, $password) {
 
 function logout() {
     error_log("Logging out user: " . ($_SESSION['username'] ?? 'unknown'));
+    
+    // Handle demo session cleanup
+    if (isset($_SESSION['demo_mode']) && $_SESSION['demo_mode'] === true) {
+        require_once PROJECT_ROOT . '/includes/DemoModeManager.php';
+        $demoManager = new DemoModeManager();
+        $demoManager->endDemoSession();
+    }
+    
+    // Clean up demo content if this is a demo user
+    if (isset($_SESSION['username']) && $_SESSION['username'] === 'demo') {
+        require_once PROJECT_ROOT . '/includes/DemoModeManager.php';
+        $demoManager = new DemoModeManager();
+        $cleanedFiles = $demoManager->cleanupDemoContent();
+        error_log("Demo user logout: Cleaned up {$cleanedFiles} demo content files");
+    }
+    
     if (function_exists('session_destroy')) {
         session_destroy();
     }
@@ -330,6 +380,13 @@ function fcms_check_permission($username, $permission) {
     if (empty($username)) {
         error_log("Permission check failed: username is empty");
         return false;
+    }
+
+    // Check session permissions first (for demo users and direct permission assignments)
+    if (isset($_SESSION['permissions']) && is_array($_SESSION['permissions'])) {
+        if (in_array($permission, $_SESSION['permissions'])) {
+            return true;
+        }
     }
 
     $usersFile = CONFIG_DIR . '/users.json';
@@ -365,10 +422,12 @@ function fcms_check_permission($username, $permission) {
             }
         }
         // Fallback to direct permissions
-        return isset($user['permissions']) && in_array($permission, $user['permissions']);
+        if (isset($user['permissions']) && in_array($permission, $user['permissions'])) {
+            return true;
+        }
     }
 
-    error_log("Permission check failed: user not found");
+    error_log("Permission check failed: user not found or permission denied");
     return false;
 }
 

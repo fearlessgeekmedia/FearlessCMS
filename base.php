@@ -81,6 +81,15 @@ require_once dirname(dirname(__DIR__)) . '/version.php';
             <div class="flex items-center space-x-4">
                 <h1 class="text-xl font-bold fira-code"><a href="<?php echo BASE_URL; ?>?action=dashboard" aria-label="Go to Mission Control dashboard">Mission Control</a></h1>
                 <span class="text-sm">Welcome, <span aria-label="Current user"><?php echo htmlspecialchars($username ?? ''); ?></span></span>
+                <?php 
+                // Check for demo mode
+                require_once PROJECT_ROOT . '/includes/DemoModeManager.php';
+                $demoManager = new DemoModeManager();
+                if ($demoManager->isDemoSession() || $demoManager->isDemoUserSession()): ?>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        DEMO MODE - RESTRICTED
+                    </span>
+                <?php endif; ?>
                 <a href="/" target="_blank" aria-label="View your website (opens in new tab)">Your site</a>
             </div>
             <div class="flex items-center space-x-4" role="menubar">
@@ -90,6 +99,9 @@ require_once dirname(dirname(__DIR__)) . '/version.php';
                 <a href="<?php echo BASE_URL; ?>?action=manage_menus" class="hover:text-green-200" role="menuitem">Menus</a>
                 <a href="<?php echo BASE_URL; ?>?action=manage_widgets" class="hover:text-green-200" role="menuitem">Widgets</a>
                 <a href="<?php echo BASE_URL; ?>?action=manage_plugins" class="hover:text-green-200" role="menuitem">Plugins</a>
+                <?php if (fcms_check_permission($_SESSION['username'], 'manage_users')): ?>
+                    <a href="<?php echo BASE_URL; ?>?action=demo_mode" class="hover:text-green-200" role="menuitem">Demo Mode</a>
+                <?php endif; ?>
                 <?php 
                 // Add admin sections to navigation
                 $admin_sections = fcms_get_admin_sections();
@@ -114,6 +126,17 @@ require_once dirname(dirname(__DIR__)) . '/version.php';
     <div id="status-messages" aria-live="polite" aria-atomic="true" class="sr-only"></div>
 
     <div class="max-w-7xl mx-auto px-4">
+        <?php 
+        // Check for demo mode and show warning
+        require_once PROJECT_ROOT . '/includes/DemoModeManager.php';
+        $demoManager = new DemoModeManager();
+        if ($demoManager->isDemoSession() || $demoManager->isDemoUserSession()): ?>
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-4" role="alert" aria-live="assertive">
+                <span class="sr-only">Security Warning: </span>
+                <strong>⚠️ DEMO MODE ACTIVE:</strong> You are logged in as a demo user. All content changes are temporary and isolated. You cannot access or modify real website content.
+            </div>
+        <?php endif; ?>
+        
         <?php if (!empty($error)): ?>
             <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-4" role="alert" aria-live="assertive">
                 <span class="sr-only">Error: </span><?php echo htmlspecialchars($error); ?>

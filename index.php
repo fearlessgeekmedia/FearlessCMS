@@ -45,6 +45,37 @@ if (($queryPos = strpos($requestPath, '?')) !== false) {
     }
 }
 
+// Check for demo mode session and handle demo content
+require_once PROJECT_ROOT . '/includes/DemoModeManager.php';
+$demoManager = new DemoModeManager();
+
+// Debug session information
+error_log("DEBUG MAIN: Session username: " . ($_SESSION['username'] ?? 'not set'));
+error_log("DEBUG MAIN: Demo session: " . ($demoManager->isDemoSession() ? 'Yes' : 'No'));
+error_log("DEBUG MAIN: Demo user session: " . ($demoManager->isDemoUserSession() ? 'Yes' : 'No'));
+error_log("DEBUG MAIN: Session data: " . json_encode($_SESSION ?? []));
+error_log("DEBUG MAIN: Session ID: " . (session_id() ?: 'no session'));
+error_log("DEBUG MAIN: Session status: " . (function_exists('session_status') ? session_status() : 'function not available'));
+
+// Force log to file for debugging
+file_put_contents('/tmp/debug.log', "DEBUG MAIN: " . date('Y-m-d H:i:s') . " - Session username: " . ($_SESSION['username'] ?? 'not set') . "\n", FILE_APPEND);
+file_put_contents('/tmp/debug.log', "DEBUG MAIN: " . date('Y-m-d H:i:s') . " - Demo user session: " . ($demoManager->isDemoUserSession() ? 'Yes' : 'No') . "\n", FILE_APPEND);
+
+// If this is a demo session, check for session expiration
+if ($demoManager->isDemoSession() || $demoManager->isDemoUserSession()) {
+    error_log("DEMO: Demo user accessing website - path: " . $requestPath);
+    
+    if ($demoManager->isDemoSessionExpired()) {
+        $demoManager->endDemoSession();
+        // Redirect to login with demo expired message
+        header('Location: /admin/login?demo_expired=1');
+        exit;
+    }
+    
+    // Demo users can access their temporary content
+    error_log("DEMO: Demo user accessing demo content");
+}
+
 // Remove any subdomain prefix if present
 
 // Load configuration for admin routing
@@ -341,8 +372,43 @@ if ($handled) {
     exit;
 }
 
-// Try direct path first
-$contentFile = CONTENT_DIR . '/' . $path . '.md';
+// Determine content directory based on demo mode
+$contentDir = CONTENT_DIR;
+$isDemoUser = $demoManager->isDemoUser();
+
+// Additional logging for debugging
+if ($isDemoUser) {
+    error_log("DEMO: Demo user detected using enhanced detection in main routing");
+} else {
+    error_log("DEMO: No demo user detected - using regular content directory");
+}
+
+if ($isDemoUser) {
+    // Demo users can access their temporary demo content
+    $contentDir = $demoManager->getDemoContentDir();
+    
+    // Log demo user access
+    error_log("DEMO: Demo user accessing demo content - path: " . $path);
+    
+    // Check demo pages first, then demo blog
+    if ($path === 'home' || $path === 'about' || $path === 'contact') {
+        $contentFile = $contentDir . '/pages/' . $path . '.md';
+    } elseif (strpos($path, 'blog/') === 0) {
+        $blogPath = substr($path, 5); // Remove 'blog/' prefix
+        $contentFile = $contentDir . '/blog/' . $blogPath . '.md';
+    } elseif (strpos($path, 'pages/') === 0) {
+        // Path already includes 'pages/' prefix
+        $contentFile = $contentDir . '/' . $path . '.md';
+    } else {
+        $contentFile = $contentDir . '/pages/' . $path . '.md';
+    }
+    
+    error_log("DEMO: Demo user accessing demo content directory: " . $contentDir);
+} else {
+    // Regular users access real content
+    $contentFile = $contentDir . '/' . $path . '.md';
+}
+
 error_log("Looking for content file: " . $contentFile);
 
 // If not found, try parent/child relationship
@@ -355,7 +421,7 @@ if (!file_exists($contentFile)) {
         error_log("Parent path: " . $parentPath . ", Child path: " . $childPath);
 
         // Check if parent exists
-        $parentFile = CONTENT_DIR . '/' . $parentPath . '.md';
+        $parentFile = $contentDir . '/' . $parentPath . '.md';
         error_log("Looking for parent file: " . $parentFile);
         if (file_exists($parentFile)) {
             error_log("Parent file found");
@@ -366,7 +432,7 @@ if (!file_exists($contentFile)) {
             }
 
             // Check if this is a child page
-            $childFile = CONTENT_DIR . '/' . $childPath . '.md';
+            $childFile = $contentDir . '/' . $childPath . '.md';
             error_log("Looking for child file: " . $childFile);
             if (file_exists($childFile)) {
                 error_log("Child file found");
@@ -524,6 +590,15 @@ $configFile = CONFIG_DIR . '/config.json';
 $siteName = 'FearlessCMS';
 $siteDescription = '';
 $favicon = "";
+
+// Use demo config if in demo mode
+if ($demoManager->isDemoSession() || $demoManager->isDemoUserSession()) {
+    $demoConfigFile = $demoManager->getDemoConfigDir() . '/config.json';
+    if (file_exists($demoConfigFile)) {
+        $configFile = $demoConfigFile;
+    }
+}
+
 if (file_exists($configFile)) {
     $config = json_decode(file_get_contents($configFile), true);
     if (isset($config['site_name'])) {

@@ -15,12 +15,63 @@ Author: Fearless Geek
 define('BLOG_POSTS_FILE', CONTENT_DIR . '/blog_posts.json');
 
 function blog_load_posts() {
+    // Check if we're in demo mode and should load demo posts
+    if (class_exists('DemoModeManager')) {
+        $demoManager = new DemoModeManager();
+        if ($demoManager->isDemoSession() || $demoManager->isDemoUserSession()) {
+            return blog_load_demo_posts();
+        }
+    }
+    
     if (!file_exists(BLOG_POSTS_FILE)) return [];
     $posts = json_decode(file_get_contents(BLOG_POSTS_FILE), true);
     return is_array($posts) ? $posts : [];
 }
 
+function blog_load_demo_posts() {
+    $demoManager = new DemoModeManager();
+    $demoContentDir = $demoManager->getDemoContentDir();
+    $demoBlogDir = $demoContentDir . '/blog';
+    
+    if (!is_dir($demoBlogDir)) return [];
+    
+    $posts = [];
+    $files = glob($demoBlogDir . '/*.md');
+    
+    foreach ($files as $file) {
+        $content = file_get_contents($file);
+        $slug = basename($file, '.md');
+        
+        // Parse frontmatter
+        if (preg_match('/<!-- json\s*(.*?)\s*-->/s', $content, $matches)) {
+            $metadata = json_decode($matches[1], true);
+            if ($metadata) {
+                $posts[] = [
+                    'id' => crc32($slug), // Generate consistent ID
+                    'title' => $metadata['title'] ?? $slug,
+                    'slug' => $slug,
+                    'date' => $metadata['date'] ?? date('Y-m-d'),
+                    'content' => trim(str_replace($matches[0], '', $content)),
+                    'status' => 'published',
+                    'featured_image' => $metadata['featured_image'] ?? '',
+                    'demo_post' => true
+                ];
+            }
+        }
+    }
+    
+    return $posts;
+}
+
 function blog_save_posts($posts) {
+    // Check if we're in demo mode and should save to demo content
+    if (class_exists('DemoModeManager')) {
+        $demoManager = new DemoModeManager();
+        if ($demoManager->isDemoSession() || $demoManager->isDemoUserSession()) {
+            return blog_save_demo_posts($posts);
+        }
+    }
+    
     if (getenv('FCMS_DEBUG') === 'true') {
         error_log("Blog plugin - blog_save_posts called");
         error_log("Blog plugin - Saving to file: " . BLOG_POSTS_FILE);
@@ -38,6 +89,41 @@ function blog_save_posts($posts) {
     }
 
     return $result;
+}
+
+function blog_save_demo_posts($posts) {
+    $demoManager = new DemoModeManager();
+    $demoContentDir = $demoManager->getDemoContentDir();
+    $demoBlogDir = $demoContentDir . '/blog';
+    
+    // Ensure demo blog directory exists
+    if (!is_dir($demoBlogDir)) {
+        mkdir($demoBlogDir, 0755, true);
+    }
+    
+    // Save each post as a markdown file in demo content
+    foreach ($posts as $post) {
+        if (isset($post['demo_post']) && $post['demo_post']) {
+            $slug = $post['slug'];
+            $filePath = $demoBlogDir . '/' . $slug . '.md';
+            
+            $metadata = [
+                'title' => $post['title'],
+                'date' => $post['date'],
+                'author' => 'Demo User',
+                'featured_image' => $post['featured_image'] ?? '',
+                'demo_post' => true,
+                'demo_session_id' => $_SESSION['demo_session_id'] ?? uniqid('demo_', true)
+            ];
+            
+            $frontmatter = '<!-- json ' . json_encode($metadata, JSON_PRETTY_PRINT) . ' -->';
+            $fileContent = $frontmatter . "\n\n" . $post['content'];
+            
+            file_put_contents($filePath, $fileContent);
+        }
+    }
+    
+    return true;
 }
 
 // Helper function to create URL-friendly slugs
@@ -197,7 +283,7 @@ fcms_register_admin_section('blog', [
                                 }
                             }
                         } else {
-                            $posts[] = [
+                            $newPost = [
                                 'id' => time(),
                                 'title' => $title,
                                 'slug' => $slug,
@@ -206,6 +292,16 @@ fcms_register_admin_section('blog', [
                                 'status' => $status,
                                 'featured_image' => $_POST['featured_image'] ?? ''
                             ];
+                            
+                            // Mark as demo post if in demo mode
+                            if (class_exists('DemoModeManager')) {
+                                $demoManager = new DemoModeManager();
+                                if ($demoManager->isDemoSession() || $demoManager->isDemoUserSession()) {
+                                    $newPost['demo_post'] = true;
+                                }
+                            }
+                            
+                            $posts[] = $newPost;
                         }
                         blog_save_posts($posts);
                         // Set success message in session and let admin system handle the flow

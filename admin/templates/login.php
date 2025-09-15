@@ -27,6 +27,12 @@
                     <span class="block sm:inline"><?php echo htmlspecialchars($error); ?></span>
                 </div>
             <?php endif; ?>
+            
+            <?php if (isset($_GET['demo_expired'])): ?>
+                <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
+                    <span class="block sm:inline">Demo session has expired. Please log in again.</span>
+                </div>
+            <?php endif; ?>
 
             <form class="mt-8 space-y-6" method="POST" action="/<?php echo $adminPath; ?>/login">
                 <input type="hidden" name="action" value="login">

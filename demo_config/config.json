@@ -1,0 +1,8 @@
+{
+    "site_name": "FearlessCMS Demo",
+    "site_description": "A demonstration of FearlessCMS capabilities",
+    "site_keywords": "demo, cms, fearlesscms, content management",
+    "site_author": "Demo User",
+    "admin_path": "admin",
+    "demo_mode": true
+}
