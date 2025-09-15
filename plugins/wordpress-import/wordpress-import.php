@@ -2,7 +2,7 @@
 /*
 Plugin Name: WordPress Import
 Description: Import content from WordPress XML export files into FearlessCMS
-Version: 1.0
+Version: 0.0.3
 Author: Fearless Geek
 */
 

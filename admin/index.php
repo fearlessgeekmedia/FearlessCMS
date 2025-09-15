@@ -114,9 +114,9 @@ if (getenv('FCMS_DEBUG') === 'true') {
     ini_set('display_startup_errors', 1);
     error_reporting(E_ALL);
 } else {
-    ini_set('display_errors', 1); // Temporarily enable for debugging
-    ini_set('display_startup_errors', 1);
-    error_reporting(E_ALL);
+    ini_set('display_errors', 0);
+    ini_set('display_startup_errors', 0);
+    error_reporting(E_ERROR | E_WARNING | E_PARSE);
 }
 
 // Log admin access for security monitoring

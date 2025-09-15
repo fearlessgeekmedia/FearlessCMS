@@ -2,7 +2,7 @@
 /*
 Plugin Name: FearlessCommerce
 Description: A comprehensive e-commerce plugin for FearlessCMS with Stripe and PayPal integration.
-Version: 2.0.0
+Version: 0.0.3
 Author: Fearless Geek
 Dependencies: mariadb-connector
 */

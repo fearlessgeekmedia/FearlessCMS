@@ -2,7 +2,7 @@
 /*
 Plugin Name: Forms
 Description: Adds form management capabilities to FearlessCMS
-Version: 1.0
+Version: 0.0.3
 Author: Fearless Geek
 */
 

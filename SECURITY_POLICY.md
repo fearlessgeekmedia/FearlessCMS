@@ -65,9 +65,9 @@ We provide security updates for the following versions:
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 2.x.x   | ✅ Fully supported |
-| 1.x.x   | ⚠️ Critical fixes only |
-| < 1.0   | ❌ No longer supported |
+| 0.0.3.x | ✅ Fully supported (Current Alpha) |
+| 0.0.2.x | ⚠️ Critical fixes only |
+| 0.0.1.x | ❌ No longer supported |
 
 ### How to Report Security Vulnerabilities
 

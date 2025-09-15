@@ -2,7 +2,7 @@
 /*
 Plugin Name: Advanced SEO Premium
 Description: Premium SEO features for FearlessCMS including Meta Editor, Open Graph Preview, 404 Monitoring, XML sitemap, structured data, and advanced meta tags
-Version: 2.0
+Version: 0.0.3
 Author: Fearless Geek
 Premium: true
 */

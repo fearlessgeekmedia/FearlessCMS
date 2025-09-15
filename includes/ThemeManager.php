@@ -186,7 +186,7 @@ class ThemeManager {
                     'id' => $themeId,
                     'name' => $themeConfig['name'] ?? ucfirst($themeId) . ' Theme',
                     'description' => $themeConfig['description'] ?? 'A theme for FearlessCMS',
-                    'version' => $themeConfig['version'] ?? '1.0',
+                    'version' => $themeConfig['version'] ?? '0.0.3',
                     'author' => $themeConfig['author'] ?? 'Unknown',
                     'thumbnail' => $thumbnail,
                     'active' => ($themeId === $this->activeTheme)
@@ -197,7 +197,7 @@ class ThemeManager {
                     'id' => $themeId,
                     'name' => ucfirst($themeId) . ' Theme',
                     'description' => 'A theme for FearlessCMS',
-                    'version' => '1.0',
+                    'version' => '0.0.3',
                     'author' => 'Unknown',
                     'thumbnail' => $thumbnail,
                     'active' => ($themeId === $this->activeTheme)

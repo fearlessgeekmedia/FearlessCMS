@@ -1,7 +1,7 @@
 {
     "name": "MariaDB Connector",
     "description": "Provides MariaDB database connectivity for FearlessCMS plugins",
-    "version": "1.0.0",
+    "version": "0.0.3",
     "author": "Fearless Geek",
     "main": "mariadb-connector.php",
     "features": [

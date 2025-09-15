@@ -8,7 +8,7 @@ if (getenv('FCMS_DEBUG') === 'true') {
 /*
 Plugin Name: Blog
 Description: Adds a blog with admin management to FearlessCMS.
-Version: 2.0
+Version: 0.0.3
 Author: Fearless Geek
 */
 

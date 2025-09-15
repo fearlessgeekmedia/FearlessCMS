@@ -1,7 +1,7 @@
 {
     "name": "WordPress Import",
     "description": "Import content from WordPress XML export files into FearlessCMS",
-    "version": "1.0",
+    "version": "0.0.3",
     "author": "Fearless Geek",
     "features": [
         "Import WordPress posts and pages",

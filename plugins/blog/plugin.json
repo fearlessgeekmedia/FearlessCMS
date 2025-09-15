@@ -1,6 +1,6 @@
 {
     "name": "Blog",
     "description": "Adds a blog with admin management to FearlessCMS",
-    "version": "1.0",
+    "version": "0.0.3",
     "author": "Fearless Geek"
 } 

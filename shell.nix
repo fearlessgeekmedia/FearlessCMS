@@ -69,6 +69,12 @@ in pkgs.mkShell {
     pkgs.php81Packages.composer
   ] ++ devTools;
 
+  # Set environment variables
+  env = {
+    HOME = toString ./. + "/sandbox_home";
+  };
+
+
   shellHook = ''
     echo "🐺 FearlessCMS Development Environment"
     echo "======================================"
@@ -86,8 +92,9 @@ in pkgs.mkShell {
     echo ""
 
     # Set up sandbox environment
-    export HOME="$(pwd)/sandbox_home"
-    mkdir -p "$HOME"
+    SANDBOX_HOME="$(pwd)/sandbox_home"
+    mkdir -p "$SANDBOX_HOME"
+    
 
     # Set up environment variables
     export FCMS_DEBUG=true

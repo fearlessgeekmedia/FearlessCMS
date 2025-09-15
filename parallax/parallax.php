@@ -21,7 +21,7 @@ function parallax_process_shortcode($content) {
     if (getenv('FCMS_DEBUG') === 'true') {
         error_log("Parallax plugin called with content length: " . strlen($content));
         error_log("Content preview: " . substr($content, 0, 500));
-        error_log("Parallax plugin version 2.0 - Added multiple parallax effects");
+        error_log("Parallax plugin version 0.0.3 - Added multiple parallax effects");
     }
     
     // Check if content contains parallax shortcodes
