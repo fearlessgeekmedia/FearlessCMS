@@ -57,6 +57,7 @@ let
     bat
     fd
     fzf
+    lsof
   ];
 
 in pkgs.mkShell {
@@ -88,7 +89,7 @@ in pkgs.mkShell {
     echo "  php install.php --install-export-deps # Install Node deps"
     echo "  node export.js                        # Export static site"
     echo "  npm install                           # Install Node dependencies"
-    echo "  ./serve.sh          		  # Start PHP server"
+    echo "  ./serve.sh          		              # Start PHP server"
     echo ""
 
     # Set up sandbox environment

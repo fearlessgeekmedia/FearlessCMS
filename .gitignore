@@ -21,3 +21,6 @@ SESSION_COMPATIBILITY_FIX.md
 # Sandbox and development directories
 sandbox_home/
 sandbox_home/*
+
+# Compiled CSS files
+public/css/output.css
