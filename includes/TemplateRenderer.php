@@ -46,6 +46,8 @@ class TemplateRenderer {
             'currentYear' => date('Y'),
             'current_year' => date('Y'),
             'mainMenu' => $this->menuManager->renderMenu('main'),
+            // Provide safe defaults for optional placeholders used by themes
+            'custom_css' => $data['custom_css'] ?? '',
 
             'themeOptions' => $this->themeOptions,
             'theme_options' => $this->themeOptions
