@@ -161,6 +161,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && in_array
     exit;
 }
 
+
+
 // Image uploads are now handled at the beginning of the file
 
 require_once __DIR__ . '/widget-handler.php';

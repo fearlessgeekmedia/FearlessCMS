@@ -68,8 +68,8 @@
                     <p class="text-sm text-gray-500">Cache system not available</p>
                 <?php endif; ?>
             </div>
-        </div>
-    </div>
+            </div>
+            </div>
 </div>
 
 <!-- Delete Confirmation Modal -->
