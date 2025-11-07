@@ -49,17 +49,9 @@ if (($queryPos = strpos($requestPath, '?')) !== false) {
 require_once PROJECT_ROOT . '/includes/DemoModeManager.php';
 $demoManager = new DemoModeManager();
 
-// Debug session information
-error_log("DEBUG MAIN: Session username: " . ($_SESSION['username'] ?? 'not set'));
-error_log("DEBUG MAIN: Demo session: " . ($demoManager->isDemoSession() ? 'Yes' : 'No'));
-error_log("DEBUG MAIN: Demo user session: " . ($demoManager->isDemoUserSession() ? 'Yes' : 'No'));
-error_log("DEBUG MAIN: Session data: " . json_encode($_SESSION ?? []));
-error_log("DEBUG MAIN: Session ID: " . (session_id() ?: 'no session'));
-error_log("DEBUG MAIN: Session status: " . (function_exists('session_status') ? session_status() : 'function not available'));
 
-// Force log to file for debugging
-file_put_contents('/tmp/debug.log', "DEBUG MAIN: " . date('Y-m-d H:i:s') . " - Session username: " . ($_SESSION['username'] ?? 'not set') . "\n", FILE_APPEND);
-file_put_contents('/tmp/debug.log', "DEBUG MAIN: " . date('Y-m-d H:i:s') . " - Demo user session: " . ($demoManager->isDemoUserSession() ? 'Yes' : 'No') . "\n", FILE_APPEND);
+
+
 
 // If this is a demo session, check for session expiration
 if ($demoManager->isDemoSession() || $demoManager->isDemoUserSession()) {
@@ -95,12 +87,8 @@ if (strpos($requestPath, '_preview/') === 0) {
     $previewPath = substr($requestPath, 9); // Remove '_preview/' prefix
     $previewFile = CONTENT_DIR . '/_preview/' . $previewPath . '.md';
 
-    error_log("Looking for preview file: " . $previewFile);
-
     if (file_exists($previewFile)) {
-        error_log("Preview file found");
         $contentData = file_get_contents($previewFile);
-        error_log("Preview content loaded: " . substr($contentData, 0, 100) . "...");
 
         $metadata = [];
         if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $contentData, $matches)) {
@@ -108,7 +96,6 @@ if (strpos($requestPath, '_preview/') === 0) {
             $content = substr($contentData, strlen($matches[0]));
             // error_log("Preview metadata: " . json_encode($metadata));
         } else {
-            error_log("No metadata found in preview file");
             $content = $contentData;
         }
 
@@ -197,11 +184,6 @@ if (strpos($requestPath, '_preview/') === 0) {
         // Update the content in template data
         $templateData['content'] = $pageContentHtml;
 
-        // Debug: Check if content has curly braces
-        if (strpos($pageContentHtml, '{') !== false || strpos($pageContentHtml, '}') !== false) {
-            error_log("CONTENT HAS CURLY BRACES: " . substr($pageContentHtml, 0, 200));
-        }
-
         // Render template
         $templateName = $metadata['template'] ?? 'page-with-sidebar';
         fcms_do_hook_ref('before_render', $templateName);
@@ -211,8 +193,7 @@ if (strpos($requestPath, '_preview/') === 0) {
         echo $template;
         exit;
     } else {
-        error_log("Preview file not found: " . $previewFile);
-        // If preview file doesn't exist, show 404
+    // If preview file doesn't exist, show 404
         fcms_flush_output(); // Flush output buffer before setting headers
         http_response_code(404);
         $pageTitle = 'Preview Not Found';
@@ -229,7 +210,6 @@ if (strpos($requestPath, '_preview/') === 0) {
     }
 }
 
-error_log("DEBUG: Reached top of index.php");
 // --- Advanced page caching using CacheManager ---
 // Only cache GET requests, non-admin, non-logged-in
 $cacheEnabled = false;
@@ -287,7 +267,6 @@ if ($requestPath === '') {
     $path = $requestPath;
     $templateName = 'page-with-sidebar'; // Default to page-with-sidebar template for other paths
 }
-error_log("Processed path: " . $path);
 
 // Initialize variables for plugin handling
 $handled = false;
@@ -364,9 +343,6 @@ if ($handled) {
         }
     }
 
-    // Debug: Log the template data
-    error_log("TEMPLATE DATA: " . json_encode($templateData));
-
     // Render template
     echo $templateRenderer->render($template, $templateData);
     exit;
@@ -409,43 +385,34 @@ if ($isDemoUser) {
     $contentFile = $contentDir . '/' . $path . '.md';
 }
 
-error_log("Looking for content file: " . $contentFile);
-
 // If not found, try parent/child relationship
 if (!file_exists($contentFile)) {
-    error_log("Content file not found, trying parent/child relationship");
     $parts = explode('/', $path);
     if (count($parts) > 1) {
         $childPath = array_pop($parts);
         $parentPath = implode('/', $parts);
-        error_log("Parent path: " . $parentPath . ", Child path: " . $childPath);
 
         // Check if parent exists
         $parentFile = $contentDir . '/' . $parentPath . '.md';
-        error_log("Looking for parent file: " . $parentFile);
         if (file_exists($parentFile)) {
-            error_log("Parent file found");
             $parentContent = file_get_contents($parentFile);
             $parentMetadata = [];
             if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $parentContent, $matches)) {
-                $parentMetadata = json_decode($matches[1], true);
+            $parentMetadata = json_decode($matches[1], true);
             }
 
-            // Check if this is a child page
+        // Check if this is a child page
             $childFile = $contentDir . '/' . $childPath . '.md';
-            error_log("Looking for child file: " . $childFile);
             if (file_exists($childFile)) {
-                error_log("Child file found");
-                $childContent = file_get_contents($childFile);
-                $childMetadata = [];
+            $childContent = file_get_contents($childFile);
+            $childMetadata = [];
                 if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $childContent, $matches)) {
-                    $childMetadata = json_decode($matches[1], true);
+                $childMetadata = json_decode($matches[1], true);
                 }
 
                 // If child has this parent, use it
                 if (isset($childMetadata['parent']) && $childMetadata['parent'] === $parentPath) {
-                    $contentFile = $childFile;
-                    error_log("Using child file as content file");
+        $contentFile = $childFile;
                 }
             }
         }
@@ -454,7 +421,6 @@ if (!file_exists($contentFile)) {
 
 // 404 fallback
 if (!file_exists($contentFile)) {
-    error_log("No content file found, showing 404");
     fcms_flush_output(); // Flush output buffer before setting headers
     http_response_code(404);
 
@@ -462,10 +428,8 @@ if (!file_exists($contentFile)) {
     fcms_do_hook('404_error', $_SERVER['REQUEST_URI']);
 
     $contentFile = CONTENT_DIR . '/404.md';
-    error_log("Looking for 404 file: " . $contentFile);
     if (!file_exists($contentFile)) {
-        error_log("No 404 file found, showing default 404 message");
-        // If no 404.md, show a default message
+    // If no 404.md, show a default message
         $pageTitle = 'Page Not Found';
         $pageContent = '<p>The page you requested could not be found.</p>';
 
@@ -575,11 +539,6 @@ if ($editorMode !== 'html') {
     $pageContentHtml = fcms_apply_filter('after_content', $pageContentHtml);
 }
 
-// Debug: Check if content has curly braces
-if (strpos($pageContentHtml, '{') !== false || strpos($pageContentHtml, '}') !== false) {
-    error_log("CONTENT HAS CURLY BRACES: " . substr($pageContentHtml, 0, 200));
-}
-
 // Content filters already applied before markdown processing
 
 // --- Theme and template ---
@@ -653,9 +612,6 @@ if (isset($metadata) && is_array($metadata)) {
         $templateData[$key] = $value;
     }
 }
-
-// Debug: Log the template data
-error_log("TEMPLATE DATA: " . json_encode($templateData));
 
 // --- Render template ---
     $templateName = $metadata['template'] ?? 'page-with-sidebar';
