@@ -29,7 +29,7 @@ echo -e "${YELLOW}Checking if localhost:8000 is accessible...${NC}"
 if ! curl -s --head "$BASE_URL" > /dev/null; then
     echo -e "${RED}Error: Cannot connect to $BASE_URL${NC}"
     echo "Please make sure the FearlessCMS development server is running:"
-    echo "  nix-shell -p php81 --run 'export FCMS_DEBUG=true && ./serve.sh'"
+    echo "  nix-shell -p php83 --run 'export FCMS_DEBUG=true && ./serve.sh'"
     exit 1
 fi
 

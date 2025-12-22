@@ -22,7 +22,7 @@ The export system crawls your running FearlessCMS site and downloads all HTML pa
 ### Starting the Development Server
 
 ```bash
-nix-shell -p php81 --run "export FCMS_DEBUG=true && ./serve.sh"
+nix-shell -p php83 --run "export FCMS_DEBUG=true && ./serve.sh"
 ```
 
 ### Installing wget (Recommended)
@@ -274,7 +274,7 @@ For issues with the export system:
 ### Basic Export
 ```bash
 # Start server
-nix-shell -p php81 --run "export FCMS_DEBUG=true && ./serve.sh"
+nix-shell -p php83 --run "export FCMS_DEBUG=true && ./serve.sh"
 
 # In another terminal, export
 ./export-wget.sh

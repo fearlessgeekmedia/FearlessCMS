@@ -99,7 +99,7 @@ FearlessCMS includes a streamlined export system that automatically crawls your 
 
 ```bash
 # Start your development server
-nix-shell -p php81 --run "export FCMS_DEBUG=true && ./serve.sh"
+nix-shell -p php83 --run "export FCMS_DEBUG=true && ./serve.sh"
 
 # In another terminal, export your site
 ./export-robust.sh

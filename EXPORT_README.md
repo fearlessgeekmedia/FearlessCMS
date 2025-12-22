@@ -20,7 +20,7 @@ The new streamlined export approach is much better than the previous Node.js scr
 ### Starting the Development Server
 
 ```bash
-nix-shell -p php81 --run "export FCMS_DEBUG=true && ./serve.sh"
+nix-shell -p php83 --run "export FCMS_DEBUG=true && ./serve.sh"
 ```
 
 ### Installing curl
@@ -126,7 +126,7 @@ Once exported, you can deploy the `export/` directory to any static hosting serv
 
 Make sure your development server is running:
 ```bash
-nix-shell -p php81 --run "export FCMS_DEBUG=true && ./serve.sh"
+nix-shell -p php83 --run "export FCMS_DEBUG=true && ./serve.sh"
 ```
 
 ### "curl is not installed"

@@ -2,7 +2,7 @@
 
 let
   # PHP with required extensions
-  php = pkgs.php81.withExtensions ({ enabled, all }: enabled ++ (with all; [
+  php = pkgs.php83.withExtensions ({ enabled, all }: enabled ++ (with all; [
     mbstring
     openssl
     pdo
@@ -67,7 +67,7 @@ in pkgs.mkShell {
     php
     nodejs
     pkgs.nodePackages.npm
-    pkgs.php81Packages.composer
+    pkgs.php83Packages.composer
   ] ++ devTools;
 
   # Set environment variables

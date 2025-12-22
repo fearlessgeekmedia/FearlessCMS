@@ -129,6 +129,15 @@ fcms_register_admin_section('site_settings', [
     }
 ]);
 
+fcms_register_admin_section('manage_users', [
+    'label' => 'Users',
+    'menu_order' => 12,
+    'parent' => 'site_management',
+    'render_callback' => function() {
+        include PROJECT_ROOT . '/admin/templates/users.php';
+    }
+]);
+
 fcms_register_admin_section('manage_content', [
     'label' => 'Content',
     'menu_order' => 15,

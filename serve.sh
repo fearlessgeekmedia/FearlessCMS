@@ -27,9 +27,9 @@ fi
 # check if php is installed and use nix-shell if needed
 if ! command -v php &> /dev/null
 then
-    echo "PHP not found in PATH, using nix-shell with php81..."
+    echo "PHP not found in PATH, using nix-shell with php83..."
     # Use nix-shell to get PHP with all required extensions
-    nix-shell -p php81 --pure --run "php -c php-config/99-custom.ini -S localhost:$port router.php" > serve-log.tmp 2>&1 &
+    nix-shell -p php83 --pure --run "php -c php-config/99-custom.ini -S localhost:$port router.php" > serve-log.tmp 2>&1 &
     pid=$!
     echo "Server started on port $port with PID $pid using nix-shell PHP"
     echo "To stop the server, run: kill $pid"
@@ -42,9 +42,9 @@ fi
 
 # check if PHP has session extension
 if ! php -m | grep -q session; then
-    echo "Warning: PHP session extension not found. Using nix-shell with php81 for proper session support..."
+    echo "Warning: PHP session extension not found. Using nix-shell with php83 for proper session support..."
     # Use nix-shell to get PHP with session extension
-    nix-shell -p php81 --pure --run "php -c php-config/99-custom.ini -S localhost:$port router.php" > serve-log.tmp 2>&1 &
+    nix-shell -p php83 --pure --run "php -c php-config/99-custom.ini -S localhost:$port router.php" > serve-log.tmp 2>&1 &
     pid=$!
     echo "Server started on port $port with PID $pid using nix-shell PHP"
     echo "To stop the server, run: kill $pid"
@@ -66,8 +66,8 @@ else
 fi
 
 # Always use nix-shell with custom config for consistent session handling
-echo "Using nix-shell with php81 and custom configuration for proper session support..."
-nix-shell -p php81 --pure --run "php $php_config -S localhost:$port router.php" > serve-log.tmp 2>&1 &
+echo "Using nix-shell with php83 and custom configuration for proper session support..."
+nix-shell -p php83 --pure --run "php $php_config -S localhost:$port router.php" > serve-log.tmp 2>&1 &
 pid=$!
 echo "Server started on port $port with PID $pid"
 echo "To stop the server, run: kill $pid"
