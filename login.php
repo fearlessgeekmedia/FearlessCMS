@@ -13,6 +13,8 @@
 <body class="bg-gray-100">
     <?php
     require_once __DIR__ . '/includes/config.php';
+    require_once __DIR__ . '/includes/session.php';
+    require_once __DIR__ . '/includes/auth.php';
     ?>
     
     <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -40,6 +42,7 @@
 
             <form class="mt-8 space-y-6" method="POST" action="/<?php echo htmlspecialchars($adminPath); ?>/login">
                 <input type="hidden" name="action" value="login">
+                <?php echo csrf_token_field(); ?>
                 <div class="rounded-md shadow-sm -space-y-px">
                     <div>
                         <label for="username" class="sr-only">Username</label>

@@ -179,7 +179,18 @@ global $cmsModeManager;
 
     <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div class="bg-white shadow rounded-lg p-6">
-            <h2 class="text-2xl font-bold mb-6 fira-code"><?php echo htmlspecialchars($pageTitle ?? ''); ?></h2>
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold fira-code"><?php echo htmlspecialchars($pageTitle ?? ''); ?></h2>
+                <?php if (($pageTitle ?? '') === 'Dashboard'): ?>
+                    <form method="POST" style="margin: 0;">
+                        <input type="hidden" name="action" value="export_site">
+                        <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium">
+                            Export Site
+                        </button>
+                    </form>
+                <?php endif; ?>
+            </div>
             <?php
             if (isset($templateFile) && $templateFile && file_exists($templateFile)) {
                 include $templateFile;

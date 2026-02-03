@@ -1,5 +1,12 @@
 <?php
+if (false) { die("THEME HANDLER LOADING"); }
+error_log("*** THEME HANDLER FILE LOADED AT " . __FILE__ . " ***");
 require_once dirname(__DIR__) . '/includes/config.php';
+error_log("*** THEME HANDLER: CONFIG LOADED ***");
+require_once dirname(__DIR__) . '/includes/session.php';
+error_log("*** THEME HANDLER: SESSION LOADED ***");
+require_once dirname(__DIR__) . '/includes/auth.php';
+error_log("*** THEME HANDLER: AUTH LOADED ***");
 
 // Set upload limits
 ini_set('upload_max_filesize', '10M');
@@ -12,32 +19,48 @@ $configFile = dirname(__DIR__) . '/config/config.json';
 $config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
 $adminPath = $config['admin_path'] ?? 'admin';
 
+error_log("*** Theme handler: File loaded, REQUEST_METHOD=" . $_SERVER['REQUEST_METHOD'] . ", POST action=" . ($_POST['action'] ?? 'NOT SET') . " ***");
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    error_log("*** THEME HANDLER PROCESSING POST ACTION: " . $_POST['action'] . " ***");
+    
     if (!isLoggedIn()) {
-        $error = 'You must be logged in to perform this action';
+        error_log("Theme handler: User not logged in");
+        $_SESSION['error'] = 'You must be logged in to perform this action';
+    } elseif (!validate_csrf_token()) {
+        error_log("Theme handler: CSRF validation failed");
+        $_SESSION['error'] = 'Invalid security token. Please refresh the page and try again.';
     } else {
         switch ($_POST['action']) {
             case 'activate_theme':
-                if (!fcms_check_permission($_SESSION['username'], 'manage_themes')) {
-                    $error = 'You do not have permission to manage themes';
+                error_log("Theme handler: Processing activate_theme");
+                error_log("Theme handler: Current user: " . ($_SESSION['username'] ?? 'NOT SET'));
+                error_log("Theme handler: Session permissions: " . print_r(($_SESSION['permissions'] ?? []), true));
+                $hasPermission = fcms_check_permission($_SESSION['username'], 'manage_themes');
+                error_log("Theme handler: Permission check result: " . ($hasPermission ? 'YES' : 'NO'));
+                if (!$hasPermission) {
+                    $_SESSION['error'] = 'You do not have permission to manage themes';
                     break;
                 }
                 if (empty($_POST['theme'])) {
-                    $error = 'Theme name is required';
+                    $_SESSION['error'] = 'Theme name is required';
                     break;
                 }
                 $theme = $_POST['theme'] ?? '';
+                error_log("Theme handler: Activating theme: " . $theme);
                 $configFile = CONFIG_DIR . '/config.json';
                 $config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
                 $config['active_theme'] = $theme;
                 if (file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT))) {
-                    header('Location: /' . $adminPath . '?action=manage_themes&success=Theme activated successfully');
+                    error_log("Theme handler: Theme activated successfully");
+                    $_SESSION['success'] = 'Theme activated successfully';
+                    header('Location: /' . $adminPath . '?action=manage_themes');
                     exit;
                 } else {
-                    $error = 'Failed to activate theme';
+                    error_log("Theme handler: Failed to write config file");
+                    $_SESSION['error'] = 'Failed to activate theme';
                 }
                 break;
-
             case 'save_theme_options':
                 error_log('DEBUG: save_theme_options action received');
                 error_log('DEBUG: POST data: ' . print_r($_POST, true));

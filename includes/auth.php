@@ -331,7 +331,7 @@ function login($username, $password) {
             // Set session variables
             $_SESSION['username'] = $username;
 
-            // Set permissions based on role
+            // Set permissions based on role or direct permissions
             if (isset($user['role'])) {
                 $rolesFile = CONFIG_DIR . '/roles.json';
                 if (file_exists($rolesFile)) {
@@ -340,6 +340,9 @@ function login($username, $password) {
                         $_SESSION['permissions'] = $roles[$user['role']]['capabilities'];
                     }
                 }
+            } elseif (isset($user['permissions']) && is_array($user['permissions'])) {
+                // If no role, use direct permissions from user object
+                $_SESSION['permissions'] = $user['permissions'];
             }
 
             return true;

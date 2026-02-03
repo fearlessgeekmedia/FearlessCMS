@@ -70,6 +70,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     exit;
 }
 
+// Handle site export
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'export_site') {
+    require_once dirname(__DIR__) . '/includes/config.php';
+    require_once dirname(__DIR__) . '/includes/auth.php';
+    require_once dirname(__DIR__) . '/includes/session.php';
+    require_once __DIR__ . '/export-handler.php';
+    exit;
+}
+
+// Handle theme activation
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'activate_theme') {
+    require_once dirname(__DIR__) . '/includes/config.php';
+    require_once dirname(__DIR__) . '/includes/session.php';
+    require_once dirname(__DIR__) . '/includes/auth.php';
+    
+    if (!isLoggedIn()) {
+        $_SESSION['error'] = 'You must be logged in';
+    } elseif (!validate_csrf_token()) {
+        $_SESSION['error'] = 'Invalid security token';
+    } elseif (empty($_POST['theme'])) {
+        $_SESSION['error'] = 'Theme name is required';
+    } else {
+        $configFile = CONFIG_DIR . '/config.json';
+        $config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
+        $config['active_theme'] = $_POST['theme'];
+        if (file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT))) {
+            $_SESSION['success'] = 'Theme activated successfully';
+        } else {
+            $_SESSION['error'] = 'Failed to activate theme';
+        }
+    }
+    header('Location: /admin?action=manage_themes');
+    exit;
+}
+
+// Handle page creation (create_page action)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'create_page') {
+    require_once dirname(__DIR__) . '/includes/config.php';
+    require_once dirname(__DIR__) . '/includes/session.php';
+    require_once dirname(__DIR__) . '/includes/auth.php';
+    require_once __DIR__ . '/newpage-handler.php';
+    exit;
+}
+
+
+
 // Session is already started by main index.php, no need to start again
 // Just ensure we have access to the required functions
 
@@ -165,10 +211,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && in_array
 
 // Image uploads are now handled at the beginning of the file
 
+error_log("*** ADMIN INDEX: ABOUT TO LOAD HANDLERS ***");
 require_once __DIR__ . '/widget-handler.php';
 require_once __DIR__ . '/theme-handler.php';
 require_once __DIR__ . '/store-handler.php';
+error_log("*** ABOUT TO LOAD NEWPAGE HANDLER ***");
 require_once __DIR__ . '/newpage-handler.php';
+error_log("*** NEWPAGE HANDLER LOADED ***");
 require_once __DIR__ . '/widgets-handler.php';
 // User handlers - only include when needed
 // require_once __DIR__ . '/user-handler.php';
@@ -742,7 +791,7 @@ $contentList = [];
 // Determine content directory based on demo mode
 require_once PROJECT_ROOT . '/includes/DemoModeManager.php';
 $demoManager = new DemoModeManager();
-$isDemoUserForList = $demoManager->isDemoUser();
+$isDemoUserForList = $demoManager->isDemoSession();
 
 // Additional logging for debugging
 if ($isDemoUserForList) {
@@ -751,7 +800,7 @@ if ($isDemoUserForList) {
     error_log("DEBUG LIST: No demo user detected - using regular content directory");
 }
 
-$listContentDir = $isDemoUserForList ? $demoManager->getDemoContentDir() : $contentDir;
+$listContentDir = $isDemoUserForList ? $demoManager->getDemoContentDir() : CONTENT_DIR;
 error_log("DEBUG LIST: Demo user detected: " . ($isDemoUserForList ? 'Yes' : 'No'));
 error_log("DEBUG LIST: Using content directory: " . $listContentDir);
 
@@ -763,8 +812,11 @@ if (is_dir($listContentDir)) {
     $files = new RegexIterator($files, '/\\.md$/');
 
     foreach ($files as $file) {
+        error_log("DEBUG: Found markdown file: " . $file->getPathname());
+        
         // Skip files in _preview directory
         if (strpos($file->getPathname(), '/content/_preview/') !== false) {
+            error_log("DEBUG: Skipping preview file: " . $file->getPathname());
             continue;
         }
 
@@ -783,6 +835,8 @@ if (is_dir($listContentDir)) {
         // Get relative path from content directory
         $relativePath = str_replace($listContentDir . '/', '', $file->getPathname());
         $path = substr($relativePath, 0, -3); // Remove .md extension
+        
+        error_log("DEBUG: Adding to contentList - Title: $title, Path: $path");
 
         $contentList[] = [
             'title' => $title,
@@ -791,6 +845,7 @@ if (is_dir($listContentDir)) {
         ];
     }
 }
+error_log("DEBUG: Final contentList count: " . count($contentList));
 
 $username = $_SESSION['username'] ?? '';
 $content = '';

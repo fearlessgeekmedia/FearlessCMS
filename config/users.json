@@ -4,7 +4,31 @@
         "username": "admin",
         "password": "$2y$10$c7L.9zzD9Up5DBH6gz1.ouac6EsL.ysAXC8i1C.2Zx1vUPbOV.J1y",
         "role": "admin",
-        "permissions": ["manage_users", "manage_content", "manage_plugins", "manage_themes", "manage_menus", "manage_settings", "manage_updates"],
+        "permissions": [
+            "manage_users",
+            "manage_content",
+            "manage_plugins",
+            "manage_themes",
+            "manage_menus",
+            "manage_settings",
+            "manage_updates"
+        ],
         "created_at": "2025-12-22 13:45:00"
+    },
+    {
+        "id": "Will",
+        "username": "Will",
+        "password": "$2y$10$SrJU1k0kSYrBjw2xRJeOp.QlM52dd8y9CJRgpDFPMl4Q.u4lAQS6C",
+        "role": "administrator",
+        "permissions": [
+            "manage_users",
+            "manage_content",
+            "manage_plugins",
+            "manage_themes",
+            "manage_menus",
+            "manage_settings",
+            "manage_updates"
+        ],
+        "created_at": "2026-02-03 19:52:13"
     }
 ]

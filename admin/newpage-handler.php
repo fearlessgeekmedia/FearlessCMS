@@ -45,12 +45,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 if ($demoManager->createDemoContentFile($pathWithoutExt, $pageTitle, $newPageContent, ['parent' => $parentPage, 'template' => $_POST['template'] ?? 'page-with-sidebar'])) {
                     error_log("Demo file saved successfully");
                     $redirectPath = str_replace('.md', '', $newPageFilename);
-                    if (!headers_sent()) {
-                        header('Location: ?action=edit_content&path=' . urlencode($redirectPath));
-                        exit;
-                    }
                     $_SESSION['just_created_page'] = $redirectPath;
                     $_SESSION['just_created_message'] = 'Page created successfully';
+                    if (!headers_sent()) {
+                        header('Location: ?action=manage_content');
+                        error_log("Redirect header sent to manage_content, exiting");
+                        exit;
+                    } else {
+                        error_log("Headers already sent, using JavaScript redirect to manage_content");
+                        echo '<html><head><meta http-equiv="refresh" content="0;url=?action=manage_content"></head><body></body></html>';
+                        exit;
+                    }
                 } else {
                     $error = 'Failed to create new demo page.';
                     error_log("Failed to save demo file");
@@ -87,19 +92,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                         $redirectPath = str_replace('.md', '', $newPageFilename);
                         error_log("About to redirect to: ?action=edit_content&path=" . urlencode($redirectPath));
                         
-                        // Try redirect first
-                        if (!headers_sent()) {
-                            header('Location: ?action=edit_content&path=' . urlencode($redirectPath));
-                            error_log("Redirect header sent, exiting");
-                            exit;
-                        } else {
-                            error_log("Headers already sent, cannot redirect");
-                        }
-                        
-                        // If redirect fails, set session variable to indicate page was created
+                        // Set session variables for redirect
                         $_SESSION['just_created_page'] = $redirectPath;
                         $_SESSION['just_created_message'] = 'Page created successfully';
-                        error_log("Fallback - setting session variable for just_created_page: " . $redirectPath);
+                        
+                        // Redirect to manage_content to show the new page in the list
+                        if (!headers_sent()) {
+                            header('Location: ?action=manage_content');
+                            error_log("Redirect header sent to manage_content, exiting");
+                            exit;
+                        } else {
+                            // Headers already sent, use JavaScript redirect
+                            error_log("Headers already sent, using JavaScript redirect to manage_content");
+                            echo '<html><head><meta http-equiv="refresh" content="0;url=?action=manage_content"></head><body></body></html>';
+                            exit;
+                        }
                     } else {
                         $error = 'Failed to create new page.';
                         error_log("Failed to save file");

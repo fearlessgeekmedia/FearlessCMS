@@ -96,6 +96,7 @@ $themes = $themeManager->getThemes();
                         <form method="POST" action="">
                             <input type="hidden" name="action" value="activate_theme" />
                             <input type="hidden" name="theme" value="<?php echo htmlspecialchars($theme['id']); ?>" />
+                            <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
                             <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full transition-colors">Activate Theme</button>
                         </form>
                     <?php endif; ?>
