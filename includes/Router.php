@@ -124,8 +124,8 @@ class Router {
         exit;
     }
 
-    public function handlePluginRoutes(&$handled, &$title, &$content, $path) {
-        fcms_do_hook_ref('route', $handled, $title, $content, $path);
+    public function handlePluginRoutes(&$handled, &$title, &$content, &$metadata, $path) {
+        fcms_do_hook_ref('route', $handled, $title, $content, $path, $metadata);
         return $handled;
     }
 

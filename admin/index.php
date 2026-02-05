@@ -75,6 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     require_once dirname(__DIR__) . '/includes/config.php';
     require_once dirname(__DIR__) . '/includes/auth.php';
     require_once dirname(__DIR__) . '/includes/session.php';
+    require_once dirname(__DIR__) . '/includes/plugins.php';
     require_once __DIR__ . '/export-handler.php';
     exit;
 }
@@ -612,7 +613,6 @@ if (!isLoggedIn()) {
 
 
 // Load plugins and run init hook
-fcms_load_plugins();
 fcms_do_hook('init');
 
 // Debug logging for admin sections

@@ -104,8 +104,6 @@ class ContentLoader {
     }
 
     public function processContent($content, $editorMode) {
-        fcms_load_plugins();
-
         if ($editorMode === 'html') {
             $pageContent = fcms_apply_filter('content', $content);
             $pageContentHtml = $pageContent;

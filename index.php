@@ -2,7 +2,7 @@
 // Set error reporting based on debug mode
 ini_set('log_errors', 1);
 
-
+global $config, $demoManager, $pageRenderer, $router, $cmsModeManager;
 
 // Only enable debug mode if explicitly requested
 if (getenv('FCMS_DEBUG') === 'true') {
@@ -118,26 +118,30 @@ $templateName = $router->getDefaultTemplate($path);
 $handled = false;
 $title = '';
 $content = '';
-$router->handlePluginRoutes($handled, $title, $content, $path);
+$metadata = [];
+$router->handlePluginRoutes($handled, $title, $content, $metadata, $path);
 
 // Initialize managers and renderers
 $themeManager = new ThemeManager();
-
 $menuManager = new MenuManager();
-
 $widgetManager = new WidgetManager();
 
-// $cmsModeManager = new CMSModeManager();
-$cmsModeManager = null; // temporary
+if (class_exists('CMSModeManager')) {
+    $cmsModeManager = new CMSModeManager();
+} else {
+    $cmsModeManager = null;
+}
 
 $contentLoader = new ContentLoader($demoManager);
-
 $pageRenderer = new PageRenderer($themeManager, $menuManager, $widgetManager, $cmsModeManager, $demoManager);
+
+$isExportMode = defined('FCMS_EXPORT_MODE');
 
 // If a plugin handled the route, render its content
 if ($handled) {
-echo $pageRenderer->renderPluginContent($title, $content);
-exit;
+echo $pageRenderer->renderPluginContent($title, $content, $path, $metadata);
+if (!$isExportMode) exit;
+return;
 }
 
 // Determine content directory based on demo mode
@@ -150,7 +154,8 @@ $contentFile = $contentLoader->findContentFile($path);
 // 404 fallback
 if (!$contentFile) {
     echo $pageRenderer->render404();
-    exit;
+    if (!$isExportMode) exit;
+    return;
 }
 
 // --- Load and process content ---

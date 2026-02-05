@@ -31,31 +31,24 @@ class PageRenderer {
         );
     }
 
-    public function renderPluginContent($title, $content) {
+    public function renderPluginContent($title, $content, $path = '', $metadata = []) {
         $siteData = $this->getSiteData();
 
-        $templateRenderer = new TemplateRenderer(
-            $this->themeManager->getActiveTheme(),
-            $this->getThemeOptions(),
-            $this->menuManager,
-            $this->widgetManager
-        );
-
         $template = 'page';
-        fcms_do_hook_ref('before_render', $template, '');
+        fcms_do_hook_ref('before_render', $template, $path);
 
         $templateData = array_merge($siteData, [
             'title' => $title,
             'content' => $content,
         ]);
 
-        if (isset($metadata) && is_array($metadata)) {
+        if (is_array($metadata)) {
             foreach ($metadata as $key => $value) {
                 $templateData[$key] = $value;
             }
         }
 
-        return $templateRenderer->render($template, $templateData);
+        return $this->templateRenderer->render($template, $templateData);
     }
 
     public function render404() {
