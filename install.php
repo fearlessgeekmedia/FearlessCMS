@@ -323,8 +323,8 @@ if (PHP_SAPI === 'cli') {
             echo "Username and password are required.\n";
             exit(1);
         }
-        if (!preg_match('/^[A-Za-z0-9_\-]{3,32}$/', $username)) {
-            echo "Invalid username. Use 3-32 chars [A-Za-z0-9_-].\n";
+        if (!preg_match('/^[A-Za-z0-9_\-]{3,50}$/', $username)) {
+            echo "Invalid username. Use 3-50 chars [A-Za-z0-9_-].\n";
             exit(1);
         }
         $usersFile = $CONFIG_DIR . '/users.json';
@@ -520,8 +520,8 @@ if ($action === 'create_admin') {
             $resultMessages[] = 'All fields are required to create the admin account.';
         } elseif ($password !== $confirm) {
             $resultMessages[] = 'Passwords do not match.';
-        } elseif (!preg_match('/^[A-Za-z0-9_\-]{3,32}$/', $username)) {
-            $resultMessages[] = 'Username must be 3-32 characters and contain only letters, numbers, underscores, or dashes.';
+        } elseif (!preg_match('/^[A-Za-z0-9_\-]{3,50}$/', $username)) {
+            $resultMessages[] = 'Username must be 3-50 characters and contain only letters, numbers, underscores, or dashes.';
         } elseif (strlen($password) < 8) {
             $resultMessages[] = 'Password must be at least 8 characters long.';
         } else {
@@ -739,7 +739,7 @@ if ($action === 'create_admin') {
                         <input type="hidden" name="action" value="create_admin">
                         <div>
                             <label class="block mb-1">Username</label>
-                            <input name="admin_user" class="w-full px-3 py-2 border rounded" required pattern="[A-Za-z0-9_\-]{3,32}" title="3-32 characters, letters, numbers, underscores, or dashes only">
+                            <input name="admin_user" class="w-full px-3 py-2 border rounded" required pattern="[A-Za-z0-9_\-]{3,50}" title="3-50 characters, letters, numbers, underscores, or dashes only">
                         </div>
                         <div>
                             <label class="block mb-1">Password</label>
@@ -758,9 +758,9 @@ if ($action === 'create_admin') {
                 <h2 class="text-xl font-semibold mb-3">Next Steps</h2>
                 <ul class="list-disc ml-6 text-sm text-gray-700 space-y-1">
                     <li>Visit <code>/admin/</code> to log in and configure your site.</li>
+                    <li>Use the **Export Site** button in the Dashboard to generate a static version of your site.</li>
                     <li>Use the Updates section in Mission Control to keep FearlessCMS up to date.</li>
                     <li>Use the Store to browse and install plugins/themes (if enabled).</li>
-                    <li>Run <code>node export.js</code> to generate a static version of your site (requires Node.js dependencies).</li>
                     <li>Use <code>npx sass</code> to compile SASS/SCSS files for custom themes (requires SASS dependency).</li>
                 </ul>
             </section>

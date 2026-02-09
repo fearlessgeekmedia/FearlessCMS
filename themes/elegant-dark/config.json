@@ -27,6 +27,11 @@
             "type": "boolean",
             "label": "Elegant Mode",
             "default": true
+        },
+        "showSidebar": {
+            "type": "boolean",
+            "label": "Show Sidebar",
+            "default": true
         }
     }
 } 

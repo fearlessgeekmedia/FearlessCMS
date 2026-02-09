@@ -123,6 +123,14 @@
     height: 16rem;
 }
 
+.h-80 {
+    height: 20rem;
+}
+
+.h-96 {
+    height: 24rem;
+}
+
 .object-cover {
     object-fit: cover;
 }

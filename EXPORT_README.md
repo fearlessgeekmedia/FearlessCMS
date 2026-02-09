@@ -47,7 +47,17 @@ nix-env -iA nixpkgs.curl
 
 ## Usage
 
-### Using the Robust Export Script
+### Primary Method: Dashboard Export (Recommended)
+
+The easiest way to export your site is using the **Export Site** button in the Mission Control dashboard.
+1. Log in to your FearlessCMS admin panel.
+2. Go to the **Dashboard**.
+3. Click the blue **Export Site** button.
+4. The static site will be generated in the `export/` directory.
+
+### Secondary Method: Using the Robust Export Script
+
+For automation or CI/CD, you can still use the shell script:
 
 ```bash
 ./export-robust.sh

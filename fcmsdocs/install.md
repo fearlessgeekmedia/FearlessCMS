@@ -42,7 +42,7 @@ The installation script (`install.php`) is designed to:
 - Validates working directory paths
 
 ### Input Validation
-- Username format validation (3-32 characters, alphanumeric + underscore + hyphen)
+- Username format validation (3-50 characters, alphanumeric + underscore + hyphen)
 - Password strength requirements
 - Directory path validation
 
@@ -666,4 +666,4 @@ If you encounter issues during installation:
 
 **Happy installing!** 🚀
 
-*This documentation is maintained by the FearlessCMS community. Last updated: January 2024*
+*This documentation is maintained by the FearlessCMS community. Last updated: February 2026*

@@ -1,74 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{title}} - {{siteName}}</title>
-    <link rel="stylesheet" href="/themes/{{theme}}/style.css">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      
-    </style>
-</head>
-<body>
-    <div class="min-h-screen bg-gray-50">
-        <!-- Header -->
-        <header class="bg-white shadow">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between h-16">
-                    <div class="flex">
-                        <div class="flex-shrink-0 flex items-center">
-                            {{#if logo}}
-                            <img src="/{{logo}}" alt="{{siteName}}" class="h-8">
-                            {{else}}
-                            <span class="text-xl font-bold">{{siteName}}</span>
-                            {{/if}}
-                        </div>
-                        <nav class="ml-6 flex space-x-8">
-                            {{mainMenu}}
-                        </nav>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <!-- Hero Banner -->
-        {{#if heroBanner}}
-        <div class="relative">
-            <img src="/{{heroBanner}}" alt="Hero Banner" class="w-full h-64 object-cover">
-            <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                <h1 class="text-4xl font-bold text-white">{{title}}</h1>
-            </div>
-        </div>
-        {{/if}}
-
-        <!-- Main Content -->
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="flex flex-col lg:flex-row gap-8">
-                <!-- Content Area -->
-                <div class="flex-1">
-                    <div class="bg-white shadow rounded-lg p-6">
-                        {{content}}
-                    </div>
-                </div>
-
-                <!-- Sidebar -->
-                <div class="lg:w-1/4">
-                    <div class="bg-white shadow rounded-lg p-6">
-                        {{sidebar=main}}
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <!-- Footer -->
-        <footer class="bg-white shadow mt-8">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                <p class="text-center text-gray-500">&copy; {{currentYear}} {{siteName}}. All rights reserved.</p>
-            </div>
-        </footer>
+<aside class="space-y-8">
+    <!-- Sidebar Widgets -->
+    <div class="bg-white shadow rounded-lg p-6">
+        {{sidebar=main}}
     </div>
-    <script>
-    </script>
-</body>
-</html> 
+
+    <!-- Additional Sidebar Navigation -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Navigation</h3>
+        <nav class="space-y-2">
+            {{#each menu.main}}
+                <a href="/{{url}}" class="block text-gray-600 hover:text-blue-600 transition-colors">{{title}}</a>
+            {{/each}}
+        </nav>
+    </div>
+</aside>

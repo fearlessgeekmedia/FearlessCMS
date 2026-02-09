@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {{module=head.html}}
+</head>
+<body class="vintage-theme">
+    {{module=header.html}}
+    {{include=ad-area.html}}
+    
+    {{#if heroBanner}}
+        <div class="vintage-hero">
+            <img src="/{{heroBanner}}" alt="{{title}}" class="hero-image">
+            <div class="hero-overlay">
+                <h1 class="hero-title">{{title}}</h1>
+            </div>
+        </div>
+    {{/if}}
+    
+    <main class="vintage-main">
+        <div class="vintage-container">
+            <div class="content-layout">
+                <article class="vintage-article">
+                    <h1 class="vintage-title">{{title}}</h1>
+                    
+                    <div class="vintage-content">
+                        {{content}}
+                    </div>
+                    
+                    <footer class="article-footer">
+                        <div class="vintage-meta">
+                            <span class="meta-item">
+                                <i class="icon-time"></i>
+                                {{currentYear}}
+                            </span>
+                            <span class="meta-item">
+                                <i class="icon-author"></i>
+                                {{siteName}}
+                            </span>
+                        </div>
+                    </footer>
+                </article>
+                
+                <aside class="vintage-sidebar">
+                    {{sidebar=main}}
+                </aside>
+            </div>
+        </div>
+    </main>
+    
+    {{module=footer.html}}
+    
+</body>
+</html>

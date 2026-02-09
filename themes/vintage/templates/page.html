@@ -18,38 +18,30 @@
     
     <main class="vintage-main">
         <div class="vintage-container">
-            <div class="content-layout">
-                <article class="vintage-article">
-                    {{#unless heroBanner}}
-                        <h1 class="vintage-title">{{title}}</h1>
-                    {{/unless}}
-                    
-                    <div class="vintage-content">
-                        {{content}}
-                    </div>
-                    
-                    <footer class="article-footer">
-                        <div class="vintage-meta">
-                            <span class="meta-item">
-                                <i class="icon-time"></i>
-                                {{currentYear}}
-                            </span>
-                            <span class="meta-item">
-                                <i class="icon-author"></i>
-                                {{siteName}}
-                            </span>
-                        </div>
-                    </footer>
-                </article>
+            <article class="vintage-article">
+                <h1 class="vintage-title">{{title}}</h1>
                 
-                <aside class="vintage-sidebar">
-                    {{sidebar=main}}
-                </aside>
-            </div>
+                <div class="vintage-content">
+                    {{content}}
+                </div>
+                
+                <footer class="article-footer">
+                    <div class="vintage-meta">
+                        <span class="meta-item">
+                            <i class="icon-time"></i>
+                            {{currentYear}}
+                        </span>
+                        <span class="meta-item">
+                            <i class="icon-author"></i>
+                            {{siteName}}
+                        </span>
+                    </div>
+                </footer>
+            </article>
         </div>
     </main>
     
     {{module=footer.html}}
     
 </body>
-</html> 
+</html>

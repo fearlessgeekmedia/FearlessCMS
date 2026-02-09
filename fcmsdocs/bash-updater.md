@@ -123,13 +123,13 @@ brew install git
 Install rsync on your system:
 ```bash
 # Ubuntu/Debian
-sudo apt-get install git
+sudo apt-get install rsync
 
 # CentOS/RHEL
-sudo yum install git
+sudo yum install rsync
 
 # macOS
-brew install git
+brew install rsync
 ```
 
 ### Wrong Directory

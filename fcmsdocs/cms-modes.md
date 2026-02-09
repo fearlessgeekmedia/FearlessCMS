@@ -61,6 +61,8 @@ CMS modes allow you to control the level of access users have to plugin manageme
 
 **Use Case**: When you want to pre-install and activate specific plugins with no user modification allowed.
 
+> **Note**: In this mode, the "Plugins" menu item is renamed to "Additional Features" and shows only currently active plugins without management options. The "Files" menu item is hidden, and image uploads are disabled in the content editor. Users can still use external image URLs or upload theme-specific assets (logo, hero banner) through theme settings.
+
 ## 🔄 Changing Modes
 
 ### Through the Admin Interface
@@ -376,4 +378,4 @@ If you encounter issues with CMS modes:
 
 **Happy mode management!** 🎛️
 
-*This documentation is maintained by the FearlessCMS community. Last updated: January 2024*
+*This documentation is maintained by the FearlessCMS community. Last updated: February 2026*

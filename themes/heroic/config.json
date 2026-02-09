@@ -1,0 +1,19 @@
+{
+    "options": {
+        "logo": {
+            "type": "image",
+            "label": "Logo",
+            "description": "Upload your site logo"
+        },
+        "herobanner": {
+            "type": "image",
+            "label": "Hero Banner",
+            "description": "Hero banner image"
+        },
+        "accentColor": {
+            "type": "color",
+            "label": "Accent Color",
+            "default": "#3b82f6"
+        }
+    }
+}

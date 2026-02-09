@@ -1,4 +1,8 @@
 <aside class="elegant-sidebar">
+    <!-- CMS Dynamic Widgets -->
+    {{sidebar=main}}
+
+    <!-- Static Theme Widgets (Optional) -->
     <div class="sidebar-widget">
         <div class="widget-header">
             <h3 class="widget-title">Navigation</h3>
@@ -15,22 +19,6 @@
                     {{/each}}
                 </ul>
             </nav>
-        </div>
-    </div>
-    
-    <div class="sidebar-widget">
-        <div class="widget-header">
-            <h3 class="widget-title">Featured</h3>
-            <div class="widget-decoration"></div>
-        </div>
-        
-        <div class="widget-content">
-            <div class="featured-elegant">
-                <div class="featured-item">
-                    <h4 class="featured-title">Premium Content</h4>
-                    <p class="featured-text">Discover our curated collection of premium articles and insights.</p>
-                </div>
-            </div>
         </div>
     </div>
     

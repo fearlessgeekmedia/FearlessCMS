@@ -165,7 +165,7 @@ if (!file_exists($configFile)) {
         'site_description' => 'A fearless content management system',
         'site_keywords' => 'cms, content management, fearless',
         'site_author' => 'FearlessGeek',
-        'site_version' => '0.0.3',
+        'site_version' => '0.1.0b',
         'admin_path' => 'admin'
     ];
     file_put_contents($configFile, json_encode($defaultConfig, JSON_PRETTY_PRINT));
