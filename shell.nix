@@ -2,7 +2,7 @@
 
 let
   # PHP with required extensions
-  php = pkgs.php81.withExtensions ({ enabled, all }: enabled ++ (with all; [
+  php = pkgs.php83.withExtensions ({ enabled, all }: enabled ++ (with all; [
     mbstring
     openssl
     pdo
@@ -57,6 +57,7 @@ let
     bat
     fd
     fzf
+    lsof
   ];
 
 in pkgs.mkShell {
@@ -66,8 +67,14 @@ in pkgs.mkShell {
     php
     nodejs
     pkgs.nodePackages.npm
-    pkgs.php81Packages.composer
+    pkgs.php83Packages.composer
   ] ++ devTools;
+
+  # Set environment variables
+  env = {
+    HOME = toString ./. + "/sandbox_home";
+  };
+
 
   shellHook = ''
     echo "🐺 FearlessCMS Development Environment"
@@ -82,12 +89,13 @@ in pkgs.mkShell {
     echo "  php install.php --install-export-deps # Install Node deps"
     echo "  node export.js                        # Export static site"
     echo "  npm install                           # Install Node dependencies"
-    echo "  ./serve.sh          		  # Start PHP server"
+    echo "  ./serve.sh          		              # Start PHP server"
     echo ""
 
     # Set up sandbox environment
-    export HOME="$(pwd)/sandbox_home"
-    mkdir -p "$HOME"
+    SANDBOX_HOME="$(pwd)/sandbox_home"
+    mkdir -p "$SANDBOX_HOME"
+    
 
     # Set up environment variables
     export FCMS_DEBUG=true

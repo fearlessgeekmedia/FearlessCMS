@@ -44,10 +44,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Log login attempt for security monitoring
     error_log("Login attempt for user: " . $username . " from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
+    error_log("DEBUG: SESSION CSRF: " . ($_SESSION['csrf_token'] ?? 'NOT SET'));
+    error_log("DEBUG: POST CSRF: " . ($_POST['csrf_token'] ?? 'NOT SET'));
 
     // Validate CSRF token
     if (!validate_csrf_token()) {
         error_log("CSRF token validation failed for user: " . $username);
+        error_log("DEBUG: Session ID: " . session_id());
+        error_log("DEBUG: Session contents: " . json_encode($_SESSION));
         $error = 'Invalid security token. Please try again.';
     } elseif (empty($username) || empty($password)) {
         $error = 'Username and password are required';

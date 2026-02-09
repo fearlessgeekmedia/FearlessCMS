@@ -46,6 +46,8 @@ class TemplateRenderer {
             'currentYear' => date('Y'),
             'current_year' => date('Y'),
             'mainMenu' => $this->menuManager->renderMenu('main'),
+            // Provide safe defaults for optional placeholders used by themes
+            'custom_css' => $data['custom_css'] ?? '',
 
             'themeOptions' => $this->themeOptions,
             'theme_options' => $this->themeOptions
@@ -192,8 +194,8 @@ class TemplateRenderer {
         }
 
         // Add Tailwind CSS if not already included
-        if (strpos($content, 'tailwindcss') === false) {
-            $tailwindLink = '<script src="https://cdn.tailwindcss.com"></script>';
+        if (strpos($content, 'tailwindcss') === false && strpos($content, '/public/css/output.css') === false) {
+            $tailwindLink = '<link href="/public/css/output.css" rel="stylesheet">';
             $content = str_replace('</head>', $tailwindLink . "\n</head>", $content);
         }
 

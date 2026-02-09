@@ -2,7 +2,7 @@
 /*
 Plugin Name: Parallax Sections
 Description: Adds parallax scrolling effects for website sections using shortcodes
-Version: 2.1
+Version: 0.0.3
 Author: Fearless Geek
 */
 

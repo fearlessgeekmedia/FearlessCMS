@@ -11,10 +11,18 @@ if (getenv('FCMS_DEBUG') === 'true') {
 }
 ini_set('log_errors', 1);
 
-// Check if session extension is available and start session for CSRF protection
-$csrf_token = null;
-if (function_exists('session_start')) {
+// Include proper session configuration for macOS compatibility
+require_once __DIR__ . '/includes/session.php';
+
+// Ensure session is started and available
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    error_log("Warning: Session not active, attempting to start");
     session_start();
+}
+
+// Generate CSRF token using the proper session handling
+$csrf_token = null;
+if (isset($_SESSION)) {
     // Generate CSRF token if not exists
     if (!isset($_SESSION['csrf_token'])) {
         // Use random_bytes() if available (PHP 7.0+), otherwise fallback
@@ -28,8 +36,8 @@ if (function_exists('session_start')) {
     }
     $csrf_token = $_SESSION['csrf_token'];
 } else {
-    // Session extension not available - use simple token fallback
-    error_log("Warning: PHP session extension not available, using fallback CSRF protection");
+    // Session not available - use simple token fallback
+    error_log("Warning: Session not available, using fallback CSRF protection");
     if (function_exists('random_bytes')) {
         $csrf_token = bin2hex(random_bytes(32));
     } elseif (function_exists('openssl_random_pseudo_bytes')) {
@@ -42,14 +50,25 @@ if (function_exists('session_start')) {
 // CSRF validation function
 function validate_csrf_token(): bool {
     if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token'])) {
+        if (getenv('FCMS_DEBUG') === 'true') {
+            error_log("CSRF validation failed: POST token=" . ($_POST['csrf_token'] ?? 'NOT SET') . ", SESSION token=" . ($_SESSION['csrf_token'] ?? 'NOT SET'));
+        }
         return false;
     }
     // Use hash_equals() if available (PHP 5.6+), otherwise fallback to comparison
     if (function_exists('hash_equals')) {
-        return hash_equals($_SESSION['csrf_token'], $_POST['csrf_token']);
+        $valid = hash_equals($_SESSION['csrf_token'], $_POST['csrf_token']);
+        if (getenv('FCMS_DEBUG') === 'true') {
+            error_log("CSRF validation result: " . ($valid ? 'VALID' : 'INVALID'));
+        }
+        return $valid;
     } else {
         // Fallback comparison (less secure against timing attacks)
-        return $_SESSION['csrf_token'] === $_POST['csrf_token'];
+        $valid = $_SESSION['csrf_token'] === $_POST['csrf_token'];
+        if (getenv('FCMS_DEBUG') === 'true') {
+            error_log("CSRF validation result: " . ($valid ? 'VALID' : 'INVALID'));
+        }
+        return $valid;
     }
 }
 
@@ -96,7 +115,8 @@ $ALLOWED_COMMANDS = [
     'which' => ['which'],
     'npm' => ['npm', 'init', '-y'],
     'npm_install' => ['npm', 'install', 'fs-extra', 'handlebars', 'marked', '--save'],
-    'npm_install_dev' => ['npm', 'install', 'sass', '--save-dev']
+    'npm_install_dev' => ['npm', 'install', 'sass', '--save-dev'],
+    'npm_install_tailwind' => ['npm', 'install', 'tailwindcss@^3.4.0', '--save-dev']
 ];
 
 function check_extension(string $ext): array {
@@ -152,7 +172,7 @@ function run_cmd(array $cmd, ?string $cwd = null): array {
 
 // CLI mode support
 if (PHP_SAPI === 'cli') {
-    $options = getopt('', ['check', 'create-dirs', 'install-export-deps', 'create-admin:', 'password:', 'password-file:']);
+    $options = getopt('', ['check', 'create-dirs', 'install-export-deps', 'install-tailwind', 'create-admin:', 'password:', 'password-file:']);
     $exitCode = 0;
 
     if (isset($options['check'])) {
@@ -263,6 +283,27 @@ if (PHP_SAPI === 'cli') {
         }
     }
 
+    if (isset($options['install-tailwind'])) {
+        $node = run_cmd(['which', 'node']);
+        $npm = run_cmd(['which', 'npm']);
+        if ($node['code'] !== 0 || $npm['code'] !== 0) {
+            echo "Node.js or npm not found in PATH. Please install Node.js and npm first.\n";
+            $exitCode = 1;
+        } else {
+            // Initialize package.json if missing
+            if (!file_exists($projectRoot . '/package.json')) {
+                $init = run_cmd(['npm', 'init', '-y'], $projectRoot);
+                echo 'npm init: exit ' . $init['code'] . (trim($init['err']) ? ' (' . strip_tags($init['err']) . ')' : '') . "\n";
+                if ($init['code'] !== 0) $exitCode = 1;
+            }
+            $install = run_cmd(['npm', 'install', 'tailwindcss@^3.4.0', '--save-dev'], $projectRoot);
+            echo 'Tailwind CSS install: exit ' . $install['code'] . "\n";
+            if (trim($install['out'])) echo strip_tags($install['out']) . "\n";
+            if (trim($install['err'])) echo strip_tags($install['err']) . "\n";
+            if ($install['code'] !== 0) $exitCode = 1;
+        }
+    }
+
     if (isset($options['create-admin'])) {
         $username = trim($options['create-admin']);
         $password = '';
@@ -282,8 +323,8 @@ if (PHP_SAPI === 'cli') {
             echo "Username and password are required.\n";
             exit(1);
         }
-        if (!preg_match('/^[A-Za-z0-9_\-]{3,32}$/', $username)) {
-            echo "Invalid username. Use 3-32 chars [A-Za-z0-9_-].\n";
+        if (!preg_match('/^[A-Za-z0-9_\-]{3,50}$/', $username)) {
+            echo "Invalid username. Use 3-50 chars [A-Za-z0-9_-].\n";
             exit(1);
         }
         $usersFile = $CONFIG_DIR . '/users.json';
@@ -320,7 +361,7 @@ if (PHP_SAPI === 'cli') {
     }
 
     if (empty($options)) {
-        echo "Usage: php install.php [--check] [--create-dirs] [--install-export-deps] [--install-dev-deps] [--create-admin=<username> --password=<pwd>|--password-file=<file>]\n";
+        echo "Usage: php install.php [--check] [--create-dirs] [--install-export-deps] [--install-dev-deps] [--install-tailwind] [--create-admin=<username> --password=<pwd>|--password-file=<file>]\n";
     }
 
     // Security warning for CLI users
@@ -395,6 +436,26 @@ if ($action === 'install_dev_deps') {
     }
 }
 
+if ($action === 'install_tailwind') {
+    // Detect node and npm
+    $node = run_cmd(['which', 'node']);
+    $npm = run_cmd(['which', 'npm']);
+    if ($node['code'] !== 0 || $npm['code'] !== 0) {
+        $resultMessages[] = 'Node.js or npm not found in PATH. Please install Node.js and npm first.';
+    } else {
+        // Initialize package.json if missing
+        if (!file_exists($projectRoot . '/package.json')) {
+            $init = run_cmd(['npm', 'init', '-y'], $projectRoot);
+            $resultMessages[] = 'npm init: exit ' . $init['code'] . (trim($init['err']) ? ' (' . htmlspecialchars($init['err']) . ')' : '');
+        }
+        // Install Tailwind CSS as dev dependency
+        $install = run_cmd(['npm', 'install', 'tailwindcss@^3.4.0', '--save-dev'], $projectRoot);
+        $resultMessages[] = 'Tailwind CSS install: exit ' . $install['code'];
+        if (trim($install['out'])) $resultMessages[] = '<pre class="text-xs whitespace-pre-wrap">' . htmlspecialchars($install['out']) . '</pre>';
+        if (trim($install['err'])) $resultMessages[] = '<pre class="text-xs text-red-700 whitespace-pre-wrap">' . htmlspecialchars($install['err']) . '</pre>';
+    }
+}
+
 // Environment checks
 $phpVersionOk = version_compare(PHP_VERSION, '8.0.0', '>=');
 $extensions = [
@@ -459,8 +520,8 @@ if ($action === 'create_admin') {
             $resultMessages[] = 'All fields are required to create the admin account.';
         } elseif ($password !== $confirm) {
             $resultMessages[] = 'Passwords do not match.';
-        } elseif (!preg_match('/^[A-Za-z0-9_\-]{3,32}$/', $username)) {
-            $resultMessages[] = 'Username must be 3-32 characters and contain only letters, numbers, underscores, or dashes.';
+        } elseif (!preg_match('/^[A-Za-z0-9_\-]{3,50}$/', $username)) {
+            $resultMessages[] = 'Username must be 3-50 characters and contain only letters, numbers, underscores, or dashes.';
         } elseif (strlen($password) < 8) {
             $resultMessages[] = 'Password must be at least 8 characters long.';
         } else {
@@ -509,7 +570,7 @@ if ($action === 'create_admin') {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FearlessCMS Installer</title>
-<script src="https://cdn.tailwindcss.com"></script>
+<link href="/public/css/output.css" rel="stylesheet">
 </head>
 <body class="bg-gray-100">
     <div class="max-w-4xl mx-auto my-10 bg-white shadow rounded p-6">
@@ -618,13 +679,21 @@ if ($action === 'create_admin') {
                 
                 <div class="mt-4">
                     <h3 class="font-medium mb-2">Optional Development Dependencies</h3>
-                                    <p class="text-sm text-gray-600 mb-2">For theme development with SASS/SCSS support:</p>
-                <form method="POST">
-                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
-                    <input type="hidden" name="action" value="install_dev_deps">
-                    <button class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">Install SASS Compiler</button>
-                </form>
-                <p class="text-xs text-gray-600 mt-2">Installs <code>sass</code> as a development dependency for compiling SASS/SCSS files.</p>
+                    <p class="text-sm text-gray-600 mb-2">For theme development with SASS/SCSS support:</p>
+                    <form method="POST" class="mb-3">
+                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
+                        <input type="hidden" name="action" value="install_dev_deps">
+                        <button class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">Install SASS Compiler</button>
+                    </form>
+                    <p class="text-xs text-gray-600 mb-3">Installs <code>sass</code> as a development dependency for compiling SASS/SCSS files.</p>
+                    
+                    <p class="text-sm text-gray-600 mb-2">For modern CSS framework with Tailwind CSS:</p>
+                    <form method="POST" class="mb-3">
+                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
+                        <input type="hidden" name="action" value="install_tailwind">
+                        <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Install Tailwind CSS</button>
+                    </form>
+                    <p class="text-xs text-gray-600 mb-3">Installs <code>tailwindcss@^3.4.0</code> as a development dependency for utility-first CSS framework.</p>
                 
                 <div class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
                     <h4 class="font-medium text-yellow-800 mb-2">Installation Process:</h4>
@@ -670,7 +739,7 @@ if ($action === 'create_admin') {
                         <input type="hidden" name="action" value="create_admin">
                         <div>
                             <label class="block mb-1">Username</label>
-                            <input name="admin_user" class="w-full px-3 py-2 border rounded" required pattern="[A-Za-z0-9_\-]{3,32}" title="3-32 characters, letters, numbers, underscores, or dashes only">
+                            <input name="admin_user" class="w-full px-3 py-2 border rounded" required pattern="[A-Za-z0-9_\-]{3,50}" title="3-50 characters, letters, numbers, underscores, or dashes only">
                         </div>
                         <div>
                             <label class="block mb-1">Password</label>
@@ -689,9 +758,9 @@ if ($action === 'create_admin') {
                 <h2 class="text-xl font-semibold mb-3">Next Steps</h2>
                 <ul class="list-disc ml-6 text-sm text-gray-700 space-y-1">
                     <li>Visit <code>/admin/</code> to log in and configure your site.</li>
+                    <li>Use the **Export Site** button in the Dashboard to generate a static version of your site.</li>
                     <li>Use the Updates section in Mission Control to keep FearlessCMS up to date.</li>
                     <li>Use the Store to browse and install plugins/themes (if enabled).</li>
-                    <li>Run <code>node export.js</code> to generate a static version of your site (requires Node.js dependencies).</li>
                     <li>Use <code>npx sass</code> to compile SASS/SCSS files for custom themes (requires SASS dependency).</li>
                 </ul>
             </section>
@@ -707,6 +776,7 @@ if ($action === 'create_admin') {
                             <li><code>php install.php --create-dirs</code> - Create required directories</li>
                             <li><code>php install.php --install-export-deps</code> - Install Node.js dependencies</li>
                             <li><code>php install.php --install-dev-deps</code> - Install development dependencies</li>
+                            <li><code>php install.php --install-tailwind</code> - Install Tailwind CSS</li>
                             <li><code>php install.php --create-admin=username --password=password</code> - Create admin user</li>
                         </ul>
                     </div>

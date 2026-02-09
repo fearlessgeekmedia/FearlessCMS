@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mission Control - Login</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="/public/css/output.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
     <style>
         .fira-code { font-family: 'Fira Code', monospace; }
@@ -25,6 +25,12 @@
             <?php if (!empty($error)): ?>
                 <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
                     <span class="block sm:inline"><?php echo htmlspecialchars($error); ?></span>
+                </div>
+            <?php endif; ?>
+            
+            <?php if (isset($_GET['demo_expired'])): ?>
+                <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
+                    <span class="block sm:inline">Demo session has expired. Please log in again.</span>
                 </div>
             <?php endif; ?>
 

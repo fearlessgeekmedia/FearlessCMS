@@ -12,13 +12,23 @@ ob_clean();
 define('PROJECT_ROOT', __DIR__);
 define('CONFIG_DIR', PROJECT_ROOT . '/config');
 
-// Simple session check without heavy dependencies
-session_start();
+// Load session configuration
+require_once __DIR__ . '/includes/session.php';
+require_once __DIR__ . '/includes/auth.php';
 if (empty($_SESSION['username'])) {
     ob_end_clean();
     http_response_code(401);
     header('Content-Type: application/json');
     echo json_encode(['success' => false, 'error' => 'You must be logged in to perform this action']);
+    exit;
+}
+
+// Check for permission to manage menus
+if (!fcms_check_permission($_SESSION['username'], 'manage_menus')) {
+    ob_end_clean();
+    http_response_code(403);
+    header('Content-Type: application/json');
+    echo json_encode(['success' => false, 'error' => 'You do not have permission to manage menus']);
     exit;
 }
 

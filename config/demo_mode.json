@@ -1,0 +1,11 @@
+{
+    "enabled": true,
+    "demo_user": {
+        "username": "demo",
+        "password": "demo",
+        "role": "administrator"
+    },
+    "session_timeout": 3600,
+    "cleanup_interval": 86400,
+    "max_demo_sessions": 10
+}

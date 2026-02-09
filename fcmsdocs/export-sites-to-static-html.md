@@ -22,7 +22,7 @@ The export system crawls your running FearlessCMS site and downloads all HTML pa
 ### Starting the Development Server
 
 ```bash
-nix-shell -p php81 --run "export FCMS_DEBUG=true && ./serve.sh"
+nix-shell -p php83 --run "export FCMS_DEBUG=true && ./serve.sh"
 ```
 
 ### Installing wget (Recommended)
@@ -49,9 +49,23 @@ nix-env -iA nixpkgs.wget
 
 ## Export Methods
 
-### Option 1: Using wget (Recommended)
+### Option 1: Using the Dashboard Button (Recommended)
 
-The `export-wget.sh` script provides comprehensive site crawling:
+The easiest way to export your site is directly from the FearlessCMS admin panel.
+
+**How to use:**
+1. Log in to your Mission Control dashboard.
+2. Click the blue **Export Site** button in the header.
+3. The CMS will internally render all pages and copy assets to the `export/` directory.
+
+**Features:**
+- **Zero configuration**: No need to install external tools.
+- **High reliability**: Uses the CMS's own rendering logic.
+- **Fast**: Performs internal rendering without network overhead.
+
+### Option 2: Using wget
+
+The `export-wget.sh` script provides comprehensive site crawling for advanced automation:
 
 ```bash
 ./export-wget.sh
@@ -64,7 +78,7 @@ The `export-wget.sh` script provides comprehensive site crawling:
 - Comprehensive error handling
 - Export statistics
 
-### Option 2: Using curl (Alternative)
+### Option 3: Using curl
 
 For systems without wget, use the `export-curl.sh` script:
 
@@ -274,7 +288,7 @@ For issues with the export system:
 ### Basic Export
 ```bash
 # Start server
-nix-shell -p php81 --run "export FCMS_DEBUG=true && ./serve.sh"
+nix-shell -p php83 --run "export FCMS_DEBUG=true && ./serve.sh"
 
 # In another terminal, export
 ./export-wget.sh

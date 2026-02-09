@@ -70,6 +70,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     exit;
 }
 
+// Handle site export
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'export_site') {
+    require_once dirname(__DIR__) . '/includes/config.php';
+    require_once dirname(__DIR__) . '/includes/auth.php';
+    require_once dirname(__DIR__) . '/includes/session.php';
+    require_once dirname(__DIR__) . '/includes/plugins.php';
+    require_once __DIR__ . '/export-handler.php';
+    exit;
+}
+
+// Handle theme activation
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'activate_theme') {
+    require_once dirname(__DIR__) . '/includes/config.php';
+    require_once dirname(__DIR__) . '/includes/session.php';
+    require_once dirname(__DIR__) . '/includes/auth.php';
+    
+    if (!isLoggedIn()) {
+        $_SESSION['error'] = 'You must be logged in';
+    } elseif (!validate_csrf_token()) {
+        $_SESSION['error'] = 'Invalid security token';
+    } elseif (empty($_POST['theme'])) {
+        $_SESSION['error'] = 'Theme name is required';
+    } else {
+        $configFile = CONFIG_DIR . '/config.json';
+        $config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
+        $config['active_theme'] = $_POST['theme'];
+        if (file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT))) {
+            $_SESSION['success'] = 'Theme activated successfully';
+        } else {
+            $_SESSION['error'] = 'Failed to activate theme';
+        }
+    }
+    header('Location: /admin?action=manage_themes');
+    exit;
+}
+
+// Handle page creation (create_page action)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'create_page') {
+    require_once dirname(__DIR__) . '/includes/config.php';
+    require_once dirname(__DIR__) . '/includes/session.php';
+    require_once dirname(__DIR__) . '/includes/auth.php';
+    require_once __DIR__ . '/newpage-handler.php';
+    exit;
+}
+
+
+
 // Session is already started by main index.php, no need to start again
 // Just ensure we have access to the required functions
 
@@ -91,14 +138,18 @@ if ($_SERVER['REQUEST_URI'] === '/' . $adminPath . '/serve-js.php') {
     exit;
 }
 
-// Check authentication FIRST - redirect to login if not authenticated
-if (!isLoggedIn()) {
-    header('Location: /' . $adminPath . '/login');
-    exit;
-}
+// Authentication check will be done later after session is fully loaded
 
 // Apply security headers for admin interface
 set_security_headers();
+
+// SECURITY: Check for demo user and add restrictions
+require_once PROJECT_ROOT . '/includes/DemoModeManager.php';
+$demoManager = new DemoModeManager();
+if ($demoManager->isDemoUserSession()) {
+    error_log("SECURITY: Demo user accessing admin panel");
+    // Demo users can access admin but with restrictions
+}
 
 // Prevent browser caching of admin pages to ensure fresh content
 header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0');
@@ -118,9 +169,9 @@ if (getenv('FCMS_DEBUG') === 'true') {
     ini_set('display_startup_errors', 1);
     error_reporting(E_ALL);
 } else {
-    ini_set('display_errors', 1); // Temporarily enable for debugging
-    ini_set('display_startup_errors', 1);
-    error_reporting(E_ALL);
+    ini_set('display_errors', 0);
+    ini_set('display_startup_errors', 0);
+    error_reporting(E_ERROR | E_WARNING | E_PARSE);
 }
 
 // Log admin access for security monitoring
@@ -157,12 +208,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && in_array
     exit;
 }
 
+
+
 // Image uploads are now handled at the beginning of the file
 
+error_log("*** ADMIN INDEX: ABOUT TO LOAD HANDLERS ***");
 require_once __DIR__ . '/widget-handler.php';
 require_once __DIR__ . '/theme-handler.php';
 require_once __DIR__ . '/store-handler.php';
+error_log("*** ABOUT TO LOAD NEWPAGE HANDLER ***");
 require_once __DIR__ . '/newpage-handler.php';
+error_log("*** NEWPAGE HANDLER LOADED ***");
 require_once __DIR__ . '/widgets-handler.php';
 // User handlers - only include when needed
 // require_once __DIR__ . '/user-handler.php';
@@ -249,11 +305,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && in_array
         } elseif (strpos($fileName, '../') !== false || strpos($fileName, './') === 0) {
             $_SESSION['error'] = 'Invalid file path - path traversal detected';
         } else {
-            $filePath = CONTENT_DIR . '/' . $fileName;
+            // Determine content directory based on demo mode
+            require_once PROJECT_ROOT . '/includes/DemoModeManager.php';
+            $demoManager = new DemoModeManager();
+            $deleteContentDir = ($demoManager->isDemoSession() || $demoManager->isDemoUserSession()) ? $demoManager->getDemoContentDir() : CONTENT_DIR;
+            
+            $filePath = $deleteContentDir . '/' . $fileName;
 
             // Ensure we're only deleting files within the content directory
             $realFilePath = realpath($filePath);
-            $realContentDir = realpath(CONTENT_DIR);
+            $realContentDir = realpath($deleteContentDir);
 
             if ($realFilePath === false || strpos($realFilePath, $realContentDir) !== 0) {
                 $_SESSION['error'] = 'Invalid file path';
@@ -355,11 +416,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     continue;
                 }
                 
-                $filePath = CONTENT_DIR . '/' . $itemPath;
+                // Determine content directory based on demo mode
+                require_once PROJECT_ROOT . '/includes/DemoModeManager.php';
+                $demoManager = new DemoModeManager();
+                $bulkDeleteContentDir = ($demoManager->isDemoSession() || $demoManager->isDemoUserSession()) ? $demoManager->getDemoContentDir() : CONTENT_DIR;
+                
+                $filePath = $bulkDeleteContentDir . '/' . $itemPath;
                 
                 // Ensure we're only deleting files within the content directory
                 $realFilePath = realpath($filePath);
-                $realContentDir = realpath(CONTENT_DIR);
+                $realContentDir = realpath($bulkDeleteContentDir);
                 
                 if ($realFilePath === false || strpos($realFilePath, $realContentDir) !== 0) {
                     $errors[] = "Invalid file path: $itemPath";
@@ -547,7 +613,6 @@ if (!isLoggedIn()) {
 
 
 // Load plugins and run init hook
-fcms_load_plugins();
 fcms_do_hook('init');
 
 // Debug logging for admin sections
@@ -641,19 +706,33 @@ if (file_exists($menusFile)) {
 
 // Calculate total pages
 $totalPages = 0;
-$contentDir = CONTENT_DIR;
-if (is_dir($contentDir)) {
-    $files = glob($contentDir . '/*.md');
+// Determine content directory based on demo mode
+require_once PROJECT_ROOT . '/includes/DemoModeManager.php';
+$demoManager = new DemoModeManager();
+$isDemoUserForCount = $demoManager->isDemoSession() || $demoManager->isDemoUserSession();
+
+// FALLBACK: Check username directly if session detection fails
+if (!$isDemoUserForCount && isset($_SESSION['username']) && $_SESSION['username'] === 'demo') {
+    error_log("SECURITY FALLBACK: Demo user detected by username during content counting");
+    $isDemoUserForCount = true;
+}
+
+$countContentDir = $isDemoUserForCount ? $demoManager->getDemoContentDir() : CONTENT_DIR;
+error_log("DEBUG COUNT: Demo user detected: " . ($isDemoUserForCount ? 'Yes' : 'No'));
+error_log("DEBUG COUNT: Using content directory: " . $countContentDir);
+
+if (is_dir($countContentDir)) {
+    $files = glob($countContentDir . '/*.md');
     $totalPages = count($files);
 }
 
 // Load recent content for dashboard
 $recentContent = [];
-if (is_dir($contentDir)) {
-    error_log("DEBUG: CONTENT_DIR is: " . CONTENT_DIR); // Log CONTENT_DIR
+if (is_dir($countContentDir)) {
+    error_log("DEBUG: Content directory is: " . $countContentDir); // Log content directory
     // Recursively get all .md files
     $files = new RecursiveIteratorIterator(
-        new RecursiveDirectoryIterator($contentDir, RecursiveDirectoryIterator::SKIP_DOTS)
+        new RecursiveDirectoryIterator($countContentDir, RecursiveDirectoryIterator::SKIP_DOTS)
     );
     $files = new RegexIterator($files, '/\\.md$/');
 
@@ -691,7 +770,7 @@ if (is_dir($contentDir)) {
         }
 
         // Get relative path from content directory
-        $relativePath = str_replace($contentDir . '/', '', $file->getPathname());
+        $relativePath = str_replace($countContentDir . '/', '', $file->getPathname());
         $path = substr($relativePath, 0, -3); // Remove .md extension
 
         $recentContent[] = [
@@ -709,16 +788,35 @@ if (is_dir($contentDir)) {
 
 // Load content list for content management
 $contentList = [];
-if (is_dir($contentDir)) {
+// Determine content directory based on demo mode
+require_once PROJECT_ROOT . '/includes/DemoModeManager.php';
+$demoManager = new DemoModeManager();
+$isDemoUserForList = $demoManager->isDemoSession();
+
+// Additional logging for debugging
+if ($isDemoUserForList) {
+    error_log("DEBUG LIST: Demo user detected using enhanced detection");
+} else {
+    error_log("DEBUG LIST: No demo user detected - using regular content directory");
+}
+
+$listContentDir = $isDemoUserForList ? $demoManager->getDemoContentDir() : CONTENT_DIR;
+error_log("DEBUG LIST: Demo user detected: " . ($isDemoUserForList ? 'Yes' : 'No'));
+error_log("DEBUG LIST: Using content directory: " . $listContentDir);
+
+if (is_dir($listContentDir)) {
     // Recursively get all .md files
     $files = new RecursiveIteratorIterator(
-        new RecursiveDirectoryIterator($contentDir, RecursiveDirectoryIterator::SKIP_DOTS)
+        new RecursiveDirectoryIterator($listContentDir, RecursiveDirectoryIterator::SKIP_DOTS)
     );
     $files = new RegexIterator($files, '/\\.md$/');
 
     foreach ($files as $file) {
+        error_log("DEBUG: Found markdown file: " . $file->getPathname());
+        
         // Skip files in _preview directory
         if (strpos($file->getPathname(), '/content/_preview/') !== false) {
+            error_log("DEBUG: Skipping preview file: " . $file->getPathname());
             continue;
         }
 
@@ -733,10 +831,12 @@ if (is_dir($contentDir)) {
         if (!$title) {
             $title = ucwords(str_replace(['-', '_'], ' ', $file->getBasename('.md')));
         }
-
+        
         // Get relative path from content directory
-        $relativePath = str_replace($contentDir . '/', '', $file->getPathname());
+        $relativePath = str_replace($listContentDir . '/', '', $file->getPathname());
         $path = substr($relativePath, 0, -3); // Remove .md extension
+        
+        error_log("DEBUG: Adding to contentList - Title: $title, Path: $path");
 
         $contentList[] = [
             'title' => $title,
@@ -745,6 +845,7 @@ if (is_dir($contentDir)) {
         ];
     }
 }
+error_log("DEBUG: Final contentList count: " . count($contentList));
 
 $username = $_SESSION['username'] ?? '';
 $content = '';
@@ -771,20 +872,58 @@ if (
         die('Access denied: Invalid path');
     }
 
+    // Determine content directory based on demo mode
+    require_once PROJECT_ROOT . '/includes/DemoModeManager.php';
+    $demoManager = new DemoModeManager();
+    
+    // Debug session information
+    error_log("DEBUG: Session username: " . ($_SESSION['username'] ?? 'not set'));
+    error_log("DEBUG: Demo session: " . ($demoManager->isDemoSession() ? 'Yes' : 'No'));
+    error_log("DEBUG: Demo user session: " . ($demoManager->isDemoUserSession() ? 'Yes' : 'No'));
+    
+    $isDemoUser = $demoManager->isDemoUser();
+    
+    // Additional logging for debugging
+    if ($isDemoUser) {
+        error_log("DEBUG LOAD: Demo user detected using enhanced detection");
+    } else {
+        error_log("DEBUG LOAD: No demo user detected - using regular content directory");
+    }
+    
+    $contentDir = $isDemoUser ? $demoManager->getDemoContentDir() : CONTENT_DIR;
+    error_log("DEBUG: Demo user detected: " . ($isDemoUser ? 'Yes' : 'No'));
+    error_log("DEBUG: Using content directory: " . $contentDir);
+    
     // Build safe content path
-    $contentFile = CONTENT_DIR . '/' . $path;
-    if (!str_ends_with($contentFile, '.md')) {
-        $contentFile .= '.md';
+    if ($isDemoUser) {
+        // For demo users, content is stored in pages/ subdirectory
+        // Handle both cases: path with 'pages/' prefix and without
+        if (strpos($path, 'pages/') === 0) {
+            // Path already includes 'pages/' prefix
+            $contentFile = $contentDir . '/' . $path;
+        } else {
+            // Path doesn't include 'pages/' prefix, add it
+            $contentFile = $contentDir . '/pages/' . $path;
+        }
+        if (!str_ends_with($contentFile, '.md')) {
+            $contentFile .= '.md';
+        }
+    } else {
+        // For regular users, content is in the root of content directory
+        $contentFile = $contentDir . '/' . $path;
+        if (!str_ends_with($contentFile, '.md')) {
+            $contentFile .= '.md';
+        }
     }
     
     // Debug: Show exact path resolution
     error_log("DEBUG: Path resolution - original path: " . $path);
-    error_log("DEBUG: Path resolution - CONTENT_DIR: " . CONTENT_DIR);
+    error_log("DEBUG: Path resolution - contentDir: " . $contentDir);
     error_log("DEBUG: Path resolution - final contentFile: " . $contentFile);
 
     // Ensure file is within content directory
     $realContentFile = realpath($contentFile);
-    $realContentDir = realpath(CONTENT_DIR);
+    $realContentDir = realpath($contentDir);
     if ($realContentFile && $realContentDir && strpos($realContentFile, $realContentDir) !== 0) {
         error_log("Invalid path access attempt: " . $_GET['path']);
         die('Access denied: Invalid path');
@@ -863,7 +1002,7 @@ if (
                     // If still empty, try alternative path
                     if (strlen($contentData) === 0) {
                         error_log("DEBUG: Trying alternative path resolution");
-                        $altPath = CONTENT_DIR . '/' . $path . '.md';
+                        $altPath = $contentDir . '/' . $path . '.md';
                         if (file_exists($altPath)) {
                             $contentData = file_get_contents($altPath);
                             error_log("DEBUG: Alternative path content load - length: " . strlen($contentData));
@@ -944,9 +1083,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     // Handle logout action (special case - doesn't need CSRF for security)
     if ($postAction === 'logout') {
-        if (function_exists('session_destroy')) {
-            session_destroy();
-        }
+        // Use the proper logout function from auth.php which handles demo cleanup
+        require_once PROJECT_ROOT . '/includes/auth.php';
+        logout();
         fcms_flush_output(); // Flush output buffer before setting headers
         header('Location: /' . $adminPath . '/login');
         exit;
@@ -1452,8 +1591,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         if (empty($fileName) || !preg_match('/^[a-zA-Z0-9_\\-\/]+$/', $fileName)) {
             $error = 'Invalid filename';
         } else {
-            $oldFilePath = CONTENT_DIR . '/' . $oldFileName . '.md';
-            $newFilePath = CONTENT_DIR . '/' . $fileName . '.md';
+            // Determine content directory based on demo mode
+            require_once PROJECT_ROOT . '/includes/DemoModeManager.php';
+            $demoManager = new DemoModeManager();
+            
+            // Debug session information for content saving
+            error_log("DEBUG SAVE: Session username: " . ($_SESSION['username'] ?? 'not set'));
+            error_log("DEBUG SAVE: Demo session: " . ($demoManager->isDemoSession() ? 'Yes' : 'No'));
+            error_log("DEBUG SAVE: Demo user session: " . ($demoManager->isDemoUserSession() ? 'Yes' : 'No'));
+            error_log("DEBUG SAVE: Session data: " . json_encode($_SESSION ?? []));
+            
+            $isDemoUser = $demoManager->isDemoUser();
+            
+            // Additional logging for debugging
+            if ($isDemoUser) {
+                error_log("DEBUG SAVE: Demo user detected using enhanced detection");
+            } else {
+                error_log("DEBUG SAVE: No demo user detected - using regular content directory");
+            }
+            
+            $contentDir = $isDemoUser ? $demoManager->getDemoContentDir() : CONTENT_DIR;
+            error_log("DEBUG SAVE: Demo user detected: " . ($isDemoUser ? 'Yes' : 'No'));
+            error_log("DEBUG SAVE: Using content directory: " . $contentDir);
+            
+            // For demo users, use proper demo content structure
+            if ($isDemoUser) {
+                // Use the demo content creation method for proper structure
+                $result = $demoManager->createDemoContentFile($fileName, $pageTitle, $content, [
+                    'editor_mode' => $editorMode,
+                    'template' => $template
+                ]);
+                
+                if ($result) {
+                    error_log("DEBUG: Demo content created successfully: " . $fileName);
+                    $success = 'Content saved successfully!';
+                    
+                    // Redirect to edit the new content
+                    $redirectPath = str_replace('.md', '', $fileName);
+                    $redirectUrl = '?action=edit_content&path=' . urlencode($redirectPath) . '&saved=1';
+                    header('Location: ' . $redirectUrl);
+                    exit;
+                } else {
+                    $error = 'Failed to save demo content';
+                }
+            } else {
+                // Regular user content saving logic
+                
+                // SECURITY: Double-check that this is not a demo user
+                if (isset($_SESSION['username']) && $_SESSION['username'] === 'demo') {
+                    error_log("SECURITY ERROR: Demo user attempting to save to real content directory!");
+                    $error = 'Security error: Demo users cannot create real content.';
+                } else {
+                    // Proceed with regular content saving
+            
+            $oldFilePath = $contentDir . '/' . $oldFileName . '.md';
+            $newFilePath = $contentDir . '/' . $fileName . '.md';
             
             // Check if slug has changed and handle file renaming
             if ($oldFileName !== $fileName && file_exists($oldFilePath)) {
@@ -1568,6 +1760,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 error_log("DEBUG: Failed to save file");
                 $error = 'Failed to save file';
             }
+            } // End of regular user content saving logic
+            } // End of security check else block
         }
     }
 }
@@ -1885,7 +2079,17 @@ if (isset($admin_sections[$action])) {
 
 // If no admin section was found, try to load the template file
 if (!$section_found) {
-    if (!file_exists($templateFile)) {
+    // Handle demo mode action
+    if ($action === 'demo_mode') {
+        $templateFile = ADMIN_TEMPLATE_DIR . '/demo-mode.php';
+        if (file_exists($templateFile)) {
+            $templateContent = file_get_contents($templateFile);
+            $templateContent = processAdminTemplate($templateContent);
+            $content = $templateContent;
+        } else {
+            $content = '<div class="alert alert-danger">Demo mode template not found.</div>';
+        }
+    } elseif (!file_exists($templateFile)) {
         error_log("Admin index.php - Invalid action: " . $action . " (Template file not found: " . $templateFile . ")");
         $content = '<div class="alert alert-danger">Invalid action specified.</div>';
         $templateFile = null; // Unset template file if not found

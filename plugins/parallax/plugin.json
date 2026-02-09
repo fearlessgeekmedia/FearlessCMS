@@ -1,7 +1,7 @@
 {
     "name": "Parallax Sections",
     "description": "Adds parallax scrolling effects for website sections using shortcodes",
-    "version": "2.1",
+    "version": "0.0.3",
     "author": "Fearless Geek",
     "main_file": "parallax.php",
     "hooks": [

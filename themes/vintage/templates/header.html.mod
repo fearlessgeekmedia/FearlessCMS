@@ -10,13 +10,7 @@
             </div>
             
             <nav class="vintage-nav">
-                <ul class="nav-menu">
-                    {{#each menu.main}}
-                        <li class="nav-item">
-                            <a href="/{{url}}" class="nav-link">{{title}}</a>
-                        </li>
-                    {{/each}}
-                </ul>
+                {{menu=main}}
             </nav>
         </div>
     </div>

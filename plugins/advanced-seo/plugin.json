@@ -1,7 +1,7 @@
 {
     "name": "Advanced SEO Premium",
     "description": "Premium SEO features for FearlessCMS including Meta Editor, Open Graph Preview, 404 Monitoring, XML sitemap, structured data, and advanced meta tags",
-    "version": "2.0",
+    "version": "0.0.3",
     "author": "Fearless Geek",
     "premium": true,
     "price": 29.99,

@@ -2,7 +2,7 @@
 /*
 Plugin Name: SEO
 Description: Adds basic SEO features to FearlessCMS
-Version: 1.0
+Version: 0.0.3
 Author: Claude
 */
 

@@ -12,7 +12,7 @@
 {{/if}}
 
 <link rel="stylesheet" href="/themes/default/assets/style.css">
-<script src="https://cdn.tailwindcss.com"></script>
+<link href="/public/css/output.css" rel="stylesheet">
 <style>
   {{#if themeOptions.accentColor}}
   :root { --color-accent: {{themeOptions.accentColor}}; }

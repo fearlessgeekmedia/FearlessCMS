@@ -18,12 +18,6 @@
                     {{/each}}
                 </ul>
             </nav>
-            
-            <div class="header-actions">
-                <button class="elegant-toggle" id="elegant-toggle">
-                    <i class="icon-elegant"></i>
-                </button>
-            </div>
         </div>
     </div>
     

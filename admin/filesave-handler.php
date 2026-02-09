@@ -20,7 +20,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         } elseif (strpos($fileName, '../') !== false || strpos($fileName, './') === 0) {
             $error = 'Invalid file path - path traversal detected';
         } else {
-            $filePath = CONTENT_DIR . '/' . $fileName;
+            // DEMO MODE HANDLING
+            require_once dirname(__DIR__) . '/includes/DemoModeManager.php';
+            $demoManager = new DemoModeManager();
+
+            if ($demoManager->isDemoSession()) {
+                $filePath = $demoManager->getDemoContentDir() . '/' . $fileName;
+            } else {
+                $filePath = CONTENT_DIR . '/' . $fileName;
+            }
 
             // Ensure the directory exists
             $dir = dirname($filePath);

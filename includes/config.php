@@ -11,17 +11,33 @@ $document_root = $_SERVER['DOCUMENT_ROOT'];
 $project_root = dirname(dirname(__FILE__));
 
 // Define root paths
-define('PROJECT_ROOT', $project_root);
-define('CONTENT_DIR', PROJECT_ROOT . '/content');
+if (!defined('PROJECT_ROOT')) {
+    define('PROJECT_ROOT', $project_root);
+}
+if (!defined('CONTENT_DIR')) {
+    define('CONTENT_DIR', PROJECT_ROOT . '/content');
+}
 // Allow config override via environment variable
 $env_config_dir = getenv('FCMS_CONFIG_DIR');
-define('CONFIG_DIR', $env_config_dir ? $env_config_dir : PROJECT_ROOT . '/config');
-define('THEMES_DIR', PROJECT_ROOT . '/themes');
-define('PLUGINS_DIR', PROJECT_ROOT . '/plugins');
+if (!defined('CONFIG_DIR')) {
+    define('CONFIG_DIR', $env_config_dir ? $env_config_dir : PROJECT_ROOT . '/config');
+}
+if (!defined('THEMES_DIR')) {
+    define('THEMES_DIR', PROJECT_ROOT . '/themes');
+}
+if (!defined('PLUGINS_DIR')) {
+    define('PLUGINS_DIR', PROJECT_ROOT . '/plugins');
+}
 $env_admin_config_dir = getenv('FCMS_ADMIN_CONFIG_DIR');
-define('ADMIN_CONFIG_DIR', $env_admin_config_dir ? $env_admin_config_dir : PROJECT_ROOT . '/admin/config');
-define('ADMIN_TEMPLATE_DIR', PROJECT_ROOT . '/admin/templates');
-define('ADMIN_INCLUDES_DIR', PROJECT_ROOT . '/admin/includes');
+if (!defined('ADMIN_CONFIG_DIR')) {
+    define('ADMIN_CONFIG_DIR', $env_admin_config_dir ? $env_admin_config_dir : PROJECT_ROOT . '/admin/config');
+}
+if (!defined('ADMIN_TEMPLATE_DIR')) {
+    define('ADMIN_TEMPLATE_DIR', PROJECT_ROOT . '/admin/templates');
+}
+if (!defined('ADMIN_INCLUDES_DIR')) {
+    define('ADMIN_INCLUDES_DIR', PROJECT_ROOT . '/admin/includes');
+}
 
 // Define base URL
 $base_url = '';
@@ -38,7 +54,9 @@ if (isset($_SERVER['HTTP_HOST'])) {
         $base_url .= '/' . $adminPath;
     }
 }
-define('BASE_URL', $base_url);
+if (!defined('BASE_URL')) {
+    define('BASE_URL', $base_url);
+}
 
 // Create required directories if they don't exist
 $requiredDirs = [
@@ -147,7 +165,7 @@ if (!file_exists($configFile)) {
         'site_description' => 'A fearless content management system',
         'site_keywords' => 'cms, content management, fearless',
         'site_author' => 'FearlessGeek',
-        'site_version' => '1.0.0',
+        'site_version' => '0.1.0b',
         'admin_path' => 'admin'
     ];
     file_put_contents($configFile, json_encode($defaultConfig, JSON_PRETTY_PRINT));

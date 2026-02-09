@@ -2,7 +2,7 @@
 /*
 Plugin Name: MariaDB Connector
 Description: Provides MariaDB database connectivity for FearlessCMS plugins
-Version: 1.0.0
+Version: 0.0.3
 Author: Fearless Geek
 */
 

@@ -2,7 +2,7 @@
 /*
 Plugin Name: Forms
 Description: Adds form management capabilities to FearlessCMS
-Version: 1.0
+Version: 0.0.3
 Author: Fearless Geek
 */
 
@@ -62,9 +62,33 @@ function forms_get_settings() {
     return [];
 }
 
+// Helper function to handle form submission errors
+function forms_handle_error($message, &$handled, &$title, &$content, $error_type = 'error') {
+    forms_log("Form submission error: " . $message);
+    $_SESSION['form_error_message'] = $message;
+    $handled = true;
+    $title = 'Form Submission Error';
+    
+    // Instead of redirecting, display the error message directly
+    $content = '<div style="padding: 20px; border: 1px solid #dc3545; background-color: #f8d7da; color: #721c24; border-radius: 5px;">';
+    $content .= '<h3>Form Submission Error</h3>';
+    $content .= '<p>' . htmlspecialchars($message) . '</p>';
+    $content .= '<p><a href="javascript:history.back()">Go Back</a></p>';
+    $content .= '</div>';
+}
+
 // Handle form submissions
-function forms_handle_submission() {
+function forms_handle_submission(&$handled, &$title, &$content, $path) {
     forms_log("Form submission handler called");
+    forms_log("GET parameters: " . print_r($_GET, true));
+    forms_log("REQUEST_METHOD: " . $_SERVER['REQUEST_METHOD']);
+    forms_log("REQUEST_URI: " . $_SERVER['REQUEST_URI']);
+    
+    // Check if this is a form submission
+    if (!isset($_GET['action']) || $_GET['action'] !== 'submit_form') {
+        forms_log("Not a form submission request - action: " . ($_GET['action'] ?? 'not set'));
+        return;
+    }
     
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         forms_log("Not a POST request");
@@ -73,8 +97,7 @@ function forms_handle_submission() {
     
     $form_id = $_GET['form_id'] ?? null;
     if (!$form_id) {
-        forms_log("No form ID provided");
-        return;
+        forms_handle_error("No form ID provided", $handled, $title, $content);
     }
     
     forms_log("Processing form submission for form ID: " . $form_id);
@@ -82,8 +105,7 @@ function forms_handle_submission() {
     // Load form data
     $form_file = FORMS_DATA_DIR . '/' . $form_id . '.json';
     if (!file_exists($form_file)) {
-        forms_log("Form file not found: " . $form_file);
-        return;
+        forms_handle_error("Form file not found: " . $form_file, $handled, $title, $content);
     }
     
     $form = json_decode(file_get_contents($form_file), true);
@@ -120,179 +142,302 @@ function forms_handle_submission() {
         $smtp = @fsockopen($settings['smtp_host'], $settings['smtp_port'], $errno, $errstr, 30);
         if (!$smtp) {
             forms_log("SMTP Connection failed: $errstr ($errno)");
-            return;
-        }
-        forms_log("SMTP connection established");
-        
-        // Read server response
-        $response = fgets($smtp, 515);
-        forms_log("SMTP Server response: " . trim($response));
-        
-        // Send EHLO first
-        fputs($smtp, "EHLO " . $_SERVER['HTTP_HOST'] . "\r\n");
-        
-        // Read multi-line EHLO response
-        $ehlo_response = '';
-        do {
+            $_SESSION['form_error_message'] = "Email sending failed: SMTP connection error";
+        } else {
+            forms_log("SMTP connection established");
+            
+            // Read server response
             $response = fgets($smtp, 515);
-            $ehlo_response .= $response;
-            forms_log("SMTP EHLO response line: " . trim($response));
-        } while (substr($response, 3, 1) === '-');
-        
-        if (strpos($ehlo_response, '250') === false) {
-            forms_log("EHLO command failed: " . trim($ehlo_response));
-            fclose($smtp);
-            return;
-        }
-        
-        // If encryption is required
-        if ($settings['smtp_encryption'] === 'tls') {
-            forms_log("Starting TLS encryption");
-            fputs($smtp, "STARTTLS\r\n");
+            forms_log("SMTP Server response: " . trim($response));
             
-            // Read multi-line STARTTLS response
-            $starttls_response = '';
-            do {
-                $response = fgets($smtp, 515);
-                $starttls_response .= $response;
-                forms_log("SMTP STARTTLS response line: " . trim($response));
-            } while (substr($response, 3, 1) === '-');
+            // Wait a moment for the connection to stabilize
+            usleep(100000); // 100ms delay
             
-            if (strpos($starttls_response, '220') === false) {
-                forms_log("STARTTLS command failed: " . trim($starttls_response));
-                fclose($smtp);
-                return;
-            }
-            
-            // Enable TLS on the existing connection
-            forms_log("Enabling TLS on existing connection");
-            if (!stream_socket_enable_crypto($smtp, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
-                forms_log("Failed to enable TLS encryption");
-                fclose($smtp);
-                return;
-            }
-            forms_log("TLS encryption enabled successfully");
-            
-            // Send EHLO again
+            // Send EHLO first
             fputs($smtp, "EHLO " . $_SERVER['HTTP_HOST'] . "\r\n");
             
-            // Read multi-line EHLO response after TLS
+            // Read multi-line EHLO response with timeout
             $ehlo_response = '';
+            $timeout = 10; // 10 second timeout
+            $start_time = time();
+            
             do {
                 $response = fgets($smtp, 515);
+                if ($response === false) {
+                    forms_log("No response from SMTP server");
+                    break;
+                }
                 $ehlo_response .= $response;
-                forms_log("SMTP EHLO response after TLS: " . trim($response));
+                forms_log("SMTP EHLO response line: " . trim($response));
+                
+                // Check for timeout
+                if (time() - $start_time > $timeout) {
+                    forms_log("SMTP EHLO response timeout");
+                    break;
+                }
             } while (substr($response, 3, 1) === '-');
             
-            if (strpos($ehlo_response, '250') === false) {
-                forms_log("EHLO after TLS failed: " . trim($ehlo_response));
+            if (empty($ehlo_response) || strpos($ehlo_response, '250') === false) {
                 fclose($smtp);
-                return;
+                forms_log("EHLO command failed: " . trim($ehlo_response));
+                $_SESSION['form_error_message'] = "Email sending failed: EHLO command failed";
+            } else {
+                // If encryption is required
+                if ($settings['smtp_encryption'] === 'tls') {
+                    forms_log("Starting TLS encryption");
+                    fputs($smtp, "STARTTLS\r\n");
+                    
+                    // Read multi-line STARTTLS response
+                    $starttls_response = '';
+                    do {
+                        $response = fgets($smtp, 515);
+                        $starttls_response .= $response;
+                        forms_log("SMTP STARTTLS response line: " . trim($response));
+                    } while (substr($response, 3, 1) === '-');
+                    
+                    if (strpos($starttls_response, '220') === false) {
+                        fclose($smtp);
+                        forms_log("STARTTLS command failed: " . trim($starttls_response));
+                        $_SESSION['form_error_message'] = "Email sending failed: STARTTLS command failed";
+                    } else {
+                        // Enable TLS on the existing connection
+                        forms_log("Enabling TLS on existing connection");
+                        
+                        // Create SSL context with options based on settings
+                        $verify_ssl = ($settings['smtp_verify_ssl'] ?? '0') === '1';
+                        forms_log("SSL verification setting: " . ($verify_ssl ? 'enabled' : 'disabled'));
+                        
+                        $context = stream_context_create([
+                            'ssl' => [
+                                'verify_peer' => $verify_ssl,
+                                'verify_peer_name' => $verify_ssl,
+                                'allow_self_signed' => !$verify_ssl,
+                                'crypto_method' => STREAM_CRYPTO_METHOD_TLS_CLIENT
+                            ]
+                        ]);
+                        
+                        // Set the context on the stream
+                        stream_context_set_option($smtp, 'ssl', 'verify_peer', $verify_ssl);
+                        stream_context_set_option($smtp, 'ssl', 'verify_peer_name', $verify_ssl);
+                        stream_context_set_option($smtp, 'ssl', 'allow_self_signed', !$verify_ssl);
+                        
+                        if (!stream_socket_enable_crypto($smtp, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+                            $ssl_error = error_get_last();
+                            $error_msg = "Failed to enable TLS encryption. This may be due to SSL certificate verification issues.";
+                            if ($ssl_error) {
+                                $error_msg .= " Error details: " . $ssl_error['message'];
+                                forms_log("SSL Error details: " . print_r($ssl_error, true));
+                            }
+                            forms_log($error_msg);
+                            fclose($smtp);
+                            $_SESSION['form_error_message'] = "Email sending failed: TLS encryption failed";
+                        } else {
+                            forms_log("TLS encryption enabled successfully");
+                            // Send EHLO again after TLS
+                            fputs($smtp, "EHLO " . $_SERVER['HTTP_HOST'] . "\r\n");
+                            
+                            // Read multi-line EHLO response after TLS
+                            $ehlo_response = '';
+                            do {
+                                $response = fgets($smtp, 515);
+                                $ehlo_response .= $response;
+                                forms_log("SMTP EHLO response after TLS: " . trim($response));
+                            } while (substr($response, 3, 1) === '-');
+                            
+                            if (strpos($ehlo_response, '250') === false) {
+                                fclose($smtp);
+                                forms_log("EHLO after TLS failed: " . trim($ehlo_response));
+                                $_SESSION['form_error_message'] = "Email sending failed: EHLO after TLS failed";
+                            } else {
+                                // TLS setup successful, proceed with authentication and email sending
+                                forms_log("TLS setup completed successfully, proceeding with email sending");
+                                $tls_success = true;
+                            }
+                        }
+                    }
+                } elseif ($settings['smtp_encryption'] === 'ssl') {
+                    // For SSL, connect directly with SSL
+                    fclose($smtp);
+                    
+                    // Create SSL context with options based on settings
+                    $verify_ssl = ($settings['smtp_verify_ssl'] ?? '0') === '1';
+                    forms_log("SSL verification setting: " . ($verify_ssl ? 'enabled' : 'disabled'));
+                    
+                    $context = stream_context_create([
+                        'ssl' => [
+                            'verify_peer' => $verify_ssl,
+                            'verify_peer_name' => $verify_ssl,
+                            'allow_self_signed' => !$verify_ssl
+                        ]
+                    ]);
+                    
+                    $smtp = @stream_socket_client('ssl://' . $settings['smtp_host'] . ':' . $settings['smtp_port'], $errno, $errstr, 30, STREAM_CLIENT_CONNECT, $context);
+                    if (!$smtp) {
+                        $error = "Failed to establish SSL connection: $errstr ($errno)";
+                        forms_log($error);
+                        $_SESSION['form_error_message'] = "Email sending failed: SSL connection failed";
+                    } else {
+                        forms_log("SSL connection established");
+                        
+                        // Read server response
+                        $response = fgets($smtp, 515);
+                        forms_log("SMTP Server response after SSL: " . trim($response));
+                        
+                        // Send EHLO
+                        fputs($smtp, "EHLO " . $_SERVER['HTTP_HOST'] . "\r\n");
+                        
+                        // Read multi-line EHLO response after SSL
+                        $ehlo_response = '';
+                        do {
+                            $response = fgets($smtp, 515);
+                            $ehlo_response .= $response;
+                            forms_log("SMTP EHLO response after SSL: " . trim($response));
+                        } while (substr($response, 3, 1) === '-');
+                        
+                        if (strpos($ehlo_response, '250') === false) {
+                            fclose($smtp);
+                            forms_log("EHLO after SSL failed: " . trim($ehlo_response));
+                            $_SESSION['form_error_message'] = "Email sending failed: EHLO after SSL failed";
+                        } else {
+                            // SSL setup successful, proceed with authentication and email sending
+                            forms_log("SSL setup completed successfully, proceeding with email sending");
+                            $ssl_success = true;
+                        }
+                    }
+                } else {
+                    // No encryption, proceed directly with authentication and email sending
+                    forms_log("No encryption required, proceeding with email sending");
+                    $no_encryption = true;
+                }
+                
+                // Only proceed with authentication and email sending if encryption setup was successful or no encryption is needed
+                if (isset($tls_success) || isset($ssl_success) || isset($no_encryption)) {
+                    // If authentication is required
+                if (!empty($settings['smtp_username']) && !empty($settings['smtp_password'])) {
+                    forms_log("Starting SMTP authentication");
+                    fputs($smtp, "AUTH LOGIN\r\n");
+                    $response = fgets($smtp, 515);
+                    forms_log("SMTP AUTH response: " . trim($response));
+                    
+                    if (strpos($response, '334') === false) {
+                        fclose($smtp);
+                        forms_log("AUTH command failed: " . trim($response));
+                        $_SESSION['form_error_message'] = "Email sending failed: Authentication failed";
+                    } else {
+                        fputs($smtp, base64_encode($settings['smtp_username']) . "\r\n");
+                        $response = fgets($smtp, 515);
+                        forms_log("SMTP Username response: " . trim($response));
+                        
+                        if (strpos($response, '334') === false) {
+                            fclose($smtp);
+                            forms_log("Username authentication failed: " . trim($response));
+                            $_SESSION['form_error_message'] = "Email sending failed: Username authentication failed";
+                        } else {
+                            fputs($smtp, base64_encode($settings['smtp_password']) . "\r\n");
+                            $response = fgets($smtp, 515);
+                            forms_log("SMTP Password response: " . trim($response));
+                            
+                            if (strpos($response, '235') === false) {
+                                fclose($smtp);
+                                forms_log("Password authentication failed: " . trim($response));
+                                $_SESSION['form_error_message'] = "Email sending failed: Password authentication failed";
+                            } else {
+                                forms_log("SMTP Authentication successful");
+                            }
+                        }
+                    }
+                }
+                
+                // Send MAIL FROM
+                fputs($smtp, "MAIL FROM:<{$settings['from_email']}>\r\n");
+                $response = fgets($smtp, 515);
+                forms_log("SMTP MAIL FROM response: " . trim($response));
+                
+                if (strpos($response, '250') === false) {
+                    fclose($smtp);
+                    forms_log("MAIL FROM command failed: " . trim($response));
+                    $_SESSION['form_error_message'] = "Email sending failed: MAIL FROM command failed";
+                } else {
+                    // Send RCPT TO for each recipient
+                    foreach ($form['email_recipients'] as $recipient) {
+                        fputs($smtp, "RCPT TO:<{$recipient}>\r\n");
+                        $response = fgets($smtp, 515);
+                        forms_log("SMTP RCPT TO response for {$recipient}: " . trim($response));
+                        
+                        if (strpos($response, '250') === false) {
+                            fclose($smtp);
+                            forms_log("RCPT TO command failed for {$recipient}: " . trim($response));
+                            $_SESSION['form_error_message'] = "Email sending failed: RCPT TO command failed";
+                            break;
+                        }
+                    }
+                    
+                    // Send DATA
+                    fputs($smtp, "DATA\r\n");
+                    $response = fgets($smtp, 515);
+                    forms_log("SMTP DATA response: " . trim($response));
+                    
+                    if (strpos($response, '354') === false) {
+                        fclose($smtp);
+                        forms_log("DATA command failed: " . trim($response));
+                        $_SESSION['form_error_message'] = "Email sending failed: DATA command failed";
+                    } else {
+                        // Send email headers and content
+                        $headers = "From: " . (!empty($settings['from_name']) ? "{$settings['from_name']} <{$settings['from_email']}>" : $settings['from_email']) . "\r\n";
+                        $headers .= "Subject: {$subject}\r\n";
+                        $headers .= "X-Mailer: PHP/" . phpversion() . "\r\n";
+                        $headers .= "MIME-Version: 1.0\r\n";
+                        $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
+                        
+                        fputs($smtp, $headers . "\r\n" . $emailMessage . "\r\n.\r\n");
+                        $response = fgets($smtp, 515);
+                        forms_log("SMTP Message send response: " . trim($response));
+                        
+                        if (strpos($response, '250') === false) {
+                            fclose($smtp);
+                            forms_log("Message send failed: " . trim($response));
+                            $_SESSION['form_error_message'] = "Email sending failed: Message send failed";
+                        } else {
+                            // Send QUIT
+                            fputs($smtp, "QUIT\r\n");
+                            fclose($smtp);
+                            forms_log("SMTP connection closed");
+                            forms_log("Email sent successfully!");
+                            
+                            // Store success message in session
+                            $_SESSION['form_success_message'] = $settings['success_message'] ?? 'Thank you for your submission!';
+                        }
+                    }
+                }
+                } // End of encryption success check
             }
         }
-        
-        // If authentication is required
-        if (!empty($settings['smtp_username']) && !empty($settings['smtp_password'])) {
-            forms_log("Starting SMTP authentication");
-            fputs($smtp, "AUTH LOGIN\r\n");
-            $response = fgets($smtp, 515);
-            forms_log("SMTP AUTH response: " . trim($response));
-            
-            if (strpos($response, '334') === false) {
-                forms_log("AUTH command failed: " . trim($response));
-                fclose($smtp);
-                return;
-            }
-            
-            fputs($smtp, base64_encode($settings['smtp_username']) . "\r\n");
-            $response = fgets($smtp, 515);
-            forms_log("SMTP Username response: " . trim($response));
-            
-            if (strpos($response, '334') === false) {
-                forms_log("Username authentication failed: " . trim($response));
-                fclose($smtp);
-                return;
-            }
-            
-            fputs($smtp, base64_encode($settings['smtp_password']) . "\r\n");
-            $response = fgets($smtp, 515);
-            forms_log("SMTP Password response: " . trim($response));
-            
-            if (strpos($response, '235') === false) {
-                forms_log("Password authentication failed: " . trim($response));
-                fclose($smtp);
-                return;
-            }
-            forms_log("SMTP Authentication successful");
-        }
-        
-        // Send MAIL FROM
-        fputs($smtp, "MAIL FROM:<{$settings['from_email']}>\r\n");
-        $response = fgets($smtp, 515);
-        forms_log("SMTP MAIL FROM response: " . trim($response));
-        
-        if (strpos($response, '250') === false) {
-            forms_log("MAIL FROM command failed: " . trim($response));
-            fclose($smtp);
-            return;
-        }
-        
-        // Send RCPT TO for each recipient
-        foreach ($form['email_recipients'] as $recipient) {
-            fputs($smtp, "RCPT TO:<{$recipient}>\r\n");
-            $response = fgets($smtp, 515);
-            forms_log("SMTP RCPT TO response for {$recipient}: " . trim($response));
-            
-            if (strpos($response, '250') === false) {
-                forms_log("RCPT TO command failed for {$recipient}: " . trim($response));
-                fclose($smtp);
-                return;
-            }
-        }
-        
-        // Send DATA
-        fputs($smtp, "DATA\r\n");
-        $response = fgets($smtp, 515);
-        forms_log("SMTP DATA response: " . trim($response));
-        
-        if (strpos($response, '354') === false) {
-            forms_log("DATA command failed: " . trim($response));
-            fclose($smtp);
-            return;
-        }
-        
-        // Send email headers and content
-        $headers = "From: " . (!empty($settings['from_name']) ? "{$settings['from_name']} <{$settings['from_email']}>" : $settings['from_email']) . "\r\n";
-        $headers .= "Subject: {$subject}\r\n";
-        $headers .= "X-Mailer: PHP/" . phpversion() . "\r\n";
-        $headers .= "MIME-Version: 1.0\r\n";
-        $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
-        
-        fputs($smtp, $headers . "\r\n" . $emailMessage . "\r\n.\r\n");
-        $response = fgets($smtp, 515);
-        forms_log("SMTP Message send response: " . trim($response));
-        
-        if (strpos($response, '250') === false) {
-            forms_log("Message send failed: " . trim($response));
-            fclose($smtp);
-            return;
-        }
-        
-        // Send QUIT
-        fputs($smtp, "QUIT\r\n");
-        fclose($smtp);
-        forms_log("SMTP connection closed");
-        
-        // Store success message in session
-        $_SESSION['form_success_message'] = $settings['success_message'] ?? 'Thank you for your submission!';
     } else {
         forms_log("No email recipients configured for this form");
         $_SESSION['form_error_message'] = $settings['error_message'] ?? 'There was an error submitting your form. Please try again.';
     }
     
-    // Redirect back to the form page
-    header('Location: ' . $_SERVER['HTTP_REFERER'] . '?submitted=1');
-    exit;
+    // Mark as handled and set content for success/error message
+    $handled = true;
+    
+    // Check if there was an error
+    if (isset($_SESSION['form_error_message'])) {
+        $title = 'Form Submission Error';
+        $content = '<div style="padding: 20px; border: 1px solid #dc3545; background-color: #f8d7da; color: #721c24; border-radius: 5px;">';
+        $content .= '<h3>Form Submission Error</h3>';
+        $content .= '<p>' . htmlspecialchars($_SESSION['form_error_message']) . '</p>';
+        $content .= '<p><a href="javascript:history.back()">Go Back</a></p>';
+        $content .= '</div>';
+        unset($_SESSION['form_error_message']);
+    } else {
+        $title = 'Form Submitted Successfully';
+        $content = '<div style="padding: 20px; border: 1px solid #28a745; background-color: #d4edda; color: #155724; border-radius: 5px;">';
+        $content .= '<h3>Form Submitted Successfully!</h3>';
+        $content .= '<p>' . htmlspecialchars($_SESSION['form_success_message'] ?? 'Thank you for your submission!') . '</p>';
+        $content .= '<p><a href="javascript:history.back()">Go Back</a></p>';
+        $content .= '</div>';
+        unset($_SESSION['form_success_message']);
+    }
 }
 
 // Process shortcodes in content

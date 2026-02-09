@@ -158,7 +158,7 @@ if (!$sessionActive) {
         // Regenerate session ID periodically for security
         if (time() - $_SESSION['last_regeneration'] > 300) { // 5 minutes
             if (function_exists('session_regenerate_id')) {
-                session_regenerate_id(true);
+                session_regenerate_id(false); // Don't delete old session data
                 $_SESSION['last_regeneration'] = time();
             }
         }

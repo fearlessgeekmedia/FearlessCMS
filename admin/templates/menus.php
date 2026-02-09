@@ -93,6 +93,10 @@
     script.src = 'https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js';
     script.onload = function() {
         console.log('Sortable.js loaded successfully from primary CDN');
+        // If we have a pending menu, initialize sortable
+        if (typeof currentMenu !== 'undefined' && currentMenu && typeof initSortable === 'function') {
+            initSortable();
+        }
     };
     script.onerror = function() {
         console.warn('Primary CDN failed, trying fallback...');
@@ -100,6 +104,9 @@
         fallbackScript.src = 'https://unpkg.com/sortablejs@1.15.0/Sortable.min.js';
         fallbackScript.onload = function() {
             console.log('Sortable.js loaded successfully from fallback CDN');
+            if (typeof currentMenu !== 'undefined' && currentMenu && typeof initSortable === 'function') {
+                initSortable();
+            }
         };
         fallbackScript.onerror = function() {
             console.error('Both CDNs failed to load Sortable.js');
@@ -129,21 +136,14 @@ function initSortable() {
     
     // Check if Sortable is available
     if (!isSortableAvailable()) {
-        console.warn('Sortable library not loaded, retrying in 500ms...');
-        // Retry after a delay
-        setTimeout(() => {
-            if (isSortableAvailable()) {
-                initSortable();
-            } else {
-                console.warn('Sortable library still not loaded, drag-and-drop functionality disabled');
-                // Show a user-friendly message
-                const warningDiv = document.createElement('div');
-                warningDiv.className = 'text-yellow-600 text-sm p-2 bg-yellow-50 border border-yellow-200 rounded mb-2';
-                warningDiv.innerHTML = '⚠️ Drag-and-drop reordering is temporarily unavailable. Please refresh the page to try again.';
-                container.parentNode.insertBefore(warningDiv, container);
-            }
-        }, 500);
+        console.warn('Sortable library not yet loaded, will retry when it becomes available...');
         return;
+    }
+    
+    // Remove any existing warning messages
+    const existingWarning = container.parentNode.querySelector('.sortable-warning');
+    if (existingWarning) {
+        existingWarning.remove();
     }
     
     try {
@@ -170,7 +170,7 @@ function initSortable() {
         console.error('Error initializing Sortable:', error);
         // Show user-friendly error message
         const errorDiv = document.createElement('div');
-        errorDiv.className = 'text-red-600 text-sm p-2 bg-red-50 border border-red-200 rounded mb-2';
+        errorDiv.className = 'text-red-600 text-sm p-2 bg-red-50 border border-red-200 rounded mb-2 sortable-error';
         errorDiv.innerHTML = '❌ Failed to initialize drag-and-drop functionality. Menu editing will still work.';
         container.parentNode.insertBefore(errorDiv, container);
     }

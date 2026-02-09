@@ -211,12 +211,18 @@ body {
 
 .content-layout {
     display: grid;
-    grid-template-columns: 1fr 350px;
+    grid-template-columns: 1fr;
     gap: 3rem;
+    max-width: 800px;
+    margin: 0 auto;
 }
 
-/* Article */
-.elegant-article {
+.content-layout.has-sidebar {
+    grid-template-columns: 1fr 350px;
+    max-width: 1200px;
+}
+
+/* Article */ .elegant-article {
     background: var(--surface);
     border-radius: var(--border-radius);
     padding: 3rem;

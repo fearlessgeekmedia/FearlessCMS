@@ -5,11 +5,11 @@
 # Note: Funding Required for FearlessCMS Development to Continue 
 More at <a href="https://ko-fi.com/post/Funding-Required-For-FearelessCMS-Development-To-C-D1D31IVNKP" target="_blank">Ko-Fi</a>.
 
-Welcome to FearlessCMS, a new content management system centered around simplicity and respect for the open source community. The project is currently in alpha testing stages, so don't expect it to be fully functional just yet. But you can make a simple website.
+Welcome to FearlessCMS, a new content management system centered around simplicity and respect for the open source community. The project is currently in beta testing stages, so while it is becoming more robust, please report any issues you find.
 
 ## ✍️ HTML Editing with Markdown Support
 
-FearlessCMS now features **HTML content creation** with **Markdown content compatibility** to accommodate different user preferences:
+FearlessCMS features **HTML content creation** with **Markdown content compatibility** to accommodate different user preferences:
 
 - **HTML Editor (Default)** - Rich WYSIWYG editor with code view toggle for complex layouts
 - **Markdown Support** - Can read and display Markdown files created in external editors
@@ -93,23 +93,20 @@ php install.php --create-admin=<username> --password-file=/path/to/secret
 
 FearlessCMS includes powerful export functionality that converts your dynamic PHP site to static HTML for deployment on any static hosting service.
 
-#### Export System
+#### Export via Dashboard (Recommended)
 
-FearlessCMS includes a streamlined export system that automatically crawls your running site, ensuring full compatibility with all plugins and themes:
-
-```bash
-# Start your development server
-nix-shell -p php81 --run "export FCMS_DEBUG=true && ./serve.sh"
-
-# In another terminal, export your site
-./export-robust.sh
-```
+The easiest way to export your site is directly through the Mission Control dashboard:
+1. Log in to your admin panel.
+2. On the **Dashboard**, look for the blue **Export Site** button next to the page title.
+3. Click the button to generate a full static export of your site in the `export/` directory.
 
 **Features:**
-- ✅ **Zero maintenance** - automatically works with most new plugins/themes
-- ✅ **Full compatibility** - whatever renders in browser gets exported
+- ✅ **One-click export** - no command line required
+- ✅ **Zero maintenance** - automatically works with all plugins and themes
+- ✅ **Full compatibility** - internal rendering ensures what you see is what you get
 - ✅ **Deploy anywhere** - Netlify, Vercel, GitHub Pages, AWS S3, etc.
-- ✅ **Simple commands** - just run the script and export
 - ✅ **Complete assets** - CSS, JS, images, and all dependencies included
+
+For advanced users, legacy shell scripts (`export-robust.sh`) are still available for automated CI/CD workflows.
 
 For complete export documentation, visit: [Export to Static HTML Guide](https://fearlesscms.online/documentation/export-sites-to-static-html/)

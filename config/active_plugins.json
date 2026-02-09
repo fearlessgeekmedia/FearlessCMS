@@ -1,6 +1,5 @@
 [
-    "seo",
-    "blog",
     "mariadb-connector",
-    "parallax"
+    "parallax",
+    "blog"
 ]
