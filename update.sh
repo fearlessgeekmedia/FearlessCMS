@@ -210,8 +210,8 @@ perform_update() {
     cp "${UPDATE_DIR}/index.php" ./index.php
     cp "${UPDATE_DIR}/base.php" ./base.php
     cp "${UPDATE_DIR}/router.php" ./router.php
-    cp "${UPDATE_DIR}/store.php" ./store.php
-    cp "${UPDATE_DIR}/version.php" ./version.php
+    cp "${UPDATE_DIR}/store.php" ./store.php 2>/dev/null || true
+    cp "${UPDATE_DIR}/version.php" ./version.php 2>/dev/null || true
     cp "${UPDATE_DIR}/"*.md ./ 2>/dev/null || true
     cp "${UPDATE_DIR}/"*.txt ./ 2>/dev/null || true
     cp "${UPDATE_DIR}/"*.nix ./ 2>/dev/null || true
