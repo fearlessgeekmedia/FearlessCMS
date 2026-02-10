@@ -103,7 +103,7 @@ class PageRenderer {
         }
 
         $templateName = $contentData['metadata']['template'] ?? 'page-with-sidebar';
-        fcms_do_hook_ref('before_render', $templateName);
+        fcms_do_hook_ref('before_render', $templateName, $path);
 
         $template = $this->templateRenderer->render($templateName, $templateData);
 

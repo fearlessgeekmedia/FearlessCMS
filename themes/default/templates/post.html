@@ -1,105 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{title}}</title>
-    <link rel="stylesheet" href="../../themes/default/assets/style.css">
+    {{module=head.html}}
     <style>
-        .site-header {
-            background: #ffffff;
+        .post-header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
             color: #111827;
-            padding: 1rem 0;
-            border-bottom: 1px solid #e3e8f2;
-            position: sticky;
-            top: 0;
-            z-index: 30;
+            margin-bottom: 1rem;
+            line-height: 1.2;
         }
-        .header-inner {
+        .post-meta {
+            color: #6b7280;
+            font-size: 0.95rem;
+            margin-bottom: 2.5rem;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            width: min(1100px, 92vw);
-            margin-inline: auto;
+            gap: 0.5rem;
         }
-        .brand {
-            color: #0a0a0a;
-            text-decoration: none;
-            font-weight: 700;
-            letter-spacing: 0.2px;
-            font-size: clamp(1.1rem, 0.9rem + 1vw, 1.5rem);
+        .post-content {
+            font-size: 1.125rem;
+            line-height: 1.75;
+            color: #374151;
         }
-        .main-menu {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            display: flex;
-            gap: 1.4rem;
+        .post-footer {
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e5e7eb;
+        }
+        .back-to-blog {
+            display: inline-flex;
             align-items: center;
-        }
-        .main-menu a {
-            color: #111827;
+            color: #2563eb;
             text-decoration: none;
             font-weight: 500;
-            padding: 0.5rem 0.2rem;
-            display: inline-block;
-            transition: color .2s ease;
+            transition: color 0.2s;
         }
-        .main-menu a:hover {
-            color: #000;
-        }
-        .site-footer {
-            background: #ffffff;
-            color: #6b7280;
-            text-align: center;
-            padding: 1.4rem 0 1.2rem 0;
-            border-top: 1px solid #e3e8f2;
-            font-size: 0.95rem;
+        .back-to-blog:hover {
+            color: #1d4ed8;
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
-    <header class="site-header">
-        <div class="header-inner">
-            <a class="brand" href="../../">
-                FearlessCMS
-            </a>
-            <nav aria-label="Main navigation">
-                {{{mainMenu}}}
-            </nav>
-        </div>
-    </header>
+    {{module=header.html}}
+    {{include=ad-area.html}}
     
-    <main>
-        <div class="container">
-            <article class="blog-post">
-                <header class="post-header">
-                    <h1>{{title}}</h1>
-                    {{#if date}}
-                    <div class="post-meta">
-                        <time datetime="{{date}}">{{date}}</time>
-                    </div>
-                    {{/if}}
-                </header>
-                
-                <div class="post-content">
-                    {{{content}}}
+    <main class="container">
+        <article class="blog-post">
+            <header class="post-header">
+                <h1>{{title}}</h1>
+                {{#if date}}
+                <div class="post-meta">
+                    <time datetime="{{date}}">{{date}}</time>
                 </div>
-                
-                <footer class="post-footer">
-                    <div class="post-navigation">
-                        <a href="../../blog" class="back-to-blog">← Back to Blog</a>
-                    </div>
-                </footer>
-            </article>
-        </div>
+                {{/if}}
+            </header>
+            
+            <div class="post-content">
+                {{content}}
+            </div>
+            
+            <footer class="post-footer">
+                <div class="post-navigation">
+                    <a href="/blog" class="back-to-blog">← Back to Blog</a>
+                </div>
+            </footer>
+        </article>
     </main>
     
-    <footer class="site-footer">
-        <div class="container">
-            Fearless Geek Media &copy; {{currentYear}}
-        </div>
-    </footer>
+    {{module=footer.html}}
 </body>
-</html> 
+</html>
