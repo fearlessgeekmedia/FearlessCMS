@@ -197,22 +197,38 @@ perform_update() {
     # Backup ALL existing themes before removing themes directory
     backup_all_themes
     
-    # Remove old core files (keeping content, config, uploads, etc.)
+    # Remove old core directories (keeping content, config, uploads, etc.)
     rm -rf admin/ includes/ themes/ plugins/ parallax/
-    rm -f index.php base.php router.php store.php
     rm -f *.md *.txt *.nix *.json package*
     
-    # Copy new files
+    # Copy new core directories
     cp -r "${UPDATE_DIR}/admin/" ./admin/
     cp -r "${UPDATE_DIR}/includes/" ./includes/
     cp -r "${UPDATE_DIR}/plugins/" ./plugins/
     cp -r "${UPDATE_DIR}/parallax/" ./parallax/
     cp -r "${UPDATE_DIR}/public/" ./public/ 2>/dev/null || true
-    cp "${UPDATE_DIR}/index.php" ./index.php
-    cp "${UPDATE_DIR}/base.php" ./base.php
-    cp "${UPDATE_DIR}/router.php" ./router.php
-    cp "${UPDATE_DIR}/store.php" ./store.php 2>/dev/null || true
-    cp "${UPDATE_DIR}/version.php" ./version.php 2>/dev/null || true
+    
+    # Copy all root-level PHP files that are new or changed
+    local php_updated=0
+    local php_added=0
+    for repo_php in "${UPDATE_DIR}"/*.php; do
+        [[ -f "$repo_php" ]] || continue
+        local fname
+        fname=$(basename "$repo_php")
+        if [[ ! -f "./$fname" ]]; then
+            cp "$repo_php" "./$fname"
+            log "Added new file: $fname"
+            ((php_added++))
+        elif ! diff -q "$repo_php" "./$fname" > /dev/null 2>&1; then
+            cp "$repo_php" "./$fname"
+            log "Updated changed file: $fname"
+            ((php_updated++))
+        fi
+    done
+    if [[ $php_added -gt 0 ]] || [[ $php_updated -gt 0 ]]; then
+        success "Root PHP files: $php_added added, $php_updated updated"
+    fi
+    
     cp "${UPDATE_DIR}/"*.md ./ 2>/dev/null || true
     cp "${UPDATE_DIR}/"*.txt ./ 2>/dev/null || true
     cp "${UPDATE_DIR}/"*.nix ./ 2>/dev/null || true

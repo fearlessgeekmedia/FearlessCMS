@@ -718,6 +718,7 @@ fcms_add_hook('route', function (&$handled, &$title, &$content, $path) {
                     if (!empty($post['featured_image'])) {
                         $content .= '<div class="mb-8"><img src="' . htmlspecialchars($post['featured_image']) . '" alt="' . htmlspecialchars($post['title']) . '" class="w-full h-96 object-cover rounded-lg shadow-lg"></div>';
                     }
+                    $content .= '<h1 class="text-3xl font-bold mb-4" style="line-height: 3.25rem;">' . htmlspecialchars($post['title']) . '</h1>';
                     $content .= '<div class="text-gray-600 mb-8">' . htmlspecialchars($post['date']) . '</div>';
                     $content .= '<div class="prose max-w-none">' . $Parsedown->text($post['content']) . '</div>';
                     $content .= '</article>';
@@ -734,7 +735,7 @@ fcms_add_hook('route', function (&$handled, &$title, &$content, $path) {
             usort($published, fn($a, $b) => strcmp($b['date'], $a['date']));
             $title = 'Blog';
             $content = '<div class="max-w-4xl mx-auto px-4 py-8">';
-            $content .= '<h1 class="text-3xl font-bold mb-8">Blog Posts</h1>';
+            $content .= '<h1 class="text-3xl font-bold mb-8" style="line-height: 3.25rem;">Blog Posts</h1>';
             // Add RSS feed link
             $content .= '<div class="mb-4"><a href="/blog/rss" class="text-blue-600 hover:underline">📡 RSS Feed</a></div>';
             $content .= '<div class="space-y-8">';
