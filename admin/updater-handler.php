@@ -36,13 +36,53 @@ function get_available_version($repo_url, $branch = 'main') {
     }
     
     try {
-        // Use the known working git path on NixOS
-        $git_cmd = '/run/current-system/sw/bin/git';
+        // Ensure /usr/bin and /usr/local/bin are in PATH
+        $current_path = getenv('PATH');
+        if (strpos($current_path, '/usr/bin') === false) {
+            putenv("PATH=$current_path:/usr/bin:/usr/local/bin");
+        }
+
+        // Try to find a working git command
+        $git_cmd = null;
+        $validation_errors = [];
         
-        // Verify git exists and is executable
-        if (!file_exists($git_cmd) || !is_executable($git_cmd)) {
-            error_log("Git not found at expected path: $git_cmd");
-            return ['error' => 'Git command not found at expected location. Please ensure git is installed.'];
+        $candidates = [
+            '/usr/bin/git',
+            '/usr/local/bin/git',
+            '/bin/git',
+            '/run/current-system/sw/bin/git', // NixOS
+            'git' // PATH fallback
+        ];
+        
+        foreach ($candidates as $candidate) {
+            // If it's a path, check existence first to save exec calls
+            if (strpos($candidate, '/') !== false) {
+                if (!file_exists($candidate) || !is_executable($candidate)) {
+                    continue;
+                }
+            }
+            
+            // Validate by running it
+            $test_output = [];
+            $test_return = 0;
+            exec(escapeshellarg($candidate) . ' --version 2>&1', $test_output, $test_return);
+            $output_str = implode(' ', $test_output);
+            
+            if ($test_return === 0 && stripos($output_str, 'git version') !== false) {
+                $git_cmd = $candidate;
+                error_log("Found working git: $git_cmd (Version: $output_str)");
+                break;
+            } else {
+                $validation_errors[] = "$candidate (Ret: $test_return, Out: $output_str)";
+            }
+        }
+        
+        // Check if we found a working git
+        if (!$git_cmd) {
+            $env_path = getenv('PATH');
+            $diag = implode('; ', $validation_errors);
+            error_log("Git validation failed. PATH: $env_path. Errors: $diag");
+            return ['error' => "Git command not found or not executable. Details: $diag. PATH: $env_path"];
         }
         
         error_log("Using git command: $git_cmd");
@@ -74,7 +114,7 @@ function get_available_version($repo_url, $branch = 'main') {
             if (is_dir($temp_dir)) {
                 exec('rm -rf ' . escapeshellarg($temp_dir));
             }
-            return ['error' => 'Failed to clone repository: ' . implode(' ', $output)];
+            return ['error' => 'Failed to clone repository (Exit Code: ' . $return_code . '): ' . implode(' ', $output)];
         }
         
         // Check if version.php exists and read the version

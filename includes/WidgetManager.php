@@ -1,25 +1,38 @@
 <?php
 class WidgetManager {
     private $widgetsFile;
+    private $sidebarsFile;
     private $documentationNavFile;
 
     public function __construct() {
         $this->widgetsFile = CONFIG_DIR . '/widgets.json';
+        $this->sidebarsFile = CONFIG_DIR . '/sidebars.json';
         $this->documentationNavFile = CONFIG_DIR . '/documentation-nav.json';
     }
 
     public function renderSidebar($sidebarName) {
-        if (!file_exists($this->widgetsFile)) {
-            return '';
+        $widgets = [];
+        
+        if (file_exists($this->sidebarsFile)) {
+            $data = json_decode(file_get_contents($this->sidebarsFile), true);
+            if (isset($data[$sidebarName])) {
+                $widgets = $data[$sidebarName]['widgets'] ?? [];
+            }
+        }
+        
+        if (empty($widgets) && file_exists($this->widgetsFile)) {
+            $data = json_decode(file_get_contents($this->widgetsFile), true);
+            if (isset($data[$sidebarName])) {
+                $widgets = $data[$sidebarName]['widgets'] ?? [];
+            }
         }
 
-        $widgets = json_decode(file_get_contents($this->widgetsFile), true);
-        if (!isset($widgets[$sidebarName])) {
+        if (empty($widgets)) {
             return '';
         }
 
         $html = '';
-        foreach ($widgets[$sidebarName]['widgets'] as $widget) {
+        foreach ($widgets as $widget) {
             $html .= $this->renderWidget($widget);
         }
 
@@ -57,11 +70,13 @@ class WidgetManager {
         $navKey = $widget['content'] ?? '';
         
         if (!file_exists($this->documentationNavFile)) {
+            error_log("WidgetManager: documentation-nav.json not found at " . $this->documentationNavFile);
             return '';
         }
         
         $navData = json_decode(file_get_contents($this->documentationNavFile), true);
         if (!isset($navData[$navKey])) {
+            error_log("WidgetManager: Nav key " . $navKey . " not found in " . $this->documentationNavFile);
             return '';
         }
         
