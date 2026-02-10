@@ -207,6 +207,7 @@ perform_update() {
     cp -r "${UPDATE_DIR}/includes/" ./includes/
     cp -r "${UPDATE_DIR}/plugins/" ./plugins/
     cp -r "${UPDATE_DIR}/parallax/" ./parallax/
+    cp -r "${UPDATE_DIR}/public/" ./public/ 2>/dev/null || true
     cp "${UPDATE_DIR}/index.php" ./index.php
     cp "${UPDATE_DIR}/base.php" ./base.php
     cp "${UPDATE_DIR}/router.php" ./router.php

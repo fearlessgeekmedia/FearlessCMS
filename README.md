@@ -70,6 +70,17 @@ Open-source projects must respect both the users of the software and the develop
 
 With these policies in place, FearlessCMS seeks to create a platform that is lightweight, secure, and accessible, but most importantly, it is a CMS **for the people**. Whether you are a developer, a designer, or a casual user, FearlessCMS will respect your needs and provide a toolset for creating websites that empower the open web and its diverse community.
 
+## 🚀 Upgrading from Alpha to Beta
+
+**IMPORTANT:** If you are upgrading from a version earlier than `0.1.0b`, do **NOT** use the `Update` button in the dashboard or run your local `update.sh` script. The older version of the updater has a bug that will cause the update to fail and may result in a "500 Internal Server Error" due to missing theme files.
+
+To upgrade safely:
+1. Download the latest `update.sh` from this repository.
+2. Replace your local `update.sh` with the new version.
+3. Run the new script from your terminal: `./update.sh`
+
+Once you are on version `0.1.0b` or higher, you can use the dashboard update button for future updates.
+
 ## Quick Start
 
 * Note: At this time, this is only being tested on Linux, Unix-like systems, and MacOS. 
