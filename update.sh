@@ -152,6 +152,7 @@ create_backup() {
               --exclude='sessions/' \
               --exclude='cache/' \
               --exclude='.git/' \
+              --exclude='node_modules/' \
               --exclude='backups/' \
               --exclude='update_temp/' \
               --exclude='themes_backup_temp/' \
@@ -197,22 +198,38 @@ perform_update() {
     # Backup ALL existing themes before removing themes directory
     backup_all_themes
     
-    # Remove old core files (keeping content, config, uploads, etc.)
+    # Remove old core directories (keeping content, config, uploads, etc.)
     rm -rf admin/ includes/ themes/ plugins/ parallax/
-    rm -f index.php base.php router.php store.php
     rm -f *.md *.txt *.nix *.json package*
     
-    # Copy new files
+    # Copy new core directories
     cp -r "${UPDATE_DIR}/admin/" ./admin/
     cp -r "${UPDATE_DIR}/includes/" ./includes/
     cp -r "${UPDATE_DIR}/plugins/" ./plugins/
     cp -r "${UPDATE_DIR}/parallax/" ./parallax/
     cp -r "${UPDATE_DIR}/public/" ./public/ 2>/dev/null || true
-    cp "${UPDATE_DIR}/index.php" ./index.php
-    cp "${UPDATE_DIR}/base.php" ./base.php
-    cp "${UPDATE_DIR}/router.php" ./router.php
-    cp "${UPDATE_DIR}/store.php" ./store.php 2>/dev/null || true
-    cp "${UPDATE_DIR}/version.php" ./version.php 2>/dev/null || true
+    
+    # Copy all root-level PHP files that are new or changed
+    local php_updated=0
+    local php_added=0
+    for repo_php in "${UPDATE_DIR}"/*.php; do
+        [[ -f "$repo_php" ]] || continue
+        local fname
+        fname=$(basename "$repo_php")
+        if [[ ! -f "./$fname" ]]; then
+            cp "$repo_php" "./$fname"
+            log "Added new file: $fname"
+            ((php_added++))
+        elif ! diff -q "$repo_php" "./$fname" > /dev/null 2>&1; then
+            cp "$repo_php" "./$fname"
+            log "Updated changed file: $fname"
+            ((php_updated++))
+        fi
+    done
+    if [[ $php_added -gt 0 ]] || [[ $php_updated -gt 0 ]]; then
+        success "Root PHP files: $php_added added, $php_updated updated"
+    fi
+    
     cp "${UPDATE_DIR}/"*.md ./ 2>/dev/null || true
     cp "${UPDATE_DIR}/"*.txt ./ 2>/dev/null || true
     cp "${UPDATE_DIR}/"*.nix ./ 2>/dev/null || true
@@ -341,6 +358,33 @@ update_cms() {
     log "Please test your site to ensure everything is working correctly"
 }
 
+# Restore from backup
+restore_from_backup() {
+    local backup_path="$1"
+    
+    if [[ -z "${backup_path}" ]]; then
+        error "Backup path is required for restore"
+        exit 1
+    fi
+    
+    if [[ ! -d "${backup_path}" ]]; then
+        error "Backup directory not found: ${backup_path}"
+        exit 1
+    fi
+    
+    log "Restoring from backup: ${backup_path}"
+    
+    # Simple restore: copy files back
+    # We use rsync if available, otherwise cp
+    if command -v rsync &> /dev/null; then
+        rsync -av "${backup_path}/" ./
+    else
+        cp -r "${backup_path}/"/* ./
+    fi
+    
+    success "Restore completed successfully from ${backup_path}"
+}
+
 # Show usage
 show_usage() {
     echo "FearlessCMS Bash Updater with Complete Theme Preservation"
@@ -353,6 +397,7 @@ show_usage() {
     echo "  -n, --no-backup     Skip creating backup before update"
     echo "  -r, --repo URL      Set repository URL (default: ${REPO_URL})"
     echo "  -b, --branch BRANCH Set branch (default: ${BRANCH})"
+    echo "  --restore PATH      Restore CMS core from a backup path"
     echo ""
     echo "Features:"
     echo "  - Preserves ALL existing themes (custom and modified defaults)"
@@ -372,6 +417,7 @@ show_usage() {
 parse_args() {
     local dry_run=false
     local create_backup=true
+    local restore_path=""
     
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -395,6 +441,10 @@ parse_args() {
                 BRANCH="$2"
                 shift 2
                 ;;
+            --restore)
+                restore_path="$2"
+                shift 2
+                ;;
             *)
                 error "Unknown option: $1"
                 show_usage
@@ -403,7 +453,11 @@ parse_args() {
         esac
     done
     
-    update_cms "${dry_run}" "${create_backup}"
+    if [[ -n "${restore_path}" ]]; then
+        restore_from_backup "${restore_path}"
+    else
+        update_cms "${dry_run}" "${create_backup}"
+    fi
 }
 
 # Main execution

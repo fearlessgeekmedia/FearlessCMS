@@ -121,3 +121,20 @@ The easiest way to export your site is directly through the Mission Control dash
 For advanced users, legacy shell scripts (`export-robust.sh`) are still available for automated CI/CD workflows.
 
 For complete export documentation, visit: [Export to Static HTML Guide](https://fearlesscms.online/documentation/export-sites-to-static-html/)
+
+### Running Tests
+
+FearlessCMS uses [Pest](https://pestphp.com/) for testing. To get started:
+
+```bash
+# Install dependencies (requires Composer and PHP 8.1+)
+composer install
+
+# Run the full test suite
+php ./vendor/bin/pest
+
+# Run a specific test file
+php ./vendor/bin/pest tests/Unit/AuthValidationTest.php
+```
+
+If you don't have Composer installed, see [getcomposer.org](https://getcomposer.org/) for installation instructions.
