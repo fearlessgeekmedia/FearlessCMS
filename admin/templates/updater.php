@@ -15,7 +15,14 @@ if (!$cmsModeManager->canManagePlugins()) {
 $config_file = CONFIG_DIR . '/config.json';
 $config = file_exists($config_file) ? json_decode(file_get_contents($config_file), true) : [];
 $update_repo = $config['update_repo_url'] ?? '';
-$update_branch = $config['update_branch'] ?? 'main';
+
+// Check for branch override via environment variable
+$env_branch = getenv('FCMS_UPDATE_BRANCH');
+$update_branch = $env_branch ?: ($config['update_branch'] ?? 'main');
+$is_branch_overridden = !empty($env_branch);
+
+// Check for forced backup via environment variable
+$is_backup_forced = getenv('FCMS_FORCE_BACKUP') === 'true';
 
 // Generate CSRF token for the updater
 if (!function_exists('generate_updater_csrf_token')) {
@@ -45,8 +52,12 @@ $csrfToken = generate_updater_csrf_token();
                 <label for="branch" class="block text-sm font-medium text-gray-700">Branch</label>
                 <input type="text" id="branch" name="branch" value="<?php echo htmlspecialchars($update_branch); ?>" 
                        placeholder="main" 
-                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm">
-                <p class="mt-1 text-sm text-gray-500">Branch to update from (default: main)</p>
+                       <?php echo $is_branch_overridden ? 'readonly class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 cursor-not-allowed sm:text-sm"' : 'class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"'; ?>>
+                <?php if ($is_branch_overridden): ?>
+                    <p class="mt-1 text-sm text-amber-600 font-medium">⚠️ Overridden by system environment (FCMS_UPDATE_BRANCH)</p>
+                <?php else: ?>
+                    <p class="mt-1 text-sm text-gray-500">Branch to update from (default: main)</p>
+                <?php endif; ?>
             </div>
             
             <div class="flex justify-end">
@@ -91,16 +102,25 @@ $csrfToken = generate_updater_csrf_token();
                 <label for="update_branch" class="block text-sm font-medium text-gray-700">Update Branch</label>
                 <input type="text" id="update_branch" name="branch" value="<?php echo htmlspecialchars($update_branch); ?>" 
                        placeholder="main" 
-                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm">
+                       <?php echo $is_branch_overridden ? 'readonly class="mt-1 block w-full border-gray-300 rounded-md shadow-sm bg-gray-100 cursor-not-allowed sm:text-sm"' : 'class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"'; ?>>
+                <?php if ($is_branch_overridden): ?>
+                    <p class="mt-1 text-sm text-amber-600 font-medium">⚠️ Overridden by system environment</p>
+                <?php endif; ?>
             </div>
             
             <div class="space-y-3">
                 <div class="flex items-center">
-                    <input id="create_backup" name="create_backup" type="checkbox" checked 
+                    <input id="create_backup" name="create_backup" type="checkbox" <?php echo ($is_backup_forced ? 'checked disabled' : 'checked'); ?> 
                            class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded">
                     <label for="create_backup" class="ml-2 block text-sm text-gray-900">
                         Create backup before updating (recommended)
+                        <?php if ($is_backup_forced): ?>
+                            <span class="text-amber-600 font-medium ml-1">(Required in this mode)</span>
+                        <?php endif; ?>
                     </label>
+                    <?php if ($is_backup_forced): ?>
+                        <input type="hidden" name="create_backup" value="on">
+                    <?php endif; ?>
                 </div>
                 
                 <div class="flex items-center">

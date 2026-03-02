@@ -152,6 +152,7 @@ create_backup() {
               --exclude='sessions/' \
               --exclude='cache/' \
               --exclude='.git/' \
+              --exclude='node_modules/' \
               --exclude='backups/' \
               --exclude='update_temp/' \
               --exclude='themes_backup_temp/' \
@@ -357,6 +358,33 @@ update_cms() {
     log "Please test your site to ensure everything is working correctly"
 }
 
+# Restore from backup
+restore_from_backup() {
+    local backup_path="$1"
+    
+    if [[ -z "${backup_path}" ]]; then
+        error "Backup path is required for restore"
+        exit 1
+    fi
+    
+    if [[ ! -d "${backup_path}" ]]; then
+        error "Backup directory not found: ${backup_path}"
+        exit 1
+    fi
+    
+    log "Restoring from backup: ${backup_path}"
+    
+    # Simple restore: copy files back
+    # We use rsync if available, otherwise cp
+    if command -v rsync &> /dev/null; then
+        rsync -av "${backup_path}/" ./
+    else
+        cp -r "${backup_path}/"/* ./
+    fi
+    
+    success "Restore completed successfully from ${backup_path}"
+}
+
 # Show usage
 show_usage() {
     echo "FearlessCMS Bash Updater with Complete Theme Preservation"
@@ -369,6 +397,7 @@ show_usage() {
     echo "  -n, --no-backup     Skip creating backup before update"
     echo "  -r, --repo URL      Set repository URL (default: ${REPO_URL})"
     echo "  -b, --branch BRANCH Set branch (default: ${BRANCH})"
+    echo "  --restore PATH      Restore CMS core from a backup path"
     echo ""
     echo "Features:"
     echo "  - Preserves ALL existing themes (custom and modified defaults)"
@@ -388,6 +417,7 @@ show_usage() {
 parse_args() {
     local dry_run=false
     local create_backup=true
+    local restore_path=""
     
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -411,6 +441,10 @@ parse_args() {
                 BRANCH="$2"
                 shift 2
                 ;;
+            --restore)
+                restore_path="$2"
+                shift 2
+                ;;
             *)
                 error "Unknown option: $1"
                 show_usage
@@ -419,7 +453,11 @@ parse_args() {
         esac
     done
     
-    update_cms "${dry_run}" "${create_backup}"
+    if [[ -n "${restore_path}" ]]; then
+        restore_from_backup "${restore_path}"
+    else
+        update_cms "${dry_run}" "${create_backup}"
+    fi
 }
 
 # Main execution

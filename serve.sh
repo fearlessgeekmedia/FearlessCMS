@@ -12,9 +12,36 @@ rm -f serve-log.tmp
 
 # set default port or use ENV variable
 port=${PORT:-8000}
+update_test=false
+restore_backup=false
 
-if [ "$1" == "--port" ]; then
-    port=$2
+# Simple argument parsing
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --port) port="$2"; shift ;;
+        --update-test) update_test=true ;;
+        --restore-backup) restore_backup=true ;;
+    esac
+    shift
+done
+
+if [ "$update_test" = true ]; then
+    export FCMS_UPDATE_BRANCH="update-test"
+    export FCMS_FORCE_BACKUP="true"
+    echo "Mode: Update Test (--update-test active, backups forced)"
+fi
+
+if [ "$restore_backup" = true ]; then
+    echo "Restoring latest backup..."
+    latest_backup=$(ls -dt backups/cms_backup_* 2>/dev/null | head -n 1)
+    if [ -n "$latest_backup" ]; then
+        echo "Found latest backup: $latest_backup"
+        ./update.sh --restore "$latest_backup"
+        exit 0
+    else
+        echo "Error: No backups found in backups/ directory."
+        exit 1
+    fi
 fi
 
 # check if port is in use
