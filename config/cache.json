@@ -1,6 +1,6 @@
 {
-    "enabled": true,
-    "cache_duration": 3600,
+    "enabled": false,
+    "cache_duration": 500,
     "cache_duration_unit": "seconds",
     "cache_pages": true,
     "cache_assets": true,
@@ -12,6 +12,6 @@
     "cache_auto_clear_interval": 86400,
     "cache_storage": "file",
     "cache_directory": "cache",
-    "cache_max_size": "100MB",
+    "cache_max_size": "200MB",
     "cache_cleanup_threshold": 0.8
-} 
+}

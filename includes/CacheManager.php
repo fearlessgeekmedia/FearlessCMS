@@ -7,7 +7,7 @@ class CacheManager {
     
     public function __construct() {
         $this->loadConfig();
-        $this->cacheDir = dirname(__DIR__) . '/cache';
+        $this->cacheDir = (defined('PROJECT_ROOT') ? PROJECT_ROOT : dirname(__DIR__)) . '/cache';
         $this->statsFile = $this->cacheDir . '/cache_stats.json';
         
         // Ensure cache directory exists
@@ -25,7 +25,7 @@ class CacheManager {
      * Load cache configuration
      */
     private function loadConfig() {
-        $configFile = dirname(__DIR__) . '/config/cache.json';
+        $configFile = (defined('CONFIG_DIR') ? CONFIG_DIR : dirname(__DIR__) . '/config') . '/cache.json';
         if (file_exists($configFile)) {
             $this->config = json_decode(file_get_contents($configFile), true) ?: [];
         } else {
@@ -55,7 +55,7 @@ class CacheManager {
      * Save cache configuration
      */
     public function saveConfig() {
-        $configFile = dirname(__DIR__) . '/config/cache.json';
+        $configFile = (defined('CONFIG_DIR') ? CONFIG_DIR : dirname(__DIR__) . '/config') . '/cache.json';
         file_put_contents($configFile, json_encode($this->config, JSON_PRETTY_PRINT));
     }
     

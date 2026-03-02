@@ -34,6 +34,23 @@ function get_available_version($repo_url, $branch = 'main') {
     if (empty($repo_url)) {
         return ['error' => 'Repository not configured'];
     }
+
+    // Caching logic
+    $cache_dir = dirname(__DIR__) . '/cache';
+    if (!file_exists($cache_dir)) {
+        mkdir($cache_dir, 0755, true);
+    }
+    $cache_file = $cache_dir . '/version_check.json';
+    $cache_key = md5($repo_url . $branch);
+    $cache_time = 600; // 10 minutes
+
+    if (file_exists($cache_file)) {
+        $cache = json_decode(file_get_contents($cache_file), true);
+        if (isset($cache[$cache_key]) && (time() - $cache[$cache_key]['timestamp'] < $cache_time)) {
+            error_log("Using cached version for $repo_url ($branch)");
+            return ['version' => $cache[$cache_key]['version']];
+        }
+    }
     
     try {
         // Ensure /usr/bin and /usr/local/bin are in PATH
@@ -132,6 +149,14 @@ function get_available_version($repo_url, $branch = 'main') {
             $version = $matches[1];
             error_log("Found version: $version");
             
+            // Save to cache
+            $cache = file_exists($cache_file) ? json_decode(file_get_contents($cache_file), true) : [];
+            $cache[$cache_key] = [
+                'version' => $version,
+                'timestamp' => time()
+            ];
+            file_put_contents($cache_file, json_encode($cache));
+            
             // Clean up
             exec('rm -rf ' . escapeshellarg($temp_dir));
             
@@ -204,8 +229,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         
     } elseif ($subaction === 'perform_update') {
         // Call the bash updater script
-        $branch = trim($_POST['branch'] ?? 'main');
-        $createBackup = isset($_POST['create_backup']);
+        $env_branch = getenv('FCMS_UPDATE_BRANCH');
+        $branch = $env_branch ?: trim($_POST['branch'] ?? 'main');
+        
+        // Check for forced backup via environment variable
+        $force_backup = getenv('FCMS_FORCE_BACKUP') === 'true';
+        $createBackup = $force_backup || isset($_POST['create_backup']);
+        
         $dryRun = isset($_POST['dry_run']);
         
         try {
@@ -280,7 +310,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $configFile = CONFIG_DIR . '/config.json';
         $config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
         $repo = $config['update_repo_url'] ?? '';
-        $branch = $config['update_branch'] ?? 'main';
+        $env_branch = getenv('FCMS_UPDATE_BRANCH');
+        $branch = $env_branch ?: ($config['update_branch'] ?? 'main');
         
         if (empty($repo)) {
             $_SESSION['error'] = 'Repository not configured. Please configure the update repository first.';
