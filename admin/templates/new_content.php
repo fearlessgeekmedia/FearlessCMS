@@ -233,85 +233,118 @@ let isRichMode = true;
 
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Quill editor
-    quill = new Quill('#richEditorContainer', {
-        theme: 'snow',
-        modules: {
-            toolbar: [
-                [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-                ['bold', 'italic', 'underline', 'strike'],
-                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                [{ 'script': 'sub'}, { 'script': 'super' }],
-                [{ 'indent': '-1'}, { 'indent': '+1' }],
-                [{ 'direction': 'rtl' }],
-                [{ 'size': ['small', false, 'large', 'huge'] }],
-                [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-                [{ 'color': [] }, { 'background': [] }],
-                [{ 'font': [] }],
-                [{ 'align': [] }],
-                ['clean'],
-                ['link', 'video', 'code-block']
-            ]
-        },
-        placeholder: 'Start writing your content here...'
-    });
+    if (typeof Quill !== 'undefined') {
+        quill = new Quill('#richEditorContainer', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    [{ 'script': 'sub'}, { 'script': 'super' }],
+                    [{ 'indent': '-1'}, { 'indent': '+1' }],
+                    [{ 'direction': 'rtl' }],
+                    [{ 'size': ['small', false, 'large', 'huge'] }],
+                    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                    [{ 'color': [] }, { 'background': [] }],
+                    [{ 'font': [] }],
+                    [{ 'align': [] }],
+                    ['clean'],
+                    ['link', 'video', 'code-block']
+                ]
+            },
+            placeholder: 'Start writing your content here...'
+        });
 
-    // Add custom image handling after Quill is initialized
-    setTimeout(function() {
-        var imageButton = document.createElement("button");
-        imageButton.innerHTML = '<svg viewBox="0 0 18 18"><rect class="ql-stroke" height="10" width="12" x="3" y="4"></rect><circle class="ql-fill" cx="6" cy="6" r="1"></circle><polyline class="ql-even ql-fill" points="5 8,9 4,13 8,13 14,5 14"></polyline></svg>';
-        imageButton.type = "button";
-        imageButton.className = "ql-image";
-        imageButton.setAttribute("aria-label", "Insert image");
-        
-        // Add click handler for image upload
-        imageButton.addEventListener("click", function() {
-            var input = document.createElement("input");
-            input.setAttribute("type", "file");
-            input.setAttribute("accept", "image/*");
-            input.click();
+        // Add custom image handling after Quill is initialized
+        setTimeout(function() {
+            var imageButton = document.createElement("button");
+            imageButton.innerHTML = '<svg viewBox="0 0 18 18"><rect class="ql-stroke" height="10" width="12" x="3" y="4"></rect><circle class="ql-fill" cx="6" cy="6" r="1"></circle><polyline class="ql-even ql-fill" points="5 8,9 4,13 8,13 14,5 14"></polyline></svg>';
+            imageButton.type = "button";
+            imageButton.className = "ql-image";
+            imageButton.setAttribute("aria-label", "Insert image");
             
-            input.onchange = function() {
-                var file = input.files[0];
-                if (file) {
-                    var formData = new FormData();
-                    formData.append("action", "upload_image");
-                    formData.append("image", file);
-                    
-                    fetch("?action=upload_image", {
-                        method: "POST",
-                        body: formData
-                    })
-                    .then(function(response) { return response.json(); })
-                    .then(function(data) {
-                        if (data.success) {
-                            var range = quill.getSelection(); 
-                            if (!range) { 
-                                range = { index: quill.getLength() }; 
+            // Add click handler for image upload
+            imageButton.addEventListener("click", function() {
+                var input = document.createElement("input");
+                input.setAttribute("type", "file");
+                input.setAttribute("accept", "image/*");
+                input.click();
+                
+                input.onchange = function() {
+                    var file = input.files[0];
+                    if (file) {
+                        var formData = new FormData();
+                        formData.append("action", "upload_image");
+                        formData.append("image", file);
+                        
+                        fetch("?action=upload_image", {
+                            method: "POST",
+                            body: formData
+                        })
+                        .then(function(response) { return response.json(); })
+                        .then(function(data) {
+                            if (data.success) {
+                                var range = quill.getSelection(); 
+                                if (!range) { 
+                                    range = { index: quill.getLength() }; 
+                                }
+                                quill.insertEmbed(range.index, "image", data.url);
+                            } else {
+                                alert("Upload failed: " + (data.error || "Unknown error"));
                             }
-                            quill.insertEmbed(range.index, "image", data.url);
-                        } else {
-                            alert("Upload failed: " + (data.error || "Unknown error"));
-                        }
-                    })
-                    .catch(function(error) {
-                        alert("Upload failed: " + error);
-                    });
-                }
-            };
+                        })
+                        .catch(function(error) {
+                            alert("Upload failed: " + error);
+                        });
+                    }
+                };
+            });
+            
+            // Add the custom image button to the toolbar
+            var toolbar = quill.getModule("toolbar");
+            toolbar.addHandler("image", function() {
+                imageButton.click();
+            });
+            
+            // Insert the image button into the toolbar
+            var toolbarContainer = document.querySelector(".ql-toolbar");
+            if (toolbarContainer) {
+                toolbarContainer.appendChild(imageButton);
+            }
+        }, 100);
+
+        // Handle mode toggle
+        document.getElementById('toggleMode').addEventListener('click', function() {
+            if (isRichMode) {
+                // Switch to code editor
+                document.getElementById('richEditorContainer').classList.add('hidden');
+                document.getElementById('codeEditorContainer').classList.remove('hidden');
+                document.getElementById('codeEditor').value = quill.root.innerHTML;
+                document.getElementById('modeIndicator').textContent = 'Code View Mode';
+                this.textContent = 'Switch to Rich Editor';
+                isRichMode = false;
+            } else {
+                // Switch to rich editor
+                document.getElementById('richEditorContainer').classList.remove('hidden');
+                document.getElementById('codeEditorContainer').classList.add('hidden');
+                quill.root.innerHTML = document.getElementById('codeEditor').value;
+                document.getElementById('modeIndicator').textContent = 'Rich Editor Mode';
+                this.textContent = 'Switch to Code View';
+                isRichMode = true;
+            }
         });
-        
-        // Add the custom image button to the toolbar
-        var toolbar = quill.getModule("toolbar");
-        toolbar.addHandler("image", function() {
-            imageButton.click();
-        });
-        
-        // Insert the image button into the toolbar
-        var toolbarContainer = document.querySelector(".ql-toolbar");
-        if (toolbarContainer) {
-            toolbarContainer.appendChild(imageButton);
-        }
-    }, 100);
+
+    } else {
+        console.error('Quill.js not loaded');
+        document.getElementById('richEditorContainer').innerHTML = '<div class="p-4 text-red-600">Error: Quill.js editor failed to load. Please refresh the page or use Code View.</div>';
+        // Force Code View if Quill fails
+        document.getElementById('richEditorContainer').classList.add('hidden');
+        document.getElementById('codeEditorContainer').classList.remove('hidden');
+        document.getElementById('modeIndicator').textContent = 'Code View Mode (Quill Failed to Load)';
+        document.getElementById('toggleMode').style.display = 'none';
+        isRichMode = false;
+    }
 
     // Handle form submission
     document.getElementById('newPageForm').addEventListener('submit', function(e) {
@@ -319,45 +352,27 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Get content from the appropriate editor
         let content;
-        if (isRichMode) {
+        if (isRichMode && typeof Quill !== 'undefined') {
             content = quill.root.innerHTML;
         } else {
             content = document.getElementById('codeEditor').value;
         }
         
-        // Set the content in the hidden textarea
+        // Set the content in the hidden textarea (which is also the code editor)
         document.getElementById('codeEditor').value = content;
         
         // Submit the form
         this.submit();
     });
 
-    // Handle mode toggle
-    document.getElementById('toggleMode').addEventListener('click', function() {
-        if (isRichMode) {
-            // Switch to code editor
-            document.getElementById('richEditorContainer').classList.add('hidden');
-            document.getElementById('codeEditorContainer').classList.remove('hidden');
-            document.getElementById('codeEditor').value = quill.root.innerHTML;
-            document.getElementById('modeIndicator').textContent = 'Code View Mode';
-            this.textContent = 'Switch to Rich Editor';
-            isRichMode = false;
-        } else {
-            // Switch to rich editor
-            document.getElementById('richEditorContainer').classList.remove('hidden');
-            document.getElementById('codeEditorContainer').classList.add('hidden');
-            quill.root.innerHTML = document.getElementById('codeEditor').value;
-            document.getElementById('modeIndicator').textContent = 'Rich Editor Mode';
-            this.textContent = 'Switch to Code View';
-            isRichMode = true;
-        }
-    });
-
     // Keyboard shortcut for mode toggle
     document.addEventListener('keydown', function(e) {
         if (e.ctrlKey && e.shiftKey && e.key === 'C') {
             e.preventDefault();
-            document.getElementById('toggleMode').click();
+            const toggleBtn = document.getElementById('toggleMode');
+            if (toggleBtn && toggleBtn.style.display !== 'none') {
+                toggleBtn.click();
+            }
         }
     });
 });

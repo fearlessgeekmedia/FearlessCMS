@@ -11,12 +11,20 @@ Welcome to FearlessCMS, a new content management system centered around simplici
 
 FearlessCMS features **HTML content creation** with **Markdown content compatibility** to accommodate different user preferences:
 
-- **HTML Editor (Default)** - Rich WYSIWYG editor with code view toggle for complex layouts
+- **HTML Editor (Default)** - Rich WYSIWYG editor (Quill.js) with code view toggle. Now **locally hosted** for maximum reliability and privacy.
 - **Markdown Support** - Can read and display Markdown files created in external editors
 - **Backwards Compatibility** - All existing Markdown content continues to work perfectly
 - **Flexible Workflow** - Create HTML in CMS or upload Markdown from external editors
 
-This approach gives you the best of both worlds: the power and precision of HTML editing when you need it, and the flexibility to use external Markdown editors when you prefer it.
+## 🤖 AI Integration
+
+FearlessCMS now includes a powerful **AI Connector** plugin that integrates with:
+- **OpenAI (ChatGPT)**
+- **Google Gemini**
+- **Anthropic Claude**
+- **Alibaba Qwen**
+
+Generate content, complete text, or use AI capabilities within other plugins via a unified API.
 
 View documentation at <a href="https://fearlesscms.online/documentation/" target="_blank">https://fearlesscms.online/documentation/</a> to get started.
 
