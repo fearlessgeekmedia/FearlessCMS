@@ -1,5 +1,6 @@
 [
     "mariadb-connector",
     "parallax",
-    "blog"
+    "blog",
+    "ai-connector"
 ]

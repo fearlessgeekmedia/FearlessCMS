@@ -39,6 +39,8 @@ $GLOBALS['fcms_hooks'] = [
     'check_permission' => [],
     'filter_admin_sections' => [],
     'content' => [], // Add content filter
+    'admin_head' => [], // Hook for admin <head> section
+    'admin_footer' => [], // Hook for admin footer (before </body>)
     // ...add more as needed
 ];
 

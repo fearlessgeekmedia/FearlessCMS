@@ -13,9 +13,9 @@ global $cmsModeManager;
     <title>Mission Control - <?php echo htmlspecialchars($pageTitle ?? ''); ?></title>
     <link href="/public/css/output.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
-    <!-- Quill.js Editor (replaces Toast UI) -->
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js?v=1756935904"></script>
+    <link href="/public/vendor/quill/quill.snow.css?v=<?php echo APP_VERSION; ?>" rel="stylesheet">
+    <script src="/public/vendor/quill/quill.min.js?v=<?php echo APP_VERSION; ?>"></script>
+    <?php fcms_do_hook('admin_head'); ?>
     <style>
         .fira-code { font-family: 'Fira Code', monospace; }
         
@@ -340,6 +340,8 @@ global $cmsModeManager;
     });
     </script>
     
+    <?php fcms_do_hook('admin_footer'); ?>
+
     <!-- Version Bar -->
     <div class="fixed bottom-0 left-0 right-0 bg-gray-800 text-white text-sm py-1 px-4 text-center flex justify-between items-center">
         <span>FearlessCMS v<?php echo APP_VERSION; ?></span>
