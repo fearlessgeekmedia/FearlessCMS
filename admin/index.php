@@ -613,7 +613,7 @@ if (!isLoggedIn()) {
 
 
 // Load plugins and run init hook
-fcms_do_hook('init');
+// fcms_do_hook('init'); // Already called in includes/plugins.php
 
 // Debug logging for admin sections
 $admin_sections = fcms_get_admin_sections();
