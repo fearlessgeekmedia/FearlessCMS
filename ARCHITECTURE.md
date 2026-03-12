@@ -1,21 +1,16 @@
 # FearlessCMS Architecture Documentation
 
+> **Changelog (2026-03):**
+> - **AI Integration**: Added **AI Connector Plugin** supporting OpenAI, Google Gemini, Anthropic Claude, and Alibaba Qwen.
+> - **Local Asset Hosting**: Transitioned **Quill.js** and its dependencies to local hosting to improve reliability and harden Content Security Policy (CSP).
+> - **CSP Hardening**: Restricted script-src and style-src to 'self' where possible for improved security.
+
 > **Changelog (2026-02):**
 > - **Beta Release (0.1.0b)**: Transitioned from Alpha to Beta testing status.
 > - **Pure PHP Export System**: Replaced external Node.js/shell-based exporting with an internal Dashboard Export button.
 > - **Documentation Consolidation**: Centralized all core documentation into the `fcmsdocs/` directory.
 > - **Session Reliability**: Standardized session configuration across all handlers to prevent 401 errors.
 > - **UI Polish**: Stabilized drag-and-drop menu reordering (Sortable.js) and editor synchronization.
-
-> **Previous Changelog (2025-08):**
-> - **Major Update**: Transitioned from Markdown to HTML editing system.
-> - **New HTML Editor**: Dual-mode WYSIWYG + Code view editor.
-> - **Enhanced Export System**: Full HTML content support with parallax plugin integration.
-> - **Security Enhancements**: Comprehensive security update management system.
-
-## Overview
-
-FearlessCMS is a lightweight, file-based content management system built in PHP. It features a modular architecture with plugin support, a modern theme system, and three operational modes for different deployment scenarios. The system prioritizes security, performance, and maintainability through proper file ownership and standard permissions. **As of February 2026, the project has entered Beta status (0.1.0b).**
 
 ## 1. Entry Points
 
@@ -42,7 +37,7 @@ FearlessCMS is a lightweight, file-based content management system built in PHP.
 ## 4. Content Management
 
 - **HTML + JSON frontmatter:** Content files use HTML format (stored as .md for compatibility) with a JSON frontmatter block for metadata (title, template, parent).
-- **WYSIWYG Editor:** Modern HTML editor with a code view toggle and automatic content synchronization.
+- **WYSIWYG Editor:** Modern HTML editor (Quill.js) with a code view toggle and automatic content synchronization. Assets are hosted locally for privacy and speed.
 - **Dashboard Export:** A pure PHP implementation that crawls the site internally and generates a static mirror in the `export/` directory.
 
 ## 5. Theme System
@@ -56,6 +51,7 @@ FearlessCMS is a lightweight, file-based content management system built in PHP.
 
 - **includes/plugins.php:** Robust hook/filter architecture (init, before_content, after_render, etc).
 - **Key Plugins:**
+  - **ai-connector:** Multi-provider AI generation (OpenAI, Gemini, Claude, Qwen).
   - **blog:** Full post management and RSS generation.
   - **forms:** Contact form builder and submission handler.
   - **seo:** Meta tag optimization.
@@ -78,6 +74,7 @@ FearlessCMS is a lightweight, file-based content management system built in PHP.
 - **File System:** Strict 700/600 permissions for sensitive directories and JSON configs.
 - **CSRF & Sanitization:** Global protection for all POST operations and input data.
 - **Update Management:** Automated vulnerability scanning and emergency patching system.
+- **Local Asset Hosting & CSP:** Hardened Content Security Policy with local asset delivery to prevent external CDN vulnerabilities.
 
 ## 10. Performance
 

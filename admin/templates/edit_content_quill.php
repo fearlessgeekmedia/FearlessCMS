@@ -612,7 +612,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     } else {
         console.error('Quill.js not loaded');
-        document.getElementById('richEditorContainer').innerHTML = '<div class="p-4 text-red-600">Error: Quill.js editor failed to load. Please refresh the page.</div>';
+        document.getElementById('richEditorContainer').innerHTML = '<div class="p-4 text-red-600">Error: Quill.js editor failed to load. Please refresh the page or use Code View.</div>';
+        // Force Code View if Quill fails
+        document.getElementById('richEditorContainer').classList.add('hidden');
+        document.getElementById('codeEditorContainer').classList.remove('hidden');
+        document.getElementById('modeIndicator').textContent = 'Code View Mode (Quill Failed to Load)';
+        document.getElementById('toggleMode').style.display = 'none';
     }
 });
 
