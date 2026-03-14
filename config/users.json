@@ -1,0 +1,10 @@
+[
+    {
+        "id": "Will",
+        "username": "Will",
+        "password": "$2y$12$dDFaXdeDvYmV2xt4R8\/Pc.XFATmsOPsZDQBF3iQt41zYEr50.CDfC",
+        "role": "administrator",
+        "permissions": [],
+        "created_at": "2026-03-14 19:50:02"
+    }
+]
