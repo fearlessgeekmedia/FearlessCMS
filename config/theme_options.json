@@ -1,15 +1,4 @@
 {
-    "herobanner": "uploads\/herobanner_1770658314.jpg",
-    "logo": "uploads\/logo_1770230742.png",
-    "author_name": "",
-    "author_avatar": "",
-    "avatar_size": "size-m",
-    "avatar_first": false,
-    "user": "user",
-    "hostname": "localhost",
-    "footer_html": "",
-    "color_scheme": "blue",
-    "social_links": [],
-    "primaryColor": "#6366f1",
-    "fontFamily": "Inter"
+    "logo": "",
+    "herobanner": ""
 }

@@ -1,5 +1,5 @@
 {
-    "enabled": true,
+    "enabled": false,
     "demo_user": {
         "username": "demo",
         "password": "demo",

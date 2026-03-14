@@ -83,7 +83,8 @@ $ALLOWED_COMMANDS = [
     'npm' => ['npm', 'init', '-y'],
     'npm_install' => ['npm', 'install', 'fs-extra', 'handlebars', 'marked', '--save'],
     'npm_install_dev' => ['npm', 'install', 'sass', '--save-dev'],
-    'npm_install_tailwind' => ['npm', 'install', 'tailwindcss@^3.4.0', '--save-dev']
+    'npm_install_tailwind' => ['npm', 'install', 'tailwindcss@^3.4.0', '--save-dev'],
+    'npx_tailwind_build' => ['npx', 'tailwindcss', '-i', './src/input.css', '-o', './public/css/output.css', '--minify']
 ];
 
 function check_extension(string $ext): array {
@@ -324,7 +325,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !validate_csrf_token()) {
 // ── Handle POST actions ──
 
 if ($action === 'create_dirs') {
-    $dirs = [$CONFIG_DIR, $ADMIN_UPLOADS_DIR, $UPLOADS_DIR, $CONTENT_DIR, $SESSIONS_DIR, $CACHE_DIR, $BACKUPS_DIR, $UPDATES_DIR];
+    $dirs = [$CONFIG_DIR, $ADMIN_UPLOADS_DIR, $UPLOADS_DIR, $CONTENT_DIR, $SESSIONS_DIR, $CACHE_DIR, $BACKUPS_DIR, $UPDATES_DIR, $projectRoot . '/public/css'];
     $allOk = true;
     foreach ($dirs as $dir) {
         if (!is_dir($dir)) {
@@ -391,7 +392,17 @@ if ($action === 'install_tailwind') {
         }
         $install = run_cmd(['npm', 'install', 'tailwindcss@^3.4.0', '--save-dev'], $projectRoot);
         if ($install['code'] === 0) {
-            $resultMessages[] = 'Tailwind CSS installed successfully.';
+            // Build the CSS so login/admin pages are styled
+            if (!is_dir($projectRoot . '/public/css')) {
+                mkdir($projectRoot . '/public/css', 0755, true);
+            }
+            $build = run_cmd(['npx', 'tailwindcss', '-i', './src/input.css', '-o', './public/css/output.css', '--minify'], $projectRoot);
+            if ($build['code'] === 0) {
+                $resultMessages[] = 'Tailwind CSS installed and CSS built successfully.';
+            } else {
+                $resultMessages[] = 'Tailwind CSS installed.';
+                $errorMessages[] = 'CSS build failed: ' . htmlspecialchars(trim($build['err']));
+            }
         } else {
             $errorMessages[] = 'Tailwind install failed: ' . htmlspecialchars(trim($install['err']));
         }
@@ -797,6 +808,49 @@ $steps = [
         font-size: 0.85rem;
         line-height: 1.5;
     }
+
+    /* Loading overlay */
+    .loading-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15,23,42,0.85);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+    .loading-overlay.active { display: flex; }
+    .loading-text {
+        color: #e2e8f0;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+    .loading-subtext {
+        color: #94a3b8;
+        font-size: 0.8rem;
+    }
+    .progress-track {
+        width: 320px;
+        max-width: 80vw;
+        height: 8px;
+        background: #1e293b;
+        border-radius: 9999px;
+        overflow: hidden;
+    }
+    .progress-bar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #3b82f6, #60a5fa);
+        border-radius: 9999px;
+        animation: progress-indeterminate 2s ease-in-out infinite;
+    }
+    @keyframes progress-indeterminate {
+        0% { width: 0%; margin-left: 0%; }
+        50% { width: 60%; margin-left: 20%; }
+        100% { width: 0%; margin-left: 100%; }
+    }
 </style>
 </head>
 <body>
@@ -939,21 +993,31 @@ $steps = [
             <a href="?step=4" class="btn btn-primary"><?php echo !empty($existingAdmins) ? 'Continue →' : 'Skip →'; ?></a>
         </div>
 
-    <?php elseif ($step === 4): // ── STEP 4: Optional Dependencies ── ?>
-        <h2>Optional Dependencies</h2>
-        <p style="font-size:0.85rem; color:#94a3b8; margin-bottom:1.25rem;">
-            These are optional and can be installed later. They require Node.js &amp; npm.
-        </p>
+    <?php elseif ($step === 4): // ── STEP 4: Dependencies ── ?>
+        <h2>Dependencies</h2>
 
         <?php
         $nodeAvailable = ($hasNode['code'] === 0 && $hasNpm['code'] === 0);
+        $cssBuilt = file_exists($projectRoot . '/public/css/output.css');
         ?>
 
         <?php if (!$nodeAvailable): ?>
             <div class="msg msg-error">
-                Node.js/npm not found. Install Node.js to use these features, or skip this step.
+                Node.js/npm not found. Install Node.js to use these features.
             </div>
         <?php endif; ?>
+
+        <div class="dep-group" style="<?php echo !$cssBuilt ? 'border: 1px solid rgba(59,130,246,0.4);' : ''; ?>">
+            <h3>Tailwind CSS <?php if (!$cssBuilt): ?><span class="badge badge-warn">Required</span><?php else: ?><span class="badge badge-ok">Built</span><?php endif; ?></h3>
+            <p>Builds the CSS used by the login page and admin panel.<?php if (!$cssBuilt): ?> <strong style="color:#facc15;">Install this to style the admin interface.</strong><?php endif; ?></p>
+            <form method="POST" action="?step=4" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+                <input type="hidden" name="action" value="install_tailwind">
+                <button type="submit" class="btn <?php echo !$cssBuilt ? 'btn-primary' : 'btn-secondary'; ?>" <?php echo !$nodeAvailable ? 'disabled' : ''; ?>><?php echo $cssBuilt ? 'Rebuild CSS' : 'Install & Build CSS'; ?></button>
+            </form>
+        </div>
+
+        <p style="font-size:0.8rem; color:#64748b; margin-bottom:0.75rem; margin-top:1.5rem;">The following are optional and can be installed later:</p>
 
         <div class="dep-group">
             <h3>Export Tool Dependencies</h3>
@@ -972,16 +1036,6 @@ $steps = [
                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
                 <input type="hidden" name="action" value="install_dev_deps">
                 <button type="submit" class="btn btn-secondary" <?php echo !$nodeAvailable ? 'disabled' : ''; ?>>Install SASS</button>
-            </form>
-        </div>
-
-        <div class="dep-group">
-            <h3>Tailwind CSS</h3>
-            <p>Utility-first CSS framework for modern theme development.</p>
-            <form method="POST" action="?step=4" style="display:inline;">
-                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
-                <input type="hidden" name="action" value="install_tailwind">
-                <button type="submit" class="btn btn-secondary" <?php echo !$nodeAvailable ? 'disabled' : ''; ?>>Install Tailwind</button>
             </form>
         </div>
 
@@ -1026,6 +1080,40 @@ $steps = [
         CLI available: <code>php install.php --help</code>
     </p>
 </div>
+
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-text" id="loadingText">Installing…</div>
+    <div class="progress-track"><div class="progress-bar"></div></div>
+    <div class="loading-subtext" id="loadingSubtext">This may take a moment</div>
+</div>
+
+<script>
+(function() {
+    var labels = {
+        install_tailwind: ['Installing Tailwind CSS & building styles…', 'This may take up to a minute'],
+        install_export_deps: ['Installing export dependencies…', 'Downloading packages from npm'],
+        install_dev_deps: ['Installing SASS compiler…', 'Downloading packages from npm'],
+        create_dirs: ['Creating directories…', 'Setting up file structure'],
+        create_admin: ['Creating admin account…', 'Almost instant']
+    };
+
+    document.querySelectorAll('form[method="POST"]').forEach(function(form) {
+        form.addEventListener('submit', function() {
+            var action = form.querySelector('input[name="action"]');
+            if (!action) return;
+            var key = action.value;
+            var overlay = document.getElementById('loadingOverlay');
+            var text = document.getElementById('loadingText');
+            var sub = document.getElementById('loadingSubtext');
+            if (labels[key]) {
+                text.textContent = labels[key][0];
+                sub.textContent = labels[key][1];
+            }
+            overlay.classList.add('active');
+        });
+    });
+})();
+</script>
 
 </body>
 </html>
