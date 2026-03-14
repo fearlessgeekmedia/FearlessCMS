@@ -11,7 +11,7 @@ if (getenv('FCMS_DEBUG') === 'true') {
 }
 ini_set('log_errors', 1);
 
-// Include proper session configuration for macOS compatibility
+// Include proper session configuration
 require_once __DIR__ . '/includes/session.php';
 
 // Ensure session is started and available
@@ -20,56 +20,23 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
-// Generate CSRF token using the proper session handling
-$csrf_token = null;
+// Generate CSRF token
 if (isset($_SESSION)) {
-    // Generate CSRF token if not exists
     if (!isset($_SESSION['csrf_token'])) {
-        // Use random_bytes() if available (PHP 7.0+), otherwise fallback
-        if (function_exists('random_bytes')) {
-            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-        } elseif (function_exists('openssl_random_pseudo_bytes')) {
-            $_SESSION['csrf_token'] = bin2hex(openssl_random_pseudo_bytes(32));
-        } else {
-            $_SESSION['csrf_token'] = bin2hex(md5(uniqid(mt_rand(), true)));
-        }
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     }
     $csrf_token = $_SESSION['csrf_token'];
 } else {
-    // Session not available - use simple token fallback
     error_log("Warning: Session not available, using fallback CSRF protection");
-    if (function_exists('random_bytes')) {
-        $csrf_token = bin2hex(random_bytes(32));
-    } elseif (function_exists('openssl_random_pseudo_bytes')) {
-        $csrf_token = bin2hex(openssl_random_pseudo_bytes(32));
-    } else {
-        $csrf_token = bin2hex(md5(uniqid(mt_rand(), true)));
-    }
+    $csrf_token = bin2hex(random_bytes(32));
 }
 
 // CSRF validation function
 function validate_csrf_token(): bool {
     if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token'])) {
-        if (getenv('FCMS_DEBUG') === 'true') {
-            error_log("CSRF validation failed: POST token=" . ($_POST['csrf_token'] ?? 'NOT SET') . ", SESSION token=" . ($_SESSION['csrf_token'] ?? 'NOT SET'));
-        }
         return false;
     }
-    // Use hash_equals() if available (PHP 5.6+), otherwise fallback to comparison
-    if (function_exists('hash_equals')) {
-        $valid = hash_equals($_SESSION['csrf_token'], $_POST['csrf_token']);
-        if (getenv('FCMS_DEBUG') === 'true') {
-            error_log("CSRF validation result: " . ($valid ? 'VALID' : 'INVALID'));
-        }
-        return $valid;
-    } else {
-        // Fallback comparison (less secure against timing attacks)
-        $valid = $_SESSION['csrf_token'] === $_POST['csrf_token'];
-        if (getenv('FCMS_DEBUG') === 'true') {
-            error_log("CSRF validation result: " . ($valid ? 'VALID' : 'INVALID'));
-        }
-        return $valid;
-    }
+    return hash_equals($_SESSION['csrf_token'], $_POST['csrf_token']);
 }
 
 // Rate limiting for admin creation
@@ -129,10 +96,7 @@ function check_extension(string $ext): array {
 function run_cmd(array $cmd, ?string $cwd = null): array {
     global $ALLOWED_COMMANDS;
 
-    // Validate command against whitelist
-    $cmd_key = implode('_', $cmd);
     $allowed = false;
-
     foreach ($ALLOWED_COMMANDS as $pattern => $allowed_cmd) {
         if (array_slice($cmd, 0, count($allowed_cmd)) === $allowed_cmd) {
             $allowed = true;
@@ -144,7 +108,6 @@ function run_cmd(array $cmd, ?string $cwd = null): array {
         return ['code' => 1, 'out' => '', 'err' => 'Command not allowed for security reasons'];
     }
 
-    // Additional security: ensure cwd is within project root
     if ($cwd && strpos(realpath($cwd), realpath($GLOBALS['projectRoot'])) !== 0) {
         return ['code' => 1, 'out' => '', 'err' => 'Invalid working directory'];
     }
@@ -170,9 +133,9 @@ function run_cmd(array $cmd, ?string $cwd = null): array {
     return ['code' => $code, 'out' => $out, 'err' => $err];
 }
 
-// CLI mode support
+// ── CLI MODE ──────────────────────────────────────────────────────────
 if (PHP_SAPI === 'cli') {
-    $options = getopt('', ['check', 'create-dirs', 'install-export-deps', 'install-tailwind', 'create-admin:', 'password:', 'password-file:']);
+    $options = getopt('', ['check', 'create-dirs', 'install-export-deps', 'install-tailwind', 'install-dev-deps', 'create-admin:', 'password:', 'password-file:']);
     $exitCode = 0;
 
     if (isset($options['check'])) {
@@ -185,43 +148,17 @@ if (PHP_SAPI === 'cli') {
         }
         echo "Directories:\n";
         foreach ([
-            $CONFIG_DIR,
-            $ADMIN_UPLOADS_DIR,
-            $UPLOADS_DIR,
-            $CONTENT_DIR,
-            $SESSIONS_DIR,
-            $CACHE_DIR,
-            $BACKUPS_DIR,
-            $UPDATES_DIR,
+            $CONFIG_DIR, $ADMIN_UPLOADS_DIR, $UPLOADS_DIR, $CONTENT_DIR,
+            $SESSIONS_DIR, $CACHE_DIR, $BACKUPS_DIR, $UPDATES_DIR,
         ] as $d) {
             $exists = is_dir($d);
             $writable = $exists ? is_writable($d) : is_writable(dirname($d));
             echo "  - {$d}: " . ($exists ? 'exists' : 'missing') . ', ' . ($writable ? 'writable' : 'not writable') . "\n";
         }
-        
-        // Check Node.js if available
         $node = run_cmd(['which', 'node']);
         $npm = run_cmd(['which', 'npm']);
         if ($node['code'] === 0 && $npm['code'] === 0) {
-            echo "Node.js:\n";
-            $nodeVersion = run_cmd(['node', '--version']);
-            $npmVersion = run_cmd(['npm', '--version']);
-            echo "  - node: " . trim($nodeVersion['out']) . "\n";
-            echo "  - npm: " . trim($npmVersion['out']) . "\n";
-            
-            // Check if package.json exists and dependencies
-            if (file_exists($projectRoot . '/package.json')) {
-                echo "  - package.json: exists\n";
-                $packageJson = json_decode(file_get_contents($projectRoot . '/package.json'), true);
-                if (isset($packageJson['dependencies'])) {
-                    echo "  - dependencies: " . implode(', ', array_keys($packageJson['dependencies'])) . "\n";
-                }
-                if (isset($packageJson['devDependencies'])) {
-                    echo "  - devDependencies: " . implode(', ', array_keys($packageJson['devDependencies'])) . "\n";
-                }
-            } else {
-                echo "  - package.json: missing\n";
-            }
+            echo "Node.js: available\n";
         } else {
             echo "Node.js: not available\n";
         }
@@ -252,12 +189,12 @@ if (PHP_SAPI === 'cli') {
         $node = run_cmd(['which', 'node']);
         $npm = run_cmd(['which', 'npm']);
         if ($node['code'] !== 0 || $npm['code'] !== 0) {
-            echo "Node.js or npm not found in PATH. Please install Node.js and npm first.\n";
+            echo "Node.js or npm not found.\n";
             $exitCode = 1;
         } else {
             if (!file_exists($projectRoot . '/package.json')) {
                 $init = run_cmd(['npm', 'init', '-y'], $projectRoot);
-                echo 'npm init: exit ' . $init['code'] . (trim($init['err']) ? ' (' . strip_tags($init['err']) . ')' : '') . "\n";
+                echo 'npm init: exit ' . $init['code'] . "\n";
                 if ($init['code'] !== 0) $exitCode = 1;
             }
             $install = run_cmd(['npm', 'install', 'fs-extra', 'handlebars', 'marked', '--save'], $projectRoot);
@@ -272,7 +209,7 @@ if (PHP_SAPI === 'cli') {
         $node = run_cmd(['which', 'node']);
         $npm = run_cmd(['which', 'npm']);
         if ($node['code'] !== 0 || $npm['code'] !== 0) {
-            echo "Node.js or npm not found in PATH. Please install Node.js and npm first.\n";
+            echo "Node.js or npm not found.\n";
             $exitCode = 1;
         } else {
             $install = run_cmd(['npm', 'install', 'sass', '--save-dev'], $projectRoot);
@@ -287,13 +224,12 @@ if (PHP_SAPI === 'cli') {
         $node = run_cmd(['which', 'node']);
         $npm = run_cmd(['which', 'npm']);
         if ($node['code'] !== 0 || $npm['code'] !== 0) {
-            echo "Node.js or npm not found in PATH. Please install Node.js and npm first.\n";
+            echo "Node.js or npm not found.\n";
             $exitCode = 1;
         } else {
-            // Initialize package.json if missing
             if (!file_exists($projectRoot . '/package.json')) {
                 $init = run_cmd(['npm', 'init', '-y'], $projectRoot);
-                echo 'npm init: exit ' . $init['code'] . (trim($init['err']) ? ' (' . strip_tags($init['err']) . ')' : '') . "\n";
+                echo 'npm init: exit ' . $init['code'] . "\n";
                 if ($init['code'] !== 0) $exitCode = 1;
             }
             $install = run_cmd(['npm', 'install', 'tailwindcss@^3.4.0', '--save-dev'], $projectRoot);
@@ -315,7 +251,6 @@ if (PHP_SAPI === 'cli') {
                 $password = rtrim(file_get_contents($pf));
             }
         } else {
-            // Read from STDIN without echo if possible
             echo "Enter password for '{$username}': ";
             $password = trim(fgets(STDIN));
         }
@@ -364,134 +299,104 @@ if (PHP_SAPI === 'cli') {
         echo "Usage: php install.php [--check] [--create-dirs] [--install-export-deps] [--install-dev-deps] [--install-tailwind] [--create-admin=<username> --password=<pwd>|--password-file=<file>]\n";
     }
 
-    // Security warning for CLI users
-    echo "\n⚠️  SECURITY WARNING: After installation, delete this file to prevent security vulnerabilities!\n";
+    echo "\n⚠️  SECURITY WARNING: After installation, delete this file!\n";
     echo "   Run: rm install.php\n\n";
 
     exit($exitCode);
 }
 
+// ── WEB MODE ──────────────────────────────────────────────────────────
+
+// Determine current step
+$step = isset($_GET['step']) ? (int)$_GET['step'] : 1;
+if ($step < 1 || $step > 5) $step = 1;
+
 $action = $_POST['action'] ?? '';
 $resultMessages = [];
+$errorMessages = [];
 
 // Validate CSRF token for all POST actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !validate_csrf_token()) {
-    $resultMessages[] = 'Invalid or expired security token. Please refresh the page and try again.';
-    $action = ''; // Prevent action execution
+    $errorMessages[] = 'Invalid or expired security token. Please refresh the page and try again.';
+    $action = '';
 }
+
+// ── Handle POST actions ──
 
 if ($action === 'create_dirs') {
     $dirs = [$CONFIG_DIR, $ADMIN_UPLOADS_DIR, $UPLOADS_DIR, $CONTENT_DIR, $SESSIONS_DIR, $CACHE_DIR, $BACKUPS_DIR, $UPDATES_DIR];
+    $allOk = true;
     foreach ($dirs as $dir) {
         if (!is_dir($dir)) {
             if (mkdir($dir, 0755, true)) {
-                $resultMessages[] = "Created directory: $dir";
+                $resultMessages[] = "Created: " . basename($dir);
             } else {
-                $resultMessages[] = "Failed to create directory: $dir";
+                $errorMessages[] = "Failed to create: " . basename($dir);
+                $allOk = false;
             }
-        } else {
-            $resultMessages[] = "Directory exists: $dir";
         }
     }
-    // Create default config files if missing by including core config (idempotent)
     $configPath = $projectRoot . '/includes/config.php';
     if (file_exists($configPath)) {
         require_once $configPath;
-        $resultMessages[] = 'Initialized default configuration files.';
+    }
+    if ($allOk && empty($errorMessages)) {
+        $resultMessages[] = 'All directories created successfully.';
     }
 }
 
 if ($action === 'install_export_deps') {
-    // Detect node and npm
     $node = run_cmd(['which', 'node']);
     $npm = run_cmd(['which', 'npm']);
     if ($node['code'] !== 0 || $npm['code'] !== 0) {
-        $resultMessages[] = 'Node.js or npm not found in PATH. Please install Node.js and npm first.';
+        $errorMessages[] = 'Node.js or npm not found. Please install Node.js first.';
     } else {
-        // Initialize package.json if missing
         if (!file_exists($projectRoot . '/package.json')) {
             $init = run_cmd(['npm', 'init', '-y'], $projectRoot);
-            $resultMessages[] = 'npm init: exit ' . $init['code'] . (trim($init['err']) ? ' (' . htmlspecialchars($init['err']) . ')' : '');
+            if ($init['code'] !== 0) $errorMessages[] = 'npm init failed.';
         }
-        // Install dependencies used by export.js and other tools
         $install = run_cmd(['npm', 'install', 'fs-extra', 'handlebars', 'marked', '--save'], $projectRoot);
-        $resultMessages[] = 'npm install: exit ' . $install['code'];
-        if (trim($install['out'])) $resultMessages[] = '<pre class="text-xs whitespace-pre-wrap">' . htmlspecialchars($install['out']) . '</pre>';
-        if (trim($install['err'])) $resultMessages[] = '<pre class="text-xs text-red-700 whitespace-pre-wrap">' . htmlspecialchars($install['err']) . '</pre>';
+        if ($install['code'] === 0) {
+            $resultMessages[] = 'Node dependencies installed successfully.';
+        } else {
+            $errorMessages[] = 'npm install failed: ' . htmlspecialchars(trim($install['err']));
+        }
     }
 }
 
 if ($action === 'install_dev_deps') {
-    // Detect node and npm
     $node = run_cmd(['which', 'node']);
     $npm = run_cmd(['which', 'npm']);
     if ($node['code'] !== 0 || $npm['code'] !== 0) {
-        $resultMessages[] = 'Node.js or npm not found in PATH. Please install Node.js and npm first.';
+        $errorMessages[] = 'Node.js or npm not found.';
     } else {
-        // Install SASS compiler as dev dependency
         $install = run_cmd(['npm', 'install', 'sass', '--save-dev'], $projectRoot);
-        $resultMessages[] = 'SASS install: exit ' . $install['code'];
-        if (trim($install['out'])) $resultMessages[] = '<pre class="text-xs whitespace-pre-wrap">' . htmlspecialchars($install['out']) . '</pre>';
-        if (trim($install['err'])) $resultMessages[] = '<pre class="text-xs text-red-700 whitespace-pre-wrap">' . htmlspecialchars($install['err']) . '</pre>';
+        if ($install['code'] === 0) {
+            $resultMessages[] = 'SASS compiler installed successfully.';
+        } else {
+            $errorMessages[] = 'SASS install failed: ' . htmlspecialchars(trim($install['err']));
+        }
     }
 }
 
 if ($action === 'install_tailwind') {
-    // Detect node and npm
     $node = run_cmd(['which', 'node']);
     $npm = run_cmd(['which', 'npm']);
     if ($node['code'] !== 0 || $npm['code'] !== 0) {
-        $resultMessages[] = 'Node.js or npm not found in PATH. Please install Node.js and npm first.';
+        $errorMessages[] = 'Node.js or npm not found.';
     } else {
-        // Initialize package.json if missing
         if (!file_exists($projectRoot . '/package.json')) {
             $init = run_cmd(['npm', 'init', '-y'], $projectRoot);
-            $resultMessages[] = 'npm init: exit ' . $init['code'] . (trim($init['err']) ? ' (' . htmlspecialchars($init['err']) . ')' : '');
+            if ($init['code'] !== 0) $errorMessages[] = 'npm init failed.';
         }
-        // Install Tailwind CSS as dev dependency
         $install = run_cmd(['npm', 'install', 'tailwindcss@^3.4.0', '--save-dev'], $projectRoot);
-        $resultMessages[] = 'Tailwind CSS install: exit ' . $install['code'];
-        if (trim($install['out'])) $resultMessages[] = '<pre class="text-xs whitespace-pre-wrap">' . htmlspecialchars($install['out']) . '</pre>';
-        if (trim($install['err'])) $resultMessages[] = '<pre class="text-xs text-red-700 whitespace-pre-wrap">' . htmlspecialchars($install['err']) . '</pre>';
+        if ($install['code'] === 0) {
+            $resultMessages[] = 'Tailwind CSS installed successfully.';
+        } else {
+            $errorMessages[] = 'Tailwind install failed: ' . htmlspecialchars(trim($install['err']));
+        }
     }
 }
-
-// Environment checks
-$phpVersionOk = version_compare(PHP_VERSION, '8.0.0', '>=');
-$extensions = [
-    check_extension('curl'),
-    check_extension('json'),
-    check_extension('mbstring'),
-    check_extension('phar'), // preferred for updater
-    check_extension('zip'),  // optional fallback
-    check_extension('openssl'),
-];
-
-// Optimize directory checks by doing them once
-$directories = [];
-$dirs_to_check = [
-    $CONFIG_DIR,
-    $ADMIN_UPLOADS_DIR,
-    $UPLOADS_DIR,
-    $CONTENT_DIR,
-    $SESSIONS_DIR,
-    $CACHE_DIR,
-    $BACKUPS_DIR,
-    $UPDATES_DIR,
-];
-
-foreach ($dirs_to_check as $dir) {
-    $exists = is_dir($dir);
-    $writable = $exists ? is_writable($dir) : is_writable(dirname($dir));
-    $directories[] = [
-        'path' => $dir,
-        'exists' => $exists,
-        'writable' => $writable
-    ];
-}
-
-$hasNode = run_cmd(['which', 'node']);
-$hasNpm  = run_cmd(['which', 'npm']);
 
 // Admin user state
 $usersFile = $CONFIG_DIR . '/users.json';
@@ -500,7 +405,7 @@ if (file_exists($usersFile)) {
     $usersData = json_decode(file_get_contents($usersFile), true);
     if (is_array($usersData)) {
         foreach ($usersData as $u) {
-            if (($u['role'] ?? '') === 'administrator') {
+            if (in_array($u['role'] ?? '', ['administrator', 'admin'])) {
                 $existingAdmins[] = $u['username'] ?? '';
             }
         }
@@ -508,37 +413,36 @@ if (file_exists($usersFile)) {
 }
 
 if ($action === 'create_admin') {
-    // Rate limiting for admin creation
     if (!check_rate_limit('create_admin', 3, 300)) {
-        $resultMessages[] = 'Too many attempts to create admin account. Please wait 5 minutes before trying again.';
+        $errorMessages[] = 'Too many attempts. Please wait 5 minutes.';
     } else {
         $username = trim($_POST['admin_user'] ?? '');
         $password = (string)($_POST['admin_pass'] ?? '');
         $confirm  = (string)($_POST['admin_pass_confirm'] ?? '');
 
         if ($username === '' || $password === '' || $confirm === '') {
-            $resultMessages[] = 'All fields are required to create the admin account.';
+            $errorMessages[] = 'All fields are required.';
         } elseif ($password !== $confirm) {
-            $resultMessages[] = 'Passwords do not match.';
+            $errorMessages[] = 'Passwords do not match.';
         } elseif (!preg_match('/^[A-Za-z0-9_\-]{3,50}$/', $username)) {
-            $resultMessages[] = 'Username must be 3-50 characters and contain only letters, numbers, underscores, or dashes.';
+            $errorMessages[] = 'Username must be 3-50 characters (letters, numbers, underscores, dashes).';
         } elseif (strlen($password) < 8) {
-            $resultMessages[] = 'Password must be at least 8 characters long.';
+            $errorMessages[] = 'Password must be at least 8 characters.';
         } else {
             $users = [];
             if (file_exists($usersFile)) {
                 $decoded = json_decode(file_get_contents($usersFile), true);
                 if (is_array($decoded)) $users = $decoded;
             }
-            // Prevent duplicates
+            $duplicate = false;
             foreach ($users as $u) {
                 if (($u['username'] ?? '') === $username) {
-                    $resultMessages[] = 'A user with that username already exists.';
-                    $username = '';
+                    $errorMessages[] = 'A user with that username already exists.';
+                    $duplicate = true;
                     break;
                 }
             }
-            if ($username !== '') {
+            if (!$duplicate) {
                 $users[] = [
                     'id' => $username,
                     'username' => $username,
@@ -548,259 +452,580 @@ if ($action === 'create_admin') {
                     'created_at' => date('Y-m-d H:i:s')
                 ];
                 if (!is_dir($CONFIG_DIR)) {
-                    if (!mkdir($CONFIG_DIR, 0755, true)) {
-                        $resultMessages[] = 'Failed to create config directory.';
-                        $username = '';
-                    }
+                    mkdir($CONFIG_DIR, 0755, true);
                 }
-                if ($username !== '' && file_put_contents($usersFile, json_encode($users, JSON_PRETTY_PRINT)) !== false) {
-                    $resultMessages[] = 'Admin account created successfully.';
+                if (file_put_contents($usersFile, json_encode($users, JSON_PRETTY_PRINT)) !== false) {
+                    $resultMessages[] = 'Admin account created successfully!';
                     $existingAdmins[] = $username;
                 } else {
-                    $resultMessages[] = 'Failed to write users.json.';
+                    $errorMessages[] = 'Failed to write users.json.';
                 }
             }
         }
     }
 }
 
-?><!doctype html>
+// ── Gather environment data ──
+
+$phpVersionOk = version_compare(PHP_VERSION, '8.0.0', '>=');
+$extensions = [
+    check_extension('curl'),
+    check_extension('json'),
+    check_extension('mbstring'),
+    check_extension('phar'),
+    check_extension('zip'),
+    check_extension('openssl'),
+];
+$allExtensionsOk = true;
+foreach ($extensions as $ext) {
+    if (!$ext['loaded'] && $ext['name'] !== 'zip') {
+        $allExtensionsOk = false;
+    }
+}
+
+$directories = [];
+$dirs_to_check = [$CONFIG_DIR, $ADMIN_UPLOADS_DIR, $UPLOADS_DIR, $CONTENT_DIR, $SESSIONS_DIR, $CACHE_DIR, $BACKUPS_DIR, $UPDATES_DIR];
+$allDirsOk = true;
+foreach ($dirs_to_check as $dir) {
+    $exists = is_dir($dir);
+    $writable = $exists ? is_writable($dir) : is_writable(dirname($dir));
+    $directories[] = ['path' => $dir, 'exists' => $exists, 'writable' => $writable];
+    if (!$exists || !$writable) $allDirsOk = false;
+}
+
+$hasNode = run_cmd(['which', 'node']);
+$hasNpm  = run_cmd(['which', 'npm']);
+
+// Step labels for the progress bar
+$steps = [
+    1 => 'Environment',
+    2 => 'Directories',
+    3 => 'Admin Account',
+    4 => 'Dependencies',
+    5 => 'Finish',
+];
+
+?><!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FearlessCMS Installer</title>
-<link href="/public/css/output.css" rel="stylesheet">
-</head>
-<body class="bg-gray-100">
-    <div class="max-w-4xl mx-auto my-10 bg-white shadow rounded p-6">
-        <h1 class="text-2xl font-bold mb-6">FearlessCMS Installer</h1>
+<title>Install FearlessCMS</title>
+<style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        background: #0f172a;
+        color: #e2e8f0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+    }
+    a { color: #60a5fa; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code {
+        background: rgba(255,255,255,0.08);
+        padding: 0.15em 0.4em;
+        border-radius: 4px;
+        font-size: 0.9em;
+        font-family: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace;
+    }
 
-        <?php if (!empty($resultMessages)): ?>
-            <div class="mb-6 space-y-2">
-                <?php foreach ($resultMessages as $msg): ?>
-                    <div class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-2 rounded"><?php echo $msg; ?></div>
-                <?php endforeach; ?>
+    .installer {
+        width: 100%;
+        max-width: 640px;
+    }
+
+    /* Logo / Header */
+    .header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    .header h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #f8fafc;
+        letter-spacing: -0.02em;
+    }
+    .header h1 span { color: #60a5fa; }
+    .header p {
+        color: #94a3b8;
+        margin-top: 0.25rem;
+        font-size: 0.9rem;
+    }
+
+    /* Step indicator */
+    .steps {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0;
+        margin-bottom: 2rem;
+    }
+    .step-dot {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        font-weight: 600;
+        flex-shrink: 0;
+        transition: all 0.2s;
+    }
+    .step-dot.completed {
+        background: #22c55e;
+        color: #fff;
+    }
+    .step-dot.active {
+        background: #3b82f6;
+        color: #fff;
+        box-shadow: 0 0 0 4px rgba(59,130,246,0.25);
+    }
+    .step-dot.upcoming {
+        background: #1e293b;
+        color: #64748b;
+        border: 2px solid #334155;
+    }
+    .step-line {
+        width: 40px;
+        height: 2px;
+        flex-shrink: 0;
+    }
+    .step-line.done { background: #22c55e; }
+    .step-line.pending { background: #334155; }
+
+    .step-labels {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 0.5rem;
+        padding: 0 0.25rem;
+    }
+    .step-label {
+        font-size: 0.7rem;
+        color: #64748b;
+        text-align: center;
+        width: 76px;
+    }
+    .step-label.active { color: #93c5fd; }
+
+    /* Card */
+    .card {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 12px;
+        padding: 2rem;
+    }
+    .card h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #f1f5f9;
+        margin-bottom: 1.25rem;
+    }
+
+    /* Messages */
+    .msg {
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+    }
+    .msg-success { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3); color: #86efac; }
+    .msg-error { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+
+    /* Check items */
+    .check-list { list-style: none; }
+    .check-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.6rem 0;
+        border-bottom: 1px solid #334155;
+        font-size: 0.9rem;
+    }
+    .check-item:last-child { border-bottom: none; }
+    .badge {
+        display: inline-block;
+        padding: 0.15em 0.6em;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .badge-ok { background: rgba(34,197,94,0.15); color: #4ade80; }
+    .badge-warn { background: rgba(234,179,8,0.15); color: #facc15; }
+    .badge-fail { background: rgba(239,68,68,0.15); color: #f87171; }
+
+    /* Dir list */
+    .dir-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.5rem 0.75rem;
+        background: #0f172a;
+        border-radius: 6px;
+        margin-bottom: 0.5rem;
+        font-size: 0.85rem;
+        font-family: 'Fira Code', monospace;
+    }
+    .dir-status {
+        display: flex;
+        gap: 0.75rem;
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    /* Forms */
+    label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #cbd5e1;
+        margin-bottom: 0.35rem;
+    }
+    input[type="text"],
+    input[type="password"] {
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        background: #0f172a;
+        border: 1px solid #475569;
+        border-radius: 8px;
+        color: #e2e8f0;
+        font-size: 0.95rem;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+    input[type="text"]:focus,
+    input[type="password"]:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+    .form-group { margin-bottom: 1rem; }
+
+    /* Buttons */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.65rem 1.5rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.15s;
+        text-decoration: none;
+    }
+    .btn-primary { background: #3b82f6; color: #fff; }
+    .btn-primary:hover { background: #2563eb; text-decoration: none; }
+    .btn-success { background: #22c55e; color: #fff; }
+    .btn-success:hover { background: #16a34a; text-decoration: none; }
+    .btn-secondary { background: #334155; color: #e2e8f0; }
+    .btn-secondary:hover { background: #475569; text-decoration: none; }
+    .btn-outline {
+        background: transparent;
+        color: #94a3b8;
+        border: 1px solid #475569;
+    }
+    .btn-outline:hover { background: #334155; color: #e2e8f0; text-decoration: none; }
+
+    .btn-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1.5rem;
+    }
+    .btn-row-right {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 1.5rem;
+    }
+
+    /* Dep section */
+    .dep-group {
+        background: #0f172a;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    .dep-group h3 {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #e2e8f0;
+        margin-bottom: 0.5rem;
+    }
+    .dep-group p {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        margin-bottom: 0.75rem;
+        line-height: 1.5;
+    }
+
+    /* Finish */
+    .finish-icon {
+        font-size: 3rem;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+    .finish-list {
+        list-style: none;
+        margin-top: 1rem;
+    }
+    .finish-list li {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #334155;
+        font-size: 0.9rem;
+    }
+    .finish-list li:last-child { border-bottom: none; }
+
+    .warning-box {
+        background: rgba(239,68,68,0.08);
+        border: 1px solid rgba(239,68,68,0.25);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1.5rem;
+    }
+    .warning-box h3 {
+        color: #f87171;
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    .warning-box p {
+        color: #fca5a5;
+        font-size: 0.85rem;
+        line-height: 1.5;
+    }
+</style>
+</head>
+<body>
+
+<div class="installer">
+    <div class="header">
+        <h1>Fearless<span>CMS</span></h1>
+        <p>Installation Wizard</p>
+    </div>
+
+    <!-- Step indicator -->
+    <div class="steps">
+        <?php foreach ($steps as $num => $label): ?>
+            <?php if ($num > 1): ?>
+                <div class="step-line <?php echo $num <= $step ? 'done' : 'pending'; ?>"></div>
+            <?php endif; ?>
+            <div class="step-dot <?php echo $num < $step ? 'completed' : ($num === $step ? 'active' : 'upcoming'); ?>">
+                <?php echo $num < $step ? '✓' : $num; ?>
+            </div>
+        <?php endforeach; ?>
+    </div>
+    <div class="step-labels">
+        <?php foreach ($steps as $num => $label): ?>
+            <div class="step-label <?php echo $num === $step ? 'active' : ''; ?>"><?php echo $label; ?></div>
+        <?php endforeach; ?>
+    </div>
+
+    <div class="card">
+
+    <?php if (!empty($resultMessages) || !empty($errorMessages)): ?>
+        <?php foreach ($resultMessages as $msg): ?>
+            <div class="msg msg-success"><?php echo $msg; ?></div>
+        <?php endforeach; ?>
+        <?php foreach ($errorMessages as $msg): ?>
+            <div class="msg msg-error"><?php echo $msg; ?></div>
+        <?php endforeach; ?>
+    <?php endif; ?>
+
+    <?php if ($step === 1): // ── STEP 1: Environment ── ?>
+        <h2>Environment Check</h2>
+
+        <div class="check-item" style="border-bottom: 1px solid #334155; padding-bottom: 0.75rem; margin-bottom: 0.5rem;">
+            <span>PHP Version</span>
+            <span>
+                <code><?php echo htmlspecialchars(PHP_VERSION); ?></code>
+                <span class="badge <?php echo $phpVersionOk ? 'badge-ok' : 'badge-fail'; ?>">
+                    <?php echo $phpVersionOk ? '≥ 8.0 ✓' : 'Requires 8.0+'; ?>
+                </span>
+            </span>
+        </div>
+
+        <h3 style="font-size:0.9rem; font-weight:600; color:#94a3b8; margin: 1rem 0 0.5rem; text-transform:uppercase; letter-spacing:0.05em;">Extensions</h3>
+        <ul class="check-list">
+            <?php foreach ($extensions as $ext): ?>
+                <li class="check-item">
+                    <span><code><?php echo htmlspecialchars($ext['name']); ?></code></span>
+                    <span class="badge <?php echo $ext['loaded'] ? 'badge-ok' : ($ext['name'] === 'zip' ? 'badge-warn' : 'badge-fail'); ?>">
+                        <?php echo $ext['loaded'] ? 'Loaded' : ($ext['name'] === 'zip' ? 'Optional' : 'Missing'); ?>
+                    </span>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+        <p style="font-size:0.75rem; color:#64748b; margin-top:0.75rem;">
+            <code>phar</code> is preferred for the updater. <code>zip</code> is an optional fallback.
+        </p>
+
+        <div class="btn-row-right">
+            <a href="?step=2" class="btn btn-primary">Continue →</a>
+        </div>
+
+    <?php elseif ($step === 2): // ── STEP 2: Directories ── ?>
+        <h2>Directories &amp; Permissions</h2>
+
+        <?php foreach ($directories as $d): ?>
+            <div class="dir-item">
+                <span><?php echo htmlspecialchars(basename($d['path'])); ?>/</span>
+                <div class="dir-status">
+                    <span class="badge <?php echo $d['exists'] ? 'badge-ok' : 'badge-fail'; ?>">
+                        <?php echo $d['exists'] ? 'exists' : 'missing'; ?>
+                    </span>
+                    <span class="badge <?php echo $d['writable'] ? 'badge-ok' : 'badge-fail'; ?>">
+                        <?php echo $d['writable'] ? 'writable' : 'not writable'; ?>
+                    </span>
+                </div>
+            </div>
+        <?php endforeach; ?>
+
+        <?php if (!$allDirsOk): ?>
+            <form method="POST" action="?step=2" style="margin-top: 1rem;">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+                <input type="hidden" name="action" value="create_dirs">
+                <button type="submit" class="btn btn-success">Create Directories</button>
+            </form>
+        <?php endif; ?>
+
+        <div class="btn-row">
+            <a href="?step=1" class="btn btn-outline">← Back</a>
+            <a href="?step=3" class="btn btn-primary">Continue →</a>
+        </div>
+
+    <?php elseif ($step === 3): // ── STEP 3: Admin Account ── ?>
+        <h2>Create Admin Account</h2>
+
+        <?php if (!empty($existingAdmins)): ?>
+            <div class="msg msg-success">
+                Admin account already exists: <strong><?php echo htmlspecialchars(implode(', ', $existingAdmins)); ?></strong>
+            </div>
+            <p style="font-size:0.85rem; color:#94a3b8;">You can skip this step or create an additional admin.</p>
+        <?php endif; ?>
+
+        <form method="POST" action="?step=3">
+            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+            <input type="hidden" name="action" value="create_admin">
+
+            <div class="form-group">
+                <label for="admin_user">Username</label>
+                <input type="text" id="admin_user" name="admin_user" required
+                       pattern="[A-Za-z0-9_\-]{3,50}"
+                       title="3-50 characters: letters, numbers, underscores, dashes"
+                       placeholder="e.g. admin">
+            </div>
+
+            <div class="form-group">
+                <label for="admin_pass">Password</label>
+                <input type="password" id="admin_pass" name="admin_pass" required
+                       minlength="8" placeholder="Minimum 8 characters">
+            </div>
+
+            <div class="form-group">
+                <label for="admin_pass_confirm">Confirm Password</label>
+                <input type="password" id="admin_pass_confirm" name="admin_pass_confirm" required
+                       minlength="8" placeholder="Re-enter password">
+            </div>
+
+            <button type="submit" class="btn btn-success">Create Account</button>
+        </form>
+
+        <div class="btn-row">
+            <a href="?step=2" class="btn btn-outline">← Back</a>
+            <a href="?step=4" class="btn btn-primary"><?php echo !empty($existingAdmins) ? 'Continue →' : 'Skip →'; ?></a>
+        </div>
+
+    <?php elseif ($step === 4): // ── STEP 4: Optional Dependencies ── ?>
+        <h2>Optional Dependencies</h2>
+        <p style="font-size:0.85rem; color:#94a3b8; margin-bottom:1.25rem;">
+            These are optional and can be installed later. They require Node.js &amp; npm.
+        </p>
+
+        <?php
+        $nodeAvailable = ($hasNode['code'] === 0 && $hasNpm['code'] === 0);
+        ?>
+
+        <?php if (!$nodeAvailable): ?>
+            <div class="msg msg-error">
+                Node.js/npm not found. Install Node.js to use these features, or skip this step.
             </div>
         <?php endif; ?>
 
-        <div class="space-y-8">
-            <section>
-                <h2 class="text-xl font-semibold mb-3">Environment</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="bg-gray-50 p-4 rounded">
-                        <div class="text-sm text-gray-500">PHP Version</div>
-                        <div class="mt-1 font-mono"><?php echo htmlspecialchars(PHP_VERSION); ?></div>
-                        <div class="mt-1 <?php echo $phpVersionOk ? 'text-green-700' : 'text-red-700'; ?>">
-                            <?php echo $phpVersionOk ? 'OK (>= 8.0)' : 'Requires PHP 8.0+'; ?>
-                        </div>
-                    </div>
-                    <div class="bg-gray-50 p-4 rounded">
-                        <div class="text-sm text-gray-500">Project Root</div>
-                        <div class="mt-1 font-mono break-all"><?php echo htmlspecialchars($projectRoot); ?></div>
-                    </div>
-                </div>
-
-                <div class="mt-4">
-                    <h3 class="font-medium mb-2">PHP Extensions</h3>
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
-                        <?php foreach ($extensions as $ext): ?>
-                            <div class="px-3 py-2 rounded <?php echo $ext['loaded'] ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-red-50 border border-red-200 text-red-800'; ?>">
-                                <?php echo htmlspecialchars($ext['name']); ?>: <?php echo $ext['loaded'] ? 'Loaded' : 'Missing'; ?>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                    <p class="text-xs text-gray-600 mt-2">Updater prefers <code>phar</code> (tar.gz). <code>zip</code> is optional fallback.</p>
-                </div>
-            </section>
-
-            <section>
-                <h2 class="text-xl font-semibold mb-3">Directories & Permissions</h2>
-                <div class="space-y-2">
-                    <?php foreach ($directories as $d): ?>
-                        <div class="flex items-center justify-between px-3 py-2 bg-gray-50 rounded border">
-                            <div class="font-mono text-sm break-all"><?php echo htmlspecialchars($d['path']); ?></div>
-                            <div class="text-sm">
-                                <span class="mr-3 <?php echo $d['exists'] ? 'text-green-700' : 'text-red-700'; ?>"><?php echo $d['exists'] ? 'exists' : 'missing'; ?></span>
-                                <span class="<?php echo $d['writable'] ? 'text-green-700' : 'text-red-700'; ?>"><?php echo $d['writable'] ? 'writable' : 'not writable'; ?></span>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-                <form method="POST" class="mt-3">
-                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
-                    <input type="hidden" name="action" value="create_dirs">
-                    <button class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Create/Verify Directories</button>
-                </form>
-            </section>
-
-            <section>
-                <h2 class="text-xl font-semibold mb-3">Export Tool & Development Dependencies (Optional)</h2>
-                <p class="text-sm text-gray-600 mb-2">The static site exporter (<code>export.js</code>) and other tools use Node.js packages: <code>fs-extra</code>, <code>handlebars</code>, <code>marked</code>.</p>
-                <p class="text-xs text-gray-500 mb-3">These dependencies enable static site generation, template processing, and content conversion capabilities.</p>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
-                    <div class="bg-gray-50 p-4 rounded">
-                        <div class="text-sm text-gray-500">node</div>
-                        <div class="font-mono"><?php echo htmlspecialchars(trim($hasNode['out']) ?: 'not found'); ?></div>
-                        <?php if (trim($hasNode['out'])): ?>
-                            <?php 
-                            // Get actual Node.js version by running node --version
-                            $nodeVersionCmd = run_cmd(['node', '--version']);
-                            $nodeVersion = trim($nodeVersionCmd['out']);
-                            $nodeVersionOk = version_compare($nodeVersion, '14.14.0', '>=');
-                            ?>
-                            <div class="mt-1 text-xs <?php echo $nodeVersionOk ? 'text-green-700' : 'text-red-700'; ?>">
-                                <?php echo $nodeVersionOk ? 'OK (>= 14.14)' : 'Requires Node.js 14.14+'; ?>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                    <div class="bg-gray-50 p-4 rounded">
-                        <div class="text-sm text-gray-500">npm</div>
-                        <div class="font-mono"><?php echo htmlspecialchars(trim($hasNpm['out']) ?: 'not found'); ?></div>
-                    </div>
-                </div>
-                <form method="POST">
-                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
-                    <input type="hidden" name="action" value="install_export_deps">
-                    <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Install Node Dependencies</button>
-                </form>
-                <p class="text-xs text-gray-600 mt-2">If Node.js is not available, run locally:<br>
-                <code>npm install fs-extra handlebars marked</code></p>
-                
-                <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
-                    <h4 class="font-medium text-blue-800 mb-2">Dependency Details:</h4>
-                    <ul class="text-xs text-blue-700 space-y-1">
-                        <li><strong>fs-extra:</strong> Enhanced file system operations for export tool</li>
-                        <li><strong>handlebars:</strong> Template engine for dynamic content generation</li>
-                        <li><strong>marked:</strong> Markdown parser (for legacy content support)</li>
-                    </ul>
-                    <p class="text-xs text-blue-600 mt-2">These packages enable the export tool to process templates, handle file operations, and convert content formats.</p>
-                </div>
-                
-                <div class="mt-4">
-                    <h3 class="font-medium mb-2">Optional Development Dependencies</h3>
-                    <p class="text-sm text-gray-600 mb-2">For theme development with SASS/SCSS support:</p>
-                    <form method="POST" class="mb-3">
-                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
-                        <input type="hidden" name="action" value="install_dev_deps">
-                        <button class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">Install SASS Compiler</button>
-                    </form>
-                    <p class="text-xs text-gray-600 mb-3">Installs <code>sass</code> as a development dependency for compiling SASS/SCSS files.</p>
-                    
-                    <p class="text-sm text-gray-600 mb-2">For modern CSS framework with Tailwind CSS:</p>
-                    <form method="POST" class="mb-3">
-                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
-                        <input type="hidden" name="action" value="install_tailwind">
-                        <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Install Tailwind CSS</button>
-                    </form>
-                    <p class="text-xs text-gray-600 mb-3">Installs <code>tailwindcss@^3.4.0</code> as a development dependency for utility-first CSS framework.</p>
-                
-                <div class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
-                    <h4 class="font-medium text-yellow-800 mb-2">Installation Process:</h4>
-                    <ul class="text-xs text-yellow-700 space-y-1">
-                        <li>Creates <code>package.json</code> if it doesn't exist</li>
-                        <li>Installs production dependencies to <code>node_modules/</code></li>
-                        <li>Updates <code>package-lock.json</code> with exact versions</li>
-                        <li>Dependencies are available via <code>npx</code> or <code>node_modules/.bin/</code></li>
-                    </ul>
-                </div>
-                
-                <div class="mt-3 p-3 bg-gray-50 border border-gray-200 rounded">
-                    <h4 class="font-medium text-gray-800 mb-2">Common Development Commands:</h4>
-                    <ul class="text-xs text-gray-700 space-y-1">
-                        <li><code>npx sass themes/your-theme/assets/style.scss themes/your-theme/assets/style.css</code> - Compile SASS to CSS</li>
-                        <li><code>npx sass --watch themes/your-theme/assets/</code> - Watch and auto-compile SASS files</li>
-                        <li><code>node export.js</code> - Generate static site export</li>
-                        <li><code>npm run build</code> - Build project (if scripts defined in package.json)</li>
-                    </ul>
-                    <p class="text-xs text-gray-600 mt-2">These commands help with theme development, content export, and project building workflows.</p>
-                
-                <div class="mt-3 p-3 bg-red-50 border border-red-200 rounded">
-                    <h4 class="font-medium text-red-800 mb-2">Troubleshooting:</h4>
-                    <ul class="text-xs text-red-700 space-y-1">
-                        <li><strong>Permission denied:</strong> Ensure npm has write access to project directory</li>
-                        <li><strong>Network errors:</strong> Check internet connection and npm registry access</li>
-                        <li><strong>Version conflicts:</strong> Delete <code>node_modules/</code> and <code>package-lock.json</code>, then reinstall</li>
-                        <li><strong>Node.js not found:</strong> Install Node.js from <a href="https://nodejs.org" class="underline">nodejs.org</a></li>
-                    </ul>
-                </div>
-                </div>
-            </section>
-
-            <section>
-                <h2 class="text-xl font-semibold mb-3">Create Admin Account</h2>
-                <?php if (!empty($existingAdmins)): ?>
-                    <div class="bg-green-50 border border-green-200 text-green-800 px-4 py-2 rounded mb-3">
-                        Administrator account exists: <span class="font-mono"><?php echo htmlspecialchars(implode(', ', $existingAdmins)); ?></span>
-                    </div>
-                <?php else: ?>
-                    <form method="POST" class="space-y-3 max-w-md">
-                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
-                        <input type="hidden" name="action" value="create_admin">
-                        <div>
-                            <label class="block mb-1">Username</label>
-                            <input name="admin_user" class="w-full px-3 py-2 border rounded" required pattern="[A-Za-z0-9_\-]{3,50}" title="3-50 characters, letters, numbers, underscores, or dashes only">
-                        </div>
-                        <div>
-                            <label class="block mb-1">Password</label>
-                            <input type="password" name="admin_pass" class="w-full px-3 py-2 border rounded" required minlength="8" title="Minimum 8 characters">
-                        </div>
-                        <div>
-                            <label class="block mb-1">Confirm Password</label>
-                            <input type="password" name="admin_pass_confirm" class="w-full px-3 py-2 border rounded" required minlength="8" title="Minimum 8 characters">
-                        </div>
-                        <button class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">Create Admin</button>
-                    </form>
-                <?php endif; ?>
-            </section>
-
-            <section>
-                <h2 class="text-xl font-semibold mb-3">Next Steps</h2>
-                <ul class="list-disc ml-6 text-sm text-gray-700 space-y-1">
-                    <li>Visit <code>/admin/</code> to log in and configure your site.</li>
-                    <li>Use the **Export Site** button in the Dashboard to generate a static version of your site.</li>
-                    <li>Use the Updates section in Mission Control to keep FearlessCMS up to date.</li>
-                    <li>Use the Store to browse and install plugins/themes (if enabled).</li>
-                    <li>Use <code>npx sass</code> to compile SASS/SCSS files for custom themes (requires SASS dependency).</li>
-                </ul>
-            </section>
-
-            <section class="bg-blue-50 border border-blue-200 rounded p-4">
-                <h2 class="text-xl font-semibold mb-3 text-blue-800">🖥️ Command Line Interface</h2>
-                <div class="text-blue-700 space-y-2">
-                    <p><strong>CLI Usage:</strong> This installer also supports command-line operation for automation and server environments.</p>
-                    <div class="bg-white border border-blue-300 rounded p-3 mt-3">
-                        <p class="font-mono text-sm text-blue-800">Available CLI commands:</p>
-                        <ul class="list-disc ml-6 text-sm mt-2 space-y-1">
-                            <li><code>php install.php --check</code> - Check system requirements</li>
-                            <li><code>php install.php --create-dirs</code> - Create required directories</li>
-                            <li><code>php install.php --install-export-deps</code> - Install Node.js dependencies</li>
-                            <li><code>php install.php --install-dev-deps</code> - Install development dependencies</li>
-                            <li><code>php install.php --install-tailwind</code> - Install Tailwind CSS</li>
-                            <li><code>php install.php --create-admin=username --password=password</code> - Create admin user</li>
-                        </ul>
-                    </div>
-                    <p class="text-sm mt-3"><strong>Example:</strong> <code>php install.php --check --create-dirs --install-export-deps</code></p>
-                </div>
-            </section>
-
-            <section class="bg-red-50 border border-red-200 rounded p-4">
-                <h2 class="text-xl font-semibold mb-3 text-red-800">⚠️ Security Warning</h2>
-                <div class="text-red-700 space-y-2">
-                    <p><strong>IMPORTANT:</strong> After completing the installation, you must delete this file for security reasons.</p>
-                    <p>The installer file contains administrative functions that could be exploited by attackers if left accessible.</p>
-                    <div class="bg-white border border-red-300 rounded p-3 mt-3">
-                        <p class="font-mono text-sm text-red-800">Delete this file using one of these methods:</p>
-                        <ul class="list-disc ml-6 text-sm mt-2 space-y-1">
-                            <li><strong>SSH/Command Line:</strong> <code>rm install.php</code></li>
-                            <li><strong>File Manager:</strong> Delete <code>install.php</code> from your web directory</li>
-                            <li><strong>FTP:</strong> Remove <code>install.php</code> from your server</li>
-                        </ul>
-                    </div>
-                    <p class="text-sm mt-3"><strong>Note:</strong> Once deleted, you cannot re-run the installer. If you need to reinstall, you'll need to upload the installer file again.</p>
-                </div>
-            </section>
+        <div class="dep-group">
+            <h3>Export Tool Dependencies</h3>
+            <p>Packages for the static site exporter: <code>fs-extra</code>, <code>handlebars</code>, <code>marked</code>.</p>
+            <form method="POST" action="?step=4" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+                <input type="hidden" name="action" value="install_export_deps">
+                <button type="submit" class="btn btn-secondary" <?php echo !$nodeAvailable ? 'disabled' : ''; ?>>Install Export Deps</button>
+            </form>
         </div>
-    </div>
+
+        <div class="dep-group">
+            <h3>SASS Compiler</h3>
+            <p>For theme development with SCSS support.</p>
+            <form method="POST" action="?step=4" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+                <input type="hidden" name="action" value="install_dev_deps">
+                <button type="submit" class="btn btn-secondary" <?php echo !$nodeAvailable ? 'disabled' : ''; ?>>Install SASS</button>
+            </form>
+        </div>
+
+        <div class="dep-group">
+            <h3>Tailwind CSS</h3>
+            <p>Utility-first CSS framework for modern theme development.</p>
+            <form method="POST" action="?step=4" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+                <input type="hidden" name="action" value="install_tailwind">
+                <button type="submit" class="btn btn-secondary" <?php echo !$nodeAvailable ? 'disabled' : ''; ?>>Install Tailwind</button>
+            </form>
+        </div>
+
+        <div class="btn-row">
+            <a href="?step=3" class="btn btn-outline">← Back</a>
+            <a href="?step=5" class="btn btn-primary">Continue →</a>
+        </div>
+
+    <?php elseif ($step === 5): // ── STEP 5: Finish ── ?>
+        <div class="finish-icon">🐺</div>
+        <h2 style="text-align:center;">Installation Complete</h2>
+        <p style="text-align:center; color:#94a3b8; font-size:0.9rem; margin-bottom:1.25rem;">
+            FearlessCMS is ready to use. Here's what to do next:
+        </p>
+
+        <ul class="finish-list">
+            <li>📋 Visit <a href="/admin/"><code>/admin/</code></a> to log in and configure your site.</li>
+            <li>🎨 Use the Themes section to customize your site's look.</li>
+            <li>🧩 Use the Store to browse and install plugins &amp; themes.</li>
+            <li>📤 Use <strong>Export Site</strong> in the Dashboard for a static version.</li>
+            <li>🔄 Use Updates in Mission Control to keep FearlessCMS current.</li>
+        </ul>
+
+        <div class="warning-box">
+            <h3>⚠️ Security: Delete This File</h3>
+            <p>
+                After installation, delete <code>install.php</code> to prevent unauthorized access.<br>
+                Run: <code>rm install.php</code>
+            </p>
+        </div>
+
+        <div style="text-align:center; margin-top:1.5rem;">
+            <a href="/admin/" class="btn btn-primary">Go to Mission Control →</a>
+        </div>
+
+    <?php endif; ?>
+
+    </div><!-- .card -->
+
+    <!-- CLI hint -->
+    <p style="text-align:center; margin-top:1.5rem; font-size:0.75rem; color:#475569;">
+        CLI available: <code>php install.php --help</code>
+    </p>
+</div>
+
 </body>
 </html>
