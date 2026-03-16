@@ -9,6 +9,7 @@
             "manage_menus",
             "manage_widgets",
             "edit_content",
+            "manage_content",
             "delete_content",
             "manage_roles"
         ]
