@@ -34,9 +34,16 @@ if (isset($_SESSION)) {
 // CSRF validation function
 function validate_csrf_token(): bool {
     if (!isset($_POST['csrf_token']) || !isset($_SESSION['csrf_token'])) {
+        error_log("CSRF validation failed - POST token: " . (isset($_POST['csrf_token']) ? 'set' : 'missing') . 
+                  ", SESSION token: " . (isset($_SESSION['csrf_token']) ? 'set' : 'missing') .
+                  ", Session ID: " . session_id());
         return false;
     }
-    return hash_equals($_SESSION['csrf_token'], $_POST['csrf_token']);
+    $result = hash_equals($_SESSION['csrf_token'], $_POST['csrf_token']);
+    if (!$result) {
+        error_log("CSRF token mismatch - POST: " . substr($_POST['csrf_token'], 0, 8) . "... vs SESSION: " . substr($_SESSION['csrf_token'], 0, 8) . "...");
+    }
+    return $result;
 }
 
 // Rate limiting for admin creation
