@@ -12,26 +12,26 @@ namespace PHPUnit\Framework\Attributes;
 use Attribute;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
 #[Attribute(Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]
-final readonly class DependsExternalUsingShallowClone
+final class DependsExternalUsingShallowClone
 {
     /**
-     * @var class-string
+     * @psalm-var class-string
      */
-    private string $className;
+    private readonly string $className;
 
     /**
-     * @var non-empty-string
+     * @psalm-var non-empty-string
      */
-    private string $methodName;
+    private readonly string $methodName;
 
     /**
-     * @param class-string     $className
-     * @param non-empty-string $methodName
+     * @psalm-param class-string $className
+     * @psalm-param non-empty-string $methodName
      */
     public function __construct(string $className, string $methodName)
     {
@@ -40,7 +40,7 @@ final readonly class DependsExternalUsingShallowClone
     }
 
     /**
-     * @return class-string
+     * @psalm-return class-string
      */
     public function className(): string
     {
@@ -48,7 +48,7 @@ final readonly class DependsExternalUsingShallowClone
     }
 
     /**
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     public function methodName(): string
     {

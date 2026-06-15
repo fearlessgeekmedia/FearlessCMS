@@ -19,19 +19,19 @@ use PHPUnit\Metadata\MetadataCollection;
 interface Parser
 {
     /**
-     * @param class-string $className
+     * @psalm-param class-string $className
      */
     public function forClass(string $className): MetadataCollection;
 
     /**
-     * @param class-string     $className
-     * @param non-empty-string $methodName
+     * @psalm-param class-string $className
+     * @psalm-param non-empty-string $methodName
      */
     public function forMethod(string $className, string $methodName): MetadataCollection;
 
     /**
-     * @param class-string     $className
-     * @param non-empty-string $methodName
+     * @psalm-param class-string $className
+     * @psalm-param non-empty-string $methodName
      */
     public function forClassAndMethod(string $className, string $methodName): MetadataCollection;
 }

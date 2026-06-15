@@ -11,9 +11,9 @@ use function Pest\testDirectory;
  */
 final class DatasetInfo
 {
-    public const string DATASETS_DIR_NAME = 'Datasets';
+    public const DATASETS_DIR_NAME = 'Datasets';
 
-    public const string DATASETS_FILE_NAME = 'Datasets.php';
+    public const DATASETS_FILE_NAME = 'Datasets.php';
 
     public static function isInsideADatasetsDirectory(string $file): bool
     {

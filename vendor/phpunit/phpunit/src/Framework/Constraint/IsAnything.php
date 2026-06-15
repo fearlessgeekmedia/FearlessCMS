@@ -9,6 +9,8 @@
  */
 namespace PHPUnit\Framework\Constraint;
 
+use PHPUnit\Framework\ExpectationFailedException;
+
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
@@ -24,7 +26,7 @@ final class IsAnything extends Constraint
      * a boolean value instead: true in case of success, false in case of a
      * failure.
      *
-     * @throws void
+     * @throws ExpectationFailedException
      */
     public function evaluate(mixed $other, string $description = '', bool $returnResult = false): ?bool
     {

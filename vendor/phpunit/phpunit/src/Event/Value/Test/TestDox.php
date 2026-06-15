@@ -10,15 +10,15 @@
 namespace PHPUnit\Event\Code;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class TestDox
+final class TestDox
 {
-    private string $prettifiedClassName;
-    private string $prettifiedMethodName;
-    private string $prettifiedAndColorizedMethodName;
+    private readonly string $prettifiedClassName;
+    private readonly string $prettifiedMethodName;
+    private readonly string $prettifiedAndColorizedMethodName;
 
     public function __construct(string $prettifiedClassName, string $prettifiedMethodName, string $prettifiedAndColorizedMethodName)
     {

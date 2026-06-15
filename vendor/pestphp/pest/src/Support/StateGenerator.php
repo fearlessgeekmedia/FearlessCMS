@@ -30,7 +30,6 @@ final class StateGenerator
                     $testResultEvent->throwable()
                 ));
             } else {
-                // @phpstan-ignore-next-line
                 $state->add(TestResult::fromBeforeFirstTestMethodErrored($testResultEvent));
             }
         }

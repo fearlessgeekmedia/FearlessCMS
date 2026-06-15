@@ -15,21 +15,21 @@ use PHPUnit\Event\Event;
 use PHPUnit\Event\Telemetry;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class MockObjectForIntersectionOfInterfacesCreated implements Event
+final class MockObjectForIntersectionOfInterfacesCreated implements Event
 {
-    private Telemetry\Info $telemetryInfo;
+    private readonly Telemetry\Info $telemetryInfo;
 
     /**
-     * @var list<class-string>
+     * @psalm-var list<class-string>
      */
-    private array $interfaces;
+    private readonly array $interfaces;
 
     /**
-     * @param list<class-string> $interfaces
+     * @psalm-param list<class-string> $interfaces
      */
     public function __construct(Telemetry\Info $telemetryInfo, array $interfaces)
     {
@@ -50,9 +50,6 @@ final readonly class MockObjectForIntersectionOfInterfacesCreated implements Eve
         return $this->interfaces;
     }
 
-    /**
-     * @return non-empty-string
-     */
     public function asString(): string
     {
         return sprintf(

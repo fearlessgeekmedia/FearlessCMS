@@ -8,8 +8,6 @@ use Closure;
 
 /**
  * @internal
- *
- * @template T of object
  */
 trait Extendable
 {
@@ -22,8 +20,6 @@ trait Extendable
 
     /**
      * Register a new extend.
-     *
-     * @param-closure-this T $extend
      */
     public function extend(string $name, Closure $extend): void
     {

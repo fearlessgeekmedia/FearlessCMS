@@ -21,11 +21,9 @@ use PHPUnit\TextUI\XmlConfiguration\Loader;
  *
  * @codeCoverageIgnore
  */
-final readonly class Builder
+final class Builder
 {
     /**
-     * @param list<string> $argv
-     *
      * @throws ConfigurationCannotBeBuiltException
      */
     public function build(array $argv): Configuration

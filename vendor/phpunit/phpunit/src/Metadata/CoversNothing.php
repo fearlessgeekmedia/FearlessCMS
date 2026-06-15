@@ -10,13 +10,16 @@
 namespace PHPUnit\Metadata;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class CoversNothing extends Metadata
+final class CoversNothing extends Metadata
 {
-    public function isCoversNothing(): true
+    /**
+     * @psalm-assert-if-true CoversNothing $this
+     */
+    public function isCoversNothing(): bool
     {
         return true;
     }

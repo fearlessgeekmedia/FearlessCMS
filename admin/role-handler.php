@@ -5,7 +5,7 @@ require_once dirname(__DIR__) . '/plugins/user-roles/user-roles.php';
 // Check if user is logged in
 // Session should already be started by session.php
 if (!isLoggedIn()) {
-    header('Location: login.php');
+    header('Location: login');
     exit;
 }
 

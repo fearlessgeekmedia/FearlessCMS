@@ -9,8 +9,6 @@
  */
 namespace PHPUnit\TestRunner\TestResult\Issues;
 
-use function array_keys;
-use function count;
 use PHPUnit\Event\Code\Test;
 
 /**
@@ -21,51 +19,45 @@ use PHPUnit\Event\Code\Test;
 final class Issue
 {
     /**
-     * @var non-empty-string
+     * @psalm-var non-empty-string
      */
     private readonly string $file;
 
     /**
-     * @var positive-int
+     * @psalm-var positive-int
      */
     private readonly int $line;
 
     /**
-     * @var non-empty-string
+     * @psalm-var non-empty-string
      */
     private readonly string $description;
 
     /**
-     * @var non-empty-array<non-empty-string, array{test: Test, count: int}>
+     * @psalm-var non-empty-array<non-empty-string, array{test: Test, count: int}>
      */
     private array $triggeringTests;
 
     /**
-     * @var ?non-empty-string
+     * @psalm-param non-empty-string $file
+     * @psalm-param positive-int $line
+     * @psalm-param non-empty-string $description
      */
-    private ?string $stackTrace;
-
-    /**
-     * @param non-empty-string $file
-     * @param positive-int     $line
-     * @param non-empty-string $description
-     */
-    public static function from(string $file, int $line, string $description, Test $triggeringTest, ?string $stackTrace = null): self
+    public static function from(string $file, int $line, string $description, Test $triggeringTest): self
     {
-        return new self($file, $line, $description, $triggeringTest, $stackTrace);
+        return new self($file, $line, $description, $triggeringTest);
     }
 
     /**
-     * @param non-empty-string $file
-     * @param positive-int     $line
-     * @param non-empty-string $description
+     * @psalm-param non-empty-string $file
+     * @psalm-param positive-int $line
+     * @psalm-param non-empty-string $description
      */
-    private function __construct(string $file, int $line, string $description, Test $triggeringTest, ?string $stackTrace)
+    private function __construct(string $file, int $line, string $description, Test $triggeringTest)
     {
         $this->file        = $file;
         $this->line        = $line;
         $this->description = $description;
-        $this->stackTrace  = $stackTrace;
 
         $this->triggeringTests = [
             $triggeringTest->id() => [
@@ -90,7 +82,7 @@ final class Issue
     }
 
     /**
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     public function file(): string
     {
@@ -98,7 +90,7 @@ final class Issue
     }
 
     /**
-     * @return positive-int
+     * @psalm-return positive-int
      */
     public function line(): int
     {
@@ -106,7 +98,7 @@ final class Issue
     }
 
     /**
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     public function description(): string
     {
@@ -114,32 +106,10 @@ final class Issue
     }
 
     /**
-     * @return non-empty-array<non-empty-string, array{test: Test, count: int}>
+     * @psalm-return non-empty-array<non-empty-string, array{test: Test, count: int}>
      */
     public function triggeringTests(): array
     {
         return $this->triggeringTests;
-    }
-
-    /**
-     * @phpstan-assert-if-true !null $this->stackTrace
-     */
-    public function hasStackTrace(): bool
-    {
-        return $this->stackTrace !== null;
-    }
-
-    /**
-     * @return ?non-empty-string
-     */
-    public function stackTrace(): ?string
-    {
-        return $this->stackTrace;
-    }
-
-    public function triggeredInTest(): bool
-    {
-        return count($this->triggeringTests) === 1 &&
-               $this->file === $this->triggeringTests[array_keys($this->triggeringTests)[0]]['test']->file();
     }
 }

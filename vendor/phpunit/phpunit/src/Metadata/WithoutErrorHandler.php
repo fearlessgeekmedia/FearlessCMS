@@ -10,13 +10,16 @@
 namespace PHPUnit\Metadata;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class WithoutErrorHandler extends Metadata
+final class WithoutErrorHandler extends Metadata
 {
-    public function isWithoutErrorHandler(): true
+    /**
+     * @psalm-assert-if-true WithoutErrorHandler $this
+     */
+    public function isWithoutErrorHandler(): bool
     {
         return true;
     }

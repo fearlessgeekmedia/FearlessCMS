@@ -10,7 +10,6 @@
 namespace PHPUnit\Runner;
 
 use function array_slice;
-use function assert;
 use function dirname;
 use function explode;
 use function implode;
@@ -26,7 +25,7 @@ final class Version
     private static string $version     = '';
 
     /**
-     * @return non-empty-string
+     * Returns the current version of PHPUnit.
      */
     public static function id(): string
     {
@@ -35,15 +34,12 @@ final class Version
         }
 
         if (self::$version === '') {
-            self::$version = (new VersionId('12.5.12', dirname(__DIR__, 2)))->asString();
+            self::$version = (new VersionId('10.5.63', dirname(__DIR__, 2)))->asString();
         }
 
         return self::$version;
     }
 
-    /**
-     * @return non-empty-string
-     */
     public static function series(): string
     {
         if (str_contains(self::id(), '-')) {
@@ -55,20 +51,11 @@ final class Version
         return implode('.', array_slice(explode('.', $version), 0, 2));
     }
 
-    /**
-     * @return positive-int
-     */
     public static function majorVersionNumber(): int
     {
-        $majorVersion = (int) explode('.', self::series())[0];
-        assert($majorVersion > 0);
-
-        return $majorVersion;
+        return (int) explode('.', self::series())[0];
     }
 
-    /**
-     * @return non-empty-string
-     */
     public static function getVersionString(): string
     {
         return 'PHPUnit ' . self::id() . ' by Sebastian Bergmann and contributors.';

@@ -9,6 +9,7 @@
  */
 namespace PHPUnit\Logging\TestDox;
 
+use function array_keys;
 use function array_merge;
 use function assert;
 use function is_subclass_of;
@@ -17,6 +18,7 @@ use function uksort;
 use function usort;
 use PHPUnit\Event\Code\TestMethod;
 use PHPUnit\Event\Code\Throwable;
+use PHPUnit\Event\EventFacadeIsSealedException;
 use PHPUnit\Event\Facade;
 use PHPUnit\Event\InvalidArgumentException;
 use PHPUnit\Event\Test\ConsideredRisky;
@@ -36,9 +38,11 @@ use PHPUnit\Event\Test\PhpWarningTriggered;
 use PHPUnit\Event\Test\Prepared;
 use PHPUnit\Event\Test\Skipped;
 use PHPUnit\Event\Test\WarningTriggered;
+use PHPUnit\Event\UnknownSubscriberTypeException;
 use PHPUnit\Framework\TestStatus\TestStatus;
 use PHPUnit\Logging\TestDox\TestResult as TestDoxTestMethod;
-use PHPUnit\TestRunner\IssueFilter;
+use PHPUnit\TextUI\Configuration\Source;
+use PHPUnit\TextUI\Configuration\SourceFilter;
 use ReflectionMethod;
 
 /**
@@ -48,25 +52,29 @@ use ReflectionMethod;
  */
 final class TestResultCollector
 {
-    private readonly IssueFilter $issueFilter;
+    private readonly Source $source;
 
     /**
-     * @var array<string, list<TestDoxTestMethod>>
+     * @psalm-var array<string, list<TestDoxTestMethod>>
      */
     private array $tests          = [];
     private ?TestStatus $status   = null;
     private ?Throwable $throwable = null;
     private bool $prepared        = false;
 
-    public function __construct(Facade $facade, IssueFilter $issueFilter)
+    /**
+     * @throws EventFacadeIsSealedException
+     * @throws UnknownSubscriberTypeException
+     */
+    public function __construct(Facade $facade, Source $source)
     {
-        $this->issueFilter = $issueFilter;
+        $this->source = $source;
 
         $this->registerSubscribers($facade);
     }
 
     /**
-     * @return array<string, TestResultCollection>
+     * @psalm-return array<string, TestResultCollection>
      */
     public function testMethodsGroupedByClass(): array
     {
@@ -85,9 +93,9 @@ final class TestResultCollector
                 $testsByDeclaringClass[$declaringClassName][] = $test;
             }
 
-            foreach ($testsByDeclaringClass as $declaringClassName) {
+            foreach (array_keys($testsByDeclaringClass) as $declaringClassName) {
                 usort(
-                    $declaringClassName,
+                    $testsByDeclaringClass[$declaringClassName],
                     static function (TestDoxTestMethod $a, TestDoxTestMethod $b): int
                     {
                         return $a->test()->line() <=> $b->test()->line();
@@ -98,8 +106,8 @@ final class TestResultCollector
             uksort(
                 $testsByDeclaringClass,
                 /**
-                 * @param class-string $a
-                 * @param class-string $b
+                 * @psalm-param class-string $a
+                 * @psalm-param class-string $b
                  */
                 static function (string $a, string $b): int
                 {
@@ -208,11 +216,23 @@ final class TestResultCollector
 
     public function testTriggeredDeprecation(DeprecationTriggered $event): void
     {
-        if (!$this->issueFilter->shouldBeProcessed($event, true)) {
+        if (!$event->test()->isTestMethod()) {
+            return;
+        }
+
+        if ($event->ignoredByTest()) {
             return;
         }
 
         if ($event->ignoredByBaseline()) {
+            return;
+        }
+
+        if (!$this->source->ignoreSuppressionOfDeprecations() && $event->wasSuppressed()) {
+            return;
+        }
+
+        if ($this->source->restrictDeprecations() && !SourceFilter::instance()->includes($event->file())) {
             return;
         }
 
@@ -221,11 +241,19 @@ final class TestResultCollector
 
     public function testTriggeredNotice(NoticeTriggered $event): void
     {
-        if (!$this->issueFilter->shouldBeProcessed($event, true)) {
+        if (!$event->test()->isTestMethod()) {
             return;
         }
 
         if ($event->ignoredByBaseline()) {
+            return;
+        }
+
+        if (!$this->source->ignoreSuppressionOfNotices() && $event->wasSuppressed()) {
+            return;
+        }
+
+        if ($this->source->restrictNotices() && !SourceFilter::instance()->includes($event->file())) {
             return;
         }
 
@@ -234,11 +262,19 @@ final class TestResultCollector
 
     public function testTriggeredWarning(WarningTriggered $event): void
     {
-        if (!$this->issueFilter->shouldBeProcessed($event, true)) {
+        if (!$event->test()->isTestMethod()) {
             return;
         }
 
         if ($event->ignoredByBaseline()) {
+            return;
+        }
+
+        if (!$this->source->ignoreSuppressionOfWarnings() && $event->wasSuppressed()) {
+            return;
+        }
+
+        if ($this->source->restrictWarnings() && !SourceFilter::instance()->includes($event->file())) {
             return;
         }
 
@@ -247,11 +283,23 @@ final class TestResultCollector
 
     public function testTriggeredPhpDeprecation(PhpDeprecationTriggered $event): void
     {
-        if (!$this->issueFilter->shouldBeProcessed($event, true)) {
+        if (!$event->test()->isTestMethod()) {
+            return;
+        }
+
+        if ($event->ignoredByTest()) {
             return;
         }
 
         if ($event->ignoredByBaseline()) {
+            return;
+        }
+
+        if (!$this->source->ignoreSuppressionOfPhpDeprecations() && $event->wasSuppressed()) {
+            return;
+        }
+
+        if ($this->source->restrictDeprecations() && !SourceFilter::instance()->includes($event->file())) {
             return;
         }
 
@@ -260,11 +308,19 @@ final class TestResultCollector
 
     public function testTriggeredPhpNotice(PhpNoticeTriggered $event): void
     {
-        if (!$this->issueFilter->shouldBeProcessed($event, true)) {
+        if (!$event->test()->isTestMethod()) {
             return;
         }
 
         if ($event->ignoredByBaseline()) {
+            return;
+        }
+
+        if (!$this->source->ignoreSuppressionOfPhpNotices() && $event->wasSuppressed()) {
+            return;
+        }
+
+        if ($this->source->restrictNotices() && !SourceFilter::instance()->includes($event->file())) {
             return;
         }
 
@@ -273,11 +329,19 @@ final class TestResultCollector
 
     public function testTriggeredPhpWarning(PhpWarningTriggered $event): void
     {
-        if (!$this->issueFilter->shouldBeProcessed($event, true)) {
+        if (!$event->test()->isTestMethod()) {
             return;
         }
 
         if ($event->ignoredByBaseline()) {
+            return;
+        }
+
+        if (!$this->source->ignoreSuppressionOfPhpWarnings() && $event->wasSuppressed()) {
+            return;
+        }
+
+        if ($this->source->restrictWarnings() && !SourceFilter::instance()->includes($event->file())) {
             return;
         }
 
@@ -308,10 +372,6 @@ final class TestResultCollector
             return;
         }
 
-        if ($event->ignoredByTest()) {
-            return;
-        }
-
         $this->updateTestStatus(TestStatus::warning());
     }
 
@@ -335,6 +395,10 @@ final class TestResultCollector
         $this->prepared  = false;
     }
 
+    /**
+     * @throws EventFacadeIsSealedException
+     * @throws UnknownSubscriberTypeException
+     */
     private function registerSubscribers(Facade $facade): void
     {
         $facade->registerSubscribers(

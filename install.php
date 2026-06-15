@@ -88,7 +88,6 @@ $UPDATES_DIR = $projectRoot . '/.fcms_updates';
 $ALLOWED_COMMANDS = [
     'which' => ['which'],
     'npm' => ['npm', 'init', '-y'],
-    'npm_install' => ['npm', 'install', 'fs-extra', 'handlebars', 'marked', '--save'],
     'npm_install_dev' => ['npm', 'install', 'sass', '--save-dev'],
     'npm_install_tailwind' => ['npm', 'install', 'tailwindcss@^3.4.0', '--save-dev'],
     'npx_tailwind_build' => ['npx', 'tailwindcss', '-i', './src/input.css', '-o', './public/css/output.css', '--minify']
@@ -143,7 +142,7 @@ function run_cmd(array $cmd, ?string $cwd = null): array {
 
 // ── CLI MODE ──────────────────────────────────────────────────────────
 if (PHP_SAPI === 'cli') {
-    $options = getopt('', ['check', 'create-dirs', 'install-export-deps', 'install-tailwind', 'install-dev-deps', 'create-admin:', 'password:', 'password-file:']);
+    $options = getopt('', ['check', 'create-dirs', 'install-tailwind', 'install-dev-deps', 'create-admin:', 'password:', 'password-file:']);
     $exitCode = 0;
 
     if (isset($options['check'])) {
@@ -190,26 +189,6 @@ if (PHP_SAPI === 'cli') {
         if (file_exists($configPath)) {
             require_once $configPath;
             echo "Initialized default configuration files.\n";
-        }
-    }
-
-    if (isset($options['install-export-deps'])) {
-        $node = run_cmd(['which', 'node']);
-        $npm = run_cmd(['which', 'npm']);
-        if ($node['code'] !== 0 || $npm['code'] !== 0) {
-            echo "Node.js or npm not found.\n";
-            $exitCode = 1;
-        } else {
-            if (!file_exists($projectRoot . '/package.json')) {
-                $init = run_cmd(['npm', 'init', '-y'], $projectRoot);
-                echo 'npm init: exit ' . $init['code'] . "\n";
-                if ($init['code'] !== 0) $exitCode = 1;
-            }
-            $install = run_cmd(['npm', 'install', 'fs-extra', 'handlebars', 'marked', '--save'], $projectRoot);
-            echo 'npm install: exit ' . $install['code'] . "\n";
-            if (trim($install['out'])) echo strip_tags($install['out']) . "\n";
-            if (trim($install['err'])) echo strip_tags($install['err']) . "\n";
-            if ($install['code'] !== 0) $exitCode = 1;
         }
     }
 
@@ -304,7 +283,7 @@ if (PHP_SAPI === 'cli') {
     }
 
     if (empty($options)) {
-        echo "Usage: php install.php [--check] [--create-dirs] [--install-export-deps] [--install-dev-deps] [--install-tailwind] [--create-admin=<username> --password=<pwd>|--password-file=<file>]\n";
+        echo "Usage: php install.php [--check] [--create-dirs] [--install-dev-deps] [--install-tailwind] [--create-admin=<username> --password=<pwd>|--password-file=<file>]\n";
     }
 
     echo "\n⚠️  SECURITY WARNING: After installation, delete this file!\n";
@@ -350,25 +329,6 @@ if ($action === 'create_dirs') {
     }
     if ($allOk && empty($errorMessages)) {
         $resultMessages[] = 'All directories created successfully.';
-    }
-}
-
-if ($action === 'install_export_deps') {
-    $node = run_cmd(['which', 'node']);
-    $npm = run_cmd(['which', 'npm']);
-    if ($node['code'] !== 0 || $npm['code'] !== 0) {
-        $errorMessages[] = 'Node.js or npm not found. Please install Node.js first.';
-    } else {
-        if (!file_exists($projectRoot . '/package.json')) {
-            $init = run_cmd(['npm', 'init', '-y'], $projectRoot);
-            if ($init['code'] !== 0) $errorMessages[] = 'npm init failed.';
-        }
-        $install = run_cmd(['npm', 'install', 'fs-extra', 'handlebars', 'marked', '--save'], $projectRoot);
-        if ($install['code'] === 0) {
-            $resultMessages[] = 'Node dependencies installed successfully.';
-        } else {
-            $errorMessages[] = 'npm install failed: ' . htmlspecialchars(trim($install['err']));
-        }
     }
 }
 
@@ -1027,16 +987,6 @@ $steps = [
         <p style="font-size:0.8rem; color:#64748b; margin-bottom:0.75rem; margin-top:1.5rem;">The following are optional and can be installed later:</p>
 
         <div class="dep-group">
-            <h3>Export Tool Dependencies</h3>
-            <p>Packages for the static site exporter: <code>fs-extra</code>, <code>handlebars</code>, <code>marked</code>.</p>
-            <form method="POST" action="?step=4" style="display:inline;">
-                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
-                <input type="hidden" name="action" value="install_export_deps">
-                <button type="submit" class="btn btn-secondary" <?php echo !$nodeAvailable ? 'disabled' : ''; ?>>Install Export Deps</button>
-            </form>
-        </div>
-
-        <div class="dep-group">
             <h3>SASS Compiler</h3>
             <p>For theme development with SCSS support.</p>
             <form method="POST" action="?step=4" style="display:inline;">
@@ -1098,7 +1048,6 @@ $steps = [
 (function() {
     var labels = {
         install_tailwind: ['Installing Tailwind CSS & building styles…', 'This may take up to a minute'],
-        install_export_deps: ['Installing export dependencies…', 'Downloading packages from npm'],
         install_dev_deps: ['Installing SASS compiler…', 'Downloading packages from npm'],
         create_dirs: ['Creating directories…', 'Setting up file structure'],
         create_admin: ['Creating admin account…', 'Almost instant']

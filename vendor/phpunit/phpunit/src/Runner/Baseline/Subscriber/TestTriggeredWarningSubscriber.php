@@ -18,7 +18,7 @@ use PHPUnit\Runner\FileDoesNotExistException;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class TestTriggeredWarningSubscriber extends Subscriber implements WarningTriggeredSubscriber
+final class TestTriggeredWarningSubscriber extends Subscriber implements WarningTriggeredSubscriber
 {
     /**
      * @throws FileDoesNotExistException

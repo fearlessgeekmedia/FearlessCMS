@@ -22,7 +22,7 @@ use function str_starts_with;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class Filesystem
+final class Filesystem
 {
     public static function createDirectory(string $directory): bool
     {
@@ -30,7 +30,7 @@ final readonly class Filesystem
     }
 
     /**
-     * @param non-empty-string $path
+     * @psalm-param non-empty-string $path
      *
      * @return false|non-empty-string
      */

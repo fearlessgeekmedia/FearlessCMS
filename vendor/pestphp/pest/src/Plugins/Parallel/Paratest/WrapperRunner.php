@@ -17,10 +17,8 @@ use ParaTest\WrapperRunner\WrapperWorker;
 use Pest\Result;
 use Pest\TestSuite;
 use PHPUnit\Event\Facade as EventFacade;
-use PHPUnit\Event\Test\AfterLastTestMethodFailed;
 use PHPUnit\Event\TestRunner\WarningTriggered;
 use PHPUnit\Runner\CodeCoverage;
-use PHPUnit\Runner\ResultCache\DefaultResultCache;
 use PHPUnit\TestRunner\TestResult\Facade as TestResultFacade;
 use PHPUnit\TestRunner\TestResult\TestResult;
 use PHPUnit\TextUI\Configuration\CodeCoverageFilterRegistry;
@@ -48,27 +46,15 @@ use function usleep;
  */
 final class WrapperRunner implements RunnerInterface
 {
-    /**
-     * The time to sleep between cycles.
-     */
-    private const int CYCLE_SLEEP = 10000;
+    private const CYCLE_SLEEP = 10000;
 
-    /**
-     * The result printer.
-     */
     private readonly ResultPrinter $printer;
 
-    /**
-     * The timer.
-     */
     private readonly Timer $timer;
 
     /** @var list<non-empty-string> */
     private array $pending = [];
 
-    /**
-     * The exit code.
-     */
     private int $exitcode = -1;
 
     /** @var array<positive-int,WrapperWorker> */
@@ -81,10 +67,7 @@ final class WrapperRunner implements RunnerInterface
     private array $unexpectedOutputFiles = [];
 
     /** @var list<SplFileInfo> */
-    private array $resultCacheFiles = [];
-
-    /** @var list<SplFileInfo> */
-    private array $testResultFiles = [];
+    private array $testresultFiles = [];
 
     /** @var list<SplFileInfo> */
     private array $coverageFiles = [];
@@ -101,9 +84,6 @@ final class WrapperRunner implements RunnerInterface
     /** @var non-empty-string[] */
     private readonly array $parameters;
 
-    /**
-     * The code coverage filter registry.
-     */
     private CodeCoverageFilterRegistry $codeCoverageFilterRegistry;
 
     public function __construct(
@@ -126,9 +106,6 @@ final class WrapperRunner implements RunnerInterface
         if ($options->passthruPhp !== null) {
             $parameters = array_merge($parameters, $options->passthruPhp);
         }
-
-        /** @var array<int, non-empty-string> $parameters */
-        $parameters = $this->handleLaravelHerd($parameters);
 
         $parameters[] = $wrapper;
 
@@ -159,21 +136,6 @@ final class WrapperRunner implements RunnerInterface
         $this->waitForAllToFinish();
 
         return $this->complete($result);
-    }
-
-    /**
-     * Handles Laravel Herd's debug and coverage modes.
-     *
-     * @param  array<string>  $parameters
-     * @return array<string>
-     */
-    private function handleLaravelHerd(array $parameters): array
-    {
-        if (isset($_ENV['HERD_DEBUG_INI'])) {
-            return array_merge($parameters, ['-c', $_ENV['HERD_DEBUG_INI']]);
-        }
-
-        return $parameters;
     }
 
     private function startWorkers(): void
@@ -269,8 +231,7 @@ final class WrapperRunner implements RunnerInterface
         $this->batches[$token] = 0;
 
         $this->unexpectedOutputFiles[] = $worker->unexpectedOutputFile;
-        $this->unexpectedOutputFiles[] = $worker->unexpectedOutputFile;
-        $this->testResultFiles[] = $worker->testResultFile;
+        $this->testresultFiles[] = $worker->testresultFile;
 
         if (isset($worker->junitFile)) {
             $this->junitFiles[] = $worker->junitFile;
@@ -304,52 +265,37 @@ final class WrapperRunner implements RunnerInterface
 
     private function complete(TestResult $testResultSum): int
     {
-        foreach ($this->testResultFiles as $testResultFile) {
-            if (! $testResultFile->isFile()) {
+        foreach ($this->testresultFiles as $testresultFile) {
+            if (! $testresultFile->isFile()) {
                 continue;
             }
 
-            $contents = file_get_contents($testResultFile->getPathname());
+            $contents = file_get_contents($testresultFile->getPathname());
             assert($contents !== false);
             $testResult = unserialize($contents);
             assert($testResult instanceof TestResult);
-
-            /** @var list<AfterLastTestMethodFailed> $failedEvents */
-            $failedEvents = array_merge_recursive($testResultSum->testFailedEvents(), $testResult->testFailedEvents());
 
             $testResultSum = new TestResult(
                 (int) $testResultSum->hasTests() + (int) $testResult->hasTests(),
                 $testResultSum->numberOfTestsRun() + $testResult->numberOfTestsRun(),
                 $testResultSum->numberOfAssertions() + $testResult->numberOfAssertions(),
                 array_merge_recursive($testResultSum->testErroredEvents(), $testResult->testErroredEvents()),
-                $failedEvents,
+                array_merge_recursive($testResultSum->testFailedEvents(), $testResult->testFailedEvents()),
                 array_merge_recursive($testResultSum->testConsideredRiskyEvents(), $testResult->testConsideredRiskyEvents()),
                 array_merge_recursive($testResultSum->testSuiteSkippedEvents(), $testResult->testSuiteSkippedEvents()),
                 array_merge_recursive($testResultSum->testSkippedEvents(), $testResult->testSkippedEvents()),
                 array_merge_recursive($testResultSum->testMarkedIncompleteEvents(), $testResult->testMarkedIncompleteEvents()),
                 array_merge_recursive($testResultSum->testTriggeredPhpunitDeprecationEvents(), $testResult->testTriggeredPhpunitDeprecationEvents()),
                 array_merge_recursive($testResultSum->testTriggeredPhpunitErrorEvents(), $testResult->testTriggeredPhpunitErrorEvents()),
-                array_merge_recursive($testResultSum->testTriggeredPhpunitNoticeEvents(), $testResult->testTriggeredPhpunitNoticeEvents()),
                 array_merge_recursive($testResultSum->testTriggeredPhpunitWarningEvents(), $testResult->testTriggeredPhpunitWarningEvents()),
-                // @phpstan-ignore-next-line
                 array_merge_recursive($testResultSum->testRunnerTriggeredDeprecationEvents(), $testResult->testRunnerTriggeredDeprecationEvents()),
-                // @phpstan-ignore-next-line
-                array_merge_recursive($testResultSum->testRunnerTriggeredNoticeEvents(), $testResult->testRunnerTriggeredNoticeEvents()),
-                // @phpstan-ignore-next-line
                 array_merge_recursive($testResultSum->testRunnerTriggeredWarningEvents(), $testResult->testRunnerTriggeredWarningEvents()),
-                // @phpstan-ignore-next-line
                 array_merge_recursive($testResultSum->errors(), $testResult->errors()),
-                // @phpstan-ignore-next-line
                 array_merge_recursive($testResultSum->deprecations(), $testResult->deprecations()),
-                // @phpstan-ignore-next-line
                 array_merge_recursive($testResultSum->notices(), $testResult->notices()),
-                // @phpstan-ignore-next-line
                 array_merge_recursive($testResultSum->warnings(), $testResult->warnings()),
-                // @phpstan-ignore-next-line
                 array_merge_recursive($testResultSum->phpDeprecations(), $testResult->phpDeprecations()),
-                // @phpstan-ignore-next-line
                 array_merge_recursive($testResultSum->phpNotices(), $testResult->phpNotices()),
-                // @phpstan-ignore-next-line
                 array_merge_recursive($testResultSum->phpWarnings(), $testResult->phpWarnings()),
                 $testResultSum->numberOfIssuesIgnoredByBaseline() + $testResult->numberOfIssuesIgnoredByBaseline(),
             );
@@ -367,10 +313,8 @@ final class WrapperRunner implements RunnerInterface
             $testResultSum->testMarkedIncompleteEvents(),
             $testResultSum->testTriggeredPhpunitDeprecationEvents(),
             $testResultSum->testTriggeredPhpunitErrorEvents(),
-            $testResultSum->testTriggeredPhpunitNoticeEvents(),
             $testResultSum->testTriggeredPhpunitWarningEvents(),
             $testResultSum->testRunnerTriggeredDeprecationEvents(),
-            $testResultSum->testRunnerTriggeredNoticeEvents(),
             array_values(array_filter(
                 $testResultSum->testRunnerTriggeredWarningEvents(),
                 fn (WarningTriggered $event): bool => ! str_contains($event->message(), 'No tests found')
@@ -383,19 +327,8 @@ final class WrapperRunner implements RunnerInterface
             $testResultSum->phpNotices(),
             $testResultSum->phpWarnings(),
             $testResultSum->numberOfIssuesIgnoredByBaseline(),
+
         );
-
-        if ($this->options->configuration->cacheResult()) {
-            $resultCacheSum = new DefaultResultCache($this->options->configuration->testResultCacheFile());
-            foreach ($this->resultCacheFiles as $resultCacheFile) {
-                $resultCache = new DefaultResultCache($resultCacheFile->getPathname());
-                $resultCache->load();
-
-                $resultCacheSum->mergeWith($resultCache);
-            }
-
-            $resultCacheSum->persist();
-        }
 
         $this->printer->printResults(
             $testResultSum,
@@ -409,7 +342,7 @@ final class WrapperRunner implements RunnerInterface
         $exitcode = Result::exitCode($this->options->configuration, $testResultSum);
 
         $this->clearFiles($this->unexpectedOutputFiles);
-        $this->clearFiles($this->testResultFiles);
+        $this->clearFiles($this->testresultFiles);
         $this->clearFiles($this->coverageFiles);
         $this->clearFiles($this->junitFiles);
         $this->clearFiles($this->teamcityFiles);
@@ -457,7 +390,6 @@ final class WrapperRunner implements RunnerInterface
         }
 
         $testSuite = (new LogMerger)->merge($this->junitFiles);
-        assert($testSuite instanceof \ParaTest\JUnit\TestSuite);
         (new Writer)->write(
             $testSuite,
             $this->options->configuration->logfileJunit(),

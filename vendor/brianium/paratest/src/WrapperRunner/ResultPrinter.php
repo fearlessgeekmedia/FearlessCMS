@@ -5,13 +5,11 @@ declare(strict_types=1);
 namespace ParaTest\WrapperRunner;
 
 use ParaTest\Options;
-use PHPUnit\Logging\TestDox\TestResultCollection as TestDoxTestResultCollection;
 use PHPUnit\Runner\TestSuiteSorter;
 use PHPUnit\TestRunner\TestResult\TestResult;
 use PHPUnit\TextUI\Output\Default\ResultPrinter as DefaultResultPrinter;
 use PHPUnit\TextUI\Output\Printer;
 use PHPUnit\TextUI\Output\SummaryPrinter;
-use PHPUnit\TextUI\Output\TestDox\ResultPrinter as TestDoxResultPrinter;
 use PHPUnit\Util\Color;
 use SebastianBergmann\CodeCoverage\Driver\Selector;
 use SebastianBergmann\CodeCoverage\Filter;
@@ -105,10 +103,6 @@ final class ResultPrinter
         // @see \PHPUnit\TextUI\Application::writeRuntimeInformation()
         $write('Processes', (string) $this->options->processes);
 
-        if ($this->options->hasShard()) {
-            $write('Shard', $this->options->currentShard . '/' . $this->options->totalShards);
-        }
-
         $runtime = 'PHP ' . PHP_VERSION;
 
         if ($this->options->configuration->hasCoverageReport()) {
@@ -176,10 +170,10 @@ final class ResultPrinter
     }
 
     /**
-     * @param list<SplFileInfo>                         $teamcityFiles
-     * @param array<string,TestDoxTestResultCollection> $testdoxResults
+     * @param list<SplFileInfo> $teamcityFiles
+     * @param list<SplFileInfo> $testdoxFiles
      */
-    public function printResults(TestResult $testResult, array $teamcityFiles, array $testdoxResults): void
+    public function printResults(TestResult $testResult, array $teamcityFiles, array $testdoxFiles): void
     {
         if ($this->options->needsTeamcity) {
             $teamcityProgress = $this->tailMultiple($teamcityFiles);
@@ -203,46 +197,39 @@ final class ResultPrinter
 
         $defaultResultPrinter = new DefaultResultPrinter(
             $this->printer,
-            $this->options->configuration->displayDetailsOnPhpunitDeprecations() || $this->options->configuration->displayDetailsOnAllIssues(),
-            true,
-            $this->options->configuration->displayDetailsOnPhpunitNotices() || $this->options->configuration->displayDetailsOnAllIssues(),
             true,
             true,
+            $this->options->configuration->displayDetailsOnPhpunitDeprecations(),
             true,
             true,
-            $this->options->configuration->displayDetailsOnIncompleteTests() || $this->options->configuration->displayDetailsOnAllIssues(),
-            $this->options->configuration->displayDetailsOnSkippedTests() || $this->options->configuration->displayDetailsOnAllIssues(),
-            $this->options->configuration->displayDetailsOnTestsThatTriggerDeprecations() || $this->options->configuration->displayDetailsOnAllIssues(),
-            $this->options->configuration->displayDetailsOnTestsThatTriggerErrors() || $this->options->configuration->displayDetailsOnAllIssues(),
-            $this->options->configuration->displayDetailsOnTestsThatTriggerNotices() || $this->options->configuration->displayDetailsOnAllIssues(),
-            $this->options->configuration->displayDetailsOnTestsThatTriggerWarnings() || $this->options->configuration->displayDetailsOnAllIssues(),
-            $this->options->configuration->reverseDefectList(),
+            true,
+            $this->options->configuration->displayDetailsOnIncompleteTests(),
+            $this->options->configuration->displayDetailsOnSkippedTests(),
+            $this->options->configuration->displayDetailsOnTestsThatTriggerDeprecations(),
+            $this->options->configuration->displayDetailsOnTestsThatTriggerErrors(),
+            $this->options->configuration->displayDetailsOnTestsThatTriggerNotices(),
+            $this->options->configuration->displayDetailsOnTestsThatTriggerWarnings(),
+            false,
         );
 
         if ($this->options->configuration->outputIsTestDox()) {
-            (new TestDoxResultPrinter(
-                $this->printer,
-                $this->options->configuration->colors(),
-                $this->options->configuration->columns(),
-                $this->options->configuration->testDoxOutputWithSummary(),
-            ))->print($testResult, $testdoxResults);
+            $this->output->write($this->tailMultiple($testdoxFiles));
 
             $defaultResultPrinter = new DefaultResultPrinter(
                 $this->printer,
-                $this->options->configuration->displayDetailsOnPhpunitDeprecations() || $this->options->configuration->displayDetailsOnAllIssues(),
                 true,
-                $this->options->configuration->displayDetailsOnPhpunitNotices() || $this->options->configuration->displayDetailsOnAllIssues(),
                 true,
+                $this->options->configuration->displayDetailsOnPhpunitDeprecations(),
                 false,
                 false,
-                true,
                 false,
                 false,
-                $this->options->configuration->displayDetailsOnTestsThatTriggerDeprecations() || $this->options->configuration->displayDetailsOnAllIssues(),
-                $this->options->configuration->displayDetailsOnTestsThatTriggerErrors() || $this->options->configuration->displayDetailsOnAllIssues(),
-                $this->options->configuration->displayDetailsOnTestsThatTriggerNotices() || $this->options->configuration->displayDetailsOnAllIssues(),
-                $this->options->configuration->displayDetailsOnTestsThatTriggerWarnings() || $this->options->configuration->displayDetailsOnAllIssues(),
-                $this->options->configuration->reverseDefectList(),
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
             );
         }
 

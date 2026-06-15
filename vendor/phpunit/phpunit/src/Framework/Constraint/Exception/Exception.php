@@ -68,7 +68,7 @@ final class Exception extends Constraint
 
         if ($other instanceof Throwable) {
             $message = '. Message was: "' . $other->getMessage() . '" at'
-                . "\n" . Filter::stackTraceFromThrowableAsString($other);
+                . "\n" . Filter::getFilteredStacktrace($other);
         }
 
         return sprintf(

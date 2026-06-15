@@ -30,12 +30,9 @@ use Pest\Expectations\HigherOrderExpectation;
 use Pest\Expectations\OppositeExpectation;
 use Pest\Matchers\Any;
 use Pest\Support\ExpectationPipeline;
-use Pest\Support\Reflection;
 use PHPUnit\Architecture\Elements\ObjectDescription;
 use PHPUnit\Framework\ExpectationFailedException;
 use ReflectionEnum;
-use ReflectionMethod;
-use ReflectionProperty;
 
 /**
  * @template TValue
@@ -52,9 +49,7 @@ use ReflectionProperty;
  */
 final class Expectation
 {
-    /** @use Extendable<self<TValue>> */
     use Extendable;
-
     use Pipeable;
     use Retrievable;
 
@@ -225,7 +220,7 @@ final class Expectation
             throw new BadMethodCallException('Expectation value is not iterable.');
         }
 
-        if ($callbacks === []) {
+        if (count($callbacks) == 0) {
             throw new InvalidArgumentException('No sequence expectations defined.');
         }
 
@@ -266,7 +261,7 @@ final class Expectation
         $matched = false;
 
         foreach ($expressions as $key => $callback) {
-            if ($subject != $key) { // @pest-arch-ignore-line
+            if ($subject != $key) {
                 continue;
             }
 
@@ -332,7 +327,7 @@ final class Expectation
      * @param  array<int, mixed>  $parameters
      * @return Expectation<TValue>|HigherOrderExpectation<Expectation<TValue>, TValue>
      */
-    public function __call(string $method, array $parameters): Expectation|HigherOrderExpectation|PendingArchExpectation|ArchExpectation
+    public function __call(string $method, array $parameters): Expectation|HigherOrderExpectation|PendingArchExpectation
     {
         if (! self::hasMethod($method)) {
             if (! is_object($this->value) && method_exists(PendingArchExpectation::class, $method)) {
@@ -356,10 +351,6 @@ final class Expectation
         $closure = $this->getExpectationClosure($method);
         $reflectionClosure = new \ReflectionFunction($closure);
         $expectation = $reflectionClosure->getClosureThis();
-
-        if ($reflectionClosure->getReturnType()?->__toString() === ArchExpectation::class) {
-            return $closure(...$parameters);
-        }
 
         assert(is_object($expectation));
 
@@ -386,7 +377,7 @@ final class Expectation
         if (self::hasExtend($name)) {
             $extend = self::$extends[$name]->bindTo($this, Expectation::class);
 
-            if ($extend != false) { // @pest-arch-ignore-line
+            if ($extend != false) {
                 return $extend;
             }
         }
@@ -399,7 +390,7 @@ final class Expectation
      *
      * @return Expectation<TValue>|OppositeExpectation<TValue>|EachExpectation<TValue>|HigherOrderExpectation<Expectation<TValue>, TValue|null>|TValue
      */
-    public function __get(string $name): mixed
+    public function __get(string $name)
     {
         if (! self::hasMethod($name)) {
             if (! is_object($this->value) && method_exists(PendingArchExpectation::class, $name)) {
@@ -444,93 +435,15 @@ final class Expectation
     }
 
     /**
-     * Asserts that the given expectation target does have the given permissions
-     */
-    public function toHaveFileSystemPermissions(string $permissions): ArchExpectation
-    {
-        return Targeted::make(
-            $this,
-            fn (ObjectDescription $object): bool => substr(sprintf('%o', fileperms($object->path)), -4) === $permissions,
-            sprintf('permissions to be [%s]', $permissions),
-            FileLineFinder::where(fn (string $line): bool => str_contains($line, '<?php')),
-        );
-    }
-
-    /**
-     * Asserts that the given expectation target to have line count less than the given number.
-     */
-    public function toHaveLineCountLessThan(int $lines): ArchExpectation
-    {
-        return Targeted::make(
-            $this,
-            fn (ObjectDescription $object): bool => count(file($object->path)) < $lines, // @phpstan-ignore-line
-            sprintf('to have less than %d lines of code', $lines),
-            FileLineFinder::where(fn (string $line): bool => str_contains($line, '<?php')),
-        );
-    }
-
-    /**
-     * Asserts that the given expectation target have all methods documented.
-     */
-    public function toHaveMethodsDocumented(): ArchExpectation
-    {
-        return Targeted::make(
-            $this,
-            fn (ObjectDescription $object): bool => isset($object->reflectionClass) === false
-                || array_filter(
-                    Reflection::getMethodsFromReflectionClass($object->reflectionClass),
-                    fn (ReflectionMethod $method): bool => (enum_exists($object->name) === false || in_array($method->name, ['from', 'tryFrom', 'cases'], true) === false)
-                        && realpath($method->getFileName() ?: '/') === realpath($object->path) // @phpstan-ignore-line
-                        && $method->getDocComment() === false,
-                ) === [],
-            'to have methods with documentation / annotations',
-            FileLineFinder::where(fn (string $line): bool => str_contains($line, 'class'))
-        );
-    }
-
-    /**
-     * Asserts that the given expectation target have all properties documented.
-     */
-    public function toHavePropertiesDocumented(): ArchExpectation
-    {
-        return Targeted::make(
-            $this,
-            fn (ObjectDescription $object): bool => isset($object->reflectionClass) === false
-                || array_filter(
-                    Reflection::getPropertiesFromReflectionClass($object->reflectionClass),
-                    fn (ReflectionProperty $property): bool => (enum_exists($object->name) === false || in_array($property->name, ['value', 'name'], true) === false)
-                        && realpath($property->getDeclaringClass()->getFileName() ?: '/') === realpath($object->path) // @phpstan-ignore-line
-                        && $property->isPromoted() === false
-                        && $property->getDocComment() === false,
-                ) === [],
-            'to have properties with documentation / annotations',
-            FileLineFinder::where(fn (string $line): bool => str_contains($line, 'class'))
-        );
-    }
-
-    /**
      * Asserts that the given expectation target use the "declare(strict_types=1)" declaration.
      */
     public function toUseStrictTypes(): ArchExpectation
     {
         return Targeted::make(
             $this,
-            fn (ObjectDescription $object): bool => (bool) preg_match('/^<\?php\s*(\/\*[\s\S]*?\*\/|\/\/[^\r\n]*(?:\r?\n|$)|\s)*declare\s*\(\s*strict_types\s*=\s*1\s*\)\s*;/m', (string) file_get_contents($object->path)),
+            fn (ObjectDescription $object): bool => (bool) preg_match('/^<\?php\s+declare\(.*?strict_types\s?=\s?1.*?\);/', (string) file_get_contents($object->path)),
             'to use strict types',
             FileLineFinder::where(fn (string $line): bool => str_contains($line, '<?php')),
-        );
-    }
-
-    /**
-     * Asserts that the given expectation target uses strict equality.
-     */
-    public function toUseStrictEquality(): ArchExpectation
-    {
-        return Targeted::make(
-            $this,
-            fn (ObjectDescription $object): bool => ! str_contains((string) file_get_contents($object->path), ' == ') && ! str_contains((string) file_get_contents($object->path), ' != '),
-            'to use strict equality',
-            FileLineFinder::where(fn (string $line): bool => str_contains($line, ' == ') || str_contains($line, ' != ')),
         );
     }
 
@@ -541,7 +454,7 @@ final class Expectation
     {
         return Targeted::make(
             $this,
-            fn (ObjectDescription $object): bool => ! enum_exists($object->name) && isset($object->reflectionClass) && $object->reflectionClass->isFinal(),
+            fn (ObjectDescription $object): bool => ! enum_exists($object->name) && $object->reflectionClass->isFinal(),
             'to be final',
             FileLineFinder::where(fn (string $line): bool => str_contains($line, 'class')),
         );
@@ -554,7 +467,7 @@ final class Expectation
     {
         return Targeted::make(
             $this,
-            fn (ObjectDescription $object): bool => ! enum_exists($object->name) && isset($object->reflectionClass) && $object->reflectionClass->isReadOnly() && assert(true), // @phpstan-ignore-line
+            fn (ObjectDescription $object): bool => ! enum_exists($object->name) && $object->reflectionClass->isReadOnly() && assert(true), // @phpstan-ignore-line
             'to be readonly',
             FileLineFinder::where(fn (string $line): bool => str_contains($line, 'class')),
         );
@@ -567,7 +480,7 @@ final class Expectation
     {
         return Targeted::make(
             $this,
-            fn (ObjectDescription $object): bool => isset($object->reflectionClass) && $object->reflectionClass->isTrait(),
+            fn (ObjectDescription $object): bool => $object->reflectionClass->isTrait(),
             'to be trait',
             FileLineFinder::where(fn (string $line): bool => str_contains($line, 'class')),
         );
@@ -588,7 +501,7 @@ final class Expectation
     {
         return Targeted::make(
             $this,
-            fn (ObjectDescription $object): bool => isset($object->reflectionClass) && $object->reflectionClass->isAbstract(),
+            fn (ObjectDescription $object): bool => $object->reflectionClass->isAbstract(),
             'to be abstract',
             FileLineFinder::where(fn (string $line): bool => str_contains($line, 'class')),
         );
@@ -596,77 +509,15 @@ final class Expectation
 
     /**
      * Asserts that the given expectation target has a specific method.
-     *
-     * @param  array<int, string>|string  $method
      */
-    public function toHaveMethod(array|string $method): ArchExpectation
+    public function toHaveMethod(string $method): ArchExpectation
     {
-        $methods = is_array($method) ? $method : [$method];
-
         return Targeted::make(
             $this,
-            fn (ObjectDescription $object): bool => count(array_filter($methods, fn (string $method): bool => isset($object->reflectionClass) && $object->reflectionClass->hasMethod($method))) === count($methods),
-            sprintf("to have method '%s'", implode("', '", $methods)),
+            fn (ObjectDescription $object): bool => $object->reflectionClass->hasMethod($method),
+            sprintf("to have method '%s'", $method),
             FileLineFinder::where(fn (string $line): bool => str_contains($line, 'class')),
         );
-    }
-
-    /**
-     * Asserts that the given expectation target has a specific methods.
-     *
-     * @param  array<int, string>  $methods
-     */
-    public function toHaveMethods(array $methods): ArchExpectation
-    {
-        return $this->toHaveMethod($methods);
-    }
-
-    /**
-     * Not supported.
-     */
-    public function toHavePublicMethodsBesides(): void
-    {
-        throw InvalidExpectation::fromMethods(['toHavePublicMethodsBesides']);
-    }
-
-    /**
-     * Not supported.
-     */
-    public function toHavePublicMethods(): void
-    {
-        throw InvalidExpectation::fromMethods(['toHavePublicMethods']);
-    }
-
-    /**
-     * Not supported.
-     */
-    public function toHaveProtectedMethodsBesides(): void
-    {
-        throw InvalidExpectation::fromMethods(['toHaveProtectedMethodsBesides']);
-    }
-
-    /**
-     * Not supported.
-     */
-    public function toHaveProtectedMethods(): void
-    {
-        throw InvalidExpectation::fromMethods(['toHaveProtectedMethods']);
-    }
-
-    /**
-     * Not supported.
-     */
-    public function toHavePrivateMethodsBesides(): void
-    {
-        throw InvalidExpectation::fromMethods(['toHavePrivateMethodsBesides']);
-    }
-
-    /**
-     * Not supported.
-     */
-    public function toHavePrivateMethods(): void
-    {
-        throw InvalidExpectation::fromMethods(['toHavePrivateMethods']);
     }
 
     /**
@@ -676,7 +527,7 @@ final class Expectation
     {
         return Targeted::make(
             $this,
-            fn (ObjectDescription $object): bool => isset($object->reflectionClass) && $object->reflectionClass->isEnum(),
+            fn (ObjectDescription $object): bool => $object->reflectionClass->isEnum(),
             'to be enum',
             FileLineFinder::where(fn (string $line): bool => str_contains($line, 'class')),
         );
@@ -718,7 +569,7 @@ final class Expectation
     {
         return Targeted::make(
             $this,
-            fn (ObjectDescription $object): bool => isset($object->reflectionClass) && $object->reflectionClass->isInterface(),
+            fn (ObjectDescription $object): bool => $object->reflectionClass->isInterface(),
             'to be interface',
             FileLineFinder::where(fn (string $line): bool => str_contains($line, 'class')),
         );
@@ -734,12 +585,14 @@ final class Expectation
 
     /**
      * Asserts that the given expectation target to be subclass of the given class.
+     *
+     * @param  class-string  $class
      */
     public function toExtend(string $class): ArchExpectation
     {
         return Targeted::make(
             $this,
-            fn (ObjectDescription $object): bool => isset($object->reflectionClass) && ($class === $object->reflectionClass->getName() || $object->reflectionClass->isSubclassOf($class)),
+            fn (ObjectDescription $object): bool => $class === $object->reflectionClass->getName() || $object->reflectionClass->isSubclassOf($class),
             sprintf("to extend '%s'", $class),
             FileLineFinder::where(fn (string $line): bool => str_contains($line, 'class')),
         );
@@ -759,50 +612,13 @@ final class Expectation
     }
 
     /**
-     * Asserts that the given expectation target to use the given trait.
-     */
-    public function toUseTrait(string $trait): ArchExpectation
-    {
-        return $this->toUseTraits($trait);
-    }
-
-    /**
-     * Asserts that the given expectation target to use the given traits.
-     *
-     * @param  array<int, string>|string  $traits
-     */
-    public function toUseTraits(array|string $traits): ArchExpectation
-    {
-        $traits = is_array($traits) ? $traits : [$traits];
-
-        return Targeted::make(
-            $this,
-            function (ObjectDescription $object) use ($traits): bool {
-                foreach ($traits as $trait) {
-                    if (isset($object->reflectionClass) === false) {
-                        return false;
-                    }
-
-                    if (! in_array($trait, $object->reflectionClass->getTraitNames(), true)) {
-                        return false;
-                    }
-                }
-
-                return true;
-            },
-            "to use traits '".implode("', '", $traits)."'",
-            FileLineFinder::where(fn (string $line): bool => str_contains($line, 'class')),
-        );
-    }
-
-    /**
      * Asserts that the given expectation target to not implement any interfaces.
      */
     public function toImplementNothing(): ArchExpectation
     {
         return Targeted::make(
             $this,
-            fn (ObjectDescription $object): bool => isset($object->reflectionClass) && $object->reflectionClass->getInterfaceNames() === [],
+            fn (ObjectDescription $object): bool => $object->reflectionClass->getInterfaceNames() === [],
             'to implement nothing',
             FileLineFinder::where(fn (string $line): bool => str_contains($line, 'class')),
         );
@@ -811,7 +627,7 @@ final class Expectation
     /**
      * Asserts that the given expectation target to only implement the given interfaces.
      *
-     * @param  array<int, string>|string  $interfaces
+     * @param  array<int, class-string>|class-string  $interfaces
      */
     public function toOnlyImplement(array|string $interfaces): ArchExpectation
     {
@@ -819,8 +635,7 @@ final class Expectation
 
         return Targeted::make(
             $this,
-            fn (ObjectDescription $object): bool => isset($object->reflectionClass)
-                && (count($interfaces) === count($object->reflectionClass->getInterfaceNames()))
+            fn (ObjectDescription $object): bool => count($interfaces) === count($object->reflectionClass->getInterfaceNames())
                 && array_diff($interfaces, $object->reflectionClass->getInterfaceNames()) === [],
             "to only implement '".implode("', '", $interfaces)."'",
             FileLineFinder::where(fn (string $line): bool => str_contains($line, 'class')),
@@ -834,7 +649,7 @@ final class Expectation
     {
         return Targeted::make(
             $this,
-            fn (ObjectDescription $object): bool => isset($object->reflectionClass) && str_starts_with($object->reflectionClass->getShortName(), $prefix),
+            fn (ObjectDescription $object): bool => str_starts_with($object->reflectionClass->getShortName(), $prefix),
             "to have prefix '{$prefix}'",
             FileLineFinder::where(fn (string $line): bool => str_contains($line, 'class')),
         );
@@ -847,7 +662,7 @@ final class Expectation
     {
         return Targeted::make(
             $this,
-            fn (ObjectDescription $object): bool => isset($object->reflectionClass) && str_ends_with($object->reflectionClass->getName(), $suffix),
+            fn (ObjectDescription $object): bool => str_ends_with($object->reflectionClass->getName(), $suffix),
             "to have suffix '{$suffix}'",
             FileLineFinder::where(fn (string $line): bool => str_contains($line, 'class')),
         );
@@ -856,7 +671,7 @@ final class Expectation
     /**
      * Asserts that the given expectation target to implement the given interfaces.
      *
-     * @param  array<int, string>|string  $interfaces
+     * @param  array<int, class-string>|class-string  $interfaces
      */
     public function toImplement(array|string $interfaces): ArchExpectation
     {
@@ -866,7 +681,7 @@ final class Expectation
             $this,
             function (ObjectDescription $object) use ($interfaces): bool {
                 foreach ($interfaces as $interface) {
-                    if (! isset($object->reflectionClass) || ! $object->reflectionClass->implementsInterface($interface)) {
+                    if (! $object->reflectionClass->implementsInterface($interface)) {
                         return false;
                     }
                 }
@@ -896,18 +711,7 @@ final class Expectation
         return ToUseNothing::make($this);
     }
 
-    /**
-     * Asserts that the source code of the given expectation target does not include suspicious characters.
-     */
-    public function toHaveSuspiciousCharacters(): ArchExpectation
-    {
-        throw InvalidExpectation::fromMethods(['toHaveSuspiciousCharacters']);
-    }
-
-    /**
-     * Not supported.
-     */
-    public function toBeUsed(): void
+    public function toBeUsed(): never
     {
         throw InvalidExpectation::fromMethods(['toBeUsed']);
     }
@@ -947,7 +751,7 @@ final class Expectation
     {
         return Targeted::make(
             $this,
-            fn (ObjectDescription $object): bool => isset($object->reflectionClass) && $object->reflectionClass->hasMethod('__invoke'),
+            fn (ObjectDescription $object): bool => $object->reflectionClass->hasMethod('__invoke'),
             'to be invokable',
             FileLineFinder::where(fn (string $line): bool => str_contains($line, 'class'))
         );
@@ -1051,12 +855,14 @@ final class Expectation
 
     /**
      * Asserts that the given expectation target to have the given attribute.
+     *
+     * @param  class-string<Attribute>  $attribute
      */
     public function toHaveAttribute(string $attribute): ArchExpectation
     {
         return Targeted::make(
             $this,
-            fn (ObjectDescription $object): bool => isset($object->reflectionClass) && $object->reflectionClass->getAttributes($attribute) !== [],
+            fn (ObjectDescription $object): bool => $object->reflectionClass->getAttributes($attribute) !== [],
             "to have attribute '{$attribute}'",
             FileLineFinder::where(fn (string $line): bool => str_contains($line, 'class')),
         );
@@ -1085,8 +891,7 @@ final class Expectation
     {
         return Targeted::make(
             $this,
-            fn (ObjectDescription $object): bool => isset($object->reflectionClass)
-                && $object->reflectionClass->isEnum()
+            fn (ObjectDescription $object): bool => $object->reflectionClass->isEnum()
                 && (new ReflectionEnum($object->name))->isBacked() // @phpstan-ignore-line
                 && (string) (new ReflectionEnum($object->name))->getBackingType() === $backingType, // @phpstan-ignore-line
             'to be '.$backingType.' backed enum',

@@ -12,37 +12,35 @@ namespace PHPUnit\Framework\Attributes;
 use Attribute;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
 #[Attribute(Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]
-final readonly class DataProviderExternal
+final class DataProviderExternal
 {
     /**
-     * @var class-string
+     * @psalm-var class-string
      */
-    private string $className;
+    private readonly string $className;
 
     /**
-     * @var non-empty-string
+     * @psalm-var non-empty-string
      */
-    private string $methodName;
-    private bool $validateArgumentCount;
+    private readonly string $methodName;
 
     /**
-     * @param class-string     $className
-     * @param non-empty-string $methodName
+     * @psalm-param class-string $className
+     * @psalm-param non-empty-string $methodName
      */
-    public function __construct(string $className, string $methodName, bool $validateArgumentCount = true)
+    public function __construct(string $className, string $methodName)
     {
-        $this->className             = $className;
-        $this->methodName            = $methodName;
-        $this->validateArgumentCount = $validateArgumentCount;
+        $this->className  = $className;
+        $this->methodName = $methodName;
     }
 
     /**
-     * @return class-string
+     * @psalm-return class-string
      */
     public function className(): string
     {
@@ -50,15 +48,10 @@ final readonly class DataProviderExternal
     }
 
     /**
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     public function methodName(): string
     {
         return $this->methodName;
-    }
-
-    public function validateArgumentCount(): bool
-    {
-        return $this->validateArgumentCount;
     }
 }

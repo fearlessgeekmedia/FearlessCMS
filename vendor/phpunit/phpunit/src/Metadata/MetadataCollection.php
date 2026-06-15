@@ -16,21 +16,21 @@ use Countable;
 use IteratorAggregate;
 
 /**
- * @template-implements IteratorAggregate<non-negative-int, Metadata>
+ * @template-implements IteratorAggregate<int, Metadata>
  *
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class MetadataCollection implements Countable, IteratorAggregate
+final class MetadataCollection implements Countable, IteratorAggregate
 {
     /**
-     * @var list<Metadata>
+     * @psalm-var list<Metadata>
      */
-    private array $metadata;
+    private readonly array $metadata;
 
     /**
-     * @param list<Metadata> $metadata
+     * @psalm-param list<Metadata> $metadata
      */
     public static function fromArray(array $metadata): self
     {
@@ -43,7 +43,7 @@ final readonly class MetadataCollection implements Countable, IteratorAggregate
     }
 
     /**
-     * @return list<Metadata>
+     * @psalm-return list<Metadata>
      */
     public function asArray(): array
     {
@@ -55,19 +55,11 @@ final readonly class MetadataCollection implements Countable, IteratorAggregate
         return count($this->metadata);
     }
 
-    /**
-     * @phpstan-assert-if-true 0 $this->count()
-     * @phpstan-assert-if-true array{} $this->asArray()
-     */
     public function isEmpty(): bool
     {
         return $this->count() === 0;
     }
 
-    /**
-     * @phpstan-assert-if-true positive-int $this->count()
-     * @phpstan-assert-if-true non-empty-list<Metadata> $this->asArray()
-     */
     public function isNotEmpty(): bool
     {
         return $this->count() > 0;
@@ -128,16 +120,6 @@ final readonly class MetadataCollection implements Countable, IteratorAggregate
         );
     }
 
-    public function isAllowMockObjectsWithoutExpectations(): self
-    {
-        return new self(
-            ...array_filter(
-                $this->metadata,
-                static fn (Metadata $metadata): bool => $metadata->isAllowMockObjectsWithoutExpectations(),
-            ),
-        );
-    }
-
     public function isBackupGlobals(): self
     {
         return new self(
@@ -178,12 +160,12 @@ final readonly class MetadataCollection implements Countable, IteratorAggregate
         );
     }
 
-    public function isCoversNamespace(): self
+    public function isCovers(): self
     {
         return new self(
             ...array_filter(
                 $this->metadata,
-                static fn (Metadata $metadata): bool => $metadata->isCoversNamespace(),
+                static fn (Metadata $metadata): bool => $metadata->isCovers(),
             ),
         );
     }
@@ -198,32 +180,12 @@ final readonly class MetadataCollection implements Countable, IteratorAggregate
         );
     }
 
-    public function isCoversClassesThatExtendClass(): self
+    public function isCoversDefaultClass(): self
     {
         return new self(
             ...array_filter(
                 $this->metadata,
-                static fn (Metadata $metadata): bool => $metadata->isCoversClassesThatExtendClass(),
-            ),
-        );
-    }
-
-    public function isCoversClassesThatImplementInterface(): self
-    {
-        return new self(
-            ...array_filter(
-                $this->metadata,
-                static fn (Metadata $metadata): bool => $metadata->isCoversClassesThatImplementInterface(),
-            ),
-        );
-    }
-
-    public function isCoversTrait(): self
-    {
-        return new self(
-            ...array_filter(
-                $this->metadata,
-                static fn (Metadata $metadata): bool => $metadata->isCoversTrait(),
+                static fn (Metadata $metadata): bool => $metadata->isCoversDefaultClass(),
             ),
         );
     }
@@ -234,16 +196,6 @@ final readonly class MetadataCollection implements Countable, IteratorAggregate
             ...array_filter(
                 $this->metadata,
                 static fn (Metadata $metadata): bool => $metadata->isCoversFunction(),
-            ),
-        );
-    }
-
-    public function isCoversMethod(): self
-    {
-        return new self(
-            ...array_filter(
-                $this->metadata,
-                static fn (Metadata $metadata): bool => $metadata->isCoversMethod(),
             ),
         );
     }
@@ -318,16 +270,6 @@ final readonly class MetadataCollection implements Countable, IteratorAggregate
         );
     }
 
-    public function isDisableReturnValueGenerationForTestDoubles(): self
-    {
-        return new self(
-            ...array_filter(
-                $this->metadata,
-                static fn (Metadata $metadata): bool => $metadata->isDisableReturnValueGenerationForTestDoubles(),
-            ),
-        );
-    }
-
     public function isDoesNotPerformAssertions(): self
     {
         return new self(
@@ -359,24 +301,40 @@ final readonly class MetadataCollection implements Countable, IteratorAggregate
     }
 
     /**
-     * @internal This method is not covered by the backward compatibility promise for PHPUnit
+     * @deprecated https://github.com/sebastianbergmann/phpunit/issues/5513
      */
-    public function isIgnorePhpunitDeprecations(): self
+    public function isIgnoreClassForCodeCoverage(): self
     {
         return new self(
             ...array_filter(
                 $this->metadata,
-                static fn (Metadata $metadata): bool => $metadata->isIgnorePhpunitDeprecations(),
+                static fn (Metadata $metadata): bool => $metadata->isIgnoreClassForCodeCoverage(),
             ),
         );
     }
 
-    public function isIgnorePhpunitWarnings(): self
+    /**
+     * @deprecated https://github.com/sebastianbergmann/phpunit/issues/5513
+     */
+    public function isIgnoreMethodForCodeCoverage(): self
     {
         return new self(
             ...array_filter(
                 $this->metadata,
-                static fn (Metadata $metadata): bool => $metadata->isIgnorePhpunitWarnings(),
+                static fn (Metadata $metadata): bool => $metadata->isIgnoreMethodForCodeCoverage(),
+            ),
+        );
+    }
+
+    /**
+     * @deprecated https://github.com/sebastianbergmann/phpunit/issues/5513
+     */
+    public function isIgnoreFunctionForCodeCoverage(): self
+    {
+        return new self(
+            ...array_filter(
+                $this->metadata,
+                static fn (Metadata $metadata): bool => $metadata->isIgnoreFunctionForCodeCoverage(),
             ),
         );
     }
@@ -521,36 +479,6 @@ final readonly class MetadataCollection implements Countable, IteratorAggregate
         );
     }
 
-    public function isRequiresPhpunitExtension(): self
-    {
-        return new self(
-            ...array_filter(
-                $this->metadata,
-                static fn (Metadata $metadata): bool => $metadata->isRequiresPhpunitExtension(),
-            ),
-        );
-    }
-
-    public function isRequiresEnvironmentVariable(): self
-    {
-        return new self(
-            ...array_filter(
-                $this->metadata,
-                static fn (Metadata $metadata): bool => $metadata->isRequiresEnvironmentVariable(),
-            ),
-        );
-    }
-
-    public function isWithEnvironmentVariable(): self
-    {
-        return new self(
-            ...array_filter(
-                $this->metadata,
-                static fn (Metadata $metadata): bool => $metadata->isWithEnvironmentVariable(),
-            ),
-        );
-    }
-
     public function isRequiresSetting(): self
     {
         return new self(
@@ -571,16 +499,6 @@ final readonly class MetadataCollection implements Countable, IteratorAggregate
         );
     }
 
-    public function isTestDoxFormatter(): self
-    {
-        return new self(
-            ...array_filter(
-                $this->metadata,
-                static fn (Metadata $metadata): bool => $metadata->isTestDoxFormatter(),
-            ),
-        );
-    }
-
     public function isTestWith(): self
     {
         return new self(
@@ -591,12 +509,12 @@ final readonly class MetadataCollection implements Countable, IteratorAggregate
         );
     }
 
-    public function isUsesNamespace(): self
+    public function isUses(): self
     {
         return new self(
             ...array_filter(
                 $this->metadata,
-                static fn (Metadata $metadata): bool => $metadata->isUsesNamespace(),
+                static fn (Metadata $metadata): bool => $metadata->isUses(),
             ),
         );
     }
@@ -611,32 +529,12 @@ final readonly class MetadataCollection implements Countable, IteratorAggregate
         );
     }
 
-    public function isUsesClassesThatExtendClass(): self
+    public function isUsesDefaultClass(): self
     {
         return new self(
             ...array_filter(
                 $this->metadata,
-                static fn (Metadata $metadata): bool => $metadata->isUsesClassesThatExtendClass(),
-            ),
-        );
-    }
-
-    public function isUsesClassesThatImplementInterface(): self
-    {
-        return new self(
-            ...array_filter(
-                $this->metadata,
-                static fn (Metadata $metadata): bool => $metadata->isUsesClassesThatImplementInterface(),
-            ),
-        );
-    }
-
-    public function isUsesTrait(): self
-    {
-        return new self(
-            ...array_filter(
-                $this->metadata,
-                static fn (Metadata $metadata): bool => $metadata->isUsesTrait(),
+                static fn (Metadata $metadata): bool => $metadata->isUsesDefaultClass(),
             ),
         );
     }
@@ -647,16 +545,6 @@ final readonly class MetadataCollection implements Countable, IteratorAggregate
             ...array_filter(
                 $this->metadata,
                 static fn (Metadata $metadata): bool => $metadata->isUsesFunction(),
-            ),
-        );
-    }
-
-    public function isUsesMethod(): self
-    {
-        return new self(
-            ...array_filter(
-                $this->metadata,
-                static fn (Metadata $metadata): bool => $metadata->isUsesMethod(),
             ),
         );
     }

@@ -16,9 +16,9 @@ use PHPUnit\TextUI\Help;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class ShowHelpCommand implements Command
+final class ShowHelpCommand implements Command
 {
-    private int $shellExitCode;
+    private readonly int $shellExitCode;
 
     public function __construct(int $shellExitCode)
     {

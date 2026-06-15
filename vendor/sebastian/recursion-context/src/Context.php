@@ -16,21 +16,13 @@ use function array_pop;
 use function array_slice;
 use function count;
 use function is_array;
-use function is_int;
 use function random_int;
-use function spl_object_id;
+use function spl_object_hash;
 use SplObjectStorage;
 
 final class Context
 {
-    /**
-     * @var list<array<mixed>>
-     */
     private array $arrays = [];
-
-    /**
-     * @var SplObjectStorage<object, null>
-     */
     private SplObjectStorage $objects;
 
     public function __construct()
@@ -52,16 +44,15 @@ final class Context
     }
 
     /**
-     * @template T of object|array
+     * @psalm-template T of object|array
      *
-     * @param T $value
+     * @psalm-param T $value
      *
      * @param-out T $value
      */
-    public function add(array|object &$value): int
+    public function add(array|object &$value): false|int|string
     {
         if (is_array($value)) {
-            /* @phpstan-ignore paramOut.type */
             return $this->addArray($value);
         }
 
@@ -69,13 +60,13 @@ final class Context
     }
 
     /**
-     * @template T of object|array
+     * @psalm-template T of object|array
      *
-     * @param T $value
+     * @psalm-param T $value
      *
      * @param-out T $value
      */
-    public function contains(array|object &$value): false|int
+    public function contains(array|object &$value): false|int|string
     {
         if (is_array($value)) {
             return $this->containsArray($value);
@@ -84,9 +75,6 @@ final class Context
         return $this->containsObject($value);
     }
 
-    /**
-     * @param array<mixed> $array
-     */
     private function addArray(array &$array): int
     {
         $key = $this->containsArray($array);
@@ -126,36 +114,26 @@ final class Context
         return $key;
     }
 
-    private function addObject(object $object): int
+    private function addObject(object $object): string
     {
         if (!$this->objects->offsetExists($object)) {
             $this->objects->offsetSet($object);
         }
 
-        return spl_object_id($object);
+        return spl_object_hash($object);
     }
 
-    /**
-     * @param array<mixed> $array
-     */
     private function containsArray(array $array): false|int
     {
         $end = array_slice($array, -2);
 
-        if (isset($end[1]) &&
-            $end[1] === $this->objects &&
-            isset($end[0]) &&
-            is_int($end[0])) {
-            return $end[0];
-        }
-
-        return false;
+        return isset($end[1]) && $end[1] === $this->objects ? $end[0] : false;
     }
 
-    private function containsObject(object $value): false|int
+    private function containsObject(object $value): false|string
     {
         if ($this->objects->offsetExists($value)) {
-            return spl_object_id($value);
+            return spl_object_hash($value);
         }
 
         return false;

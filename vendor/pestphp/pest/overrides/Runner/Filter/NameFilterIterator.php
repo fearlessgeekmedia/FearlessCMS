@@ -32,27 +32,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-declare(strict_types=1);
-
-/*
- * This file is part of PHPUnit.
- *
- * (c) Sebastian Bergmann <sebastian@phpunit.de>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-
 namespace PHPUnit\Runner\Filter;
 
+use Exception;
 use Pest\Contracts\HasPrintableTestCaseName;
+use PHPUnit\Framework\SelfDescribing;
 use PHPUnit\Framework\Test;
+use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\TestSuite;
-use PHPUnit\Runner\PhptTestCase;
 use RecursiveFilterIterator;
 use RecursiveIterator;
 
 use function end;
+use function implode;
 use function preg_match;
 use function sprintf;
 use function str_replace;
@@ -60,30 +52,22 @@ use function str_replace;
 /**
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-abstract class NameFilterIterator extends RecursiveFilterIterator
+final class NameFilterIterator extends RecursiveFilterIterator
 {
-    /**
-     * @psalm-var non-empty-string
-     */
-    private readonly string $regularExpression;
+    private ?string $filter = null;
 
-    private readonly ?int $dataSetMinimum;
+    private ?int $filterMin = null;
 
-    private readonly ?int $dataSetMaximum;
+    private ?int $filterMax = null;
 
     /**
-     * @psalm-param RecursiveIterator<int, Test> $iterator
-     * @psalm-param non-empty-string $filter
+     * @throws Exception
      */
     public function __construct(RecursiveIterator $iterator, string $filter)
     {
         parent::__construct($iterator);
 
-        $preparedFilter = $this->prepareFilter($filter);
-
-        $this->regularExpression = $preparedFilter['regularExpression'];
-        $this->dataSetMinimum = $preparedFilter['dataSetMinimum'];
-        $this->dataSetMaximum = $preparedFilter['dataSetMaximum'];
+        $this->setFilter($filter);
     }
 
     public function accept(): bool
@@ -94,40 +78,29 @@ abstract class NameFilterIterator extends RecursiveFilterIterator
             return true;
         }
 
-        if ($test instanceof PhptTestCase) {
-            return false;
-        }
+        $tmp = $this->describe($test);
 
-        if ($test instanceof HasPrintableTestCaseName) {
-            $name = trim(
-                $test::getPrintableTestCaseName().'::'.$test->getPrintableTestCaseMethodName().$test->dataSetAsString()
-            );
+        if ($tmp[0] !== '') {
+            $name = implode('::', $tmp);
         } else {
-            $name = $test::class.'::'.$test->nameWithDataSet();
+            $name = $tmp[1];
         }
 
-        $accepted = @preg_match($this->regularExpression, $name, $matches) === 1;
+        $accepted = @preg_match($this->filter, $name, $matches);
 
-        if ($accepted && isset($this->dataSetMaximum)) {
+        if ($accepted && isset($this->filterMax)) {
             $set = end($matches);
-            $accepted = $set >= $this->dataSetMinimum && $set <= $this->dataSetMaximum;
+            $accepted = $set >= $this->filterMin && $set <= $this->filterMax;
         }
 
-        return $this->doAccept($accepted);
+        return (bool) $accepted;
     }
 
-    abstract protected function doAccept(bool $result): bool;
-
     /**
-     * @psalm-param non-empty-string $filter
-     *
-     * @psalm-return array{regularExpression: non-empty-string, dataSetMinimum: ?int, dataSetMaximum: ?int}
+     * @throws Exception
      */
-    private function prepareFilter(string $filter): array
+    private function setFilter(string $filter): void
     {
-        $dataSetMinimum = null;
-        $dataSetMaximum = null;
-
         if (@preg_match($filter, '') === false) {
             // Handles:
             //  * testAssertEqualsSucceeds#4
@@ -135,17 +108,17 @@ abstract class NameFilterIterator extends RecursiveFilterIterator
             if (preg_match('/^(.*?)#(\d+)(?:-(\d+))?$/', $filter, $matches)) {
                 if (isset($matches[3]) && $matches[2] < $matches[3]) {
                     $filter = sprintf(
-                        '%s.*with data set #(\d+)$',
-                        $matches[1],
+                        '%s.*with dataset #(\d+)$',
+                        $matches[1]
                     );
 
-                    $dataSetMinimum = (int) $matches[2];
-                    $dataSetMaximum = (int) $matches[3];
+                    $this->filterMin = (int) $matches[2];
+                    $this->filterMax = (int) $matches[3];
                 } else {
                     $filter = sprintf(
-                        '%s.*with data set #%s$',
+                        '%s.*with dataset #%s$',
                         $matches[1],
-                        $matches[2],
+                        $matches[2]
                     );
                 }
             } // Handles:
@@ -153,9 +126,9 @@ abstract class NameFilterIterator extends RecursiveFilterIterator
             //  * testDetermineJsonError@JSON.*
             elseif (preg_match('/^(.*?)@(.+)$/', $filter, $matches)) {
                 $filter = sprintf(
-                    '%s.*with data set "%s"$',
+                    '%s.*with dataset "%s"$',
                     $matches[1],
-                    $matches[2],
+                    $matches[2]
                 );
             }
 
@@ -166,15 +139,34 @@ abstract class NameFilterIterator extends RecursiveFilterIterator
                 str_replace(
                     '/',
                     '\\/',
-                    $filter,
-                ),
+                    $filter
+                )
             );
         }
 
-        return [
-            'regularExpression' => $filter,
-            'dataSetMinimum' => $dataSetMinimum,
-            'dataSetMaximum' => $dataSetMaximum,
-        ];
+        $this->filter = $filter;
+    }
+
+    /**
+     * @psalm-return array{0: string, 1: string}
+     */
+    private function describe(Test $test): array
+    {
+        if ($test instanceof HasPrintableTestCaseName) {
+            return [
+                $test::getPrintableTestCaseName(),
+                $test->getPrintableTestCaseMethodName(),
+            ];
+        }
+
+        if ($test instanceof TestCase) {
+            return [$test::class, $test->nameWithDataSet()];
+        }
+
+        if ($test instanceof SelfDescribing) {
+            return ['', $test->toString()];
+        }
+
+        return ['', $test::class];
     }
 }

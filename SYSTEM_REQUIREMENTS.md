@@ -46,16 +46,16 @@
 
 ### Node.js (Optional)
 Required only for:
-- Static site export functionality
 - Tailwind CSS development builds
+- SASS theme development
 
 **Versions:**
 - Node.js 14.14.0 or higher (Node.js 18+ recommended)
 - npm 6.0+
 
-**npm packages (auto-installed):**
-- `fs-extra` - file system utilities
-- `handlebars` - templating for export
+**npm packages (auto-installed via installer):**
+- `tailwindcss` - CSS framework build tooling
+- `sass` - SCSS compilation for themes (optional)
 
 ---
 

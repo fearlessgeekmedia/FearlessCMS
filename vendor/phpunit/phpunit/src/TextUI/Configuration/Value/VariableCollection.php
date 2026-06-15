@@ -16,19 +16,19 @@ use IteratorAggregate;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
- * @immutable
+ * @psalm-immutable
  *
- * @template-implements IteratorAggregate<non-negative-int, Variable>
+ * @template-implements IteratorAggregate<int, Variable>
  */
-final readonly class VariableCollection implements Countable, IteratorAggregate
+final class VariableCollection implements Countable, IteratorAggregate
 {
     /**
-     * @var list<Variable>
+     * @psalm-var list<Variable>
      */
-    private array $variables;
+    private readonly array $variables;
 
     /**
-     * @param list<Variable> $variables
+     * @psalm-param list<Variable> $variables
      */
     public static function fromArray(array $variables): self
     {
@@ -41,7 +41,7 @@ final readonly class VariableCollection implements Countable, IteratorAggregate
     }
 
     /**
-     * @return list<Variable>
+     * @psalm-return list<Variable>
      */
     public function asArray(): array
     {

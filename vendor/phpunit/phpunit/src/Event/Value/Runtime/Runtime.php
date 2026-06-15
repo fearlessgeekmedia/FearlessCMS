@@ -12,15 +12,15 @@ namespace PHPUnit\Event\Runtime;
 use function sprintf;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class Runtime
+final class Runtime
 {
-    private OperatingSystem $operatingSystem;
-    private PHP $php;
-    private PHPUnit $phpunit;
+    private readonly OperatingSystem $operatingSystem;
+    private readonly PHP $php;
+    private readonly PHPUnit $phpunit;
 
     public function __construct()
     {

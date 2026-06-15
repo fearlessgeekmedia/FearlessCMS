@@ -12,11 +12,11 @@ namespace PHPUnit\TextUI\Configuration;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
- * @immutable
+ * @psalm-immutable
  */
-final readonly class Group
+final class Group
 {
-    private string $name;
+    private readonly string $name;
 
     public function __construct(string $name)
     {

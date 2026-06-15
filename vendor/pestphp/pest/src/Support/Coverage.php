@@ -74,7 +74,7 @@ final class Coverage
      * Reports the code coverage report to the
      * console and returns the result in float.
      */
-    public static function report(OutputInterface $output, bool $compact = false): float
+    public static function report(OutputInterface $output): float
     {
         if (! file_exists($reportPath = self::getPath())) {
             if (self::usingXdebug()) {
@@ -113,10 +113,6 @@ final class Coverage
                 ? '100.0'
                 : number_format($file->percentageOfExecutedLines()->asFloat(), 1, '.', '');
 
-            if ($percentage === '100.0' && $compact) {
-                continue;
-            }
-
             $uncoveredLines = '';
 
             $percentageOfExecutedLinesAsString = $file->percentageOfExecutedLines()->asString();
@@ -142,7 +138,7 @@ final class Coverage
 
         $totalCoverageAsString = $totalCoverage->asFloat() === 0.0
             ? '0.0'
-            : number_format(floor($totalCoverage->asFloat() * 10) / 10, 1, '.', '');
+            : number_format($totalCoverage->asFloat(), 1, '.', '');
 
         renderUsing($output);
         render(<<<HTML
@@ -201,7 +197,7 @@ final class Coverage
         };
 
         $array = [];
-        foreach (array_filter($file->lineCoverageData(), is_array(...)) as $line => $tests) {
+        foreach (array_filter($file->lineCoverageData(), 'is_array') as $line => $tests) {
             $array = $eachLine($array, $tests, $line);
         }
 

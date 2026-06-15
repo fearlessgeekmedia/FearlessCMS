@@ -16,10 +16,10 @@ namespace PHPUnit\Runner\Baseline;
  */
 final class Baseline
 {
-    public const int VERSION = 1;
+    public const VERSION = 1;
 
     /**
-     * @var array<non-empty-string, array<positive-int, list<Issue>>>
+     * @psalm-var array<non-empty-string, array<positive-int, list<Issue>>>
      */
     private array $issues = [];
 
@@ -52,7 +52,7 @@ final class Baseline
     }
 
     /**
-     * @return array<non-empty-string, array<positive-int, list<Issue>>>
+     * @psalm-return array<string, array<positive-int, list<Issue>>>
      */
     public function groupedByFileAndLine(): array
     {

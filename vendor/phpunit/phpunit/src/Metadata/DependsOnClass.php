@@ -10,22 +10,22 @@
 namespace PHPUnit\Metadata;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class DependsOnClass extends Metadata
+final class DependsOnClass extends Metadata
 {
     /**
-     * @var class-string
+     * @psalm-var class-string
      */
-    private string $className;
-    private bool $deepClone;
-    private bool $shallowClone;
+    private readonly string $className;
+    private readonly bool $deepClone;
+    private readonly bool $shallowClone;
 
     /**
-     * @param int<0, 1>    $level
-     * @param class-string $className
+     * @psalm-param 0|1 $level
+     * @psalm-param class-string $className
      */
     protected function __construct(int $level, string $className, bool $deepClone, bool $shallowClone)
     {
@@ -36,13 +36,16 @@ final readonly class DependsOnClass extends Metadata
         $this->shallowClone = $shallowClone;
     }
 
-    public function isDependsOnClass(): true
+    /**
+     * @psalm-assert-if-true DependsOnClass $this
+     */
+    public function isDependsOnClass(): bool
     {
         return true;
     }
 
     /**
-     * @return class-string
+     * @psalm-return class-string
      */
     public function className(): string
     {

@@ -11,20 +11,14 @@ use PHPUnit\Framework\TestSuite;
 use PHPUnit\Logging\JUnit\JunitXmlLogger;
 use PHPUnit\Logging\TeamCity\TeamCityLogger;
 use PHPUnit\Logging\TestDox\TestResultCollector;
-use PHPUnit\Runner\Baseline\CannotLoadBaselineException;
-use PHPUnit\Runner\Baseline\Reader;
+use PHPUnit\Metadata\Api\CodeCoverage as CodeCoverageMetadataApi;
 use PHPUnit\Runner\CodeCoverage;
-use PHPUnit\Runner\DeprecationCollector\Facade as DeprecationCollector;
-use PHPUnit\Runner\ErrorHandler;
 use PHPUnit\Runner\Extension\ExtensionBootstrapper;
 use PHPUnit\Runner\Extension\Facade as ExtensionFacade;
 use PHPUnit\Runner\Extension\PharLoader;
 use PHPUnit\Runner\Filter\Factory;
-use PHPUnit\Runner\ResultCache\DefaultResultCache;
-use PHPUnit\Runner\ResultCache\ResultCacheHandler;
 use PHPUnit\Runner\TestSuiteLoader;
 use PHPUnit\Runner\TestSuiteSorter;
-use PHPUnit\TestRunner\IssueFilter;
 use PHPUnit\TestRunner\TestResult\Facade as TestResultFacade;
 use PHPUnit\TextUI\Configuration\Builder;
 use PHPUnit\TextUI\Configuration\CodeCoverageFilterRegistry;
@@ -34,6 +28,7 @@ use PHPUnit\TextUI\Output\Default\ProgressPrinter\ProgressPrinter;
 use PHPUnit\TextUI\Output\Default\UnexpectedOutputPrinter;
 use PHPUnit\TextUI\Output\DefaultPrinter;
 use PHPUnit\TextUI\Output\NullPrinter;
+use PHPUnit\TextUI\Output\TestDox\ResultPrinter as TestDoxResultPrinter;
 use PHPUnit\TextUI\TestSuiteFilterProcessor;
 use PHPUnit\Util\ExcludeList;
 
@@ -62,10 +57,11 @@ final class ApplicationForWrapperWorker
         private readonly array $argv,
         private readonly string $progressFile,
         private readonly string $unexpectedOutputFile,
-        private readonly string $testResultFile,
-        private readonly ?string $resultCacheFile,
+        private readonly string $testresultFile,
         private readonly ?string $teamcityFile,
         private readonly ?string $testdoxFile,
+        private readonly bool $testdoxColor,
+        private readonly ?int $testdoxColumns,
     ) {
     }
 
@@ -77,7 +73,7 @@ final class ApplicationForWrapperWorker
             $filter = new Factory();
             $name   = substr($testPath, $null + 1);
             assert($name !== '');
-            $filter->addIncludeNameFilter($name);
+            $filter->addNameFilter($name);
 
             $testPath = substr($testPath, 0, $null);
         }
@@ -92,14 +88,10 @@ final class ApplicationForWrapperWorker
             $testSuite     = TestSuite::fromClassReflector($testSuiteRefl);
         }
 
-        EventFacade::emitter()->testSuiteLoaded(
-            TestSuiteBuilder::from($testSuite),
-        );
-
-        EventFacade::emitter()->testRunnerStarted();
-
-        if ($this->configuration->executionOrder() === TestSuiteSorter::ORDER_RANDOMIZED) {
-            mt_srand($this->configuration->randomOrderSeed());
+        if (CodeCoverage::instance()->isActive()) {
+            CodeCoverage::instance()->ignoreLines(
+                (new CodeCoverageMetadataApi())->linesToBeIgnored($testSuite),
+            );
         }
 
         (new TestSuiteFilterProcessor())->process($this->configuration, $testSuite);
@@ -166,6 +158,12 @@ final class ApplicationForWrapperWorker
             $extensionRequiresCodeCoverageCollection = $extensionFacade->requiresCodeCoverageCollection();
         }
 
+        CodeCoverage::instance()->init(
+            $this->configuration,
+            CodeCoverageFilterRegistry::instance(),
+            $extensionRequiresCodeCoverageCollection,
+        );
+
         if ($this->configuration->hasLogfileJunit()) {
             new JunitXmlLogger(
                 DefaultPrinter::from($this->configuration->logfileJunit()),
@@ -197,42 +195,17 @@ final class ApplicationForWrapperWorker
         if (isset($this->testdoxFile)) {
             $this->testdoxResultCollector = new TestResultCollector(
                 EventFacade::instance(),
-                new IssueFilter($this->configuration->source()),
+                $this->configuration->source(),
             );
         }
 
         TestResultFacade::init();
-        DeprecationCollector::init();
-
-        if (isset($this->resultCacheFile)) {
-            new ResultCacheHandler(
-                new DefaultResultCache($this->resultCacheFile),
-                EventFacade::instance(),
-            );
-        }
-
-        if ($this->configuration->source()->useBaseline()) {
-            $baselineFile = $this->configuration->source()->baseline();
-            $baseline     = null;
-
-            try {
-                $baseline = (new Reader())->read($baselineFile);
-            } catch (CannotLoadBaselineException $e) {
-                EventFacade::emitter()->testRunnerTriggeredPhpunitWarning($e->getMessage());
-            }
-
-            if ($baseline !== null) {
-                ErrorHandler::instance()->useBaseline($baseline);
-            }
-        }
-
         EventFacade::instance()->seal();
+        EventFacade::emitter()->testRunnerStarted();
 
-        CodeCoverage::instance()->init(
-            $this->configuration,
-            CodeCoverageFilterRegistry::instance(),
-            $extensionRequiresCodeCoverageCollection,
-        );
+        if ($this->configuration->executionOrder() === TestSuiteSorter::ORDER_RANDOMIZED) {
+            mt_srand($this->configuration->randomOrderSeed());
+        }
 
         $this->hasBeenBootstrapped = true;
     }
@@ -251,11 +224,14 @@ final class ApplicationForWrapperWorker
         $result = TestResultFacade::result();
         if (isset($this->testdoxResultCollector)) {
             assert(isset($this->testdoxFile));
+            assert(isset($this->testdoxColumns));
 
-            file_put_contents($this->testdoxFile, serialize($this->testdoxResultCollector->testMethodsGroupedByClass()));
+            (new TestDoxResultPrinter(DefaultPrinter::from($this->testdoxFile), $this->testdoxColor))->print(
+                $this->testdoxResultCollector->testMethodsGroupedByClass(),
+            );
         }
 
-        file_put_contents($this->testResultFile, serialize($result));
+        file_put_contents($this->testresultFile, serialize($result));
 
         EventFacade::emitter()->applicationFinished(0);
     }

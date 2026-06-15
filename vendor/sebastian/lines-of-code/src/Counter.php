@@ -24,11 +24,7 @@ final class Counter
      */
     public function countInSourceFile(string $sourceFile): LinesOfCode
     {
-        $source = file_get_contents($sourceFile);
-
-        assert($source !== false);
-
-        return $this->countInSourceString($source);
+        return $this->countInSourceString(file_get_contents($sourceFile));
     }
 
     /**
@@ -42,12 +38,15 @@ final class Counter
             $linesOfCode = 1;
         }
 
+        assert($linesOfCode >= 0);
+
         try {
             $nodes = (new ParserFactory)->createForHostVersion()->parse($source);
 
             assert($nodes !== null);
 
             return $this->countInAbstractSyntaxTree($linesOfCode, $nodes);
+
             // @codeCoverageIgnoreStart
         } catch (Error $error) {
             throw new RuntimeException(
@@ -60,8 +59,9 @@ final class Counter
     }
 
     /**
-     * @param non-negative-int $linesOfCode
-     * @param Node[]           $nodes
+     * @psalm-param non-negative-int $linesOfCode
+     *
+     * @param Node[] $nodes
      *
      * @throws RuntimeException
      */

@@ -12,23 +12,23 @@ namespace PHPUnit\TextUI\Configuration;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
- * @immutable
+ * @psalm-immutable
  */
-final readonly class ExtensionBootstrap
+final class ExtensionBootstrap
 {
     /**
-     * @var non-empty-string
+     * @psalm-var class-string
      */
-    private string $className;
+    private readonly string $className;
 
     /**
-     * @var array<string,string>
+     * @psalm-var array<string,string>
      */
-    private array $parameters;
+    private readonly array $parameters;
 
     /**
-     * @param non-empty-string     $className
-     * @param array<string,string> $parameters
+     * @psalm-param class-string $className
+     * @psalm-param array<string,string> $parameters
      */
     public function __construct(string $className, array $parameters)
     {
@@ -37,7 +37,7 @@ final readonly class ExtensionBootstrap
     }
 
     /**
-     * @return non-empty-string
+     * @psalm-return class-string
      */
     public function className(): string
     {
@@ -45,7 +45,7 @@ final readonly class ExtensionBootstrap
     }
 
     /**
-     * @return array<string,string>
+     * @psalm-return array<string,string>
      */
     public function parameters(): array
     {

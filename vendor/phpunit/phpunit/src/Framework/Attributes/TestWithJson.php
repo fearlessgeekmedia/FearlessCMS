@@ -12,46 +12,31 @@ namespace PHPUnit\Framework\Attributes;
 use Attribute;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
 #[Attribute(Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]
-final readonly class TestWithJson
+final class TestWithJson
 {
     /**
-     * @var non-empty-string
+     * @psalm-var non-empty-string
      */
-    private string $json;
+    private readonly string $json;
 
     /**
-     * @var ?non-empty-string
+     * @psalm-param non-empty-string $json
      */
-    private ?string $name;
-
-    /**
-     * @param non-empty-string  $json
-     * @param ?non-empty-string $name
-     */
-    public function __construct(string $json, ?string $name = null)
+    public function __construct(string $json)
     {
         $this->json = $json;
-        $this->name = $name;
     }
 
     /**
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     public function json(): string
     {
         return $this->json;
-    }
-
-    /**
-     * @return ?non-empty-string
-     */
-    public function name(): ?string
-    {
-        return $this->name;
     }
 }

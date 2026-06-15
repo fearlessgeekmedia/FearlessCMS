@@ -12,20 +12,20 @@ namespace PHPUnit\Framework\Attributes;
 use Attribute;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
 #[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]
-final readonly class Group
+final class Group
 {
     /**
-     * @var non-empty-string
+     * @psalm-var non-empty-string
      */
-    private string $name;
+    private readonly string $name;
 
     /**
-     * @param non-empty-string $name
+     * @psalm-param non-empty-string $name
      */
     public function __construct(string $name)
     {
@@ -33,7 +33,7 @@ final readonly class Group
     }
 
     /**
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     public function name(): string
     {

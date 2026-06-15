@@ -10,13 +10,15 @@
 namespace PHPUnit\TextUI\Command;
 
 use const PHP_EOL;
-use function assert;
 use function file_put_contents;
-use function ksort;
+use function implode;
 use function sprintf;
+use function str_replace;
 use PHPUnit\Framework\TestCase;
-use PHPUnit\Runner\Phpt\TestCase as PhptTestCase;
-use ReflectionClass;
+use PHPUnit\Framework\TestSuite;
+use PHPUnit\Runner\PhptTestCase;
+use PHPUnit\TextUI\Configuration\Registry;
+use RecursiveIteratorIterator;
 use XMLWriter;
 
 /**
@@ -24,117 +26,117 @@ use XMLWriter;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class ListTestsAsXmlCommand implements Command
+final class ListTestsAsXmlCommand implements Command
 {
-    /**
-     * @var list<PhptTestCase|TestCase>
-     */
-    private array $tests;
-    private string $filename;
+    private readonly string $filename;
+    private readonly TestSuite $suite;
 
-    /**
-     * @param list<PhptTestCase|TestCase> $tests
-     */
-    public function __construct(array $tests, string $filename)
+    public function __construct(string $filename, TestSuite $suite)
     {
-        $this->tests    = $tests;
         $this->filename = $filename;
+        $this->suite    = $suite;
     }
 
     public function execute(): Result
     {
+        $buffer = $this->warnAboutConflictingOptions();
         $writer = new XMLWriter;
 
         $writer->openMemory();
         $writer->setIndent(true);
         $writer->startDocument();
-
-        $writer->startElement('testSuite');
-        $writer->writeAttribute('xmlns', 'https://xml.phpunit.de/testSuite');
-
         $writer->startElement('tests');
 
-        $currentTestClass = null;
-        $groups           = [];
+        $currentTestCase = null;
 
-        foreach ($this->tests as $test) {
+        foreach (new RecursiveIteratorIterator($this->suite) as $test) {
             if ($test instanceof TestCase) {
-                foreach ($test->groups() as $group) {
-                    if (!isset($groups[$group])) {
-                        $groups[$group] = [];
-                    }
-
-                    $groups[$group][] = $test->valueObjectForEvents()->id();
-                }
-
-                if ($test::class !== $currentTestClass) {
-                    if ($currentTestClass !== null) {
+                if ($test::class !== $currentTestCase) {
+                    if ($currentTestCase !== null) {
                         $writer->endElement();
                     }
 
-                    $file = (new ReflectionClass($test))->getFileName();
-
-                    assert($file !== false);
-
-                    $writer->startElement('testClass');
+                    $writer->startElement('testCaseClass');
                     $writer->writeAttribute('name', $test::class);
-                    $writer->writeAttribute('file', $file);
 
-                    $currentTestClass = $test::class;
+                    $currentTestCase = $test::class;
                 }
 
-                $writer->startElement('testMethod');
+                $writer->startElement('testCaseMethod');
                 $writer->writeAttribute('id', $test->valueObjectForEvents()->id());
-                $writer->writeAttribute('name', $test->valueObjectForEvents()->methodName());
+                $writer->writeAttribute('name', $test->name());
+                $writer->writeAttribute('groups', implode(',', $test->groups()));
+
+                /**
+                 * @deprecated https://github.com/sebastianbergmann/phpunit/issues/5481
+                 */
+                if (!empty($test->dataSetAsString())) {
+                    $writer->writeAttribute(
+                        'dataSet',
+                        str_replace(
+                            ' with data set ',
+                            '',
+                            $test->dataSetAsString(),
+                        ),
+                    );
+                }
+
                 $writer->endElement();
 
                 continue;
             }
 
-            if ($currentTestClass !== null) {
-                $writer->endElement();
+            if ($test instanceof PhptTestCase) {
+                if ($currentTestCase !== null) {
+                    $writer->endElement();
 
-                $currentTestClass = null;
-            }
+                    $currentTestCase = null;
+                }
 
-            $writer->startElement('phpt');
-            $writer->writeAttribute('file', $test->getName());
-            $writer->endElement();
-        }
-
-        if ($currentTestClass !== null) {
-            $writer->endElement();
-        }
-
-        $writer->endElement();
-
-        ksort($groups);
-
-        $writer->startElement('groups');
-
-        foreach ($groups as $groupName => $testIds) {
-            $writer->startElement('group');
-            $writer->writeAttribute('name', (string) $groupName);
-
-            foreach ($testIds as $testId) {
-                $writer->startElement('test');
-                $writer->writeAttribute('id', $testId);
+                $writer->startElement('phptFile');
+                $writer->writeAttribute('path', $test->getName());
                 $writer->endElement();
             }
+        }
 
+        if ($currentTestCase !== null) {
             $writer->endElement();
         }
 
-        $writer->endElement();
         $writer->endElement();
 
         file_put_contents($this->filename, $writer->outputMemory());
 
-        return Result::from(
-            sprintf(
-                'Wrote list of tests that would have been run to %s' . PHP_EOL,
-                $this->filename,
-            ),
+        $buffer .= sprintf(
+            'Wrote list of tests that would have been run to %s' . PHP_EOL,
+            $this->filename,
         );
+
+        return Result::from($buffer);
+    }
+
+    private function warnAboutConflictingOptions(): string
+    {
+        $buffer = '';
+
+        $configuration = Registry::get();
+
+        if ($configuration->hasFilter()) {
+            $buffer .= 'The --filter and --list-tests-xml options cannot be combined, --filter is ignored' . PHP_EOL;
+        }
+
+        if ($configuration->hasGroups()) {
+            $buffer .= 'The --group and --list-tests-xml options cannot be combined, --group is ignored' . PHP_EOL;
+        }
+
+        if ($configuration->hasExcludeGroups()) {
+            $buffer .= 'The --exclude-group and --list-tests-xml options cannot be combined, --exclude-group is ignored' . PHP_EOL;
+        }
+
+        if (!empty($buffer)) {
+            $buffer .= PHP_EOL;
+        }
+
+        return $buffer;
     }
 }

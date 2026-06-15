@@ -22,10 +22,10 @@ use PHPUnit\Runner\Version;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class SchemaFinder
+final class SchemaFinder
 {
     /**
-     * @return non-empty-list<non-empty-string>
+     * @psalm-return non-empty-list<non-empty-string>
      */
     public function available(): array
     {
@@ -38,7 +38,7 @@ final readonly class SchemaFinder
 
             $version = $file->getBasename('.xsd');
 
-            assert($version !== '');
+            assert(!empty($version));
 
             $result[] = $version;
         }

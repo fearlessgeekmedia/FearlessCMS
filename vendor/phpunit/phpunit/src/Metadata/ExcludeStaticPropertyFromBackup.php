@@ -10,26 +10,26 @@
 namespace PHPUnit\Metadata;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class ExcludeStaticPropertyFromBackup extends Metadata
+final class ExcludeStaticPropertyFromBackup extends Metadata
 {
     /**
-     * @var class-string
+     * @psalm-var class-string
      */
-    private string $className;
+    private readonly string $className;
 
     /**
-     * @var non-empty-string
+     * @psalm-var non-empty-string
      */
-    private string $propertyName;
+    private readonly string $propertyName;
 
     /**
-     * @param int<0, 1>        $level
-     * @param class-string     $className
-     * @param non-empty-string $propertyName
+     * @psalm-param 0|1 $level
+     * @psalm-param class-string $className
+     * @psalm-param non-empty-string $propertyName
      */
     protected function __construct(int $level, string $className, string $propertyName)
     {
@@ -39,13 +39,16 @@ final readonly class ExcludeStaticPropertyFromBackup extends Metadata
         $this->propertyName = $propertyName;
     }
 
-    public function isExcludeStaticPropertyFromBackup(): true
+    /**
+     * @psalm-assert-if-true ExcludeStaticPropertyFromBackup $this
+     */
+    public function isExcludeStaticPropertyFromBackup(): bool
     {
         return true;
     }
 
     /**
-     * @return class-string
+     * @psalm-return class-string
      */
     public function className(): string
     {
@@ -53,7 +56,7 @@ final readonly class ExcludeStaticPropertyFromBackup extends Metadata
     }
 
     /**
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     public function propertyName(): string
     {

@@ -59,99 +59,19 @@ use PHPUnit\Framework\MockObject\Rule\InvokedAtLeastCount as InvokedAtLeastCount
 use PHPUnit\Framework\MockObject\Rule\InvokedAtLeastOnce as InvokedAtLeastOnceMatcher;
 use PHPUnit\Framework\MockObject\Rule\InvokedAtMostCount as InvokedAtMostCountMatcher;
 use PHPUnit\Framework\MockObject\Rule\InvokedCount as InvokedCountMatcher;
+use PHPUnit\Framework\MockObject\Stub\ConsecutiveCalls as ConsecutiveCallsStub;
 use PHPUnit\Framework\MockObject\Stub\Exception as ExceptionStub;
+use PHPUnit\Framework\MockObject\Stub\ReturnArgument as ReturnArgumentStub;
+use PHPUnit\Framework\MockObject\Stub\ReturnCallback as ReturnCallbackStub;
+use PHPUnit\Framework\MockObject\Stub\ReturnSelf as ReturnSelfStub;
+use PHPUnit\Framework\MockObject\Stub\ReturnStub;
+use PHPUnit\Framework\MockObject\Stub\ReturnValueMap as ReturnValueMapStub;
 use PHPUnit\Util\Xml\XmlException;
 use Throwable;
-
-if (!function_exists('PHPUnit\Framework\assertArrayIsEqualToArrayOnlyConsideringListOfKeys')) {
-    /**
-     * Asserts that two arrays are equal while only considering a list of keys.
-     *
-     * @param array<mixed>              $expected
-     * @param array<mixed>              $actual
-     * @param non-empty-list<array-key> $keysToBeConsidered
-     *
-     * @throws Exception
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertArrayIsEqualToArrayOnlyConsideringListOfKeys
-     */
-    function assertArrayIsEqualToArrayOnlyConsideringListOfKeys(array $expected, array $actual, array $keysToBeConsidered, string $message = ''): void
-    {
-        Assert::assertArrayIsEqualToArrayOnlyConsideringListOfKeys(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\assertArrayIsEqualToArrayIgnoringListOfKeys')) {
-    /**
-     * Asserts that two arrays are equal while ignoring a list of keys.
-     *
-     * @param array<mixed>              $expected
-     * @param array<mixed>              $actual
-     * @param non-empty-list<array-key> $keysToBeIgnored
-     *
-     * @throws Exception
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertArrayIsEqualToArrayIgnoringListOfKeys
-     */
-    function assertArrayIsEqualToArrayIgnoringListOfKeys(array $expected, array $actual, array $keysToBeIgnored, string $message = ''): void
-    {
-        Assert::assertArrayIsEqualToArrayIgnoringListOfKeys(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys')) {
-    /**
-     * Asserts that two arrays are identical while only considering a list of keys.
-     *
-     * @param array<mixed>              $expected
-     * @param array<mixed>              $actual
-     * @param non-empty-list<array-key> $keysToBeConsidered
-     *
-     * @throws Exception
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys
-     */
-    function assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys(array $expected, array $actual, array $keysToBeConsidered, string $message = ''): void
-    {
-        Assert::assertArrayIsIdenticalToArrayOnlyConsideringListOfKeys(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\assertArrayIsIdenticalToArrayIgnoringListOfKeys')) {
-    /**
-     * Asserts that two arrays are equal while ignoring a list of keys.
-     *
-     * @param array<mixed>              $expected
-     * @param array<mixed>              $actual
-     * @param non-empty-list<array-key> $keysToBeIgnored
-     *
-     * @throws Exception
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertArrayIsIdenticalToArrayIgnoringListOfKeys
-     */
-    function assertArrayIsIdenticalToArrayIgnoringListOfKeys(array $expected, array $actual, array $keysToBeIgnored, string $message = ''): void
-    {
-        Assert::assertArrayIsIdenticalToArrayIgnoringListOfKeys(...func_get_args());
-    }
-}
 
 if (!function_exists('PHPUnit\Framework\assertArrayHasKey')) {
     /**
      * Asserts that an array has a specified key.
-     *
-     * @param array<mixed>|ArrayAccess<array-key, mixed> $array
      *
      * @throws Exception
      * @throws ExpectationFailedException
@@ -170,8 +90,6 @@ if (!function_exists('PHPUnit\Framework\assertArrayNotHasKey')) {
     /**
      * Asserts that an array does not have a specified key.
      *
-     * @param array<mixed>|ArrayAccess<array-key, mixed> $array
-     *
      * @throws Exception
      * @throws ExpectationFailedException
      *
@@ -187,8 +105,6 @@ if (!function_exists('PHPUnit\Framework\assertArrayNotHasKey')) {
 
 if (!function_exists('PHPUnit\Framework\assertIsList')) {
     /**
-     * @phpstan-assert list<mixed> $array
-     *
      * @throws ExpectationFailedException
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
@@ -205,8 +121,6 @@ if (!function_exists('PHPUnit\Framework\assertContains')) {
     /**
      * Asserts that a haystack contains a needle.
      *
-     * @param iterable<mixed> $haystack
-     *
      * @throws Exception
      * @throws ExpectationFailedException
      *
@@ -222,8 +136,6 @@ if (!function_exists('PHPUnit\Framework\assertContains')) {
 
 if (!function_exists('PHPUnit\Framework\assertContainsEquals')) {
     /**
-     * @param iterable<mixed> $haystack
-     *
      * @throws ExpectationFailedException
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
@@ -240,8 +152,6 @@ if (!function_exists('PHPUnit\Framework\assertNotContains')) {
     /**
      * Asserts that a haystack does not contain a needle.
      *
-     * @param iterable<mixed> $haystack
-     *
      * @throws Exception
      * @throws ExpectationFailedException
      *
@@ -257,8 +167,6 @@ if (!function_exists('PHPUnit\Framework\assertNotContains')) {
 
 if (!function_exists('PHPUnit\Framework\assertNotContainsEquals')) {
     /**
-     * @param iterable<mixed> $haystack
-     *
      * @throws ExpectationFailedException
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
@@ -275,13 +183,8 @@ if (!function_exists('PHPUnit\Framework\assertContainsOnly')) {
     /**
      * Asserts that a haystack contains only values of a given type.
      *
-     * @param 'array'|'bool'|'boolean'|'callable'|'double'|'float'|'int'|'integer'|'iterable'|'null'|'numeric'|'object'|'real'|'resource (closed)'|'resource'|'scalar'|'string' $type
-     * @param iterable<mixed>                                                                                                                                                   $haystack
-     *
      * @throws Exception
      * @throws ExpectationFailedException
-     *
-     * @deprecated https://github.com/sebastianbergmann/phpunit/issues/6056
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -293,276 +196,9 @@ if (!function_exists('PHPUnit\Framework\assertContainsOnly')) {
     }
 }
 
-if (!function_exists('PHPUnit\Framework\assertContainsOnlyArray')) {
-    /**
-     * Asserts that a haystack contains only values of type array.
-     *
-     * @phpstan-assert iterable<array<mixed>> $haystack
-     *
-     * @param iterable<mixed> $haystack
-     *
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertContainsOnlyArray
-     */
-    function assertContainsOnlyArray(iterable $haystack, string $message = ''): void
-    {
-        Assert::assertContainsOnlyArray(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\assertContainsOnlyBool')) {
-    /**
-     * Asserts that a haystack contains only values of type bool.
-     *
-     * @phpstan-assert iterable<bool> $haystack
-     *
-     * @param iterable<mixed> $haystack
-     *
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertContainsOnlyBool
-     */
-    function assertContainsOnlyBool(iterable $haystack, string $message = ''): void
-    {
-        Assert::assertContainsOnlyBool(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\assertContainsOnlyCallable')) {
-    /**
-     * Asserts that a haystack contains only values of type callable.
-     *
-     * @phpstan-assert iterable<callable> $haystack
-     *
-     * @param iterable<mixed> $haystack
-     *
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertContainsOnlyCallable
-     */
-    function assertContainsOnlyCallable(iterable $haystack, string $message = ''): void
-    {
-        Assert::assertContainsOnlyCallable(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\assertContainsOnlyFloat')) {
-    /**
-     * Asserts that a haystack contains only values of type float.
-     *
-     * @phpstan-assert iterable<float> $haystack
-     *
-     * @param iterable<mixed> $haystack
-     *
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertContainsOnlyFloat
-     */
-    function assertContainsOnlyFloat(iterable $haystack, string $message = ''): void
-    {
-        Assert::assertContainsOnlyFloat(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\assertContainsOnlyInt')) {
-    /**
-     * Asserts that a haystack contains only values of type int.
-     *
-     * @phpstan-assert iterable<int> $haystack
-     *
-     * @param iterable<mixed> $haystack
-     *
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertContainsOnlyInt
-     */
-    function assertContainsOnlyInt(iterable $haystack, string $message = ''): void
-    {
-        Assert::assertContainsOnlyInt(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\assertContainsOnlyIterable')) {
-    /**
-     * Asserts that a haystack contains only values of type iterable.
-     *
-     * @phpstan-assert iterable<iterable<mixed>> $haystack
-     *
-     * @param iterable<mixed> $haystack
-     *
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertContainsOnlyIterable
-     */
-    function assertContainsOnlyIterable(iterable $haystack, string $message = ''): void
-    {
-        Assert::assertContainsOnlyIterable(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\assertContainsOnlyNull')) {
-    /**
-     * Asserts that a haystack contains only values of type null.
-     *
-     * @phpstan-assert iterable<null> $haystack
-     *
-     * @param iterable<mixed> $haystack
-     *
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertContainsOnlyNull
-     */
-    function assertContainsOnlyNull(iterable $haystack, string $message = ''): void
-    {
-        Assert::assertContainsOnlyNull(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\assertContainsOnlyNumeric')) {
-    /**
-     * Asserts that a haystack contains only values of type numeric.
-     *
-     * @phpstan-assert iterable<numeric> $haystack
-     *
-     * @param iterable<mixed> $haystack
-     *
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertContainsOnlyNumeric
-     */
-    function assertContainsOnlyNumeric(iterable $haystack, string $message = ''): void
-    {
-        Assert::assertContainsOnlyNumeric(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\assertContainsOnlyObject')) {
-    /**
-     * Asserts that a haystack contains only values of type object.
-     *
-     * @phpstan-assert iterable<object> $haystack
-     *
-     * @param iterable<mixed> $haystack
-     *
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertContainsOnlyObject
-     */
-    function assertContainsOnlyObject(iterable $haystack, string $message = ''): void
-    {
-        Assert::assertContainsOnlyObject(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\assertContainsOnlyResource')) {
-    /**
-     * Asserts that a haystack contains only values of type resource.
-     *
-     * @phpstan-assert iterable<resource> $haystack
-     *
-     * @param iterable<mixed> $haystack
-     *
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertContainsOnlyResource
-     */
-    function assertContainsOnlyResource(iterable $haystack, string $message = ''): void
-    {
-        Assert::assertContainsOnlyResource(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\assertContainsOnlyClosedResource')) {
-    /**
-     * Asserts that a haystack contains only values of type closed resource.
-     *
-     * @phpstan-assert iterable<resource> $haystack
-     *
-     * @param iterable<mixed> $haystack
-     *
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertContainsOnlyClosedResource
-     */
-    function assertContainsOnlyClosedResource(iterable $haystack, string $message = ''): void
-    {
-        Assert::assertContainsOnlyClosedResource(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\assertContainsOnlyScalar')) {
-    /**
-     * Asserts that a haystack contains only values of type scalar.
-     *
-     * @phpstan-assert iterable<scalar> $haystack
-     *
-     * @param iterable<mixed> $haystack
-     *
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertContainsOnlyScalar
-     */
-    function assertContainsOnlyScalar(iterable $haystack, string $message = ''): void
-    {
-        Assert::assertContainsOnlyScalar(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\assertContainsOnlyString')) {
-    /**
-     * Asserts that a haystack contains only values of type string.
-     *
-     * @phpstan-assert iterable<string> $haystack
-     *
-     * @param iterable<mixed> $haystack
-     *
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertContainsOnlyString
-     */
-    function assertContainsOnlyString(iterable $haystack, string $message = ''): void
-    {
-        Assert::assertContainsOnlyString(...func_get_args());
-    }
-}
-
 if (!function_exists('PHPUnit\Framework\assertContainsOnlyInstancesOf')) {
     /**
-     * Asserts that a haystack contains only instances of a specified interface or class name.
-     *
-     * @template T
-     *
-     * @phpstan-assert iterable<T> $haystack
-     *
-     * @param class-string<T> $className
-     * @param iterable<mixed> $haystack
+     * Asserts that a haystack contains only instances of a given class name.
      *
      * @throws Exception
      * @throws ExpectationFailedException
@@ -581,13 +217,8 @@ if (!function_exists('PHPUnit\Framework\assertNotContainsOnly')) {
     /**
      * Asserts that a haystack does not contain only values of a given type.
      *
-     * @param 'array'|'bool'|'boolean'|'callable'|'double'|'float'|'int'|'integer'|'iterable'|'null'|'numeric'|'object'|'real'|'resource (closed)'|'resource'|'scalar'|'string' $type
-     * @param iterable<mixed>                                                                                                                                                   $haystack
-     *
      * @throws Exception
      * @throws ExpectationFailedException
-     *
-     * @deprecated https://github.com/sebastianbergmann/phpunit/issues/6056
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -599,265 +230,9 @@ if (!function_exists('PHPUnit\Framework\assertNotContainsOnly')) {
     }
 }
 
-if (!function_exists('PHPUnit\Framework\assertContainsNotOnlyArray')) {
-    /**
-     * Asserts that a haystack does not contain only values of type array.
-     *
-     * @param iterable<mixed> $haystack
-     *
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertContainsNotOnlyArray
-     */
-    function assertContainsNotOnlyArray(iterable $haystack, string $message = ''): void
-    {
-        Assert::assertContainsNotOnlyArray(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\assertContainsNotOnlyBool')) {
-    /**
-     * Asserts that a haystack does not contain only values of type bool.
-     *
-     * @param iterable<mixed> $haystack
-     *
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertContainsNotOnlyBool
-     */
-    function assertContainsNotOnlyBool(iterable $haystack, string $message = ''): void
-    {
-        Assert::assertContainsNotOnlyBool(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\assertContainsNotOnlyCallable')) {
-    /**
-     * Asserts that a haystack does not contain only values of type callable.
-     *
-     * @param iterable<mixed> $haystack
-     *
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertContainsNotOnlyCallable
-     */
-    function assertContainsNotOnlyCallable(iterable $haystack, string $message = ''): void
-    {
-        Assert::assertContainsNotOnlyCallable(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\assertContainsNotOnlyFloat')) {
-    /**
-     * Asserts that a haystack does not contain only values of type float.
-     *
-     * @param iterable<mixed> $haystack
-     *
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertContainsNotOnlyFloat
-     */
-    function assertContainsNotOnlyFloat(iterable $haystack, string $message = ''): void
-    {
-        Assert::assertContainsNotOnlyFloat(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\assertContainsNotOnlyInt')) {
-    /**
-     * Asserts that a haystack does not contain only values of type int.
-     *
-     * @param iterable<mixed> $haystack
-     *
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertContainsNotOnlyInt
-     */
-    function assertContainsNotOnlyInt(iterable $haystack, string $message = ''): void
-    {
-        Assert::assertContainsNotOnlyInt(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\assertContainsNotOnlyIterable')) {
-    /**
-     * Asserts that a haystack does not contain only values of type iterable.
-     *
-     * @param iterable<mixed> $haystack
-     *
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertContainsNotOnlyIterable
-     */
-    function assertContainsNotOnlyIterable(iterable $haystack, string $message = ''): void
-    {
-        Assert::assertContainsNotOnlyIterable(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\assertContainsNotOnlyNull')) {
-    /**
-     * Asserts that a haystack does not contain only values of type null.
-     *
-     * @param iterable<mixed> $haystack
-     *
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertContainsNotOnlyNull
-     */
-    function assertContainsNotOnlyNull(iterable $haystack, string $message = ''): void
-    {
-        Assert::assertContainsNotOnlyNull(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\assertContainsNotOnlyNumeric')) {
-    /**
-     * Asserts that a haystack does not contain only values of type numeric.
-     *
-     * @param iterable<mixed> $haystack
-     *
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertContainsNotOnlyNumeric
-     */
-    function assertContainsNotOnlyNumeric(iterable $haystack, string $message = ''): void
-    {
-        Assert::assertContainsNotOnlyNumeric(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\assertContainsNotOnlyObject')) {
-    /**
-     * Asserts that a haystack does not contain only values of type object.
-     *
-     * @param iterable<mixed> $haystack
-     *
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertContainsNotOnlyObject
-     */
-    function assertContainsNotOnlyObject(iterable $haystack, string $message = ''): void
-    {
-        Assert::assertContainsNotOnlyObject(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\assertContainsNotOnlyResource')) {
-    /**
-     * Asserts that a haystack does not contain only values of type resource.
-     *
-     * @param iterable<mixed> $haystack
-     *
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertContainsNotOnlyResource
-     */
-    function assertContainsNotOnlyResource(iterable $haystack, string $message = ''): void
-    {
-        Assert::assertContainsNotOnlyResource(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\assertContainsNotOnlyClosedResource')) {
-    /**
-     * Asserts that a haystack does not contain only values of type closed resource.
-     *
-     * @param iterable<mixed> $haystack
-     *
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertContainsNotOnlyClosedResource
-     */
-    function assertContainsNotOnlyClosedResource(iterable $haystack, string $message = ''): void
-    {
-        Assert::assertContainsNotOnlyClosedResource(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\assertContainsNotOnlyScalar')) {
-    /**
-     * Asserts that a haystack does not contain only values of type scalar.
-     *
-     * @param iterable<mixed> $haystack
-     *
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertContainsNotOnlyScalar
-     */
-    function assertContainsNotOnlyScalar(iterable $haystack, string $message = ''): void
-    {
-        Assert::assertContainsNotOnlyScalar(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\assertContainsNotOnlyString')) {
-    /**
-     * Asserts that a haystack does not contain only values of type string.
-     *
-     * @param iterable<mixed> $haystack
-     *
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertContainsNotOnlyString
-     */
-    function assertContainsNotOnlyString(iterable $haystack, string $message = ''): void
-    {
-        Assert::assertContainsNotOnlyString(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\assertContainsNotOnlyInstancesOf')) {
-    /**
-     * Asserts that a haystack does not contain only instances of a specified interface or class name.
-     *
-     * @param class-string    $className
-     * @param iterable<mixed> $haystack
-     *
-     * @throws Exception
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertContainsNotOnlyInstancesOf
-     */
-    function assertContainsNotOnlyInstancesOf(string $className, iterable $haystack, string $message = ''): void
-    {
-        Assert::assertContainsNotOnlyInstancesOf(...func_get_args());
-    }
-}
-
 if (!function_exists('PHPUnit\Framework\assertCount')) {
     /**
      * Asserts the number of elements of an array, Countable or Traversable.
-     *
-     * @param Countable|iterable<mixed> $haystack
      *
      * @throws Exception
      * @throws ExpectationFailedException
@@ -876,8 +251,6 @@ if (!function_exists('PHPUnit\Framework\assertCount')) {
 if (!function_exists('PHPUnit\Framework\assertNotCount')) {
     /**
      * Asserts the number of elements of an array, Countable or Traversable.
-     *
-     * @param Countable|iterable<mixed> $haystack
      *
      * @throws Exception
      * @throws ExpectationFailedException
@@ -1035,26 +408,14 @@ if (!function_exists('PHPUnit\Framework\assertObjectEquals')) {
     }
 }
 
-if (!function_exists('PHPUnit\Framework\assertObjectNotEquals')) {
-    /**
-     * @throws ExpectationFailedException
-     *
-     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
-     *
-     * @see Assert::assertObjectNotEquals
-     */
-    function assertObjectNotEquals(object $expected, object $actual, string $method = 'equals', string $message = ''): void
-    {
-        Assert::assertObjectNotEquals(...func_get_args());
-    }
-}
-
 if (!function_exists('PHPUnit\Framework\assertEmpty')) {
     /**
      * Asserts that a variable is empty.
      *
      * @throws ExpectationFailedException
      * @throws GeneratorNotSupportedException
+     *
+     * @psalm-assert empty $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -1072,6 +433,8 @@ if (!function_exists('PHPUnit\Framework\assertNotEmpty')) {
      *
      * @throws ExpectationFailedException
      * @throws GeneratorNotSupportedException
+     *
+     * @psalm-assert !empty $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -1093,7 +456,7 @@ if (!function_exists('PHPUnit\Framework\assertGreaterThan')) {
      *
      * @see Assert::assertGreaterThan
      */
-    function assertGreaterThan(mixed $minimum, mixed $actual, string $message = ''): void
+    function assertGreaterThan(mixed $expected, mixed $actual, string $message = ''): void
     {
         Assert::assertGreaterThan(...func_get_args());
     }
@@ -1109,7 +472,7 @@ if (!function_exists('PHPUnit\Framework\assertGreaterThanOrEqual')) {
      *
      * @see Assert::assertGreaterThanOrEqual
      */
-    function assertGreaterThanOrEqual(mixed $minimum, mixed $actual, string $message = ''): void
+    function assertGreaterThanOrEqual(mixed $expected, mixed $actual, string $message = ''): void
     {
         Assert::assertGreaterThanOrEqual(...func_get_args());
     }
@@ -1125,7 +488,7 @@ if (!function_exists('PHPUnit\Framework\assertLessThan')) {
      *
      * @see Assert::assertLessThan
      */
-    function assertLessThan(mixed $maximum, mixed $actual, string $message = ''): void
+    function assertLessThan(mixed $expected, mixed $actual, string $message = ''): void
     {
         Assert::assertLessThan(...func_get_args());
     }
@@ -1141,7 +504,7 @@ if (!function_exists('PHPUnit\Framework\assertLessThanOrEqual')) {
      *
      * @see Assert::assertLessThanOrEqual
      */
-    function assertLessThanOrEqual(mixed $maximum, mixed $actual, string $message = ''): void
+    function assertLessThanOrEqual(mixed $expected, mixed $actual, string $message = ''): void
     {
         Assert::assertLessThanOrEqual(...func_get_args());
     }
@@ -1613,7 +976,7 @@ if (!function_exists('PHPUnit\Framework\assertTrue')) {
      *
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert true $condition
+     * @psalm-assert true $condition
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -1631,7 +994,7 @@ if (!function_exists('PHPUnit\Framework\assertNotTrue')) {
      *
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert !true $condition
+     * @psalm-assert !true $condition
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -1649,7 +1012,7 @@ if (!function_exists('PHPUnit\Framework\assertFalse')) {
      *
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert false $condition
+     * @psalm-assert false $condition
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -1667,7 +1030,7 @@ if (!function_exists('PHPUnit\Framework\assertNotFalse')) {
      *
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert !false $condition
+     * @psalm-assert !false $condition
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -1685,7 +1048,7 @@ if (!function_exists('PHPUnit\Framework\assertNull')) {
      *
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert null $actual
+     * @psalm-assert null $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -1703,7 +1066,7 @@ if (!function_exists('PHPUnit\Framework\assertNotNull')) {
      *
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert !null $actual
+     * @psalm-assert !null $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -1801,13 +1164,13 @@ if (!function_exists('PHPUnit\Framework\assertSame')) {
      * Used on objects, it asserts that two variables reference
      * the same object.
      *
-     * @template ExpectedType
+     * @psalm-template ExpectedType
      *
-     * @param ExpectedType $expected
+     * @psalm-param ExpectedType $expected
      *
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert =ExpectedType $actual
+     * @psalm-assert =ExpectedType $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -1841,15 +1204,15 @@ if (!function_exists('PHPUnit\Framework\assertInstanceOf')) {
     /**
      * Asserts that a variable is of a given type.
      *
-     * @template ExpectedType of object
+     * @psalm-template ExpectedType of object
      *
-     * @param class-string<ExpectedType> $expected
+     * @psalm-param class-string<ExpectedType> $expected
      *
      * @throws Exception
      * @throws ExpectationFailedException
      * @throws UnknownClassOrInterfaceException
      *
-     * @phpstan-assert =ExpectedType $actual
+     * @psalm-assert =ExpectedType $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -1865,14 +1228,14 @@ if (!function_exists('PHPUnit\Framework\assertNotInstanceOf')) {
     /**
      * Asserts that a variable is not of a given type.
      *
-     * @template ExpectedType of object
+     * @psalm-template ExpectedType of object
      *
-     * @param class-string<ExpectedType> $expected
+     * @psalm-param class-string<ExpectedType> $expected
      *
      * @throws Exception
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert !ExpectedType $actual
+     * @psalm-assert !ExpectedType $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -1891,7 +1254,7 @@ if (!function_exists('PHPUnit\Framework\assertIsArray')) {
      * @throws Exception
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert array<mixed> $actual
+     * @psalm-assert array $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -1910,7 +1273,7 @@ if (!function_exists('PHPUnit\Framework\assertIsBool')) {
      * @throws Exception
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert bool $actual
+     * @psalm-assert bool $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -1929,7 +1292,7 @@ if (!function_exists('PHPUnit\Framework\assertIsFloat')) {
      * @throws Exception
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert float $actual
+     * @psalm-assert float $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -1948,7 +1311,7 @@ if (!function_exists('PHPUnit\Framework\assertIsInt')) {
      * @throws Exception
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert int $actual
+     * @psalm-assert int $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -1967,7 +1330,7 @@ if (!function_exists('PHPUnit\Framework\assertIsNumeric')) {
      * @throws Exception
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert numeric $actual
+     * @psalm-assert numeric $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -1986,7 +1349,7 @@ if (!function_exists('PHPUnit\Framework\assertIsObject')) {
      * @throws Exception
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert object $actual
+     * @psalm-assert object $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -2005,7 +1368,7 @@ if (!function_exists('PHPUnit\Framework\assertIsResource')) {
      * @throws Exception
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert resource $actual
+     * @psalm-assert resource $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -2024,7 +1387,7 @@ if (!function_exists('PHPUnit\Framework\assertIsClosedResource')) {
      * @throws Exception
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert resource $actual
+     * @psalm-assert resource $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -2043,7 +1406,7 @@ if (!function_exists('PHPUnit\Framework\assertIsString')) {
      * @throws Exception
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert string $actual
+     * @psalm-assert string $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -2062,7 +1425,7 @@ if (!function_exists('PHPUnit\Framework\assertIsScalar')) {
      * @throws Exception
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert scalar $actual
+     * @psalm-assert scalar $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -2081,7 +1444,7 @@ if (!function_exists('PHPUnit\Framework\assertIsCallable')) {
      * @throws Exception
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert callable $actual
+     * @psalm-assert callable $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -2100,7 +1463,7 @@ if (!function_exists('PHPUnit\Framework\assertIsIterable')) {
      * @throws Exception
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert iterable<mixed> $actual
+     * @psalm-assert iterable $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -2119,7 +1482,7 @@ if (!function_exists('PHPUnit\Framework\assertIsNotArray')) {
      * @throws Exception
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert !array<mixed> $actual
+     * @psalm-assert !array $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -2138,7 +1501,7 @@ if (!function_exists('PHPUnit\Framework\assertIsNotBool')) {
      * @throws Exception
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert !bool $actual
+     * @psalm-assert !bool $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -2157,7 +1520,7 @@ if (!function_exists('PHPUnit\Framework\assertIsNotFloat')) {
      * @throws Exception
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert !float $actual
+     * @psalm-assert !float $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -2176,7 +1539,7 @@ if (!function_exists('PHPUnit\Framework\assertIsNotInt')) {
      * @throws Exception
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert !int $actual
+     * @psalm-assert !int $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -2195,7 +1558,7 @@ if (!function_exists('PHPUnit\Framework\assertIsNotNumeric')) {
      * @throws Exception
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert !numeric $actual
+     * @psalm-assert !numeric $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -2214,7 +1577,7 @@ if (!function_exists('PHPUnit\Framework\assertIsNotObject')) {
      * @throws Exception
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert !object $actual
+     * @psalm-assert !object $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -2233,7 +1596,7 @@ if (!function_exists('PHPUnit\Framework\assertIsNotResource')) {
      * @throws Exception
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert !resource $actual
+     * @psalm-assert !resource $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -2252,7 +1615,7 @@ if (!function_exists('PHPUnit\Framework\assertIsNotClosedResource')) {
      * @throws Exception
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert !resource $actual
+     * @psalm-assert !resource $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -2271,7 +1634,7 @@ if (!function_exists('PHPUnit\Framework\assertIsNotString')) {
      * @throws Exception
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert !string $actual
+     * @psalm-assert !string $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -2290,7 +1653,7 @@ if (!function_exists('PHPUnit\Framework\assertIsNotScalar')) {
      * @throws Exception
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert !scalar $actual
+     * @psalm-assert !scalar $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -2309,7 +1672,7 @@ if (!function_exists('PHPUnit\Framework\assertIsNotCallable')) {
      * @throws Exception
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert !callable $actual
+     * @psalm-assert !callable $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -2328,7 +1691,7 @@ if (!function_exists('PHPUnit\Framework\assertIsNotIterable')) {
      * @throws Exception
      * @throws ExpectationFailedException
      *
-     * @phpstan-assert !iterable<mixed> $actual
+     * @psalm-assert !iterable $actual
      *
      * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
      *
@@ -2377,9 +1740,6 @@ if (!function_exists('PHPUnit\Framework\assertSameSize')) {
      * Assert that the size of two arrays (or `Countable` or `Traversable` objects)
      * is the same.
      *
-     * @param Countable|iterable<mixed> $expected
-     * @param Countable|iterable<mixed> $actual
-     *
      * @throws Exception
      * @throws ExpectationFailedException
      * @throws GeneratorNotSupportedException
@@ -2398,9 +1758,6 @@ if (!function_exists('PHPUnit\Framework\assertNotSameSize')) {
     /**
      * Assert that the size of two arrays (or `Countable` or `Traversable` objects)
      * is not the same.
-     *
-     * @param Countable|iterable<mixed> $expected
-     * @param Countable|iterable<mixed> $actual
      *
      * @throws Exception
      * @throws ExpectationFailedException
@@ -2494,6 +1851,24 @@ if (!function_exists('PHPUnit\Framework\assertStringMatchesFormat')) {
     }
 }
 
+if (!function_exists('PHPUnit\Framework\assertStringNotMatchesFormat')) {
+    /**
+     * Asserts that a string does not match a given format string.
+     *
+     * @throws ExpectationFailedException
+     *
+     * @deprecated https://github.com/sebastianbergmann/phpunit/issues/5472
+     *
+     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
+     *
+     * @see Assert::assertStringNotMatchesFormat
+     */
+    function assertStringNotMatchesFormat(string $format, string $string, string $message = ''): void
+    {
+        Assert::assertStringNotMatchesFormat(...func_get_args());
+    }
+}
+
 if (!function_exists('PHPUnit\Framework\assertStringMatchesFormatFile')) {
     /**
      * Asserts that a string matches a given format file.
@@ -2510,11 +1885,29 @@ if (!function_exists('PHPUnit\Framework\assertStringMatchesFormatFile')) {
     }
 }
 
+if (!function_exists('PHPUnit\Framework\assertStringNotMatchesFormatFile')) {
+    /**
+     * Asserts that a string does not match a given format string.
+     *
+     * @throws ExpectationFailedException
+     *
+     * @deprecated https://github.com/sebastianbergmann/phpunit/issues/5472
+     *
+     * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
+     *
+     * @see Assert::assertStringNotMatchesFormatFile
+     */
+    function assertStringNotMatchesFormatFile(string $formatFile, string $string, string $message = ''): void
+    {
+        Assert::assertStringNotMatchesFormatFile(...func_get_args());
+    }
+}
+
 if (!function_exists('PHPUnit\Framework\assertStringStartsWith')) {
     /**
      * Asserts that a string starts with a given prefix.
      *
-     * @param non-empty-string $prefix
+     * @psalm-param non-empty-string $prefix
      *
      * @throws ExpectationFailedException
      * @throws InvalidArgumentException
@@ -2533,7 +1926,7 @@ if (!function_exists('PHPUnit\Framework\assertStringStartsNotWith')) {
     /**
      * Asserts that a string starts not with a given prefix.
      *
-     * @param non-empty-string $prefix
+     * @psalm-param non-empty-string $prefix
      *
      * @throws ExpectationFailedException
      * @throws InvalidArgumentException
@@ -2608,7 +2001,7 @@ if (!function_exists('PHPUnit\Framework\assertStringEndsWith')) {
     /**
      * Asserts that a string ends with a given suffix.
      *
-     * @param non-empty-string $suffix
+     * @psalm-param non-empty-string $suffix
      *
      * @throws ExpectationFailedException
      * @throws InvalidArgumentException
@@ -2627,7 +2020,7 @@ if (!function_exists('PHPUnit\Framework\assertStringEndsNotWith')) {
     /**
      * Asserts that a string ends not with a given suffix.
      *
-     * @param non-empty-string $suffix
+     * @psalm-param non-empty-string $suffix
      *
      * @throws ExpectationFailedException
      * @throws InvalidArgumentException
@@ -2978,97 +2371,6 @@ if (!function_exists('PHPUnit\Framework\containsOnly')) {
     }
 }
 
-if (!function_exists('PHPUnit\Framework\containsOnlyArray')) {
-    function containsOnlyArray(): TraversableContainsOnly
-    {
-        return Assert::containsOnlyArray(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\containsOnlyBool')) {
-    function containsOnlyBool(): TraversableContainsOnly
-    {
-        return Assert::containsOnlyBool(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\containsOnlyCallable')) {
-    function containsOnlyCallable(): TraversableContainsOnly
-    {
-        return Assert::containsOnlyCallable(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\containsOnlyFloat')) {
-    function containsOnlyFloat(): TraversableContainsOnly
-    {
-        return Assert::containsOnlyFloat(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\containsOnlyInt')) {
-    function containsOnlyInt(): TraversableContainsOnly
-    {
-        return Assert::containsOnlyInt(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\containsOnlyIterable')) {
-    function containsOnlyIterable(): TraversableContainsOnly
-    {
-        return Assert::containsOnlyIterable(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\containsOnlyNull')) {
-    function containsOnlyNull(): TraversableContainsOnly
-    {
-        return Assert::containsOnlyNull(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\containsOnlyNumeric')) {
-    function containsOnlyNumeric(): TraversableContainsOnly
-    {
-        return Assert::containsOnlyNumeric(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\containsOnlyObject')) {
-    function containsOnlyObject(): TraversableContainsOnly
-    {
-        return Assert::containsOnlyObject(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\containsOnlyResource')) {
-    function containsOnlyResource(): TraversableContainsOnly
-    {
-        return Assert::containsOnlyResource(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\containsOnlyClosedResource')) {
-    function containsOnlyClosedResource(): TraversableContainsOnly
-    {
-        return Assert::containsOnlyClosedResource(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\containsOnlyScalar')) {
-    function containsOnlyScalar(): TraversableContainsOnly
-    {
-        return Assert::containsOnlyScalar(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\containsOnlyString')) {
-    function containsOnlyString(): TraversableContainsOnly
-    {
-        return Assert::containsOnlyString(...func_get_args());
-    }
-}
-
 if (!function_exists('PHPUnit\Framework\containsOnlyInstancesOf')) {
     function containsOnlyInstancesOf(string $className): TraversableContainsOnly
     {
@@ -3181,90 +2483,6 @@ if (!function_exists('PHPUnit\Framework\isInstanceOf')) {
     }
 }
 
-if (!function_exists('PHPUnit\Framework\isArray')) {
-    function isArray(): IsType
-    {
-        return Assert::isArray(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\isBool')) {
-    function isBool(): IsType
-    {
-        return Assert::isBool(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\isCallable')) {
-    function isCallable(): IsType
-    {
-        return Assert::isCallable(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\isFloat')) {
-    function isFloat(): IsType
-    {
-        return Assert::isFloat(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\isInt')) {
-    function isInt(): IsType
-    {
-        return Assert::isInt(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\isIterable')) {
-    function isIterable(): IsType
-    {
-        return Assert::isIterable(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\isNumeric')) {
-    function isNumeric(): IsType
-    {
-        return Assert::isNumeric(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\isObject')) {
-    function isObject(): IsType
-    {
-        return Assert::isObject(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\isResource')) {
-    function isResource(): IsType
-    {
-        return Assert::isResource(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\isClosedResource')) {
-    function isClosedResource(): IsType
-    {
-        return Assert::isClosedResource(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\isScalar')) {
-    function isScalar(): IsType
-    {
-        return Assert::isScalar(...func_get_args());
-    }
-}
-
-if (!function_exists('PHPUnit\Framework\isString')) {
-    function isString(): IsType
-    {
-        return Assert::isString(...func_get_args());
-    }
-}
-
 if (!function_exists('PHPUnit\Framework\isType')) {
     function isType(string $type): IsType
     {
@@ -3344,11 +2562,11 @@ if (!function_exists('PHPUnit\Framework\objectEquals')) {
 
 if (!function_exists('PHPUnit\Framework\callback')) {
     /**
-     * @template CallbackInput of mixed
+     * @psalm-template CallbackInput of mixed
      *
-     * @param callable(CallbackInput $callback): bool $callback
+     * @psalm-param callable(CallbackInput $callback): bool $callback
      *
-     * @return Callback<CallbackInput>
+     * @psalm-return Callback<CallbackInput>
      */
     function callback(callable $callback): Callback
     {
@@ -3360,8 +2578,6 @@ if (!function_exists('PHPUnit\Framework\any')) {
     /**
      * Returns a matcher that matches when the method is executed
      * zero or more times.
-     *
-     * @deprecated https://github.com/sebastianbergmann/phpunit/issues/6461
      */
     function any(): AnyInvokedCountMatcher
     {
@@ -3434,9 +2650,58 @@ if (!function_exists('PHPUnit\Framework\atMost')) {
     }
 }
 
+if (!function_exists('PHPUnit\Framework\returnValue')) {
+    function returnValue(mixed $value): ReturnStub
+    {
+        return new ReturnStub($value);
+    }
+}
+
+if (!function_exists('PHPUnit\Framework\returnValueMap')) {
+    function returnValueMap(array $valueMap): ReturnValueMapStub
+    {
+        return new ReturnValueMapStub($valueMap);
+    }
+}
+
+if (!function_exists('PHPUnit\Framework\returnArgument')) {
+    function returnArgument(int $argumentIndex): ReturnArgumentStub
+    {
+        return new ReturnArgumentStub($argumentIndex);
+    }
+}
+
+if (!function_exists('PHPUnit\Framework\returnCallback')) {
+    function returnCallback(callable $callback): ReturnCallbackStub
+    {
+        return new ReturnCallbackStub($callback);
+    }
+}
+
+if (!function_exists('PHPUnit\Framework\returnSelf')) {
+    /**
+     * Returns the current object.
+     *
+     * This method is useful when mocking a fluent interface.
+     */
+    function returnSelf(): ReturnSelfStub
+    {
+        return new ReturnSelfStub;
+    }
+}
+
 if (!function_exists('PHPUnit\Framework\throwException')) {
     function throwException(Throwable $exception): ExceptionStub
     {
         return new ExceptionStub($exception);
+    }
+}
+
+if (!function_exists('PHPUnit\Framework\onConsecutiveCalls')) {
+    function onConsecutiveCalls(): ConsecutiveCallsStub
+    {
+        $arguments = func_get_args();
+
+        return new ConsecutiveCallsStub($arguments);
     }
 }

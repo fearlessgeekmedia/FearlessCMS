@@ -13,25 +13,24 @@ use function sprintf;
 use PHPUnit\Event\Code;
 use PHPUnit\Event\Event;
 use PHPUnit\Event\Telemetry;
-use PHPUnit\Framework\TestCase;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class AfterLastTestMethodCalled implements Event
+final class AfterLastTestMethodCalled implements Event
 {
-    private Telemetry\Info $telemetryInfo;
+    private readonly Telemetry\Info $telemetryInfo;
 
     /**
-     * @var class-string<TestCase>
+     * @psalm-var class-string
      */
-    private string $testClassName;
-    private Code\ClassMethod $calledMethod;
+    private readonly string $testClassName;
+    private readonly Code\ClassMethod $calledMethod;
 
     /**
-     * @param class-string<TestCase> $testClassName
+     * @psalm-param class-string $testClassName
      */
     public function __construct(Telemetry\Info $telemetryInfo, string $testClassName, Code\ClassMethod $calledMethod)
     {
@@ -46,7 +45,7 @@ final readonly class AfterLastTestMethodCalled implements Event
     }
 
     /**
-     * @return class-string<TestCase>
+     * @psalm-return class-string
      */
     public function testClassName(): string
     {
@@ -58,9 +57,6 @@ final readonly class AfterLastTestMethodCalled implements Event
         return $this->calledMethod;
     }
 
-    /**
-     * @return non-empty-string
-     */
     public function asString(): string
     {
         return sprintf(

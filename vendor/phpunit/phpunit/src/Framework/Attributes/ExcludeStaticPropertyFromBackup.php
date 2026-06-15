@@ -12,26 +12,26 @@ namespace PHPUnit\Framework\Attributes;
 use Attribute;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
 #[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]
-final readonly class ExcludeStaticPropertyFromBackup
+final class ExcludeStaticPropertyFromBackup
 {
     /**
-     * @var class-string
+     * @psalm-var class-string
      */
-    private string $className;
+    private readonly string $className;
 
     /**
-     * @var non-empty-string
+     * @psalm-var non-empty-string
      */
-    private string $propertyName;
+    private readonly string $propertyName;
 
     /**
-     * @param class-string     $className
-     * @param non-empty-string $propertyName
+     * @psalm-param class-string $className
+     * @psalm-param non-empty-string $propertyName
      */
     public function __construct(string $className, string $propertyName)
     {
@@ -40,7 +40,7 @@ final readonly class ExcludeStaticPropertyFromBackup
     }
 
     /**
-     * @return class-string
+     * @psalm-return class-string
      */
     public function className(): string
     {
@@ -48,7 +48,7 @@ final readonly class ExcludeStaticPropertyFromBackup
     }
 
     /**
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     public function propertyName(): string
     {

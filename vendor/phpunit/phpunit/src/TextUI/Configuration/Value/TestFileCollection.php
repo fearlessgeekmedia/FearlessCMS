@@ -16,19 +16,19 @@ use IteratorAggregate;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
- * @immutable
+ * @psalm-immutable
  *
- * @template-implements IteratorAggregate<non-negative-int, TestFile>
+ * @template-implements IteratorAggregate<int, TestFile>
  */
-final readonly class TestFileCollection implements Countable, IteratorAggregate
+final class TestFileCollection implements Countable, IteratorAggregate
 {
     /**
-     * @var list<TestFile>
+     * @psalm-var list<TestFile>
      */
-    private array $files;
+    private readonly array $files;
 
     /**
-     * @param list<TestFile> $files
+     * @psalm-param list<TestFile> $files
      */
     public static function fromArray(array $files): self
     {
@@ -41,7 +41,7 @@ final readonly class TestFileCollection implements Countable, IteratorAggregate
     }
 
     /**
-     * @return list<TestFile>
+     * @psalm-return list<TestFile>
      */
     public function asArray(): array
     {

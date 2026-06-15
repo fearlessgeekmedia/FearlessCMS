@@ -14,9 +14,9 @@ namespace PHPUnit\Runner\ResultCache;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-abstract readonly class Subscriber
+abstract class Subscriber
 {
-    private ResultCacheHandler $handler;
+    private readonly ResultCacheHandler $handler;
 
     public function __construct(ResultCacheHandler $handler)
     {

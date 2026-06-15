@@ -57,13 +57,11 @@ The easiest way to install FearlessCMS is using the built-in installer:
    # Or use command-line installation
    php install.php --check
    php install.php --create-dirs
-   php install.php --install-export-deps
    php install.php --create-admin=admin --password=yourpassword
    ```
 
 3. **Complete Installation**
    - Create necessary directories
-   - Install export dependencies
    - Create administrator account
    - Set up initial configuration
 

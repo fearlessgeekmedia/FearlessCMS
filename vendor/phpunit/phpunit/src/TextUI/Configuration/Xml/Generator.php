@@ -16,15 +16,15 @@ use function str_replace;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class Generator
+final class Generator
 {
     /**
      * @var string
      */
-    private const string TEMPLATE = <<<'EOT'
+    private const TEMPLATE = <<<'EOT'
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="{schema_location}"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/{phpunit_version}/phpunit.xsd"
          bootstrap="{bootstrap_script}"
          cacheDirectory="{cache_directory}"
          executionOrder="depends,defects"
@@ -41,7 +41,7 @@ final readonly class Generator
         </testsuite>
     </testsuites>
 
-    <source ignoreIndirectDeprecations="true" restrictNotices="true" restrictWarnings="true">
+    <source restrictDeprecations="true" restrictNotices="true" restrictWarnings="true">
         <include>
             <directory>{src_directory}</directory>
         </include>
@@ -50,18 +50,18 @@ final readonly class Generator
 
 EOT;
 
-    public function generateDefaultConfiguration(string $schemaLocation, string $bootstrapScript, string $testsDirectory, string $srcDirectory, string $cacheDirectory): string
+    public function generateDefaultConfiguration(string $phpunitVersion, string $bootstrapScript, string $testsDirectory, string $srcDirectory, string $cacheDirectory): string
     {
         return str_replace(
             [
-                '{schema_location}',
+                '{phpunit_version}',
                 '{bootstrap_script}',
                 '{tests_directory}',
                 '{src_directory}',
                 '{cache_directory}',
             ],
             [
-                $schemaLocation,
+                $phpunitVersion,
                 $bootstrapScript,
                 $testsDirectory,
                 $srcDirectory,

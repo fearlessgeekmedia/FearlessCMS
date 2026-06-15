@@ -12,21 +12,21 @@ namespace PHPUnit\TextUI\Configuration;
 use IteratorAggregate;
 
 /**
- * @template-implements IteratorAggregate<non-negative-int, ExtensionBootstrap>
+ * @template-implements IteratorAggregate<int, ExtensionBootstrap>
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
- * @immutable
+ * @psalm-immutable
  */
-final readonly class ExtensionBootstrapCollection implements IteratorAggregate
+final class ExtensionBootstrapCollection implements IteratorAggregate
 {
     /**
-     * @var list<ExtensionBootstrap>
+     * @psalm-var list<ExtensionBootstrap>
      */
-    private array $extensionBootstraps;
+    private readonly array $extensionBootstraps;
 
     /**
-     * @param list<ExtensionBootstrap> $extensionBootstraps
+     * @psalm-param list<ExtensionBootstrap> $extensionBootstraps
      */
     public static function fromArray(array $extensionBootstraps): self
     {
@@ -39,7 +39,7 @@ final readonly class ExtensionBootstrapCollection implements IteratorAggregate
     }
 
     /**
-     * @return list<ExtensionBootstrap>
+     * @psalm-return list<ExtensionBootstrap>
      */
     public function asArray(): array
     {

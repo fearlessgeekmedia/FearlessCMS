@@ -9,21 +9,13 @@
  */
 namespace PHPUnit\Framework\Constraint;
 
-use function assert;
 use function gettype;
-use function is_int;
-use function is_object;
 use function sprintf;
-use function str_replace;
-use function strpos;
 use function strtolower;
-use function substr;
 use Countable;
-use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\ExpectationFailedException;
 use PHPUnit\Framework\SelfDescribing;
 use PHPUnit\Util\Exporter;
-use ReflectionObject;
 use SebastianBergmann\Comparator\ComparisonFailure;
 
 /**
@@ -31,20 +23,6 @@ use SebastianBergmann\Comparator\ComparisonFailure;
  */
 abstract class Constraint implements Countable, SelfDescribing
 {
-    /**
-     * @template A
-     *
-     * @param A $actual
-     *
-     * @return A
-     */
-    final public function __invoke(mixed $actual): mixed
-    {
-        Assert::assertThat($actual, $this);
-
-        return $actual;
-    }
-
     /**
      * Evaluates the constraint for parameter $other.
      *
@@ -85,6 +63,14 @@ abstract class Constraint implements Countable, SelfDescribing
     }
 
     /**
+     * @deprecated
+     */
+    protected function exporter(): \SebastianBergmann\Exporter\Exporter
+    {
+        return new \SebastianBergmann\Exporter\Exporter;
+    }
+
+    /**
      * Evaluates the constraint for parameter $other. Returns true if the
      * constraint is met, false otherwise.
      *
@@ -109,11 +95,11 @@ abstract class Constraint implements Countable, SelfDescribing
 
         $additionalFailureDescription = $this->additionalFailureDescription($other);
 
-        if ($additionalFailureDescription !== '') {
+        if ($additionalFailureDescription) {
             $failureDescription .= "\n" . $additionalFailureDescription;
         }
 
-        if ($description !== '') {
+        if (!empty($description)) {
             $failureDescription = $description . "\n" . $failureDescription;
         }
 
@@ -145,7 +131,7 @@ abstract class Constraint implements Countable, SelfDescribing
      */
     protected function failureDescription(mixed $other): string
     {
-        return Exporter::export($other) . ' ' . $this->toString();
+        return Exporter::export($other, true) . ' ' . $this->toString(true);
     }
 
     /**
@@ -185,7 +171,7 @@ abstract class Constraint implements Countable, SelfDescribing
             return '';
         }
 
-        return Exporter::export($other) . ' ' . $string;
+        return Exporter::export($other, true) . ' ' . $string;
     }
 
     /**
@@ -254,28 +240,10 @@ abstract class Constraint implements Countable, SelfDescribing
     }
 
     /**
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     protected function valueToTypeStringFragment(mixed $value): string
     {
-        if (is_object($value)) {
-            $reflector = new ReflectionObject($value);
-
-            if ($reflector->isAnonymous()) {
-                $name = str_replace('class@anonymous', '', $reflector->getName());
-
-                $length = strpos($name, '$');
-
-                assert(is_int($length));
-
-                $name = substr($name, 0, $length);
-
-                return 'an instance of anonymous class created at ' . $name . ' ';
-            }
-
-            return 'an instance of class ' . $reflector->getName() . ' ';
-        }
-
         $type = strtolower(gettype($value));
 
         if ($type === 'double') {
@@ -287,7 +255,7 @@ abstract class Constraint implements Countable, SelfDescribing
         }
 
         return match ($type) {
-            'array', 'integer' => 'an ' . $type . ' ',
+            'array', 'integer', 'object' => 'an ' . $type . ' ',
             'boolean', 'closed resource', 'float', 'resource', 'string' => 'a ' . $type . ' ',
             'null'  => 'null ',
             default => 'a value of ' . $type . ' ',

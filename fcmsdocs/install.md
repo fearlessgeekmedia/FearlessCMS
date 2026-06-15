@@ -64,13 +64,7 @@ Creates the essential directory structure:
 - `backups/` - Backup storage
 - `.fcms_updates/` - Update files
 
-#### 2. Install Export Dependencies
-Installs Node.js packages required for the export functionality:
-- `fs-extra` - Enhanced file system operations
-- `handlebars` - Template engine
-- `marked` - Markdown parser
-
-#### 3. Create Administrator Account
+#### 2. Create Administrator Account
 Creates the first administrator user with full system access.
 
 ## 💻 Command Line Interface
@@ -100,12 +94,6 @@ php install.php --create-dirs
 ```
 Creates all necessary directories and initializes configuration files.
 
-#### Install Export Dependencies
-```bash
-php install.php --install-export-deps
-```
-Installs Node.js dependencies for the export functionality.
-
 #### Create Administrator Account
 ```bash
 php install.php --create-admin=username --password=password
@@ -131,9 +119,6 @@ php install.php --check
 # Create directory structure
 php install.php --create-dirs
 
-# Install dependencies
-php install.php --install-export-deps
-
 # Create admin account
 php install.php --create-admin=admin --password=securepassword123
 ```
@@ -148,9 +133,6 @@ php install.php --check
 
 # Create directories
 php install.php --create-dirs
-
-# Install dependencies
-php install.php --install-export-deps
 
 # Create admin (password from environment variable)
 php install.php --create-admin=admin --password="$ADMIN_PASSWORD"

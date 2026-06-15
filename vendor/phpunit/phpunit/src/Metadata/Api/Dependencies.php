@@ -20,13 +20,13 @@ use PHPUnit\Metadata\Parser\Registry;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class Dependencies
+final class Dependencies
 {
     /**
-     * @param class-string     $className
-     * @param non-empty-string $methodName
+     * @psalm-param class-string $className
+     * @psalm-param non-empty-string $methodName
      *
-     * @return list<ExecutionOrderDependency>
+     * @psalm-return list<ExecutionOrderDependency>
      */
     public static function dependencies(string $className, string $methodName): array
     {
@@ -43,7 +43,7 @@ final readonly class Dependencies
 
             assert($metadata instanceof DependsOnMethod);
 
-            if ($metadata->methodName() === '') {
+            if (empty($metadata->methodName())) {
                 $dependencies[] = ExecutionOrderDependency::invalid();
 
                 continue;

@@ -12,17 +12,17 @@ namespace PHPUnit\Event\Telemetry;
 use function sprintf;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class Info
+final class Info
 {
-    private Snapshot $current;
-    private Duration $durationSinceStart;
-    private MemoryUsage $memorySinceStart;
-    private Duration $durationSincePrevious;
-    private MemoryUsage $memorySincePrevious;
+    private readonly Snapshot $current;
+    private readonly Duration $durationSinceStart;
+    private readonly MemoryUsage $memorySinceStart;
+    private readonly Duration $durationSincePrevious;
+    private readonly MemoryUsage $memorySincePrevious;
 
     public function __construct(Snapshot $current, Duration $durationSinceStart, MemoryUsage $memorySinceStart, Duration $durationSincePrevious, MemoryUsage $memorySincePrevious)
     {
@@ -79,7 +79,7 @@ final readonly class Info
             '[%s / %s] [%d bytes]',
             $this->durationSinceStart()->asString(),
             $this->durationSincePrevious()->asString(),
-            $this->peakMemoryUsage()->bytes(),
+            $this->memoryUsage()->bytes(),
         );
     }
 }

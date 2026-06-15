@@ -1,15 +1,9 @@
 #!/usr/bin/env php
-<?php
-
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
 use Pest\Kernel;
 use Pest\Panic;
 use Pest\TestCaseFilters\GitDirtyTestCaseFilter;
-use Pest\TestCaseMethodFilters\AssigneeTestCaseFilter;
-use Pest\TestCaseMethodFilters\IssueTestCaseFilter;
-use Pest\TestCaseMethodFilters\NotesTestCaseFilter;
-use Pest\TestCaseMethodFilters\PrTestCaseFilter;
 use Pest\TestCaseMethodFilters\TodoTestCaseFilter;
 use Pest\TestSuite;
 use Symfony\Component\Console\Input\ArgvInput;
@@ -23,10 +17,8 @@ use Symfony\Component\Console\Output\ConsoleOutput;
 
     $dirty = false;
     $todo = false;
-    $notes = false;
 
     foreach ($arguments as $key => $value) {
-
         if ($value === '--compact') {
             $_SERVER['COLLISION_PRINTER_COMPACT'] = 'true';
             unset($arguments[$key]);
@@ -37,14 +29,8 @@ use Symfony\Component\Console\Output\ConsoleOutput;
             unset($arguments[$key]);
         }
 
-        if (str_contains($value, '--test-directory=')) {
+        if (str_contains($value, '--test-directory')) {
             unset($arguments[$key]);
-        } elseif ($value === '--test-directory') {
-            unset($arguments[$key]);
-
-            if (isset($arguments[$key + 1])) {
-                unset($arguments[$key + 1]);
-            }
         }
 
         if ($value === '--dirty') {
@@ -55,61 +41,6 @@ use Symfony\Component\Console\Output\ConsoleOutput;
         if (in_array($value, ['--todo', '--todos'], true)) {
             $todo = true;
             unset($arguments[$key]);
-        }
-
-        if ($value === '--notes') {
-            $notes = true;
-            unset($arguments[$key]);
-        }
-
-        if (str_contains($value, '--assignee=')) {
-            unset($arguments[$key]);
-        } elseif ($value === '--assignee') {
-            unset($arguments[$key]);
-
-            if (isset($arguments[$key + 1])) {
-                unset($arguments[$key + 1]);
-            }
-        }
-
-        if (str_contains($value, '--issue=')) {
-            unset($arguments[$key]);
-        } elseif ($value === '--issue') {
-            unset($arguments[$key]);
-
-            if (isset($arguments[$key + 1])) {
-                unset($arguments[$key + 1]);
-            }
-        }
-
-        if (str_contains($value, '--ticket=')) {
-            unset($arguments[$key]);
-        } elseif ($value === '--ticket') {
-            unset($arguments[$key]);
-
-            if (isset($arguments[$key + 1])) {
-                unset($arguments[$key + 1]);
-            }
-        }
-
-        if (str_contains($value, '--pr=')) {
-            unset($arguments[$key]);
-        } elseif ($value === '--pr') {
-            unset($arguments[$key]);
-
-            if (isset($arguments[$key + 1])) {
-                unset($arguments[$key + 1]);
-            }
-        }
-
-        if (str_contains($value, '--pull-request=')) {
-            unset($arguments[$key]);
-        } elseif ($value === '--pull-request') {
-            unset($arguments[$key]);
-
-            if (isset($arguments[$key + 1])) {
-                unset($arguments[$key + 1]);
-            }
         }
 
         if (str_contains($value, '--teamcity')) {
@@ -135,7 +66,7 @@ use Symfony\Component\Console\Output\ConsoleOutput;
 
     // Get $rootPath based on $autoloadPath
     $rootPath = dirname($autoloadPath, 2);
-    $input = new ArgvInput;
+    $input = new ArgvInput();
 
     $testSuite = TestSuite::getInstance(
         $rootPath,
@@ -147,31 +78,7 @@ use Symfony\Component\Console\Output\ConsoleOutput;
     }
 
     if ($todo) {
-        $testSuite->tests->addTestCaseMethodFilter(new TodoTestCaseFilter);
-    }
-
-    if ($notes) {
-        $testSuite->tests->addTestCaseMethodFilter(new NotesTestCaseFilter);
-    }
-
-    if ($assignee = $input->getParameterOption('--assignee')) {
-        $testSuite->tests->addTestCaseMethodFilter(new AssigneeTestCaseFilter((string) $assignee));
-    }
-
-    if ($issue = $input->getParameterOption('--issue')) {
-        $testSuite->tests->addTestCaseMethodFilter(new IssueTestCaseFilter((int) $issue));
-    }
-
-    if ($issue = $input->getParameterOption('--ticket')) {
-        $testSuite->tests->addTestCaseMethodFilter(new IssueTestCaseFilter((int) $issue));
-    }
-
-    if ($pr = $input->getParameterOption('--pr')) {
-        $testSuite->tests->addTestCaseMethodFilter(new PrTestCaseFilter((int) $pr));
-    }
-
-    if ($pr = $input->getParameterOption('--pull-request')) {
-        $testSuite->tests->addTestCaseMethodFilter(new PrTestCaseFilter((int) $pr));
+        $testSuite->tests->addTestCaseMethodFilter(new TodoTestCaseFilter());
     }
 
     $isDecorated = $input->getParameterOption('--colors', 'always') !== 'never';
