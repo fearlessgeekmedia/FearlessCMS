@@ -11,9 +11,6 @@ namespace PHPUnit\Metadata;
 
 use RuntimeException;
 
-/**
- * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
- */
 final class InvalidVersionRequirementException extends RuntimeException implements Exception
 {
 }

@@ -12,9 +12,6 @@ namespace SebastianBergmann\Type;
 use function is_subclass_of;
 use function strcasecmp;
 
-/**
- * @no-named-arguments Parameter names are not covered by the backward compatibility promise for this library
- */
 final class ObjectType extends Type
 {
     private TypeName $className;
@@ -45,9 +42,6 @@ final class ObjectType extends Type
         return false;
     }
 
-    /**
-     * @return non-empty-string
-     */
     public function name(): string
     {
         return $this->className->qualifiedName();
@@ -63,6 +57,9 @@ final class ObjectType extends Type
         return $this->className;
     }
 
+    /**
+     * @psalm-assert-if-true ObjectType $this
+     */
     public function isObject(): bool
     {
         return true;

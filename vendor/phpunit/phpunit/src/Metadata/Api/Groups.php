@@ -16,11 +16,12 @@ use function assert;
 use function strtolower;
 use function trim;
 use PHPUnit\Framework\TestSize\TestSize;
+use PHPUnit\Metadata\Covers;
 use PHPUnit\Metadata\CoversClass;
 use PHPUnit\Metadata\CoversFunction;
 use PHPUnit\Metadata\Group;
 use PHPUnit\Metadata\Parser\Registry;
-use PHPUnit\Metadata\RequiresPhpExtension;
+use PHPUnit\Metadata\Uses;
 use PHPUnit\Metadata\UsesClass;
 use PHPUnit\Metadata\UsesFunction;
 
@@ -32,15 +33,15 @@ use PHPUnit\Metadata\UsesFunction;
 final class Groups
 {
     /**
-     * @var array<string, list<non-empty-string>>
+     * @var array<string, array<int, string>>
      */
     private static array $groupCache = [];
 
     /**
-     * @param class-string     $className
-     * @param non-empty-string $methodName
+     * @psalm-param class-string $className
+     * @psalm-param non-empty-string $methodName
      *
-     * @return list<non-empty-string>
+     * @psalm-return array<int, string>
      */
     public function groups(string $className, string $methodName, bool $includeVirtual = true): array
     {
@@ -58,47 +59,43 @@ final class Groups
             $groups[] = $group->groupName();
         }
 
+        if ($groups === []) {
+            $groups[] = 'default';
+        }
+
         if (!$includeVirtual) {
             return self::$groupCache[$key] = array_unique($groups);
         }
 
         foreach (Registry::parser()->forClassAndMethod($className, $methodName) as $metadata) {
-            if ($metadata->isCoversClass()) {
-                assert($metadata instanceof CoversClass);
+            if ($metadata->isCoversClass() || $metadata->isCoversFunction()) {
+                assert($metadata instanceof CoversClass || $metadata instanceof CoversFunction);
 
-                $groups[] = '__phpunit_covers_' . $this->canonicalizeName($metadata->className());
-
-                continue;
-            }
-
-            if ($metadata->isCoversFunction()) {
-                assert($metadata instanceof CoversFunction);
-
-                $groups[] = '__phpunit_covers_' . $this->canonicalizeName($metadata->functionName());
+                $groups[] = '__phpunit_covers_' . $this->canonicalizeName($metadata->asStringForCodeUnitMapper());
 
                 continue;
             }
 
-            if ($metadata->isUsesClass()) {
-                assert($metadata instanceof UsesClass);
+            if ($metadata->isCovers()) {
+                assert($metadata instanceof Covers);
 
-                $groups[] = '__phpunit_uses_' . $this->canonicalizeName($metadata->className());
-
-                continue;
-            }
-
-            if ($metadata->isUsesFunction()) {
-                assert($metadata instanceof UsesFunction);
-
-                $groups[] = '__phpunit_uses_' . $this->canonicalizeName($metadata->functionName());
+                $groups[] = '__phpunit_covers_' . $this->canonicalizeName($metadata->target());
 
                 continue;
             }
 
-            if ($metadata->isRequiresPhpExtension()) {
-                assert($metadata instanceof RequiresPhpExtension);
+            if ($metadata->isUsesClass() || $metadata->isUsesFunction()) {
+                assert($metadata instanceof UsesClass || $metadata instanceof UsesFunction);
 
-                $groups[] = '__phpunit_requires_php_extension' . $this->canonicalizeName($metadata->extension());
+                $groups[] = '__phpunit_uses_' . $this->canonicalizeName($metadata->asStringForCodeUnitMapper());
+
+                continue;
+            }
+
+            if ($metadata->isUses()) {
+                assert($metadata instanceof Uses);
+
+                $groups[] = '__phpunit_uses_' . $this->canonicalizeName($metadata->target());
             }
         }
 
@@ -106,8 +103,8 @@ final class Groups
     }
 
     /**
-     * @param class-string     $className
-     * @param non-empty-string $methodName
+     * @psalm-param class-string $className
+     * @psalm-param non-empty-string $methodName
      */
     public function size(string $className, string $methodName): TestSize
     {

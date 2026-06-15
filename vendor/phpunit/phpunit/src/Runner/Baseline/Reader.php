@@ -27,10 +27,10 @@ use PHPUnit\Util\Xml\XmlException;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class Reader
+final class Reader
 {
     /**
-     * @param non-empty-string $baselineFile
+     * @psalm-param non-empty-string $baselineFile
      *
      * @throws CannotLoadBaselineException
      */
@@ -50,8 +50,7 @@ final readonly class Reader
         } catch (XmlException $e) {
             throw new CannotLoadBaselineException(
                 sprintf(
-                    'Cannot read baseline %s: %s',
-                    $baselineFile,
+                    'Cannot read baseline: %s',
                     trim($e->getMessage()),
                 ),
             );
@@ -90,8 +89,8 @@ final readonly class Reader
                     $description = $issueElement->textContent;
 
                     assert($line > 0);
-                    assert($hash !== '');
-                    assert($description !== '');
+                    assert(!empty($hash));
+                    assert(!empty($description));
 
                     $baseline->add(Issue::from($file, $line, $hash, $description));
                 }

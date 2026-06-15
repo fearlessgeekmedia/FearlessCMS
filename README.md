@@ -94,15 +94,17 @@ Once you are on version `0.1.0b` or higher, you can use the dashboard update but
 * Note: At this time, this is only being tested on Linux, Unix-like systems, and MacOS. 
 Windows is not supported, but may be in the future. But this will likely work with Windows Subsystem for Linux. *
 
+FearlessCMS runs with a normal PHP/Composer/Node.js setup. **Nix is optional** — it is a convenience for a reproducible development environment, not a requirement. See [NIX_SETUP.md](NIX_SETUP.md) if you want to use it.
+
 ### Installation
 
-- Web installer: visit `install.php` in your browser and follow the prompts to verify directories, initialize defaults, and optionally install export tool dependencies.
+- Web installer: visit `install.php` in your browser and follow the prompts to verify directories, initialize defaults, and optionally install Tailwind CSS build dependencies.
 - CLI installer:
 
 ```bash
 php install.php --check               # show environment and directory status
 php install.php --create-dirs         # create required directories and default configs
-php install.php --install-export-deps # install Node deps for export.js (fs-extra, handlebars, marked)
+php install.php --install-tailwind    # install Tailwind CSS and build styles (optional)
 php install.php --create-admin=<username> --password=<pwd>
 # or use a file for the password:
 php install.php --create-admin=<username> --password-file=/path/to/secret

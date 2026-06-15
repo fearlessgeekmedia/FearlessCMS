@@ -13,19 +13,15 @@ use const PHP_OS;
 use const PHP_OS_FAMILY;
 use const PHP_VERSION;
 use function addcslashes;
-use function array_column;
-use function array_key_exists;
 use function assert;
 use function extension_loaded;
 use function function_exists;
-use function in_array;
 use function ini_get;
 use function method_exists;
 use function phpversion;
 use function preg_match;
 use function sprintf;
 use PHPUnit\Metadata\Parser\Registry;
-use PHPUnit\Metadata\RequiresEnvironmentVariable;
 use PHPUnit\Metadata\RequiresFunction;
 use PHPUnit\Metadata\RequiresMethod;
 use PHPUnit\Metadata\RequiresOperatingSystem;
@@ -33,23 +29,21 @@ use PHPUnit\Metadata\RequiresOperatingSystemFamily;
 use PHPUnit\Metadata\RequiresPhp;
 use PHPUnit\Metadata\RequiresPhpExtension;
 use PHPUnit\Metadata\RequiresPhpunit;
-use PHPUnit\Metadata\RequiresPhpunitExtension;
 use PHPUnit\Metadata\RequiresSetting;
 use PHPUnit\Runner\Version;
-use PHPUnit\TextUI\Configuration\Registry as ConfigurationRegistry;
 
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class Requirements
+final class Requirements
 {
     /**
-     * @param class-string     $className
-     * @param non-empty-string $methodName
+     * @psalm-param class-string $className
+     * @psalm-param non-empty-string $methodName
      *
-     * @return list<string>
+     * @psalm-return list<string>
      */
     public function requirementsNotSatisfiedFor(string $className, string $methodName): array
     {
@@ -70,15 +64,9 @@ final readonly class Requirements
             if ($metadata->isRequiresPhpExtension()) {
                 assert($metadata instanceof RequiresPhpExtension);
 
-                $extensionVersion = phpversion($metadata->extension());
-
-                if ($extensionVersion === false) {
-                    $extensionVersion = '';
-                }
-
                 if (!extension_loaded($metadata->extension()) ||
                     ($metadata->hasVersionRequirement() &&
-                    !$metadata->versionRequirement()->isSatisfiedBy($extensionVersion))) {
+                        !$metadata->versionRequirement()->isSatisfiedBy(phpversion($metadata->extension())))) {
                     $notSatisfied[] = sprintf(
                         'PHP extension %s%s is required.',
                         $metadata->extension(),
@@ -94,40 +82,6 @@ final readonly class Requirements
                     $notSatisfied[] = sprintf(
                         'PHPUnit %s is required.',
                         $metadata->versionRequirement()->asString(),
-                    );
-                }
-            }
-
-            if ($metadata->isRequiresPhpunitExtension()) {
-                assert($metadata instanceof RequiresPhpunitExtension);
-
-                $configuration = ConfigurationRegistry::get();
-
-                $extensionBootstrappers = array_column($configuration->extensionBootstrappers(), 'className');
-
-                if ($configuration->noExtensions() || !in_array($metadata->extensionClass(), $extensionBootstrappers, true)) {
-                    $notSatisfied[] = sprintf(
-                        'PHPUnit extension "%s" is required.',
-                        $metadata->extensionClass(),
-                    );
-                }
-            }
-
-            if ($metadata->isRequiresEnvironmentVariable()) {
-                assert($metadata instanceof RequiresEnvironmentVariable);
-
-                if (!array_key_exists($metadata->environmentVariableName(), $_ENV) ||
-                    $metadata->value() === null && $_ENV[$metadata->environmentVariableName()] === '') {
-                    $notSatisfied[] = sprintf('Environment variable "%s" is required.', $metadata->environmentVariableName());
-
-                    continue;
-                }
-
-                if ($metadata->value() !== null && $_ENV[$metadata->environmentVariableName()] !== $metadata->value()) {
-                    $notSatisfied[] = sprintf(
-                        'Environment variable "%s" is required to be "%s".',
-                        $metadata->environmentVariableName(),
-                        $metadata->value(),
                     );
                 }
             }
@@ -151,7 +105,7 @@ final readonly class Requirements
                     addcslashes($metadata->operatingSystem(), '/'),
                 );
 
-                if (preg_match($pattern, PHP_OS) === 0) {
+                if (!preg_match($pattern, PHP_OS)) {
                     $notSatisfied[] = sprintf(
                         'Operating system %s is required.',
                         $metadata->operatingSystem(),
@@ -196,18 +150,5 @@ final readonly class Requirements
         }
 
         return $notSatisfied;
-    }
-
-    public function requiresXdebug(string $className, string $methodName): bool
-    {
-        foreach (Registry::parser()->forClassAndMethod($className, $methodName) as $metadata) {
-            if ($metadata->isRequiresPhpExtension()) {
-                if ($metadata->extension() === 'xdebug') {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 }

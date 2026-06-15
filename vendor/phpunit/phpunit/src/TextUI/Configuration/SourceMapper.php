@@ -9,12 +9,7 @@
  */
 namespace PHPUnit\TextUI\Configuration;
 
-use function file_get_contents;
-use function file_put_contents;
-use function is_array;
 use function realpath;
-use function serialize;
-use function unserialize;
 use SebastianBergmann\FileIterator\Facade as FileIteratorFacade;
 use SplObjectStorage;
 
@@ -26,44 +21,12 @@ use SplObjectStorage;
 final class SourceMapper
 {
     /**
-     * @var ?SplObjectStorage<Source, array<non-empty-string, true>>
+     * @psalm-var SplObjectStorage<Source, array<non-empty-string, true>>
      */
     private static ?SplObjectStorage $files = null;
 
-    public static function saveTo(string $path, Source $source): bool
-    {
-        $map = (new self)->map($source);
-
-        return file_put_contents($path, serialize($map)) !== false;
-    }
-
     /**
-     * @codeCoverageIgnore
-     */
-    public static function loadFrom(string $path, Source $source): void
-    {
-        $content = file_get_contents($path);
-
-        if ($content === false) {
-            return;
-        }
-
-        $map = unserialize($content, ['allowed_classes' => false]);
-
-        if (!is_array($map)) {
-            return;
-        }
-
-        if (self::$files === null) {
-            self::$files = new SplObjectStorage;
-        }
-
-        /** @phpstan-ignore offsetAssign.valueType */
-        self::$files[$source] = $map;
-    }
-
-    /**
-     * @return array<non-empty-string, true>
+     * @psalm-return array<non-empty-string, true>
      */
     public function map(Source $source): array
     {
@@ -77,10 +40,8 @@ final class SourceMapper
 
         $files = [];
 
-        $directories = $this->aggregateDirectories($source->includeDirectories());
-
-        foreach ($directories as $path => [$prefixes, $suffixes]) {
-            foreach ((new FileIteratorFacade)->getFilesAsArray($path, $suffixes, $prefixes) as $file) {
+        foreach ($source->includeDirectories() as $directory) {
+            foreach ((new FileIteratorFacade)->getFilesAsArray($directory->path(), $directory->suffix(), $directory->prefix()) as $file) {
                 $file = realpath($file);
 
                 if (!$file) {
@@ -101,10 +62,8 @@ final class SourceMapper
             $files[$file] = true;
         }
 
-        $directories = $this->aggregateDirectories($source->excludeDirectories());
-
-        foreach ($directories as $path => [$prefixes, $suffixes]) {
-            foreach ((new FileIteratorFacade)->getFilesAsArray($path, $suffixes, $prefixes) as $file) {
+        foreach ($source->excludeDirectories() as $directory) {
+            foreach ((new FileIteratorFacade)->getFilesAsArray($directory->path(), $directory->suffix(), $directory->prefix()) as $file) {
                 $file = realpath($file);
 
                 if (!$file) {
@@ -136,36 +95,5 @@ final class SourceMapper
         self::$files[$source] = $files;
 
         return $files;
-    }
-
-    /**
-     * @return array<string,array{list<string>,list<string>}>
-     */
-    private function aggregateDirectories(FilterDirectoryCollection $directories): array
-    {
-        $aggregated = [];
-
-        foreach ($directories as $directory) {
-            if (!isset($aggregated[$directory->path()])) {
-                $aggregated[$directory->path()] = [
-                    0 => [],
-                    1 => [],
-                ];
-            }
-
-            $prefix = $directory->prefix();
-
-            if ($prefix !== '') {
-                $aggregated[$directory->path()][0][] = $prefix;
-            }
-
-            $suffix = $directory->suffix();
-
-            if ($suffix !== '') {
-                $aggregated[$directory->path()][1][] = $suffix;
-            }
-        }
-
-        return $aggregated;
     }
 }

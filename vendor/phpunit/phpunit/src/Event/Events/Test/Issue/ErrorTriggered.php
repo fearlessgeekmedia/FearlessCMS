@@ -10,42 +10,41 @@
 namespace PHPUnit\Event\Test;
 
 use const PHP_EOL;
-use function implode;
 use function sprintf;
 use PHPUnit\Event\Code\Test;
 use PHPUnit\Event\Event;
 use PHPUnit\Event\Telemetry;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class ErrorTriggered implements Event
+final class ErrorTriggered implements Event
 {
-    private Telemetry\Info $telemetryInfo;
-    private Test $test;
+    private readonly Telemetry\Info $telemetryInfo;
+    private readonly Test $test;
 
     /**
-     * @var non-empty-string
+     * @psalm-var non-empty-string
      */
-    private string $message;
+    private readonly string $message;
 
     /**
-     * @var non-empty-string
+     * @psalm-var non-empty-string
      */
-    private string $file;
+    private readonly string $file;
 
     /**
-     * @var positive-int
+     * @psalm-var positive-int
      */
-    private int $line;
-    private bool $suppressed;
+    private readonly int $line;
+    private readonly bool $suppressed;
 
     /**
-     * @param non-empty-string $message
-     * @param non-empty-string $file
-     * @param positive-int     $line
+     * @psalm-param non-empty-string $message
+     * @psalm-param non-empty-string $file
+     * @psalm-param positive-int $line
      */
     public function __construct(Telemetry\Info $telemetryInfo, Test $test, string $message, string $file, int $line, bool $suppressed)
     {
@@ -68,7 +67,7 @@ final readonly class ErrorTriggered implements Event
     }
 
     /**
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     public function message(): string
     {
@@ -76,7 +75,7 @@ final readonly class ErrorTriggered implements Event
     }
 
     /**
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     public function file(): string
     {
@@ -84,7 +83,7 @@ final readonly class ErrorTriggered implements Event
     }
 
     /**
-     * @return positive-int
+     * @psalm-return positive-int
      */
     public function line(): int
     {
@@ -96,26 +95,18 @@ final readonly class ErrorTriggered implements Event
         return $this->suppressed;
     }
 
-    /**
-     * @return non-empty-string
-     */
     public function asString(): string
     {
         $message = $this->message;
 
-        if ($message !== '') {
+        if (!empty($message)) {
             $message = PHP_EOL . $message;
         }
 
-        $details = [$this->test->id()];
-
-        if ($this->suppressed) {
-            $details[] = 'suppressed using operator';
-        }
-
         return sprintf(
-            'Test Triggered Error (%s) in %s:%d%s',
-            implode(', ', $details),
+            'Test Triggered %sError (%s) in %s:%d%s',
+            $this->wasSuppressed() ? 'Suppressed ' : '',
+            $this->test->id(),
             $this->file,
             $this->line,
             $message,

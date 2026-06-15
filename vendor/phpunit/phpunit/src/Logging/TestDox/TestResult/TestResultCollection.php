@@ -12,23 +12,23 @@ namespace PHPUnit\Logging\TestDox;
 use IteratorAggregate;
 
 /**
- * @template-implements IteratorAggregate<non-negative-int, TestResult>
+ * @template-implements IteratorAggregate<int, TestResult>
  *
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class TestResultCollection implements IteratorAggregate
+final class TestResultCollection implements IteratorAggregate
 {
     /**
-     * @var list<TestResult>
+     * @psalm-var list<TestResult>
      */
-    private array $testResults;
+    private readonly array $testResults;
 
     /**
-     * @param list<TestResult> $testResults
+     * @psalm-param list<TestResult> $testResults
      */
     public static function fromArray(array $testResults): self
     {
@@ -41,7 +41,7 @@ final readonly class TestResultCollection implements IteratorAggregate
     }
 
     /**
-     * @return list<TestResult>
+     * @psalm-return list<TestResult>
      */
     public function asArray(): array
     {

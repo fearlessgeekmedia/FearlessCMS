@@ -10,44 +10,45 @@
 namespace PHPUnit\Metadata;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class DataProvider extends Metadata
+final class DataProvider extends Metadata
 {
     /**
-     * @var class-string
+     * @psalm-var class-string
      */
-    private string $className;
+    private readonly string $className;
 
     /**
-     * @var non-empty-string
+     * @psalm-var non-empty-string
      */
-    private string $methodName;
-    private bool $validateArgumentCount;
+    private readonly string $methodName;
 
     /**
-     * @param int<0, 1>        $level
-     * @param class-string     $className
-     * @param non-empty-string $methodName
+     * @psalm-param 0|1 $level
+     * @psalm-param class-string $className
+     * @psalm-param non-empty-string $methodName
      */
-    protected function __construct(int $level, string $className, string $methodName, bool $validateArgumentCount)
+    protected function __construct(int $level, string $className, string $methodName)
     {
         parent::__construct($level);
 
-        $this->className             = $className;
-        $this->methodName            = $methodName;
-        $this->validateArgumentCount = $validateArgumentCount;
+        $this->className  = $className;
+        $this->methodName = $methodName;
     }
 
-    public function isDataProvider(): true
+    /**
+     * @psalm-assert-if-true DataProvider $this
+     */
+    public function isDataProvider(): bool
     {
         return true;
     }
 
     /**
-     * @return class-string
+     * @psalm-return class-string
      */
     public function className(): string
     {
@@ -55,15 +56,10 @@ final readonly class DataProvider extends Metadata
     }
 
     /**
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     public function methodName(): string
     {
         return $this->methodName;
-    }
-
-    public function validateArgumentCount(): bool
-    {
-        return $this->validateArgumentCount;
     }
 }

@@ -85,9 +85,6 @@ EOT;
         return 'unserialize(' . var_export(serialize($variable), true) . ')';
     }
 
-    /**
-     * @param array<mixed> $array
-     */
     private function arrayOnlyContainsScalars(array $array): bool
     {
         $result = true;

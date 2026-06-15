@@ -9,7 +9,7 @@ use PHPUnit\Architecture\Elements\ObjectDescriptionBase as BaseObjectDescription
 /**
  * @internal
  */
-final class ObjectDescriptionBase extends BaseObjectDescriptionBase
+final class ObjectDescriptionBase extends BaseObjectDescriptionBase // @phpstan-ignore-line
 {
     //
 }

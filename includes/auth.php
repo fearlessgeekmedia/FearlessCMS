@@ -18,7 +18,7 @@ function is_development_mode() {
 
 function get_development_csrf_token() {
     // In development mode, if sessions fail, use a simple token based on time
-    if (is_development_mode() && (!isset($_SESSION) || empty($_SESSION))) {
+    if (is_development_mode() && !isset($_SESSION)) {
         // Generate a simple token for development
         $time = floor(time() / 300); // Token changes every 5 minutes
         $secret = 'dev_secret_key_' . (getenv('FCMS_DEV_SECRET') ?: 'default');
@@ -28,7 +28,7 @@ function get_development_csrf_token() {
 }
 
 function validate_development_csrf_token($token) {
-    if (is_development_mode() && (!isset($_SESSION) || empty($_SESSION))) {
+    if (is_development_mode() && !isset($_SESSION)) {
         $expected = get_development_csrf_token();
         return $token === $expected;
     }
@@ -38,7 +38,7 @@ function validate_development_csrf_token($token) {
 // Enhanced CSRF token generation with development fallback
 function generate_csrf_token() {
     // Try normal session-based token first
-    if (isset($_SESSION) && !empty($_SESSION)) {
+    if (isset($_SESSION)) {
         if (!isset($_SESSION['csrf_token'])) {
             // Use random_bytes() if available (PHP 7.0+), otherwise fallback to openssl_random_pseudo_bytes()
             if (function_exists('random_bytes')) {

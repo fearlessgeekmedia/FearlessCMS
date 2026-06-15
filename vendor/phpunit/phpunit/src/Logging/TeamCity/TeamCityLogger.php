@@ -20,6 +20,7 @@ use function stripos;
 use PHPUnit\Event\Code\TestMethod;
 use PHPUnit\Event\Code\Throwable;
 use PHPUnit\Event\Event;
+use PHPUnit\Event\EventFacadeIsSealedException;
 use PHPUnit\Event\Facade;
 use PHPUnit\Event\InvalidArgumentException;
 use PHPUnit\Event\Telemetry\HRTime;
@@ -36,6 +37,7 @@ use PHPUnit\Event\TestSuite\Skipped as TestSuiteSkipped;
 use PHPUnit\Event\TestSuite\Started as TestSuiteStarted;
 use PHPUnit\Event\TestSuite\TestSuiteForTestClass;
 use PHPUnit\Event\TestSuite\TestSuiteForTestMethodWithDataProvider;
+use PHPUnit\Event\UnknownSubscriberTypeException;
 use PHPUnit\Framework\Exception as FrameworkException;
 use PHPUnit\TextUI\Output\Printer;
 
@@ -49,8 +51,12 @@ final class TeamCityLogger
     private readonly Printer $printer;
     private bool $isSummaryTestCountPrinted = false;
     private ?HRTime $time                   = null;
-    private ?int $flowId                    = null;
+    private ?int $flowId;
 
+    /**
+     * @throws EventFacadeIsSealedException
+     * @throws UnknownSubscriberTypeException
+     */
     public function __construct(Printer $printer, Facade $facade)
     {
         $this->printer = $printer;
@@ -307,6 +313,10 @@ final class TeamCityLogger
         $this->printer->flush();
     }
 
+    /**
+     * @throws EventFacadeIsSealedException
+     * @throws UnknownSubscriberTypeException
+     */
     private function registerSubscribers(Facade $facade): void
     {
         $facade->registerSubscribers(
@@ -332,9 +342,6 @@ final class TeamCityLogger
         }
     }
 
-    /**
-     * @param array<non-empty-string, int|string> $parameters
-     */
     private function writeMessage(string $eventName, array $parameters = []): void
     {
         $this->printer->print(
@@ -392,7 +399,7 @@ final class TeamCityLogger
 
         $buffer = $throwable->className();
 
-        if ($throwable->message() !== '') {
+        if (!empty($throwable->message())) {
             $buffer .= ': ' . $throwable->message();
         }
 

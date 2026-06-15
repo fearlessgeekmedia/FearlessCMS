@@ -12,38 +12,31 @@ namespace PHPUnit\Framework\Attributes;
 use Attribute;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
 #[Attribute(Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]
-final readonly class DataProvider
+final class DataProvider
 {
     /**
-     * @var non-empty-string
+     * @psalm-var non-empty-string
      */
-    private string $methodName;
-    private bool $validateArgumentCount;
+    private readonly string $methodName;
 
     /**
-     * @param non-empty-string $methodName
+     * @psalm-param non-empty-string $methodName
      */
-    public function __construct(string $methodName, bool $validateArgumentCount = true)
+    public function __construct(string $methodName)
     {
-        $this->methodName            = $methodName;
-        $this->validateArgumentCount = $validateArgumentCount;
+        $this->methodName = $methodName;
     }
 
     /**
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     public function methodName(): string
     {
         return $this->methodName;
-    }
-
-    public function validateArgumentCount(): bool
-    {
-        return $this->validateArgumentCount;
     }
 }

@@ -13,9 +13,7 @@ use function assert;
 use Exception;
 
 /**
- * @no-named-arguments Parameter names are not covered by the backward compatibility promise for sebastian/comparator
- *
- * @internal This class is not covered by the backward compatibility promise for sebastian/comparator
+ * Compares Exception instances for equality.
  */
 final class ExceptionComparator extends ObjectComparator
 {
@@ -24,9 +22,6 @@ final class ExceptionComparator extends ObjectComparator
         return $expected instanceof Exception && $actual instanceof Exception;
     }
 
-    /**
-     * @return array<mixed>
-     */
     protected function toArray(object $object): array
     {
         assert($object instanceof Exception);

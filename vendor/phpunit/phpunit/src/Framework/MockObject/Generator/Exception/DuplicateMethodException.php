@@ -22,7 +22,7 @@ use function sprintf;
 final class DuplicateMethodException extends \PHPUnit\Framework\Exception implements Exception
 {
     /**
-     * @param list<string> $methods
+     * @psalm-param list<string> $methods
      */
     public function __construct(array $methods)
     {

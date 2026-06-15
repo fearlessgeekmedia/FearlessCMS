@@ -6,4 +6,4 @@ display_errors = On
 log_errors = On
 error_log = /tmp/php_errors.log
 session.save_handler = files
-session.save_path = /home/fearlessgeek/devel/FearlessCMS/sessions
+session.save_path = /home/Commodore/devel/fearlesscms/sessions

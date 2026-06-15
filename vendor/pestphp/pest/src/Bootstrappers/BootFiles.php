@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Pest\Bootstrappers;
 
 use Pest\Contracts\Bootstrapper;
-use Pest\Exceptions\FatalException;
 use Pest\Support\DatasetInfo;
 use Pest\Support\Str;
 use Pest\TestSuite;
@@ -25,7 +24,7 @@ final class BootFiles implements Bootstrapper
      *
      * @var array<int, string>
      */
-    private const array STRUCTURE = [
+    private const STRUCTURE = [
         'Expectations',
         'Expectations.php',
         'Helpers',
@@ -40,10 +39,6 @@ final class BootFiles implements Bootstrapper
     {
         $rootPath = TestSuite::getInstance()->rootPath;
         $testsPath = $rootPath.DIRECTORY_SEPARATOR.testDirectory();
-
-        if (! is_dir($testsPath)) {
-            throw new FatalException(sprintf('The test directory [%s] does not exist.', $testsPath));
-        }
 
         foreach (self::STRUCTURE as $filename) {
             $filename = sprintf('%s%s%s', $testsPath, DIRECTORY_SEPARATOR, $filename);
@@ -83,7 +78,7 @@ final class BootFiles implements Bootstrapper
 
     private function bootDatasets(string $testsPath): void
     {
-        assert($testsPath !== '');
+        assert(strlen($testsPath) > 0);
 
         $files = (new PhpUnitFileIterator)->getFilesAsArray($testsPath, '.php');
 

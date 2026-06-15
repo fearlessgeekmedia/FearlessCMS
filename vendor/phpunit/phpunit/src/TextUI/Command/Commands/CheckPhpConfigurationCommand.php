@@ -26,9 +26,9 @@ use SebastianBergmann\Environment\Console;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class CheckPhpConfigurationCommand implements Command
+final class CheckPhpConfigurationCommand implements Command
 {
-    private bool $colorize;
+    private readonly bool $colorize;
 
     public function __construct()
     {

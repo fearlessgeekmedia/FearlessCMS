@@ -13,14 +13,14 @@ use const PHP_OS;
 use const PHP_OS_FAMILY;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class OperatingSystem
+final class OperatingSystem
 {
-    private string $operatingSystem;
-    private string $operatingSystemFamily;
+    private readonly string $operatingSystem;
+    private readonly string $operatingSystemFamily;
 
     public function __construct()
     {

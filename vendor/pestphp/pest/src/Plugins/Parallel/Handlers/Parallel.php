@@ -18,7 +18,7 @@ final class Parallel implements HandlesArguments
     /**
      * The list of arguments to remove.
      */
-    private const array ARGS_TO_REMOVE = [
+    private const ARGS_TO_REMOVE = [
         '--parallel',
         '-p',
         '--no-output',

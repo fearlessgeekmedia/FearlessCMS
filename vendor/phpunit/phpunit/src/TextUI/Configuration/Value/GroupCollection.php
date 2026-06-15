@@ -14,19 +14,19 @@ use IteratorAggregate;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
- * @immutable
+ * @psalm-immutable
  *
- * @template-implements IteratorAggregate<non-negative-int, Group>
+ * @template-implements IteratorAggregate<int, Group>
  */
-final readonly class GroupCollection implements IteratorAggregate
+final class GroupCollection implements IteratorAggregate
 {
     /**
-     * @var list<Group>
+     * @psalm-var list<Group>
      */
-    private array $groups;
+    private readonly array $groups;
 
     /**
-     * @param list<Group> $groups
+     * @psalm-param list<Group> $groups
      */
     public static function fromArray(array $groups): self
     {
@@ -39,7 +39,7 @@ final readonly class GroupCollection implements IteratorAggregate
     }
 
     /**
-     * @return list<Group>
+     * @psalm-return list<Group>
      */
     public function asArray(): array
     {
@@ -47,7 +47,7 @@ final readonly class GroupCollection implements IteratorAggregate
     }
 
     /**
-     * @return list<string>
+     * @psalm-return list<string>
      */
     public function asArrayOfStrings(): array
     {
@@ -62,7 +62,7 @@ final readonly class GroupCollection implements IteratorAggregate
 
     public function isEmpty(): bool
     {
-        return $this->groups === [];
+        return empty($this->groups);
     }
 
     public function getIterator(): GroupCollectionIterator

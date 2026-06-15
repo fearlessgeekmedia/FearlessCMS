@@ -10,36 +10,17 @@
 namespace PHPUnit\Metadata;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class IgnoreDeprecations extends Metadata
+final class IgnoreDeprecations extends Metadata
 {
-    /** @var null|non-empty-string */
-    private ?string $messagePattern;
-
     /**
-     * @param int<0, 1>             $level
-     * @param null|non-empty-string $messagePattern
+     * @psalm-assert-if-true IgnoreDeprecations $this
      */
-    protected function __construct(int $level, null|string $messagePattern)
-    {
-        parent::__construct($level);
-
-        $this->messagePattern = $messagePattern;
-    }
-
-    public function isIgnoreDeprecations(): true
+    public function isIgnoreDeprecations(): bool
     {
         return true;
-    }
-
-    /**
-     * @return null|non-empty-string
-     */
-    public function messagePattern(): ?string
-    {
-        return $this->messagePattern;
     }
 }

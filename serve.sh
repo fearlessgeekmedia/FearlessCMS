@@ -68,8 +68,8 @@ if [ ! -f "php-config/99-custom.ini" ]; then
     echo "Warning: Custom PHP configuration not found (php-config/99-custom.ini)."
     php_config=""
 else
-    php_config="-c php-config/99-custom.ini"
-    echo "Using custom PHP configuration: $php_config"
+    php_config="-d include_path=. $(sed -E '/^\s*(;|$)/d' php-config/99-custom.ini | while IFS='=' read -r key val; do printf -- '-d %s=%s ' "$(echo "$key" | xargs)" "$(echo "$val" | xargs)"; done)"
+    echo "Using custom PHP configuration from php-config/99-custom.ini"
 fi
 
 echo "Starting FearlessCMS server on http://localhost:$port..."

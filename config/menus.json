@@ -1,14 +1,13 @@
 {
     "main": {
-        "label": "main",
-        "menu_class": "main-menu",
+        "label": "Main Menu",
+        "menu_class": "main-nav",
         "items": [
             {
                 "label": "Home",
                 "url": "\/",
-                "target": "",
-                "class": "",
-                "id": "item_0"
+                "item_class": "",
+                "target": ""
             }
         ]
     }

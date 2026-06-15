@@ -9,14 +9,14 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * @internal
  */
-final readonly class Help
+final class Help
 {
     /**
      * The Command messages.
      *
      * @var array<int, string>
      */
-    private const array HELP_MESSAGES = [
+    private const HELP_MESSAGES = [
         '<comment>Pest Options:</comment>',
         '  <info>--init</info>                      Initialise a standard Pest configuration',
         '  <info>--coverage</info>                  Enable coverage and output to standard output',
@@ -27,7 +27,7 @@ final readonly class Help
     /**
      * Creates a new Console Command instance.
      */
-    public function __construct(private OutputInterface $output)
+    public function __construct(private readonly OutputInterface $output)
     {
         // ..
     }

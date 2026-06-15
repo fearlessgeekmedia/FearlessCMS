@@ -21,7 +21,7 @@ if (function_exists('random_bytes')) {
 }
 
 // Parse command line arguments
-$options = getopt('', ['check', 'create-dirs', 'install-export-deps']);
+$options = getopt('', ['check', 'create-dirs']);
 
 if (isset($options['check'])) {
     checkEnvironment();
@@ -30,11 +30,6 @@ if (isset($options['check'])) {
 
 if (isset($options['create-dirs'])) {
     createDirectories();
-    exit(0);
-}
-
-if (isset($options['install-export-deps'])) {
-    installExportDependencies();
     exit(0);
 }
 
@@ -128,31 +123,6 @@ function createDirectories() {
     echo "\n✅ Directory creation complete!\n";
 }
 
-function installExportDependencies() {
-    echo "📦 Installing export dependencies\n";
-    echo "================================\n\n";
-
-    if (!file_exists('package.json')) {
-        echo "✗ package.json not found\n";
-        exit(1);
-    }
-
-    echo "Running npm install...\n";
-    $output = [];
-    $returnCode = 0;
-    exec('npm install 2>&1', $output, $returnCode);
-
-    if ($returnCode === 0) {
-        echo "✅ NPM dependencies installed successfully!\n";
-    } else {
-        echo "❌ Failed to install NPM dependencies:\n";
-        foreach ($output as $line) {
-            echo "  $line\n";
-        }
-        exit(1);
-    }
-}
-
 function showHelp() {
     echo "🐺 FearlessCMS Installation Helper\n";
     echo "=================================\n\n";
@@ -160,12 +130,10 @@ function showHelp() {
     echo "Options:\n";
     echo "  --check                Check environment requirements\n";
     echo "  --create-dirs         Create necessary directories\n";
-    echo "  --install-export-deps Install Node.js dependencies for export\n";
     echo "\n";
     echo "Examples:\n";
     echo "  php install-no-session.php --check\n";
     echo "  php install-no-session.php --create-dirs\n";
-    echo "  php install-no-session.php --install-export-deps\n";
     echo "\n";
     echo "Note: This version works without PHP session extension.\n";
 }

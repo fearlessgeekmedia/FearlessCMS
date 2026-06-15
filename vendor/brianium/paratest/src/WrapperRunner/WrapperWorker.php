@@ -17,7 +17,6 @@ use function clearstatcache;
 use function file_get_contents;
 use function filesize;
 use function implode;
-use function is_array;
 use function is_string;
 use function serialize;
 use function sprintf;
@@ -29,18 +28,17 @@ use const DIRECTORY_SEPARATOR;
 /** @internal */
 final class WrapperWorker
 {
-    public const string COMMAND_EXIT = "EXIT\n";
+    public const COMMAND_EXIT = "EXIT\n";
 
     public readonly SplFileInfo $statusFile;
     public readonly SplFileInfo $progressFile;
     public readonly SplFileInfo $unexpectedOutputFile;
-    public readonly SplFileInfo $testResultFile;
-    public readonly SplFileInfo $resultCacheFile;
+    public readonly SplFileInfo $testresultFile;
     public readonly SplFileInfo $junitFile;
     public readonly SplFileInfo $coverageFile;
     public readonly SplFileInfo $teamcityFile;
-    public readonly SplFileInfo $testdoxFile;
 
+    public readonly SplFileInfo $testdoxFile;
     private ?string $currentlyExecuting = null;
     private Process $process;
     private int $inExecution = 0;
@@ -67,12 +65,7 @@ final class WrapperWorker
         touch($this->progressFile->getPathname());
         $this->unexpectedOutputFile = new SplFileInfo($commonTmpFilePath . 'unexpected_output');
         touch($this->unexpectedOutputFile->getPathname());
-        $this->testResultFile = new SplFileInfo($commonTmpFilePath . 'test_result');
-
-        if ($this->options->configuration->cacheResult()) {
-            $this->resultCacheFile = new SplFileInfo($commonTmpFilePath . 'result_cache');
-        }
-
+        $this->testresultFile = new SplFileInfo($commonTmpFilePath . 'testresult');
         if ($options->configuration->hasLogfileJunit()) {
             $this->junitFile = new SplFileInfo($commonTmpFilePath . 'junit');
         }
@@ -85,7 +78,7 @@ final class WrapperWorker
             $this->teamcityFile = new SplFileInfo($commonTmpFilePath . 'teamcity');
         }
 
-        if ($options->needsTestdox) {
+        if ($options->configuration->outputIsTestDox()) {
             $this->testdoxFile = new SplFileInfo($commonTmpFilePath . 'testdox');
         }
 
@@ -95,14 +88,8 @@ final class WrapperWorker
         $parameters[] = $this->progressFile->getPathname();
         $parameters[] = '--unexpected-output-file';
         $parameters[] = $this->unexpectedOutputFile->getPathname();
-        $parameters[] = '--test-result-file';
-        $parameters[] = $this->testResultFile->getPathname();
-
-        if (isset($this->resultCacheFile)) {
-            $parameters[] = '--result-cache-file';
-            $parameters[] = $this->resultCacheFile->getPathname();
-        }
-
+        $parameters[] = '--testresult-file';
+        $parameters[] = $this->testresultFile->getPathname();
         if (isset($this->teamcityFile)) {
             $parameters[] = '--teamcity-file';
             $parameters[] = $this->teamcityFile->getPathname();
@@ -111,6 +98,12 @@ final class WrapperWorker
         if (isset($this->testdoxFile)) {
             $parameters[] = '--testdox-file';
             $parameters[] = $this->testdoxFile->getPathname();
+            if ($options->configuration->colors()) {
+                $parameters[] = '--testdox-color';
+            }
+
+            $parameters[] = '--testdox-columns';
+            $parameters[] = (string) $options->configuration->columns();
         }
 
         $phpunitArguments = [$options->phpunit];
@@ -119,19 +112,12 @@ final class WrapperWorker
                 continue;
             }
 
+            $phpunitArguments[] = "--{$key}";
             if ($value === true) {
-                $phpunitArguments[] = "--{$key}";
                 continue;
             }
 
-            if (! is_array($value)) {
-                $value = [$value];
-            }
-
-            foreach ($value as $innerValue) {
-                $phpunitArguments[] = "--{$key}";
-                $phpunitArguments[] = $innerValue;
-            }
+            $phpunitArguments[] = $value;
         }
 
         $phpunitArguments[] = '--do-not-cache-result';
@@ -229,10 +215,5 @@ final class WrapperWorker
     public function isRunning(): bool
     {
         return $this->process->isRunning();
-    }
-
-    public function hasExecutedTests(): bool
-    {
-        return $this->inExecution > 0;
     }
 }

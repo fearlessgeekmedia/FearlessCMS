@@ -16,26 +16,19 @@ use PHPUnit\TextUI\Configuration\Directory;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  *
- * @immutable
+ * @psalm-immutable
  */
-final readonly class Xml
+final class Xml
 {
-    private Directory $target;
-    private bool $includeSource;
+    private readonly Directory $target;
 
-    public function __construct(Directory $target, bool $includeSource)
+    public function __construct(Directory $target)
     {
-        $this->target        = $target;
-        $this->includeSource = $includeSource;
+        $this->target = $target;
     }
 
     public function target(): Directory
     {
         return $this->target;
-    }
-
-    public function includeSource(): bool
-    {
-        return $this->includeSource;
     }
 }

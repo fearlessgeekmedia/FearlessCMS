@@ -14,26 +14,26 @@ use PHPUnit\Event\Event;
 use PHPUnit\Event\Telemetry;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class PartialMockObjectCreated implements Event
+final class PartialMockObjectCreated implements Event
 {
-    private Telemetry\Info $telemetryInfo;
+    private readonly Telemetry\Info $telemetryInfo;
 
     /**
-     * @var class-string
+     * @psalm-var class-string
      */
-    private string $className;
+    private readonly string $className;
 
     /**
-     * @var list<string>
+     * @psalm-var list<string>
      */
-    private array $methodNames;
+    private readonly array $methodNames;
 
     /**
-     * @param class-string $className
+     * @psalm-param class-string $className
      */
     public function __construct(Telemetry\Info $telemetryInfo, string $className, string ...$methodNames)
     {
@@ -48,7 +48,7 @@ final readonly class PartialMockObjectCreated implements Event
     }
 
     /**
-     * @return class-string
+     * @psalm-return class-string
      */
     public function className(): string
     {
@@ -56,16 +56,13 @@ final readonly class PartialMockObjectCreated implements Event
     }
 
     /**
-     * @return list<string>
+     * @psalm-return list<string>
      */
     public function methodNames(): array
     {
         return $this->methodNames;
     }
 
-    /**
-     * @return non-empty-string
-     */
     public function asString(): string
     {
         return sprintf(

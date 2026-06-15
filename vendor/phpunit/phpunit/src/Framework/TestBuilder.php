@@ -9,13 +9,9 @@
  */
 namespace PHPUnit\Framework;
 
-use function array_merge;
 use function assert;
-use function sprintf;
-use PHPUnit\Event\Facade as EventFacade;
 use PHPUnit\Metadata\Api\DataProvider;
 use PHPUnit\Metadata\Api\Groups;
-use PHPUnit\Metadata\Api\ProvidedData;
 use PHPUnit\Metadata\Api\Requirements;
 use PHPUnit\Metadata\BackupGlobals;
 use PHPUnit\Metadata\BackupStaticProperties;
@@ -23,7 +19,6 @@ use PHPUnit\Metadata\ExcludeGlobalVariableFromBackup;
 use PHPUnit\Metadata\ExcludeStaticPropertyFromBackup;
 use PHPUnit\Metadata\Parser\Registry as MetadataRegistry;
 use PHPUnit\Metadata\PreserveGlobalState;
-use PHPUnit\Runner\ErrorHandler;
 use PHPUnit\TextUI\Configuration\Registry as ConfigurationRegistry;
 use ReflectionClass;
 
@@ -32,29 +27,21 @@ use ReflectionClass;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class TestBuilder
+final class TestBuilder
 {
     /**
-     * @param ReflectionClass<TestCase> $theClass
-     * @param non-empty-string          $methodName
-     * @param list<non-empty-string>    $groups
+     * @psalm-param non-empty-string $methodName
      *
      * @throws InvalidDataProviderException
      */
-    public function build(ReflectionClass $theClass, string $methodName, array $groups = []): Test
+    public function build(ReflectionClass $theClass, string $methodName): Test
     {
         $className = $theClass->getName();
 
         $data = null;
 
         if ($this->requirementsSatisfied($className, $methodName)) {
-            try {
-                ErrorHandler::instance()->enterTestCaseContext($className, $methodName);
-
-                $data = (new DataProvider)->providedData($className, $methodName);
-            } finally {
-                ErrorHandler::instance()->leaveTestCaseContext();
-            }
+            $data = (new DataProvider)->providedData($className, $methodName);
         }
 
         if ($data !== null) {
@@ -66,11 +53,12 @@ final readonly class TestBuilder
                 $this->shouldGlobalStateBePreserved($className, $methodName),
                 $this->shouldAllTestMethodsOfTestClassBeRunInSingleSeparateProcess($className),
                 $this->backupSettings($className, $methodName),
-                $groups,
             );
         }
 
         $test = new $className($methodName);
+
+        assert($test instanceof TestCase);
 
         $this->configureTestCase(
             $test,
@@ -84,27 +72,24 @@ final readonly class TestBuilder
     }
 
     /**
-     * @param non-empty-string                                                                                                                                                  $methodName
-     * @param class-string<TestCase>                                                                                                                                            $className
-     * @param array<ProvidedData>                                                                                                                                               $data
-     * @param array{backupGlobals: ?true, backupGlobalsExcludeList: list<string>, backupStaticProperties: ?true, backupStaticPropertiesExcludeList: array<string,list<string>>} $backupSettings
-     * @param list<non-empty-string>                                                                                                                                            $groups
+     * @psalm-param class-string $className
+     * @psalm-param non-empty-string $methodName
+     * @psalm-param array{backupGlobals: ?bool, backupGlobalsExcludeList: list<string>, backupStaticProperties: ?bool, backupStaticPropertiesExcludeList: array<string,list<string>>} $backupSettings
      */
-    private function buildDataProviderTestSuite(string $methodName, string $className, array $data, bool $runTestInSeparateProcess, ?bool $preserveGlobalState, bool $runClassInSeparateProcess, array $backupSettings, array $groups): DataProviderTestSuite
+    private function buildDataProviderTestSuite(string $methodName, string $className, array $data, bool $runTestInSeparateProcess, ?bool $preserveGlobalState, bool $runClassInSeparateProcess, array $backupSettings): DataProviderTestSuite
     {
         $dataProviderTestSuite = DataProviderTestSuite::empty(
             $className . '::' . $methodName,
         );
 
-        $groups = array_merge(
-            $groups,
-            (new Groups)->groups($className, $methodName),
-        );
+        $groups = (new Groups)->groups($className, $methodName);
 
         foreach ($data as $_dataName => $_data) {
             $_test = new $className($methodName);
 
-            $_test->setData($_dataName, $_data->value());
+            assert($_test instanceof TestCase);
+
+            $_test->setData($_dataName, $_data);
 
             $this->configureTestCase(
                 $_test,
@@ -121,7 +106,7 @@ final readonly class TestBuilder
     }
 
     /**
-     * @param array{backupGlobals: ?true, backupGlobalsExcludeList: list<string>, backupStaticProperties: ?true, backupStaticPropertiesExcludeList: array<string,list<string>>} $backupSettings
+     * @psalm-param array{backupGlobals: ?bool, backupGlobalsExcludeList: list<string>, backupStaticProperties: ?bool, backupStaticPropertiesExcludeList: array<string,list<string>>} $backupSettings
      */
     private function configureTestCase(TestCase $test, bool $runTestInSeparateProcess, ?bool $preserveGlobalState, bool $runClassInSeparateProcess, array $backupSettings): void
     {
@@ -155,10 +140,10 @@ final readonly class TestBuilder
     }
 
     /**
-     * @param class-string<TestCase> $className
-     * @param non-empty-string       $methodName
+     * @psalm-param class-string $className
+     * @psalm-param non-empty-string $methodName
      *
-     * @return array{backupGlobals: ?true, backupGlobalsExcludeList: list<string>, backupStaticProperties: ?true, backupStaticPropertiesExcludeList: array<string,list<string>>}
+     * @psalm-return array{backupGlobals: ?bool, backupGlobalsExcludeList: list<string>, backupStaticProperties: ?bool, backupStaticPropertiesExcludeList: array<string,list<string>>}
      */
     private function backupSettings(string $className, string $methodName): array
     {
@@ -233,8 +218,8 @@ final readonly class TestBuilder
     }
 
     /**
-     * @param class-string<TestCase> $className
-     * @param non-empty-string       $methodName
+     * @psalm-param class-string $className
+     * @psalm-param non-empty-string $methodName
      */
     private function shouldGlobalStateBePreserved(string $className, string $methodName): ?bool
     {
@@ -262,8 +247,8 @@ final readonly class TestBuilder
     }
 
     /**
-     * @param class-string<TestCase> $className
-     * @param non-empty-string       $methodName
+     * @psalm-param class-string $className
+     * @psalm-param non-empty-string $methodName
      */
     private function shouldTestMethodBeRunInSeparateProcess(string $className, string $methodName): bool
     {
@@ -279,27 +264,16 @@ final readonly class TestBuilder
     }
 
     /**
-     * @param class-string<TestCase> $className
+     * @psalm-param class-string $className
      */
     private function shouldAllTestMethodsOfTestClassBeRunInSingleSeparateProcess(string $className): bool
     {
-        $result = MetadataRegistry::parser()->forClass($className)->isRunClassInSeparateProcess()->isNotEmpty();
-
-        if ($result) {
-            EventFacade::emitter()->testRunnerTriggeredPhpunitDeprecation(
-                sprintf(
-                    'Class %s uses the #[RunClassInSeparateProcess]. This attribute is deprecated and will be removed in PHPUnit 13',
-                    $className,
-                ),
-            );
-        }
-
-        return $result;
+        return MetadataRegistry::parser()->forClass($className)->isRunClassInSeparateProcess()->isNotEmpty();
     }
 
     /**
-     * @param class-string     $className
-     * @param non-empty-string $methodName
+     * @psalm-param class-string     $className
+     * @psalm-param non-empty-string $methodName
      */
     private function requirementsSatisfied(string $className, string $methodName): bool
     {

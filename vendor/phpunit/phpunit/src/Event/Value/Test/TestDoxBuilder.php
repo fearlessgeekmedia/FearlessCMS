@@ -9,6 +9,7 @@
  */
 namespace PHPUnit\Event\Code;
 
+use PHPUnit\Event\TestData\MoreThanOneDataSetFromDataProviderException;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Logging\TestDox\NamePrettifier;
 
@@ -19,11 +20,12 @@ use PHPUnit\Logging\TestDox\NamePrettifier;
  */
 final class TestDoxBuilder
 {
-    private static ?NamePrettifier $namePrettifier = null;
-
+    /**
+     * @throws MoreThanOneDataSetFromDataProviderException
+     */
     public static function fromTestCase(TestCase $testCase): TestDox
     {
-        $prettifier = self::namePrettifier();
+        $prettifier = new NamePrettifier;
 
         return new TestDox(
             $prettifier->prettifyTestClassName($testCase::class),
@@ -33,12 +35,12 @@ final class TestDoxBuilder
     }
 
     /**
-     * @param class-string     $className
-     * @param non-empty-string $methodName
+     * @psalm-param class-string $className
+     * @psalm-param non-empty-string $methodName
      */
     public static function fromClassNameAndMethodName(string $className, string $methodName): TestDox
     {
-        $prettifier = self::namePrettifier();
+        $prettifier = new NamePrettifier;
 
         $prettifiedMethodName = $prettifier->prettifyTestMethodName($methodName);
 
@@ -47,14 +49,5 @@ final class TestDoxBuilder
             $prettifiedMethodName,
             $prettifiedMethodName,
         );
-    }
-
-    private static function namePrettifier(): NamePrettifier
-    {
-        if (self::$namePrettifier === null) {
-            self::$namePrettifier = new NamePrettifier;
-        }
-
-        return self::$namePrettifier;
     }
 }

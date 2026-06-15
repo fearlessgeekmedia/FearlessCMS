@@ -10,15 +10,18 @@
 namespace PHPUnit\Framework\TestStatus;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class Risky extends Known
+final class Risky extends Known
 {
-    public function isRisky(): true
+    /**
+     * @psalm-assert-if-true Risky $this
+     */
+    public function isRisky(): bool
     {
         return true;
     }

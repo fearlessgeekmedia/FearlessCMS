@@ -9,7 +9,6 @@
  */
 namespace SebastianBergmann\CodeCoverage;
 
-use function rtrim;
 use RuntimeException;
 
 final class UnintentionallyCoveredCodeException extends RuntimeException implements Exception
@@ -45,6 +44,6 @@ final class UnintentionallyCoveredCodeException extends RuntimeException impleme
             $message .= '- ' . $unit . "\n";
         }
 
-        return rtrim($message);
+        return $message;
     }
 }

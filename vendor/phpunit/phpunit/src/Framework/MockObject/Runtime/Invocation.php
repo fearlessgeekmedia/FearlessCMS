@@ -11,49 +11,47 @@ namespace PHPUnit\Framework\MockObject;
 
 use function array_map;
 use function implode;
+use function is_object;
 use function sprintf;
 use function str_starts_with;
 use function strtolower;
 use function substr;
 use PHPUnit\Framework\SelfDescribing;
-use PHPUnit\Util\Exporter;
+use PHPUnit\Util\Cloner;
+use SebastianBergmann\Exporter\Exporter;
 
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class Invocation implements SelfDescribing
+final class Invocation implements SelfDescribing
 {
     /**
-     * @var class-string
+     * @psalm-var class-string
      */
-    private string $className;
+    private readonly string $className;
 
     /**
-     * @var non-empty-string
+     * @psalm-var non-empty-string
      */
-    private string $methodName;
+    private readonly string $methodName;
+    private readonly array $parameters;
+    private readonly string $returnType;
+    private readonly bool $isReturnTypeNullable;
+    private readonly bool $proxiedCall;
+    private readonly MockObjectInternal|StubInternal $object;
 
     /**
-     * @var array<mixed>
+     * @psalm-param class-string $className
+     * @psalm-param non-empty-string $methodName
      */
-    private array $parameters;
-    private string $returnType;
-    private bool $isReturnTypeNullable;
-    private MockObjectInternal|StubInternal $object;
-
-    /**
-     * @param class-string     $className
-     * @param non-empty-string $methodName
-     * @param array<mixed>     $parameters
-     */
-    public function __construct(string $className, string $methodName, array $parameters, string $returnType, MockObjectInternal|StubInternal $object)
+    public function __construct(string $className, string $methodName, array $parameters, string $returnType, MockObjectInternal|StubInternal $object, bool $cloneObjects = false, bool $proxiedCall = false)
     {
-        $this->className  = $className;
-        $this->methodName = $methodName;
-        $this->parameters = $parameters;
-        $this->object     = $object;
+        $this->className   = $className;
+        $this->methodName  = $methodName;
+        $this->object      = $object;
+        $this->proxiedCall = $proxiedCall;
 
         if (strtolower($methodName) === '__tostring') {
             $returnType = 'string';
@@ -67,10 +65,24 @@ final readonly class Invocation implements SelfDescribing
         }
 
         $this->returnType = $returnType;
+
+        if (!$cloneObjects) {
+            $this->parameters = $parameters;
+
+            return;
+        }
+
+        foreach ($parameters as $key => $value) {
+            if (is_object($value)) {
+                $parameters[$key] = Cloner::clone($value);
+            }
+        }
+
+        $this->parameters = $parameters;
     }
 
     /**
-     * @return class-string
+     * @psalm-return class-string
      */
     public function className(): string
     {
@@ -78,16 +90,13 @@ final readonly class Invocation implements SelfDescribing
     }
 
     /**
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     public function methodName(): string
     {
         return $this->methodName;
     }
 
-    /**
-     * @return array<mixed>
-     */
     public function parameters(): array
     {
         return $this->parameters;
@@ -105,20 +114,22 @@ final readonly class Invocation implements SelfDescribing
             );
         }
 
-        if ($this->isReturnTypeNullable) {
+        if ($this->isReturnTypeNullable || $this->proxiedCall) {
             return null;
         }
 
         return (new ReturnValueGenerator)->generate(
             $this->className,
             $this->methodName,
-            $this->object,
+            $this->object::class,
             $this->returnType,
         );
     }
 
     public function toString(): string
     {
+        $exporter = new Exporter;
+
         return sprintf(
             '%s::%s(%s)%s',
             $this->className,
@@ -126,11 +137,11 @@ final readonly class Invocation implements SelfDescribing
             implode(
                 ', ',
                 array_map(
-                    [Exporter::class, 'shortenedExport'],
+                    [$exporter, 'shortenedExport'],
                     $this->parameters,
                 ),
             ),
-            $this->returnType !== '' ? sprintf(': %s', $this->returnType) : '',
+            $this->returnType ? sprintf(': %s', $this->returnType) : '',
         );
     }
 

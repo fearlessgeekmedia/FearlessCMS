@@ -14,9 +14,6 @@ use function class_exists;
 use function is_iterable;
 use ReflectionClass;
 
-/**
- * @no-named-arguments Parameter names are not covered by the backward compatibility promise for this library
- */
 final class IterableType extends Type
 {
     private bool $allowsNull;
@@ -54,9 +51,6 @@ final class IterableType extends Type
         return false;
     }
 
-    /**
-     * @return 'iterable'
-     */
     public function name(): string
     {
         return 'iterable';
@@ -67,6 +61,9 @@ final class IterableType extends Type
         return $this->allowsNull;
     }
 
+    /**
+     * @psalm-assert-if-true IterableType $this
+     */
     public function isIterable(): bool
     {
         return true;

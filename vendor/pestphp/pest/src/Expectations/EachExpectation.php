@@ -17,9 +17,6 @@ use function expect;
  */
 final class EachExpectation
 {
-    /**
-     * Indicates if the expectation is the opposite.
-     */
     private bool $opposite = false;
 
     /**

@@ -21,33 +21,33 @@ use PHPUnit\Runner\FileDoesNotExistException;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class Issue
+final class Issue
 {
     /**
-     * @var non-empty-string
+     * @psalm-var non-empty-string
      */
-    private string $file;
+    private readonly string $file;
 
     /**
-     * @var positive-int
+     * @psalm-var positive-int
      */
-    private int $line;
+    private readonly int $line;
 
     /**
-     * @var non-empty-string
+     * @psalm-var non-empty-string
      */
-    private string $hash;
+    private readonly string $hash;
 
     /**
-     * @var non-empty-string
+     * @psalm-var non-empty-string
      */
-    private string $description;
+    private readonly string $description;
 
     /**
-     * @param non-empty-string  $file
-     * @param positive-int      $line
-     * @param ?non-empty-string $hash
-     * @param non-empty-string  $description
+     * @psalm-param non-empty-string $file
+     * @psalm-param positive-int $line
+     * @psalm-param ?non-empty-string $hash
+     * @psalm-param non-empty-string $description
      *
      * @throws FileDoesNotExistException
      * @throws FileDoesNotHaveLineException
@@ -62,10 +62,10 @@ final readonly class Issue
     }
 
     /**
-     * @param non-empty-string $file
-     * @param positive-int     $line
-     * @param non-empty-string $hash
-     * @param non-empty-string $description
+     * @psalm-param non-empty-string $file
+     * @psalm-param positive-int $line
+     * @psalm-param non-empty-string $hash
+     * @psalm-param non-empty-string $description
      */
     private function __construct(string $file, int $line, string $hash, string $description)
     {
@@ -76,7 +76,7 @@ final readonly class Issue
     }
 
     /**
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     public function file(): string
     {
@@ -84,7 +84,7 @@ final readonly class Issue
     }
 
     /**
-     * @return positive-int
+     * @psalm-return positive-int
      */
     public function line(): int
     {
@@ -92,7 +92,7 @@ final readonly class Issue
     }
 
     /**
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     public function hash(): string
     {
@@ -100,7 +100,7 @@ final readonly class Issue
     }
 
     /**
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     public function description(): string
     {
@@ -116,13 +116,13 @@ final readonly class Issue
     }
 
     /**
-     * @param non-empty-string $file
-     * @param positive-int     $line
+     * @psalm-param non-empty-string $file
+     * @psalm-param positive-int $line
      *
      * @throws FileDoesNotExistException
      * @throws FileDoesNotHaveLineException
      *
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     private static function calculateHash(string $file, int $line): string
     {

@@ -9,12 +9,15 @@
  */
 namespace PHPUnit\Util\Xml;
 
+use const PHP_OS_FAMILY;
+use function chdir;
+use function dirname;
 use function error_reporting;
 use function file_get_contents;
+use function getcwd;
 use function libxml_get_errors;
 use function libxml_use_internal_errors;
 use function sprintf;
-use function trim;
 use DOMDocument;
 
 /**
@@ -22,7 +25,7 @@ use DOMDocument;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class Loader
+final class Loader
 {
     /**
      * @throws XmlException
@@ -43,7 +46,19 @@ final readonly class Loader
             );
         }
 
-        if (trim($contents) === '') {
+        return $this->load($contents, $filename);
+    }
+
+    /**
+     * @throws XmlException
+     */
+    public function load(string $actual, ?string $filename = null): DOMDocument
+    {
+        if ($actual === '') {
+            if ($filename === null) {
+                throw new XmlException('Could not parse XML from empty string');
+            }
+
             throw new XmlException(
                 sprintf(
                     'Could not parse XML from empty file "%s"',
@@ -52,25 +67,29 @@ final readonly class Loader
             );
         }
 
-        return $this->load($contents);
-    }
-
-    /**
-     * @throws XmlException
-     */
-    public function load(string $actual): DOMDocument
-    {
-        if ($actual === '') {
-            throw new XmlException('Could not parse XML from empty string');
-        }
-
         $document                     = new DOMDocument;
         $document->preserveWhiteSpace = false;
 
         $internal  = libxml_use_internal_errors(true);
         $message   = '';
         $reporting = error_reporting(0);
-        $loaded    = $document->loadXML($actual);
+
+        // Required for XInclude
+        if ($filename !== null) {
+            // Required for XInclude on Windows
+            if (PHP_OS_FAMILY === 'Windows') {
+                $cwd = getcwd();
+                @chdir(dirname($filename));
+            }
+
+            $document->documentURI = $filename;
+        }
+
+        $loaded = $document->loadXML($actual);
+
+        if ($filename !== null) {
+            $document->xinclude();
+        }
 
         foreach (libxml_get_errors() as $error) {
             $message .= "\n" . $error->message;
@@ -79,7 +98,21 @@ final readonly class Loader
         libxml_use_internal_errors($internal);
         error_reporting($reporting);
 
-        if ($loaded === false) {
+        if (isset($cwd)) {
+            @chdir($cwd);
+        }
+
+        if ($loaded === false || $message !== '') {
+            if ($filename !== null) {
+                throw new XmlException(
+                    sprintf(
+                        'Could not load "%s"%s',
+                        $filename,
+                        $message !== '' ? ":\n" . $message : '',
+                    ),
+                );
+            }
+
             if ($message === '') {
                 // @codeCoverageIgnoreStart
                 $message = 'Could not load XML for unknown reason';

@@ -19,11 +19,7 @@ final class TestCaseAlreadyInUse extends InvalidArgumentException implements Exc
      */
     public function __construct(string $inUse, string $newOne, string $folder)
     {
-        parent::__construct(sprintf(
-            'Test case [%s] can not be used. The folder [%s] already uses the test case [%s].',
-            $newOne,
-            $folder,
-            $inUse,
-        ));
+        parent::__construct(sprintf('Test case `%s` can not be used. The folder `%s` already uses the test case `%s`',
+            $newOne, $folder, $inUse));
     }
 }

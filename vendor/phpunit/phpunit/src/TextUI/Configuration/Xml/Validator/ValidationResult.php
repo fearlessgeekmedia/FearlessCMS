@@ -19,17 +19,17 @@ use LibXMLError;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  *
- * @immutable
+ * @psalm-immutable
  */
-final readonly class ValidationResult
+final class ValidationResult
 {
     /**
-     * @var array<int, list<string>>
+     * @psalm-var array<int,list<string>>
      */
-    private array $validationErrors;
+    private readonly array $validationErrors;
 
     /**
-     * @param array<int, LibXMLError> $errors
+     * @psalm-param array<int,LibXMLError> $errors
      */
     public static function fromArray(array $errors): self
     {
@@ -46,9 +46,6 @@ final readonly class ValidationResult
         return new self($validationErrors);
     }
 
-    /**
-     * @param array<int, list<string>> $validationErrors
-     */
     private function __construct(array $validationErrors)
     {
         $this->validationErrors = $validationErrors;
@@ -56,7 +53,7 @@ final readonly class ValidationResult
 
     public function hasValidationErrors(): bool
     {
-        return $this->validationErrors !== [];
+        return !empty($this->validationErrors);
     }
 
     public function asString(): string

@@ -14,21 +14,15 @@ use Symfony\Component\Process\Process;
 final class GitDirtyTestCaseFilter implements TestCaseFilter
 {
     /**
-     * @var array<int, string>|null
+     * @var string[]|null
      */
     private ?array $changedFiles = null;
 
-    /**
-     * Creates a new instance of the filter.
-     */
     public function __construct(private readonly string $projectRoot)
     {
         // ...
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function accept(string $testCaseFilename): bool
     {
         if ($this->changedFiles === null) {
@@ -47,9 +41,6 @@ final class GitDirtyTestCaseFilter implements TestCaseFilter
         return in_array($relativePath, $this->changedFiles, true);
     }
 
-    /**
-     * Loads the changed files.
-     */
     private function loadChangedFiles(): void
     {
         $process = new Process(['git', 'status', '--short', '--', '*.php']);

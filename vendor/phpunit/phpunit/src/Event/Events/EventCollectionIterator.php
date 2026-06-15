@@ -13,20 +13,16 @@ use function count;
 use Iterator;
 
 /**
- * @template-implements Iterator<non-negative-int, Event>
+ * @template-implements Iterator<int, Event>
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
 final class EventCollectionIterator implements Iterator
 {
     /**
-     * @var list<Event>
+     * @psalm-var list<Event>
      */
     private readonly array $events;
-
-    /**
-     * @var non-negative-int
-     */
     private int $position = 0;
 
     public function __construct(EventCollection $events)
@@ -44,9 +40,6 @@ final class EventCollectionIterator implements Iterator
         return $this->position < count($this->events);
     }
 
-    /**
-     * @return non-negative-int
-     */
     public function key(): int
     {
         return $this->position;

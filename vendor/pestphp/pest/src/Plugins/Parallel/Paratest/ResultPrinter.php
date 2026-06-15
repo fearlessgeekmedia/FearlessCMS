@@ -59,10 +59,10 @@ final class ResultPrinter
         private readonly OutputInterface $output,
         private readonly Options $options
     ) {
-        $this->printer = new readonly class($this->output) implements Printer
+        $this->printer = new class($this->output) implements Printer
         {
             public function __construct(
-                private OutputInterface $output,
+                private readonly OutputInterface $output,
             ) {}
 
             public function print(string $buffer): void

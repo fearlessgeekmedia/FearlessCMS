@@ -21,7 +21,7 @@ use PHPUnit\Framework\SelfDescribing;
 abstract class InvocationOrder implements SelfDescribing
 {
     /**
-     * @var list<BaseInvocation>
+     * @psalm-var list<BaseInvocation>
      */
     private array $invocations = [];
 

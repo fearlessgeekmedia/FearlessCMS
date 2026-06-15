@@ -10,18 +10,21 @@
 namespace PHPUnit\Event\TestData;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class DataFromTestDependency extends TestData
+final class DataFromTestDependency extends TestData
 {
     public static function from(string $data): self
     {
         return new self($data);
     }
 
-    public function isFromTestDependency(): true
+    /**
+     * @psalm-assert-if-true DataFromTestDependency $this
+     */
+    public function isFromTestDependency(): bool
     {
         return true;
     }

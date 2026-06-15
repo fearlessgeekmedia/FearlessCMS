@@ -10,13 +10,16 @@
 namespace PHPUnit\Metadata;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class DoesNotPerformAssertions extends Metadata
+final class DoesNotPerformAssertions extends Metadata
 {
-    public function isDoesNotPerformAssertions(): true
+    /**
+     * @psalm-assert-if-true DoesNotPerformAssertions $this
+     */
+    public function isDoesNotPerformAssertions(): bool
     {
         return true;
     }

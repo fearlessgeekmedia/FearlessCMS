@@ -78,7 +78,6 @@ final class TestSuite
         $this->afterAll = new AfterAllRepository;
         $this->rootPath = (string) realpath($rootPath);
         $this->snapshots = new SnapshotRepository(
-            $this->rootPath,
             implode(DIRECTORY_SEPARATOR, [$this->rootPath, $this->testPath]),
             implode(DIRECTORY_SEPARATOR, ['.pest', 'snapshots']),
         );
@@ -102,7 +101,7 @@ final class TestSuite
         }
 
         if (! self::$instance instanceof self) {
-            throw new InvalidPestCommand;
+            Panic::with(new InvalidPestCommand);
         }
 
         return self::$instance;
@@ -120,7 +119,7 @@ final class TestSuite
         assert($this->test instanceof TestCase);
 
         $description = str_replace('__pest_evaluable_', '', $this->test->name());
-        $datasetAsString = str_replace('__pest_evaluable_', '', Str::evaluable($this->test->dataSetAsString()));
+        $datasetAsString = str_replace('__pest_evaluable_', '', Str::evaluable($this->test->dataSetAsStringWithData()));
 
         return str_replace(' ', '_', $description.$datasetAsString);
     }

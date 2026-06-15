@@ -12,17 +12,17 @@ namespace PHPUnit\TextUI\Configuration;
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
- * @immutable
+ * @psalm-immutable
  */
-final readonly class File
+final class File
 {
     /**
-     * @var non-empty-string
+     * @psalm-var non-empty-string
      */
-    private string $path;
+    private readonly string $path;
 
     /**
-     * @param non-empty-string $path
+     * @psalm-param non-empty-string $path
      */
     public function __construct(string $path)
     {
@@ -30,7 +30,7 @@ final readonly class File
     }
 
     /**
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     public function path(): string
     {

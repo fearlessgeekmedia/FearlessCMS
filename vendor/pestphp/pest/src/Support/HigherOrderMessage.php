@@ -13,7 +13,7 @@ use Throwable;
  */
 final class HigherOrderMessage
 {
-    public const string UNDEFINED_METHOD = 'Method %s does not exist';
+    public const UNDEFINED_METHOD = 'Method %s does not exist';
 
     /**
      * An optional condition that will determine if the message will be executed.
@@ -50,13 +50,14 @@ final class HigherOrderMessage
         }
 
         if ($this->hasHigherOrderCallable()) {
+            /* @phpstan-ignore-next-line */
             return (new HigherOrderCallables($target))->{$this->name}(...$this->arguments);
         }
 
         try {
             return is_array($this->arguments)
                 ? Reflection::call($target, $this->name, $this->arguments)
-                : $target->{$this->name};
+                : $target->{$this->name}; /* @phpstan-ignore-line */
         } catch (Throwable $throwable) {
             Reflection::setPropertyValue($throwable, 'file', $this->filename);
             Reflection::setPropertyValue($throwable, 'line', $this->line);
@@ -64,6 +65,7 @@ final class HigherOrderMessage
             if ($throwable->getMessage() === $this->getUndefinedMethodMessage($target, $this->name)) {
                 /** @var ReflectionClass<TValue> $reflection */
                 $reflection = new ReflectionClass($target);
+                /* @phpstan-ignore-next-line */
                 $reflection = $reflection->getParentClass() ?: $reflection;
                 Reflection::setPropertyValue($throwable, 'message', sprintf('Call to undefined method %s::%s()', $reflection->getName(), $this->name));
             }
@@ -94,6 +96,10 @@ final class HigherOrderMessage
 
     private function getUndefinedMethodMessage(object $target, string $methodName): string
     {
-        return sprintf(self::UNDEFINED_METHOD, sprintf('%s::%s()', $target::class, $methodName));
+        if (\PHP_MAJOR_VERSION >= 8) {
+            return sprintf(self::UNDEFINED_METHOD, sprintf('%s::%s()', $target::class, $methodName));
+        }
+
+        return sprintf(self::UNDEFINED_METHOD, $methodName);
     }
 }

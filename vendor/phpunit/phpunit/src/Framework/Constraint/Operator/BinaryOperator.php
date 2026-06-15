@@ -18,14 +18,14 @@ use function count;
 abstract class BinaryOperator extends Operator
 {
     /**
-     * @var list<Constraint>
+     * @psalm-var list<Constraint>
      */
     private readonly array $constraints;
 
     protected function __construct(mixed ...$constraints)
     {
         $this->constraints = array_map(
-            fn (mixed $constraint): Constraint => $this->checkConstraint($constraint),
+            fn ($constraint): Constraint => $this->checkConstraint($constraint),
             $constraints,
         );
     }
@@ -75,7 +75,7 @@ abstract class BinaryOperator extends Operator
     }
 
     /**
-     * @return list<Constraint>
+     * @psalm-return list<Constraint>
      */
     final protected function constraints(): array
     {
@@ -99,7 +99,7 @@ abstract class BinaryOperator extends Operator
      */
     protected function reduce(): Constraint
     {
-        if (count($this->constraints) === 1 && $this->constraints[0] instanceof Operator) {
+        if ($this->arity() === 1 && $this->constraints[0] instanceof Operator) {
             return $this->constraints[0]->reduce();
         }
 

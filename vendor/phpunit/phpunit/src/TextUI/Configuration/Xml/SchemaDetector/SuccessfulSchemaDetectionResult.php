@@ -14,32 +14,33 @@ namespace PHPUnit\TextUI\XmlConfiguration;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  *
- * @immutable
+ * @psalm-immutable
  */
-final readonly class SuccessfulSchemaDetectionResult extends SchemaDetectionResult
+final class SuccessfulSchemaDetectionResult extends SchemaDetectionResult
 {
     /**
-     * @var non-empty-string
+     * @psalm-var non-empty-string
      */
-    private string $version;
+    private readonly string $version;
 
     /**
-     * @param non-empty-string $version
+     * @psalm-param non-empty-string $version
      */
     public function __construct(string $version)
     {
         $this->version = $version;
     }
 
+    /**
+     * @psalm-assert-if-true SuccessfulSchemaDetectionResult $this
+     */
     public function detected(): bool
     {
         return true;
     }
 
     /**
-     * @throws void
-     *
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     public function version(): string
     {

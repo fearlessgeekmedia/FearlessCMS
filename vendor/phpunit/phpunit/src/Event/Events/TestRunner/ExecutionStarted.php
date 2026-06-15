@@ -15,14 +15,14 @@ use PHPUnit\Event\Telemetry;
 use PHPUnit\Event\TestSuite\TestSuite;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class ExecutionStarted implements Event
+final class ExecutionStarted implements Event
 {
-    private Telemetry\Info $telemetryInfo;
-    private TestSuite $testSuite;
+    private readonly Telemetry\Info $telemetryInfo;
+    private readonly TestSuite $testSuite;
 
     public function __construct(Telemetry\Info $telemetryInfo, TestSuite $testSuite)
     {
@@ -40,9 +40,6 @@ final readonly class ExecutionStarted implements Event
         return $this->testSuite;
     }
 
-    /**
-     * @return non-empty-string
-     */
     public function asString(): string
     {
         return sprintf(

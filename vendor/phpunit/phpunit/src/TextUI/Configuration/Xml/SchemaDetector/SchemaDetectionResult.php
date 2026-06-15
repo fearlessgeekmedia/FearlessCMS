@@ -16,12 +16,12 @@ use PHPUnit\Util\Xml\XmlException;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  *
- * @immutable
+ * @psalm-immutable
  */
-abstract readonly class SchemaDetectionResult
+abstract class SchemaDetectionResult
 {
     /**
-     * @phpstan-assert-if-true SuccessfulSchemaDetectionResult $this
+     * @psalm-assert-if-true SuccessfulSchemaDetectionResult $this
      */
     public function detected(): bool
     {

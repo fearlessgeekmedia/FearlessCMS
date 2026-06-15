@@ -10,11 +10,14 @@
 namespace SebastianBergmann\CodeCoverage\Test\TestSize;
 
 /**
- * @immutable
+ * @psalm-immutable
  */
 final class Medium extends Known
 {
-    public function isMedium(): true
+    /**
+     * @psalm-assert-if-true Medium $this
+     */
+    public function isMedium(): bool
     {
         return true;
     }
