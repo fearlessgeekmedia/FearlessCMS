@@ -14,9 +14,9 @@ namespace PHPUnit\Runner\GarbageCollection;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-abstract readonly class Subscriber
+abstract class Subscriber
 {
-    private GarbageCollectionHandler $handler;
+    private readonly GarbageCollectionHandler $handler;
 
     public function __construct(GarbageCollectionHandler $handler)
     {

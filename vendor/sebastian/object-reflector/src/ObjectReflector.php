@@ -15,7 +15,7 @@ use function explode;
 final class ObjectReflector
 {
     /**
-     * @return array<string, mixed>
+     * @psalm-return array<string,mixed>
      */
     public function getProperties(object $object): array
     {

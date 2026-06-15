@@ -9,41 +9,42 @@
  */
 namespace PHPUnit\Event\Code;
 
+use function assert;
 use function is_int;
 use function sprintf;
 use PHPUnit\Event\TestData\TestDataCollection;
 use PHPUnit\Metadata\MetadataCollection;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class TestMethod extends Test
+final class TestMethod extends Test
 {
     /**
-     * @var class-string
+     * @psalm-var class-string
      */
-    private string $className;
+    private readonly string $className;
 
     /**
-     * @var non-empty-string
+     * @psalm-var non-empty-string
      */
-    private string $methodName;
+    private readonly string $methodName;
 
     /**
-     * @var non-negative-int
+     * @psalm-var non-negative-int
      */
-    private int $line;
-    private TestDox $testDox;
-    private MetadataCollection $metadata;
-    private TestDataCollection $testData;
+    private readonly int $line;
+    private readonly TestDox $testDox;
+    private readonly MetadataCollection $metadata;
+    private readonly TestDataCollection $testData;
 
     /**
-     * @param class-string     $className
-     * @param non-empty-string $methodName
-     * @param non-empty-string $file
-     * @param non-negative-int $line
+     * @psalm-param class-string $className
+     * @psalm-param non-empty-string $methodName
+     * @psalm-param non-empty-string $file
+     * @psalm-param non-negative-int $line
      */
     public function __construct(string $className, string $methodName, string $file, int $line, TestDox $testDox, MetadataCollection $metadata, TestDataCollection $testData)
     {
@@ -58,7 +59,7 @@ final readonly class TestMethod extends Test
     }
 
     /**
-     * @return class-string
+     * @psalm-return class-string
      */
     public function className(): string
     {
@@ -66,7 +67,7 @@ final readonly class TestMethod extends Test
     }
 
     /**
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     public function methodName(): string
     {
@@ -74,7 +75,7 @@ final readonly class TestMethod extends Test
     }
 
     /**
-     * @return non-negative-int
+     * @psalm-return non-negative-int
      */
     public function line(): int
     {
@@ -96,13 +97,16 @@ final readonly class TestMethod extends Test
         return $this->testData;
     }
 
-    public function isTestMethod(): true
+    /**
+     * @psalm-assert-if-true TestMethod $this
+     */
+    public function isTestMethod(): bool
     {
         return true;
     }
 
     /**
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     public function id(): string
     {
@@ -116,7 +120,7 @@ final readonly class TestMethod extends Test
     }
 
     /**
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     public function nameWithClass(): string
     {
@@ -124,7 +128,7 @@ final readonly class TestMethod extends Test
     }
 
     /**
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     public function name(): string
     {

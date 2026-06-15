@@ -29,7 +29,7 @@ final class Loader
     /**
      * returns an array of pest plugins to execute.
      *
-     * @param  string  $interface  the interface for the hook to execute
+     * @param  string  $interface the interface for the hook to execute
      * @return array<int, object> list of plugins
      */
     public static function getPlugins(string $interface): array
@@ -60,7 +60,6 @@ final class Loader
         if (! self::$loaded) {
             $cachedPlugins = sprintf(
                 '%s/../pest-plugins.json',
-                // @phpstan-ignore-next-line
                 $GLOBALS['_composer_bin_dir'] ?? getcwd().'/vendor/bin',
             );
             $container = Container::getInstance();

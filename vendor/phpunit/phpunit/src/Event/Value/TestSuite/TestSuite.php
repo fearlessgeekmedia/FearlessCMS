@@ -12,21 +12,21 @@ namespace PHPUnit\Event\TestSuite;
 use PHPUnit\Event\Code\TestCollection;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-abstract readonly class TestSuite
+abstract class TestSuite
 {
     /**
-     * @var non-empty-string
+     * @psalm-var non-empty-string
      */
-    private string $name;
-    private int $count;
-    private TestCollection $tests;
+    private readonly string $name;
+    private readonly int $count;
+    private readonly TestCollection $tests;
 
     /**
-     * @param non-empty-string $name
+     * @psalm-param non-empty-string $name
      */
     public function __construct(string $name, int $size, TestCollection $tests)
     {
@@ -36,7 +36,7 @@ abstract readonly class TestSuite
     }
 
     /**
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     public function name(): string
     {
@@ -54,7 +54,7 @@ abstract readonly class TestSuite
     }
 
     /**
-     * @phpstan-assert-if-true TestSuiteWithName $this
+     * @psalm-assert-if-true TestSuiteWithName $this
      */
     public function isWithName(): bool
     {
@@ -62,7 +62,7 @@ abstract readonly class TestSuite
     }
 
     /**
-     * @phpstan-assert-if-true TestSuiteForTestClass $this
+     * @psalm-assert-if-true TestSuiteForTestClass $this
      */
     public function isForTestClass(): bool
     {
@@ -70,7 +70,7 @@ abstract readonly class TestSuite
     }
 
     /**
-     * @phpstan-assert-if-true TestSuiteForTestMethodWithDataProvider $this
+     * @psalm-assert-if-true TestSuiteForTestMethodWithDataProvider $this
      */
     public function isForTestMethodWithDataProvider(): bool
     {

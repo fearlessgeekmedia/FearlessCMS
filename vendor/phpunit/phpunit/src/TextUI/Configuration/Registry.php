@@ -57,12 +57,8 @@ final class Registry
      */
     public static function loadFrom(string $path): void
     {
-        $buffer = file_get_contents($path);
-
-        assert($buffer !== false);
-
         self::$instance = unserialize(
-            $buffer,
+            file_get_contents($path),
             [
                 'allowed_classes' => [
                     Configuration::class,

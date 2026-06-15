@@ -10,28 +10,31 @@
 namespace PHPUnit\TextUI\Configuration;
 
 use function count;
+use function iterator_count;
+use Countable;
 use Iterator;
 
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
- * @template-implements Iterator<non-negative-int, IniSetting>
+ * @template-implements Iterator<int, IniSetting>
  */
-final class IniSettingCollectionIterator implements Iterator
+final class IniSettingCollectionIterator implements Countable, Iterator
 {
     /**
-     * @var list<IniSetting>
+     * @psalm-var list<IniSetting>
      */
     private readonly array $iniSettings;
-
-    /**
-     * @var non-negative-int
-     */
     private int $position = 0;
 
     public function __construct(IniSettingCollection $iniSettings)
     {
         $this->iniSettings = $iniSettings->asArray();
+    }
+
+    public function count(): int
+    {
+        return iterator_count($this);
     }
 
     public function rewind(): void
@@ -44,9 +47,6 @@ final class IniSettingCollectionIterator implements Iterator
         return $this->position < count($this->iniSettings);
     }
 
-    /**
-     * @return non-negative-int
-     */
     public function key(): int
     {
         return $this->position;

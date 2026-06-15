@@ -12,14 +12,14 @@ namespace PHPUnit\Event\Runtime;
 use PHPUnit\Runner\Version;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class PHPUnit
+final class PHPUnit
 {
-    private string $versionId;
-    private string $releaseSeries;
+    private readonly string $versionId;
+    private readonly string $releaseSeries;
 
     public function __construct()
     {

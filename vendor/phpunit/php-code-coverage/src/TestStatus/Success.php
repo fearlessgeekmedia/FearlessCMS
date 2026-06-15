@@ -10,11 +10,14 @@
 namespace SebastianBergmann\CodeCoverage\Test\TestStatus;
 
 /**
- * @immutable
+ * @psalm-immutable
  */
 final class Success extends Known
 {
-    public function isSuccess(): true
+    /**
+     * @psalm-assert-if-true Success $this
+     */
+    public function isSuccess(): bool
     {
         return true;
     }

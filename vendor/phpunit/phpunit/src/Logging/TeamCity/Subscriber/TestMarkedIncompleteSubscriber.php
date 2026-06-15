@@ -18,7 +18,7 @@ use PHPUnit\Event\Test\MarkedIncompleteSubscriber;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class TestMarkedIncompleteSubscriber extends Subscriber implements MarkedIncompleteSubscriber
+final class TestMarkedIncompleteSubscriber extends Subscriber implements MarkedIncompleteSubscriber
 {
     /**
      * @throws InvalidArgumentException

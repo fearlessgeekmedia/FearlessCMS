@@ -19,7 +19,7 @@ final class SourceFilter
     private static ?self $instance = null;
 
     /**
-     * @var array<non-empty-string, true>
+     * @psalm-var array<non-empty-string, true>
      */
     private readonly array $map;
 
@@ -37,7 +37,7 @@ final class SourceFilter
     }
 
     /**
-     * @param array<non-empty-string, true> $map
+     * @psalm-param array<non-empty-string, true> $map
      */
     public function __construct(array $map)
     {

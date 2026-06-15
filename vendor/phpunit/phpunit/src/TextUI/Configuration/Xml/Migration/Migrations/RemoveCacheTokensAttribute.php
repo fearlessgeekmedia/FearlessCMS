@@ -18,7 +18,7 @@ use DOMElement;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class RemoveCacheTokensAttribute implements Migration
+final class RemoveCacheTokensAttribute implements Migration
 {
     public function migrate(DOMDocument $document): void
     {

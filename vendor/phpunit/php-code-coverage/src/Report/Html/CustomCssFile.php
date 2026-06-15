@@ -13,11 +13,11 @@ use function is_file;
 use SebastianBergmann\CodeCoverage\InvalidArgumentException;
 
 /**
- * @immutable
+ * @psalm-immutable
  */
-final readonly class CustomCssFile
+final class CustomCssFile
 {
-    private string $path;
+    private readonly string $path;
 
     public static function default(): self
     {

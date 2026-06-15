@@ -16,7 +16,7 @@ final class Verbose implements HandlesArguments
     /**
      * The list of verbosity levels.
      */
-    private const array VERBOSITY_LEVELS = ['v', 'vv', 'vvv', 'q'];
+    private const VERBOSITY_LEVELS = ['v', 'vv', 'vvv', 'q'];
 
     /**
      * {@inheritDoc}

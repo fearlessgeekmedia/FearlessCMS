@@ -10,43 +10,42 @@
 namespace PHPUnit\Event\Test;
 
 use const PHP_EOL;
-use function implode;
 use function sprintf;
 use PHPUnit\Event\Code\Test;
 use PHPUnit\Event\Event;
 use PHPUnit\Event\Telemetry;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class NoticeTriggered implements Event
+final class NoticeTriggered implements Event
 {
-    private Telemetry\Info $telemetryInfo;
-    private Test $test;
+    private readonly Telemetry\Info $telemetryInfo;
+    private readonly Test $test;
 
     /**
-     * @var non-empty-string
+     * @psalm-var non-empty-string
      */
-    private string $message;
+    private readonly string $message;
 
     /**
-     * @var non-empty-string
+     * @psalm-var non-empty-string
      */
-    private string $file;
+    private readonly string $file;
 
     /**
-     * @var positive-int
+     * @psalm-var positive-int
      */
-    private int $line;
-    private bool $suppressed;
-    private bool $ignoredByBaseline;
+    private readonly int $line;
+    private readonly bool $suppressed;
+    private readonly bool $ignoredByBaseline;
 
     /**
-     * @param non-empty-string $message
-     * @param non-empty-string $file
-     * @param positive-int     $line
+     * @psalm-param non-empty-string $message
+     * @psalm-param non-empty-string $file
+     * @psalm-param positive-int $line
      */
     public function __construct(Telemetry\Info $telemetryInfo, Test $test, string $message, string $file, int $line, bool $suppressed, bool $ignoredByBaseline)
     {
@@ -70,7 +69,7 @@ final readonly class NoticeTriggered implements Event
     }
 
     /**
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     public function message(): string
     {
@@ -78,7 +77,7 @@ final readonly class NoticeTriggered implements Event
     }
 
     /**
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     public function file(): string
     {
@@ -86,7 +85,7 @@ final readonly class NoticeTriggered implements Event
     }
 
     /**
-     * @return positive-int
+     * @psalm-return positive-int
      */
     public function line(): int
     {
@@ -103,30 +102,26 @@ final readonly class NoticeTriggered implements Event
         return $this->ignoredByBaseline;
     }
 
-    /**
-     * @return non-empty-string
-     */
     public function asString(): string
     {
         $message = $this->message;
 
-        if ($message !== '') {
+        if (!empty($message)) {
             $message = PHP_EOL . $message;
         }
 
-        $details = [$this->test->id()];
-
-        if ($this->suppressed) {
-            $details[] = 'suppressed using operator';
-        }
+        $status = '';
 
         if ($this->ignoredByBaseline) {
-            $details[] = 'ignored by baseline';
+            $status = 'Baseline-Ignored ';
+        } elseif ($this->suppressed) {
+            $status = 'Suppressed ';
         }
 
         return sprintf(
-            'Test Triggered Notice (%s) in %s:%d%s',
-            implode(', ', $details),
+            'Test Triggered %sNotice (%s) in %s:%d%s',
+            $status,
+            $this->test->id(),
             $this->file,
             $this->line,
             $message,

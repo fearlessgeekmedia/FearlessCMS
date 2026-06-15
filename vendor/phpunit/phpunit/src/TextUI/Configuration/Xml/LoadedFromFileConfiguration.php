@@ -21,19 +21,13 @@ use PHPUnit\TextUI\XmlConfiguration\Logging\Logging;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  *
- * @immutable
+ * @psalm-immutable
  */
-final readonly class LoadedFromFileConfiguration extends Configuration
+final class LoadedFromFileConfiguration extends Configuration
 {
-    /**
-     * @var non-empty-string
-     */
-    private string $filename;
-    private ValidationResult $validationResult;
+    private readonly string $filename;
+    private readonly ValidationResult $validationResult;
 
-    /**
-     * @param non-empty-string $filename
-     */
     public function __construct(string $filename, ValidationResult $validationResult, ExtensionBootstrapCollection $extensions, Source $source, CodeCoverage $codeCoverage, Groups $groups, Logging $logging, Php $php, PHPUnit $phpunit, TestSuiteCollection $testSuite)
     {
         $this->filename         = $filename;
@@ -51,9 +45,6 @@ final readonly class LoadedFromFileConfiguration extends Configuration
         );
     }
 
-    /**
-     * @return non-empty-string
-     */
     public function filename(): string
     {
         return $this->filename;

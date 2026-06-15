@@ -20,12 +20,12 @@ use PHPUnit\Framework\UnknownClassOrInterfaceException;
 final class IsInstanceOf extends Constraint
 {
     /**
-     * @var class-string
+     * @psalm-var class-string
      */
     private readonly string $name;
 
     /**
-     * @var 'class'|'interface'
+     * @psalm-var 'class'|'interface'
      */
     private readonly string $type;
 
@@ -74,6 +74,6 @@ final class IsInstanceOf extends Constraint
      */
     protected function failureDescription(mixed $other): string
     {
-        return $this->valueToTypeStringFragment($other) . $this->toString();
+        return $this->valueToTypeStringFragment($other) . $this->toString(true);
     }
 }

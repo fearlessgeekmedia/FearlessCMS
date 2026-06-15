@@ -10,53 +10,33 @@
 namespace PHPUnit\TextUI\Command;
 
 use const PHP_EOL;
-use function assert;
-use function count;
-use function ksort;
 use function sprintf;
-use PHPUnit\Framework\TestSuite;
 use PHPUnit\TextUI\Configuration\Registry;
+use PHPUnit\TextUI\Configuration\TestSuiteCollection;
 
 /**
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class ListTestSuitesCommand implements Command
+final class ListTestSuitesCommand implements Command
 {
-    private TestSuite $testSuite;
+    private readonly TestSuiteCollection $suites;
 
-    public function __construct(TestSuite $testSuite)
+    public function __construct(TestSuiteCollection $suites)
     {
-        $this->testSuite = $testSuite;
+        $this->suites = $suites;
     }
 
     public function execute(): Result
     {
-        /** @var array<non-empty-string, positive-int> $suites */
-        $suites = [];
-
-        foreach ($this->testSuite->tests() as $test) {
-            assert($test instanceof TestSuite);
-
-            $suites[$test->name()] = count($test->collect());
-        }
-
-        ksort($suites);
-
         $buffer = $this->warnAboutConflictingOptions();
+        $buffer .= 'Available test suite(s):' . PHP_EOL;
 
-        $buffer .= sprintf(
-            'Available test suite%s:' . PHP_EOL,
-            count($suites) > 1 ? 's' : '',
-        );
-
-        foreach ($suites as $suite => $numberOfTests) {
+        foreach ($this->suites as $suite) {
             $buffer .= sprintf(
-                ' - %s (%d test%s)' . PHP_EOL,
-                $suite,
-                $numberOfTests,
-                $numberOfTests > 1 ? 's' : '',
+                ' - %s' . PHP_EOL,
+                $suite->name(),
             );
         }
 
@@ -69,23 +49,23 @@ final readonly class ListTestSuitesCommand implements Command
 
         $configuration = Registry::get();
 
-        if ($configuration->includeTestSuites() !== [] && !$configuration->hasDefaultTestSuite()) {
-            $buffer .= 'The --testsuite and --list-suites options cannot be combined, --testsuite is ignored' . PHP_EOL;
-        }
-
         if ($configuration->hasFilter()) {
             $buffer .= 'The --filter and --list-suites options cannot be combined, --filter is ignored' . PHP_EOL;
         }
 
         if ($configuration->hasGroups()) {
-            $buffer .= 'The --group (CLI) and <groups> (XML) options cannot be combined with --list-suites, --group and <groups> are ignored' . PHP_EOL;
+            $buffer .= 'The --group and --list-suites options cannot be combined, --group is ignored' . PHP_EOL;
         }
 
         if ($configuration->hasExcludeGroups()) {
-            $buffer .= 'The --exclude-group (CLI) and <groups> (XML) options cannot be combined with --list-suites, --exclude-group and <groups> are ignored' . PHP_EOL;
+            $buffer .= 'The --exclude-group and --list-suites options cannot be combined, --exclude-group is ignored' . PHP_EOL;
         }
 
-        if ($buffer !== '') {
+        if ($configuration->includeTestSuite() !== '') {
+            $buffer .= 'The --testsuite and --list-suites options cannot be combined, --testsuite is ignored' . PHP_EOL;
+        }
+
+        if (!empty($buffer)) {
             $buffer .= PHP_EOL;
         }
 

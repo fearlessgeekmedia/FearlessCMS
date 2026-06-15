@@ -9,11 +9,9 @@ use Pest\Contracts\TestCaseFilter;
 use Pest\Contracts\TestCaseMethodFilter;
 use Pest\Exceptions\TestCaseAlreadyInUse;
 use Pest\Exceptions\TestCaseClassOrTraitNotFound;
-use Pest\Factories\Attribute;
 use Pest\Factories\TestCaseFactory;
 use Pest\Factories\TestCaseMethodFactory;
 use Pest\Support\Str;
-use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -116,9 +114,9 @@ final class TestRepository
     /**
      * Gets the test case factory from the given filename.
      */
-    public function get(string $filename): ?TestCaseFactory
+    public function get(string $filename): TestCaseFactory
     {
-        return $this->testCases[$filename] ?? null;
+        return $this->testCases[$filename];
     }
 
     /**
@@ -188,10 +186,7 @@ final class TestRepository
 
                 foreach ($testCase->methods as $method) {
                     foreach ($groups as $group) {
-                        $method->attributes[] = new Attribute(
-                            Group::class,
-                            [$group],
-                        );
+                        $method->groups[] = $group;
                     }
                 }
 

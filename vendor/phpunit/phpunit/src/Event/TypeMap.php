@@ -24,13 +24,13 @@ use function sprintf;
 final class TypeMap
 {
     /**
-     * @var array<class-string, class-string>
+     * @psalm-var array<class-string, class-string>
      */
     private array $mapping = [];
 
     /**
-     * @param class-string $subscriberInterface
-     * @param class-string $eventClass
+     * @psalm-param class-string $subscriberInterface
+     * @psalm-param class-string $eventClass
      *
      * @throws EventAlreadyAssignedException
      * @throws InvalidEventException
@@ -70,7 +70,7 @@ final class TypeMap
     /**
      * @throws MapError
      *
-     * @return class-string
+     * @psalm-return class-string
      */
     public function map(Subscriber $subscriber): string
     {
@@ -89,7 +89,7 @@ final class TypeMap
     }
 
     /**
-     * @param class-string $subscriberInterface
+     * @psalm-param class-string $subscriberInterface
      *
      * @throws UnknownSubscriberException
      */
@@ -106,7 +106,7 @@ final class TypeMap
     }
 
     /**
-     * @param class-string $eventClass
+     * @psalm-param class-string $eventClass
      *
      * @throws UnknownEventException
      */
@@ -123,7 +123,7 @@ final class TypeMap
     }
 
     /**
-     * @param class-string $subscriberInterface
+     * @psalm-param class-string $subscriberInterface
      *
      * @throws InvalidSubscriberException
      */
@@ -140,7 +140,7 @@ final class TypeMap
     }
 
     /**
-     * @param class-string $eventClass
+     * @psalm-param class-string $eventClass
      *
      * @throws InvalidEventException
      */
@@ -157,7 +157,7 @@ final class TypeMap
     }
 
     /**
-     * @param class-string $subscriberInterface
+     * @psalm-param class-string $subscriberInterface
      *
      * @throws SubscriberTypeAlreadyRegisteredException
      */
@@ -174,7 +174,7 @@ final class TypeMap
     }
 
     /**
-     * @param class-string $eventClass
+     * @psalm-param class-string $eventClass
      *
      * @throws EventAlreadyAssignedException
      */

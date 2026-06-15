@@ -12,7 +12,7 @@ use PHPUnit\Architecture\Services\ServiceContainer;
 /**
  * @internal
  */
-final class ObjectDescription extends \PHPUnit\Architecture\Elements\ObjectDescription
+final class ObjectDescription extends \PHPUnit\Architecture\Elements\ObjectDescription // @phpstan-ignore-line
 {
     /**
      * {@inheritDoc}

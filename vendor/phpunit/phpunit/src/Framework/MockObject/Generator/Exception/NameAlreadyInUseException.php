@@ -19,7 +19,7 @@ use function sprintf;
 final class NameAlreadyInUseException extends \PHPUnit\Framework\Exception implements Exception
 {
     /**
-     * @param class-string|trait-string $name
+     * @psalm-param class-string|trait-string $name
      */
     public function __construct(string $name)
     {

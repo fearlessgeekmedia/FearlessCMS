@@ -12,29 +12,11 @@ namespace PHPUnit\Framework\Attributes;
 use Attribute;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
 #[Attribute(Attribute::TARGET_CLASS | Attribute::TARGET_METHOD)]
-final readonly class IgnoreDeprecations
+final class IgnoreDeprecations
 {
-    /** @var null|non-empty-string */
-    private ?string $messagePattern;
-
-    /**
-     * @param null|non-empty-string $messagePattern
-     */
-    public function __construct(null|string $messagePattern = null)
-    {
-        $this->messagePattern = $messagePattern;
-    }
-
-    /**
-     * @return null|non-empty-string
-     */
-    public function messagePattern(): ?string
-    {
-        return $this->messagePattern;
-    }
 }

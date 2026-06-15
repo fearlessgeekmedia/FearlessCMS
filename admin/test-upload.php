@@ -3,7 +3,7 @@ require_once dirname(__DIR__) . '/includes/auth.php';
 require_once dirname(__DIR__) . '/includes/config.php';
 
 if (!isLoggedIn()) {
-    header('Location: login.php');
+    header('Location: login');
     exit;
 }
 

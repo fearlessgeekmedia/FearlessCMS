@@ -16,28 +16,28 @@ use SebastianBergmann\Type\Type;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class ConfigurableMethod
+final class ConfigurableMethod
 {
     /**
-     * @var non-empty-string
+     * @psalm-var non-empty-string
      */
-    private string $name;
+    private readonly string $name;
 
     /**
-     * @var array<int, mixed>
+     * @psalm-var array<int, mixed>
      */
-    private array $defaultParameterValues;
+    private readonly array $defaultParameterValues;
 
     /**
-     * @var non-negative-int
+     * @psalm-var non-negative-int
      */
-    private int $numberOfParameters;
-    private Type $returnType;
+    private readonly int $numberOfParameters;
+    private readonly Type $returnType;
 
     /**
-     * @param non-empty-string  $name
-     * @param array<int, mixed> $defaultParameterValues
-     * @param non-negative-int  $numberOfParameters
+     * @psalm-param non-empty-string $name
+     * @psalm-param array<int, mixed> $defaultParameterValues
+     * @psalm-param non-negative-int $numberOfParameters
      */
     public function __construct(string $name, array $defaultParameterValues, int $numberOfParameters, Type $returnType)
     {
@@ -48,7 +48,7 @@ final readonly class ConfigurableMethod
     }
 
     /**
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     public function name(): string
     {
@@ -56,7 +56,7 @@ final readonly class ConfigurableMethod
     }
 
     /**
-     * @return array<int, mixed>
+     * @psalm-return array<int, mixed>
      */
     public function defaultParameterValues(): array
     {
@@ -64,7 +64,7 @@ final readonly class ConfigurableMethod
     }
 
     /**
-     * @return non-negative-int
+     * @psalm-return non-negative-int
      */
     public function numberOfParameters(): int
     {

@@ -46,7 +46,7 @@ final class LayerFactory
             $uses = $object->uses->getIterator();
 
             $object->uses = new ObjectUses(array_values(
-                array_filter(iterator_to_array($uses), function (string $use) use ($options): bool {
+                array_filter(iterator_to_array($uses), function ($use) use ($options): bool {
                     foreach ($options->exclude as $exclude) {
                         if (str_starts_with($use, $exclude)) {
                             return false;
@@ -60,9 +60,7 @@ final class LayerFactory
             return $object;
         }, $this->objectsStorage->allByNamespace($name, $onlyUserDefinedUses));
 
-        $layer = str_contains($name, '*')
-            ? Layer::fromBase($objects)->leaveByNameRegex('/'.strtr(preg_quote($name, '/'), ['\\*' => '[^\\\\]+']).'/')
-            : Layer::fromBase($objects)->leaveByNameStart($name);
+        $layer = Layer::fromBase($objects)->leaveByNameStart($name);
 
         foreach ($options->exclude as $exclude) {
             $layer = $layer->excludeByNameStart($exclude);

@@ -15,15 +15,15 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * @internal
  */
-final readonly class EnsureTeamCityEnabled implements ConfiguredSubscriber
+final class EnsureTeamCityEnabled implements ConfiguredSubscriber
 {
     /**
      * Creates a new Configured Subscriber instance.
      */
     public function __construct(
-        private InputInterface $input,
-        private OutputInterface $output,
-        private TestSuite $testSuite,
+        private readonly InputInterface $input,
+        private readonly OutputInterface $output,
+        private readonly TestSuite $testSuite,
     ) {}
 
     /**

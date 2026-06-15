@@ -34,7 +34,7 @@ final class CompactPrinter
     /**
      * @var array<string, array<int, string>>
      */
-    private const array LOOKUP_TABLE = [
+    private const LOOKUP_TABLE = [
         '.' => ['gray', '.'],
         'S' => ['yellow', 's'],
         'T' => ['cyan', 't'],
@@ -131,14 +131,14 @@ final class CompactPrinter
             $status['collected'],
             $status['threshold'],
             $status['roots'],
-            0.00,
-            0.00,
-            0.00,
-            0.00,
-            false,
-            false,
-            false,
-            0,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
         );
 
         $telemetry = new Info(

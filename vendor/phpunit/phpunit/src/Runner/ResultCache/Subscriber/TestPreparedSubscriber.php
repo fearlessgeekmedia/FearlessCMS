@@ -17,7 +17,7 @@ use PHPUnit\Event\Test\PreparedSubscriber;
  *
  * @internal This class is not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class TestPreparedSubscriber extends Subscriber implements PreparedSubscriber
+final class TestPreparedSubscriber extends Subscriber implements PreparedSubscriber
 {
     public function notify(Prepared $event): void
     {

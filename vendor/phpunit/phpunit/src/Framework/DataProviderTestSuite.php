@@ -9,9 +9,6 @@
  */
 namespace PHPUnit\Framework;
 
-use function assert;
-use function class_exists;
-use function count;
 use function explode;
 use PHPUnit\Framework\TestSize\TestSize;
 use PHPUnit\Metadata\Api\Groups;
@@ -24,17 +21,13 @@ use PHPUnit\Metadata\Api\Groups;
 final class DataProviderTestSuite extends TestSuite
 {
     /**
-     * @var list<ExecutionOrderDependency>
+     * @psalm-var list<ExecutionOrderDependency>
      */
-    private array $dependencies = [];
-
-    /**
-     * @var ?non-empty-list<ExecutionOrderDependency>
-     */
+    private array $dependencies   = [];
     private ?array $providedTests = null;
 
     /**
-     * @param list<ExecutionOrderDependency> $dependencies
+     * @psalm-param list<ExecutionOrderDependency> $dependencies
      */
     public function setDependencies(array $dependencies): void
     {
@@ -50,7 +43,7 @@ final class DataProviderTestSuite extends TestSuite
     }
 
     /**
-     * @return non-empty-list<ExecutionOrderDependency>
+     * @psalm-return list<ExecutionOrderDependency>
      */
     public function provides(): array
     {
@@ -62,7 +55,7 @@ final class DataProviderTestSuite extends TestSuite
     }
 
     /**
-     * @return list<ExecutionOrderDependency>
+     * @psalm-return list<ExecutionOrderDependency>
      */
     public function requires(): array
     {
@@ -76,11 +69,7 @@ final class DataProviderTestSuite extends TestSuite
      */
     public function size(): TestSize
     {
-        assert(count(explode('::', $this->name())) === 2);
         [$className, $methodName] = explode('::', $this->name());
-
-        assert(class_exists($className));
-        assert($methodName !== '');
 
         return (new Groups)->size($className, $methodName);
     }

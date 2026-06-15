@@ -18,8 +18,8 @@ use RuntimeException;
 final class NeverReturningMethodException extends RuntimeException implements Exception
 {
     /**
-     * @param class-string     $className
-     * @param non-empty-string $methodName
+     * @psalm-param class-string $className
+     * @psalm-param non-empty-string $methodName
      */
     public function __construct(string $className, string $methodName)
     {

@@ -111,7 +111,7 @@ function get_available_version($repo_url, $branch = 'main') {
         }
         
         // Clone the repository to check version using full path to git
-        $cmd = sprintf('%s -c http.sslVerify=false clone --depth 1 --branch %s %s %s 2>&1', 
+        $cmd = sprintf('%s -c http.sslVerify=false clone --depth 1 --branch %s -- %s %s 2>&1', 
                       escapeshellarg($git_cmd), 
                       escapeshellarg($branch), 
                       escapeshellarg($repo_url), 
@@ -210,6 +210,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         
         if (empty($repo)) {
             $_SESSION['error'] = 'Repository URL is required.';
+        } elseif (!preg_match('/^https:\/\/github\.com\/[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+(\.git)?$/', $repo)) {
+            $_SESSION['error'] = 'Invalid repository URL. Only GitHub HTTPS URLs are allowed.';
         } else {
             // Save to config
             $configFile = CONFIG_DIR . '/config.json';

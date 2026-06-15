@@ -15,20 +15,27 @@ use PHPUnit\Event\Event;
 use PHPUnit\Event\Telemetry;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class PreConditionCalled implements Event
+final class PreConditionCalled implements Event
 {
-    private Telemetry\Info$telemetryInfo;
-    private Code\TestMethod $test;
-    private Code\ClassMethod $calledMethod;
+    private readonly Telemetry\Info$telemetryInfo;
 
-    public function __construct(Telemetry\Info $telemetryInfo, Code\TestMethod $test, Code\ClassMethod $calledMethod)
+    /**
+     * @psalm-var class-string
+     */
+    private readonly string $testClassName;
+    private readonly Code\ClassMethod $calledMethod;
+
+    /**
+     * @psalm-param class-string $testClassName
+     */
+    public function __construct(Telemetry\Info $telemetryInfo, string $testClassName, Code\ClassMethod $calledMethod)
     {
         $this->telemetryInfo = $telemetryInfo;
-        $this->test          = $test;
+        $this->testClassName = $testClassName;
         $this->calledMethod  = $calledMethod;
     }
 
@@ -37,19 +44,12 @@ final readonly class PreConditionCalled implements Event
         return $this->telemetryInfo;
     }
 
-    public function test(): Code\TestMethod
-    {
-        return $this->test;
-    }
-
     /**
-     * @return class-string
-     *
-     * @deprecated https://github.com/sebastianbergmann/phpunit/issues/6140
+     * @psalm-return class-string
      */
     public function testClassName(): string
     {
-        return $this->test->className();
+        return $this->testClassName;
     }
 
     public function calledMethod(): Code\ClassMethod
@@ -57,9 +57,6 @@ final readonly class PreConditionCalled implements Event
         return $this->calledMethod;
     }
 
-    /**
-     * @return non-empty-string
-     */
     public function asString(): string
     {
         return sprintf(

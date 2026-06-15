@@ -10,10 +10,11 @@ use ParaTest\WrapperRunner\WrapperWorker;
         'status-file:',
         'progress-file:',
         'unexpected-output-file:',
-        'test-result-file:',
-        'result-cache-file:',
+        'testresult-file:',
         'teamcity-file:',
         'testdox-file:',
+        'testdox-color',
+        'testdox-columns:',
         'phpunit-argv:',
     ]);
 
@@ -38,10 +39,10 @@ use ParaTest\WrapperRunner\WrapperWorker;
 
     assert(isset($getopt['progress-file']) && is_string($getopt['progress-file']));
     assert(isset($getopt['unexpected-output-file']) && is_string($getopt['unexpected-output-file']));
-    assert(isset($getopt['test-result-file']) && is_string($getopt['test-result-file']));
-    assert(!isset($getopt['result-cache-file']) || is_string($getopt['result-cache-file']));
+    assert(isset($getopt['testresult-file']) && is_string($getopt['testresult-file']));
     assert(!isset($getopt['teamcity-file']) || is_string($getopt['teamcity-file']));
     assert(!isset($getopt['testdox-file']) || is_string($getopt['testdox-file']));
+    assert(!isset($getopt['testdox-columns']) || $getopt['testdox-columns'] === (string) (int) $getopt['testdox-columns']);
 
     assert(isset($getopt['phpunit-argv']) && is_string($getopt['phpunit-argv']));
     $phpunitArgv = unserialize($getopt['phpunit-argv'], ['allowed_classes' => false]);
@@ -51,10 +52,11 @@ use ParaTest\WrapperRunner\WrapperWorker;
         $phpunitArgv,
         $getopt['progress-file'],
         $getopt['unexpected-output-file'],
-        $getopt['test-result-file'],
-        $getopt['result-cache-file'] ?? null,
+        $getopt['testresult-file'],
         $getopt['teamcity-file'] ?? null,
         $getopt['testdox-file'] ?? null,
+        isset($getopt['testdox-color']),
+        isset($getopt['testdox-columns']) ? (int) $getopt['testdox-columns'] : null,
     );
 
     while (true) {

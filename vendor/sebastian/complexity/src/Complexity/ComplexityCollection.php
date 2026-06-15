@@ -19,24 +19,22 @@ use Countable;
 use IteratorAggregate;
 
 /**
- * @template-implements IteratorAggregate<int, Complexity>
- *
  * @psalm-immutable
  */
-final readonly class ComplexityCollection implements Countable, IteratorAggregate
+final class ComplexityCollection implements Countable, IteratorAggregate
 {
     /**
-     * @var list<Complexity>
+     * @psalm-var list<Complexity>
      */
-    private array $items;
+    private readonly array $items;
 
     public static function fromList(Complexity ...$items): self
     {
-        return new self(array_values($items));
+        return new self($items);
     }
 
     /**
-     * @param list<Complexity> $items
+     * @psalm-param list<Complexity> $items
      */
     private function __construct(array $items)
     {
@@ -44,7 +42,7 @@ final readonly class ComplexityCollection implements Countable, IteratorAggregat
     }
 
     /**
-     * @return list<Complexity>
+     * @psalm-return list<Complexity>
      */
     public function asArray(): array
     {
@@ -57,7 +55,7 @@ final readonly class ComplexityCollection implements Countable, IteratorAggregat
     }
 
     /**
-     * @return non-negative-int
+     * @psalm-return non-negative-int
      */
     public function count(): int
     {
@@ -70,7 +68,7 @@ final readonly class ComplexityCollection implements Countable, IteratorAggregat
     }
 
     /**
-     * @return non-negative-int
+     * @psalm-return non-negative-int
      */
     public function cyclomaticComplexity(): int
     {

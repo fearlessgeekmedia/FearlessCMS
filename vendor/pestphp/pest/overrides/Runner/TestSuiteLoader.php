@@ -38,13 +38,11 @@ namespace PHPUnit\Runner;
 
 use Exception;
 use Pest\Contracts\HasPrintableTestCaseName;
-use Pest\Panic;
 use Pest\TestCases\IgnorableTestCase;
 use Pest\TestSuite;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionException;
-use Throwable;
 
 use function array_diff;
 use function array_values;
@@ -88,11 +86,7 @@ final class TestSuiteLoader
         $suiteClassName = $this->classNameFromFileName($suiteClassFile);
 
         (static function () use ($suiteClassFile) {
-            try {
-                include_once $suiteClassFile;
-            } catch (Throwable $e) {
-                Panic::with($e);
-            }
+            include_once $suiteClassFile;
 
             TestSuite::getInstance()->tests->makeIfNeeded($suiteClassFile);
         })();

@@ -13,23 +13,23 @@ use const PHP_EOL;
 use PHPUnit\Event\NoPreviousThrowableException;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class Throwable
+final class Throwable
 {
     /**
-     * @var class-string
+     * @psalm-var class-string
      */
-    private string $className;
-    private string $message;
-    private string $description;
-    private string $stackTrace;
-    private ?Throwable $previous;
+    private readonly string $className;
+    private readonly string $message;
+    private readonly string $description;
+    private readonly string $stackTrace;
+    private readonly ?Throwable $previous;
 
     /**
-     * @param class-string $className
+     * @psalm-param class-string $className
      */
     public function __construct(string $className, string $message, string $description, string $stackTrace, ?self $previous)
     {
@@ -47,7 +47,7 @@ final readonly class Throwable
     {
         $buffer = $this->description();
 
-        if ($this->stackTrace() !== '') {
+        if (!empty($this->stackTrace())) {
             $buffer .= PHP_EOL . $this->stackTrace();
         }
 
@@ -59,7 +59,7 @@ final readonly class Throwable
     }
 
     /**
-     * @return class-string
+     * @psalm-return class-string
      */
     public function className(): string
     {
@@ -82,7 +82,7 @@ final readonly class Throwable
     }
 
     /**
-     * @phpstan-assert-if-true !null $this->previous
+     * @psalm-assert-if-true !null $this->previous
      */
     public function hasPrevious(): bool
     {

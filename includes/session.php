@@ -44,8 +44,8 @@ if (function_exists('session_status')) {
 
 if (!$sessionActive) {
     // CRITICAL: Set session configuration BEFORE any session starts
-    // Use absolute path for session save directory
-    $sessionDir = dirname(dirname(__FILE__)) . '/sessions';
+    // Use absolute path for session save directory (realpath to resolve symlinks)
+    $sessionDir = realpath(dirname(dirname(__FILE__))) . '/sessions';
     
     // Ensure session directory exists with proper permissions
     if (!is_dir($sessionDir)) {
@@ -156,9 +156,10 @@ if (!$sessionActive) {
         }
         
         // Regenerate session ID periodically for security
-        if (time() - $_SESSION['last_regeneration'] > 300) { // 5 minutes
+        // Skip regeneration during POST requests to avoid CSRF token mismatches
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST' && time() - $_SESSION['last_regeneration'] > 300) { // 5 minutes
             if (function_exists('session_regenerate_id')) {
-                session_regenerate_id(false); // Don't delete old session data
+                session_regenerate_id(true); // Delete old session file to avoid orphans
                 $_SESSION['last_regeneration'] = time();
             }
         }

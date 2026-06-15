@@ -17,22 +17,22 @@ use PHPUnit\Event\Event;
 use PHPUnit\Event\Telemetry;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class PhpunitErrorTriggered implements Event
+final class PhpunitErrorTriggered implements Event
 {
-    private Telemetry\Info $telemetryInfo;
-    private Test $test;
+    private readonly Telemetry\Info $telemetryInfo;
+    private readonly Test $test;
 
     /**
-     * @var non-empty-string
+     * @psalm-var non-empty-string
      */
-    private string $message;
+    private readonly string $message;
 
     /**
-     * @param non-empty-string $message
+     * @psalm-param non-empty-string $message
      */
     public function __construct(Telemetry\Info $telemetryInfo, Test $test, string $message)
     {
@@ -52,21 +52,18 @@ final readonly class PhpunitErrorTriggered implements Event
     }
 
     /**
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     public function message(): string
     {
         return $this->message;
     }
 
-    /**
-     * @return non-empty-string
-     */
     public function asString(): string
     {
         $message = trim($this->message);
 
-        if ($message !== '') {
+        if (!empty($message)) {
             $message = PHP_EOL . $message;
         }
 

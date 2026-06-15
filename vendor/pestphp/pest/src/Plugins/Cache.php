@@ -21,7 +21,7 @@ final class Cache implements HandlesArguments
     /**
      * The temporary folder.
      */
-    private const string TEMPORARY_FOLDER = __DIR__
+    private const TEMPORARY_FOLDER = __DIR__
         .DIRECTORY_SEPARATOR
         .'..'
         .DIRECTORY_SEPARATOR

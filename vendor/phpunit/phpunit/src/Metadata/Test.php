@@ -10,13 +10,16 @@
 namespace PHPUnit\Metadata;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class Test extends Metadata
+final class Test extends Metadata
 {
-    public function isTest(): true
+    /**
+     * @psalm-assert-if-true Test $this
+     */
+    public function isTest(): bool
     {
         return true;
     }

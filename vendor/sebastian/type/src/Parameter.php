@@ -9,19 +9,16 @@
  */
 namespace SebastianBergmann\Type;
 
-/**
- * @no-named-arguments Parameter names are not covered by the backward compatibility promise for this library
- */
-final readonly class Parameter
+final class Parameter
 {
     /**
-     * @var non-empty-string
+     * @psalm-var non-empty-string
      */
     private string $name;
     private Type $type;
 
     /**
-     * @param non-empty-string $name
+     * @psalm-param non-empty-string $name
      */
     public function __construct(string $name, Type $type)
     {
@@ -29,9 +26,6 @@ final readonly class Parameter
         $this->type = $type;
     }
 
-    /**
-     * @return non-empty-string
-     */
     public function name(): string
     {
         return $this->name;

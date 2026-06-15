@@ -22,9 +22,6 @@ use Closure;
 use ReflectionClass;
 use ReflectionObject;
 
-/**
- * @no-named-arguments Parameter names are not covered by the backward compatibility promise for this library
- */
 final class CallableType extends Type
 {
     private bool $allowsNull;
@@ -71,9 +68,6 @@ final class CallableType extends Type
         return false;
     }
 
-    /**
-     * @return 'callable'
-     */
     public function name(): string
     {
         return 'callable';
@@ -84,6 +78,9 @@ final class CallableType extends Type
         return $this->allowsNull;
     }
 
+    /**
+     * @psalm-assert-if-true CallableType $this
+     */
     public function isCallable(): bool
     {
         return true;
@@ -164,6 +161,9 @@ final class CallableType extends Type
 
             [$className, $methodName] = $type->value();
         }
+
+        assert(isset($className) && is_string($className));
+        assert(isset($methodName) && is_string($methodName));
 
         if (!class_exists($className)) {
             return false;

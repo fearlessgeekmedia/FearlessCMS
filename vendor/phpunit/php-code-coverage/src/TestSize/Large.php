@@ -10,11 +10,14 @@
 namespace SebastianBergmann\CodeCoverage\Test\TestSize;
 
 /**
- * @immutable
+ * @psalm-immutable
  */
 final class Large extends Known
 {
-    public function isLarge(): true
+    /**
+     * @psalm-assert-if-true Large $this
+     */
+    public function isLarge(): bool
     {
         return true;
     }

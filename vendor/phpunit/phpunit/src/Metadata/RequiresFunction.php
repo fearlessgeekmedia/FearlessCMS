@@ -10,20 +10,20 @@
 namespace PHPUnit\Metadata;
 
 /**
- * @immutable
+ * @psalm-immutable
  *
  * @no-named-arguments Parameter names are not covered by the backward compatibility promise for PHPUnit
  */
-final readonly class RequiresFunction extends Metadata
+final class RequiresFunction extends Metadata
 {
     /**
-     * @var non-empty-string
+     * @psalm-var non-empty-string
      */
-    private string $functionName;
+    private readonly string $functionName;
 
     /**
-     * @param int<0, 1>        $level
-     * @param non-empty-string $functionName
+     * @psalm-param 0|1 $level
+     * @psalm-param non-empty-string $functionName
      */
     protected function __construct(int $level, string $functionName)
     {
@@ -32,13 +32,16 @@ final readonly class RequiresFunction extends Metadata
         $this->functionName = $functionName;
     }
 
-    public function isRequiresFunction(): true
+    /**
+     * @psalm-assert-if-true RequiresFunction $this
+     */
+    public function isRequiresFunction(): bool
     {
         return true;
     }
 
     /**
-     * @return non-empty-string
+     * @psalm-return non-empty-string
      */
     public function functionName(): string
     {

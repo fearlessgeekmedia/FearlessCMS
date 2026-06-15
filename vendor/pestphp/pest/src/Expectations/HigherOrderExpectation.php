@@ -25,14 +25,8 @@ final class HigherOrderExpectation
      */
     private Expectation|EachExpectation $expectation;
 
-    /**
-     * Indicates if the expectation is the opposite.
-     */
     private bool $opposite = false;
 
-    /**
-     * Indicates if the expectation should reset the value.
-     */
     private bool $shouldReset = false;
 
     /**

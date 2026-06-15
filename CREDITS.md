@@ -4,28 +4,6 @@ This file recognizes the authors, contributors, and maintainers of the dependenc
 
 ## Core Dependencies
 
-### Node.js Dependencies
-
-#### fs-extra
-- **Author**: JP Richardson
-- **Repository**: https://github.com/jprichardson/node-fs-extra
-- **License**: MIT
-- **Description**: Enhanced file system methods for Node.js
-
-#### Handlebars
-- **Author**: Yehuda Katz
-- **Repository**: https://github.com/handlebars-lang/handlebars.js
-- **License**: MIT
-- **Description**: Minimal templating on steroids
-
-#### Marked
-- **Author**: Christopher Jeffrey
-- **Repository**: https://github.com/markedjs/marked
-- **License**: MIT
-- **Description**: A low-level markdown compiler for parsing markdown without caching or blocking for long periods of time.
-
-## Third-Party Libraries
-
 ### Markdown Parser
 
 #### Parsedown

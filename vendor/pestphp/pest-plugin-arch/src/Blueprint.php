@@ -109,29 +109,7 @@ final class Blueprint
                 }
 
                 $path = (string) realpath($object->path);
-
                 $line = $lineFinder($path);
-
-                $file = file($path);
-
-                if (is_array($file)) {
-                    if (array_key_exists($line - 1, $file)) {
-                        $lineContent = $file[$line - 1];
-
-                        if (str_contains($lineContent, '@pest-arch-ignore-line')) {
-                            continue;
-                        }
-                    }
-
-                    if (array_key_exists($line - 2, $file)) {
-                        $lineContent = $file[$line - 2];
-
-                        if (str_contains($lineContent, '@pest-arch-ignore-next-line')) {
-                            continue;
-                        }
-                    }
-                }
-
                 $path = substr($path, strlen(TestSuite::getInstance()->rootPath) + 1);
 
                 $failure(new Violation($path, $line, $line));
@@ -244,21 +222,14 @@ final class Blueprint
     private function getUsagePathAndLines(Layer $layer, string $objectName, string $target): ?Violation
     {
         $dependOnObjects = array_filter(
-            $layer->getIterator()->getArrayCopy(), // @phpstan-ignore-line
-            // @phpstan-ignore-next-line
+            $layer->getIterator()->getArrayCopy(), //@phpstan-ignore-line
             fn (ObjectDescription $objectDescription): bool => $objectDescription->name === $objectName
         );
 
         /** @var ObjectDescription $dependOnObject */
         $dependOnObject = array_pop($dependOnObjects);
 
-        /** @var class-string<\PhpParser\Node> $class */
         $class = PhpCoreExpressions::getClass($target) ?? Name::class;
-
-        // @phpstan-ignore-next-line
-        if ($dependOnObject === null) {
-            return null;
-        }
 
         $nodes = ServiceContainer::$nodeFinder->findInstanceOf(
             $dependOnObject->stmts,
@@ -267,7 +238,7 @@ final class Blueprint
 
         /** @var array<int, Name|Expr> $nodes */
         $names = array_values(array_filter(
-            $nodes, static function (\PhpParser\Node\Expr|\PhpParser\Node\Name $node) use ($target): bool {
+            $nodes, static function ($node) use ($target): bool {
                 $name = $node instanceof Name ? $node->toString() : PhpCoreExpressions::getName($node);
 
                 return $name === $target;
