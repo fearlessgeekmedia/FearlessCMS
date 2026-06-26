@@ -24,7 +24,8 @@ $cacheManager = new CacheManager();
 $GLOBALS['cacheManager'] = $cacheManager;
 
 if (!isLoggedIn()) {
-    header('Location: login');
+    $redirectAdminPath = $adminPath ?? 'admin';
+    header('Location: /' . $redirectAdminPath . '/login');
     exit;
 }
 
@@ -32,15 +33,22 @@ $action = $_GET['action'] ?? $_POST['action'] ?? 'dashboard';
 $pageTitle = ucwords(str_replace(['_', '-'], ' ', $action));
 
 // Load content handlers (deletion, etc.)
-require_once __DIR__ . '/includes/content-handlers.php';
-require_once __DIR__ . '/includes/menu-handlers.php';
+$contentHandlersFile = __DIR__ . '/includes/content-handlers.php';
+if (file_exists($contentHandlersFile)) {
+    require_once $contentHandlersFile;
+}
+$menuHandlersFile = __DIR__ . '/includes/menu-handlers.php';
+if (file_exists($menuHandlersFile)) {
+    require_once $menuHandlersFile;
+}
 
 // Handle POST requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $postAction = $_POST['action'];
     if ($postAction === 'logout') {
         logout();
-        header('Location: login');
+        $redirectAdminPath = $adminPath ?? 'admin';
+        header('Location: /' . $redirectAdminPath . '/login');
         exit;
     }
     require_once __DIR__ . '/includes/site-handlers.php';

@@ -3,7 +3,8 @@ require_once dirname(__DIR__) . '/includes/auth.php';
 require_once dirname(__DIR__) . '/includes/config.php';
 
 if (!isLoggedIn()) {
-    header('Location: login');
+    $redirectAdminPath = $adminPath ?? 'admin';
+    header('Location: /' . $redirectAdminPath . '/login');
     exit;
 }
 
