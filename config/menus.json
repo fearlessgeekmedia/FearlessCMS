@@ -1,14 +1,36 @@
 {
     "main": {
-        "label": "Main Menu",
+        "label": "main",
         "menu_class": "main-nav",
         "items": [
             {
                 "label": "Home",
                 "url": "\/",
                 "item_class": "",
-                "target": ""
+                "target": "",
+                "id": "item_0"
+            },
+            {
+                "id": "item_1782770987485",
+                "label": "About",
+                "url": "\/about",
+                "class": "",
+                "target": "",
+                "children": []
+            },
+            {
+                "id": "item_1782772740340",
+                "label": "Contact Us",
+                "url": "contact",
+                "class": "",
+                "target": "",
+                "children": []
             }
         ]
+    },
+    "top_menu": {
+        "label": "Top Menu",
+        "menu_class": "main-nav",
+        "items": []
     }
 }

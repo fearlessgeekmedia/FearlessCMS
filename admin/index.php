@@ -37,10 +37,6 @@ $contentHandlersFile = __DIR__ . '/includes/content-handlers.php';
 if (file_exists($contentHandlersFile)) {
     require_once $contentHandlersFile;
 }
-$menuHandlersFile = __DIR__ . '/includes/menu-handlers.php';
-if (file_exists($menuHandlersFile)) {
-    require_once $menuHandlersFile;
-}
 
 // Handle POST requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
@@ -141,6 +137,19 @@ $template_map = [
 ];
 
 $templateFile = ADMIN_TEMPLATE_DIR . '/' . ($template_map[$action] ?? $action . '.php');
+
+$menu_options = '';
+$selectedMenuId = $_GET['menu_id'] ?? '';
+$menuFile = CONFIG_DIR . '/menus.json';
+$menus = file_exists($menuFile) ? json_decode(file_get_contents($menuFile), true) : [];
+if (is_array($menus)) {
+    foreach ($menus as $menuId => $menu) {
+        $label = isset($menu['label']) ? $menu['label'] : ucwords(str_replace(['_', '-'], ' ', $menuId));
+        $selected = ($selectedMenuId === $menuId) ? ' selected' : '';
+        $menu_options .= '<option value="' . htmlspecialchars($menuId) . '"' . $selected . '>' . htmlspecialchars($label) . '</option>';
+    }
+}
+global $menu_options;
 
 // Check if this is a registered admin section
 $admin_sections = fcms_get_admin_sections();
