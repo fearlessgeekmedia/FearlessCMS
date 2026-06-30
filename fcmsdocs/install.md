@@ -65,7 +65,7 @@ Creates the essential directory structure:
 - `.fcms_updates/` - Update files
 
 #### 2. Create Administrator Account
-Creates the first administrator user with full system access.
+Creates the first administrator user with full system access. Can configure a custom admin path using `--admin-path`.
 
 ## 💻 Command Line Interface
 
@@ -109,6 +109,15 @@ php install.php --create-admin=username --password-file=/path/to/password.txt
 php install.php --create-admin=username
 ```
 
+#### Custom Admin URL Path
+```bash
+# Specify a custom admin path during installation
+php install.php --create-admin=username --password=password --admin-path=mcp
+```
+Sets the admin URL path to `/mcp/` instead of the default `/admin/`. The admin path must be 2-50 characters and can only contain letters, numbers, underscores, and dashes (cannot start with a dash).
+
+This provides security through obscurity by allowing you to change the well-known `/admin/` path to something less predictable.
+
 ### CLI Examples
 
 #### Complete Automated Installation
@@ -119,8 +128,8 @@ php install.php --check
 # Create directory structure
 php install.php --create-dirs
 
-# Create admin account
-php install.php --create-admin=admin --password=securepassword123
+# Create admin account with custom path
+php install.php --create-admin=admin --password=securepassword123 --admin-path=mcp
 ```
 
 #### Server Setup Script

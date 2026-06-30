@@ -300,7 +300,7 @@ if (PHP_SAPI === 'cli') {
     }
 
     if (empty($options)) {
-        echo "Usage: php install.php [--check] [--create-dirs] [--install-dev-deps] [--install-tailwind] [--create-admin=<username> --password=<pwd>|--password-file=<file> [--admin-path=<path>]]\n";
+        echo "Usage: php install.php [--check] [--create-dirs] [--install-dev-deps] [--install-tailwind] [--create-admin=<username> --password=<pwd>|--password-file=<file> [--admin-path=<path>]\n";
     }
 
     echo "\n⚠️  SECURITY WARNING: After installation, delete this file!\n";
