@@ -4,25 +4,23 @@
  * Handles load_menu (GET) and save_menu, create_menu, delete_menu (POST)
  */
 
-ob_start();
-ob_clean();
-
 define('PROJECT_ROOT', __DIR__);
 define('CONFIG_DIR', PROJECT_ROOT . '/config');
 
+// Authentication must be checked BEFORE any output
 require_once PROJECT_ROOT . '/includes/session.php';
 require_once PROJECT_ROOT . '/includes/auth.php';
 
-if (empty($_SESSION['username'])) {
-    ob_end_clean();
+// Reject unauthenticated access immediately
+if (!isLoggedIn()) {
     header('Content-Type: application/json');
     http_response_code(401);
     echo json_encode(['success' => false, 'error' => 'You must be logged in to perform this action']);
     exit;
 }
 
+// Reject unauthorized access
 if (!fcms_check_permission($_SESSION['username'], 'manage_menus')) {
-    ob_end_clean();
     header('Content-Type: application/json');
     http_response_code(403);
     echo json_encode(['success' => false, 'error' => 'You do not have permission to manage menus']);
@@ -32,12 +30,11 @@ if (!fcms_check_permission($_SESSION['username'], 'manage_menus')) {
 $menuFile = CONFIG_DIR . '/menus.json';
 $menus = file_exists($menuFile) ? json_decode(file_get_contents($menuFile), true) : [];
 
+header('Content-Type: application/json');
+header('Cache-Control: no-cache, must-revalidate');
+
 // Handle load_menu action (GET)
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['action'] === 'load_menu') {
-    ob_end_clean();
-    header('Content-Type: application/json');
-    header('Cache-Control: no-cache, must-revalidate');
-
     if (!isset($_GET['menu_id'])) {
         echo json_encode(['success' => false, 'error' => 'Menu ID is required']);
         exit;
@@ -56,10 +53,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
 
 // Handle POST actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    ob_end_clean();
-    header('Content-Type: application/json');
-    header('Cache-Control: no-cache, must-revalidate');
-
     $json = file_get_contents('php://input');
     $data = json_decode($json, true);
 
@@ -148,7 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-ob_end_clean();
+// Invalid request method
 header('Content-Type: application/json');
 http_response_code(400);
 echo json_encode(['success' => false, 'error' => 'Invalid request method']);
