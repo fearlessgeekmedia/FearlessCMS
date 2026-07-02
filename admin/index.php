@@ -19,12 +19,12 @@ require_once dirname(__DIR__) . '/includes/CacheManager.php';
 // Create managers
 $cmsModeManager = new CMSModeManager();
 $GLOBALS['cmsModeManager'] = $cmsModeManager;
-$themeManager = new ThemeManager(THEMES_DIR);
+$themeManager = new ThemeManager();
 $cacheManager = new CacheManager();
 $GLOBALS['cacheManager'] = $cacheManager;
 
 if (!isLoggedIn()) {
-    header('Location: login');
+    header('Location: /admin/login');
     exit;
 }
 
@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $postAction = $_POST['action'];
     if ($postAction === 'logout') {
         logout();
-        header('Location: login');
+        header('Location: /admin/login');
         exit;
     }
     require_once __DIR__ . '/includes/site-handlers.php';
