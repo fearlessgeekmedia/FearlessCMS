@@ -3,7 +3,11 @@
 # FearlessCMS Bash Updater with Complete Theme Preservation
 # Preserves ALL existing themes and only adds new ones from repository
 
-set -e # Exit on any error
+set -e  # Exit on any error
+
+# Ensure we run from the CMS root (script's own directory)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || SCRIPT_DIR="$(pwd)"
+cd "$SCRIPT_DIR"
 
 # Set up environment - ensure we have a proper PATH
 export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/run/current-system/sw/bin:$PATH"
@@ -11,8 +15,8 @@ export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/run/current-system/sw
 # Find git dynamically
 GIT_CMD=$(which git 2>/dev/null || echo "git")
 if [[ ! -x "$(which $GIT_CMD 2>/dev/null)" ]]; then
-  echo "ERROR: Git is not available in PATH. Please ensure git is installed." >&2
-  exit 1
+    echo "ERROR: Git is not available in PATH. Please ensure git is installed." >&2
+    exit 1
 fi
 
 # Colors for output
@@ -31,436 +35,570 @@ THEMES_BACKUP_DIR="./themes_backup_temp"
 
 # Logging function
 log() {
-  echo -e "${BLUE}[$(date '+%Y-%m-%d %H:%M:%S')]${NC} $1"
+    echo -e "${BLUE}[$(date '+%Y-%m-%d %H:%M:%S')]${NC} $1"
 }
 
 error() {
-  echo -e "${RED}[ERROR]${NC} $1" >&2
+    echo -e "${RED}[ERROR]${NC} $1" >&2
 }
 
 success() {
-  echo -e "${GREEN}[SUCCESS]${NC} $1"
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
 }
 
 warning() {
-  echo -e "${YELLOW}[WARNING]${NC} $1"
+    echo -e "${YELLOW}[WARNING]${NC} $1"
 }
 
 # Check if we're in the right directory
 check_environment() {
-  if [[ ! -f "index.php" ]]; then
-    error "This doesn't appear to be a FearlessCMS installation (index.php not found)"
-    exit 1
-  fi
-
-  if [[ ! -d "admin" ]]; then
-    error "Admin directory not found. Are you in the correct CMS root directory?"
-    exit 1
-  fi
-
-  # Debug environment information
-  log "Environment check passed"
-  log "Current PATH: $PATH"
-  log "Git command: $GIT_CMD"
-  log "Git location: $(which $GIT_CMD 2>/dev/null || echo 'not found')"
+    if [[ ! -f "index.php" ]]; then
+        error "This doesn't appear to be a FearlessCMS installation (index.php not found)"
+        exit 1
+    fi
+    
+    if [[ ! -d "admin" ]]; then
+        error "Admin directory not found. Are you in the correct CMS root directory?"
+        exit 1
+    fi
+    
+    # Debug environment information
+    log "Environment check passed"
+    log "Current PATH: $PATH"
+    log "Git command: $GIT_CMD"
+    log "Git location: $(which $GIT_CMD 2>/dev/null || echo 'not found')"
 }
 
 # Backup ALL existing themes
 backup_all_themes() {
-  log "Backing up ALL existing themes..."
-
-  if [[ ! -d "themes" ]]; then
-    log "No themes directory found, skipping theme backup"
-    return 0
-  fi
-
-  # Create temporary backup directory
-  rm -rf "${THEMES_BACKUP_DIR}"
-  mkdir -p "${THEMES_BACKUP_DIR}"
-
-  # Simple approach: copy entire themes directory
-  log "Copying all themes to backup directory"
-  cp -r themes/* "${THEMES_BACKUP_DIR}/" 2>/dev/null || {
-    log "No themes found to backup"
-    return 0
-  }
-
-  local theme_count=$(ls -1 "${THEMES_BACKUP_DIR}" | wc -l)
-  if [[ $theme_count -gt 0 ]]; then
-    success "Backed up $theme_count themes to ${THEMES_BACKUP_DIR}"
-  else
-    log "No themes found to backup"
-  fi
+    log "Backing up ALL existing themes..."
+    
+    if [[ ! -d "themes" ]]; then
+        log "No themes directory found, skipping theme backup"
+        return 0
+    fi
+    
+    # Create temporary backup directory
+    rm -rf "${THEMES_BACKUP_DIR}"
+    mkdir -p "${THEMES_BACKUP_DIR}"
+    
+    # Simple approach: copy entire themes directory
+    log "Copying all themes to backup directory"
+    cp -r themes/* "${THEMES_BACKUP_DIR}/" 2>/dev/null || {
+        log "No themes found to backup"
+        return 0
+    }
+    
+    local theme_count=$(ls -1 "${THEMES_BACKUP_DIR}" | wc -l)
+    if [[ $theme_count -gt 0 ]]; then
+        success "Backed up $theme_count themes to ${THEMES_BACKUP_DIR}"
+    else
+        log "No themes found to backup"
+    fi
 }
 
 # Restore ALL themes and add new ones from repository
 restore_and_merge_themes() {
-  log "Restoring themes and merging with new ones from repository..."
-
-  # First, restore all backed up themes
-  if [[ -d "${THEMES_BACKUP_DIR}" ]] && [[ "$(ls -A "${THEMES_BACKUP_DIR}" 2>/dev/null)" ]]; then
-    log "Restoring all backed up themes"
-    cp -r "${THEMES_BACKUP_DIR}"/* themes/
-    local restored_count=$(ls -1 "${THEMES_BACKUP_DIR}" | wc -l)
-    success "Restored $restored_count existing themes"
-  else
-    log "No themes to restore"
-  fi
-
-  # Now add any new themes from the repository that don't exist locally
-  if [[ -d "${UPDATE_DIR}/themes" ]]; then
-    local new_themes_added=0
-
-    for repo_theme in "${UPDATE_DIR}/themes"/*; do
-      if [[ -d "$repo_theme" ]]; then
-        repo_theme_name=$(basename "$repo_theme")
-
-        # Check if this theme already exists locally
-        if [[ ! -d "themes/$repo_theme_name" ]]; then
-          log "Adding new theme from repository: $repo_theme_name"
-          cp -r "$repo_theme" themes/
-          ((new_themes_added++))
-        else
-          log "Theme '$repo_theme_name' already exists locally, preserving local version"
+    log "Preserving existing themes and adding new ones from repository..."
+    
+    # Clean up the temporary theme backup (no longer needed for restore)
+    rm -rf "${THEMES_BACKUP_DIR}"
+    
+    # Add any new themes from the repository that don't exist locally
+    if [[ -d "${UPDATE_DIR}/themes" ]]; then
+        local new_themes_added=0
+        
+        for repo_theme in "${UPDATE_DIR}/themes"/*; do
+            if [[ -d "$repo_theme" ]]; then
+                repo_theme_name=$(basename "$repo_theme")
+                
+                # Check if this theme already exists locally
+                if [[ ! -d "themes/$repo_theme_name" ]]; then
+                    log "Adding new theme from repository: $repo_theme_name"
+                    cp -r "$repo_theme" themes/
+                    ((new_themes_added++))
+                else
+                    log "Theme '$repo_theme_name' already exists locally, preserving local version"
+                fi
+            fi
+        done
+        
+        if [[ $new_themes_added -gt 0 ]]; then
+            success "Added $new_themes_added new themes from repository"
         fi
-      fi
-    done
-
-    if [[ $new_themes_added -gt 0 ]]; then
-      success "Added $new_themes_added new themes from repository"
     fi
-  fi
-
-  # Clean up temporary backup
-  rm -rf "${THEMES_BACKUP_DIR}"
 }
 
 # Create backup
 create_backup() {
-  local timestamp=$(date '+%Y%m%d_%H%M%S')
-  local backup_path="${BACKUP_DIR}/cms_backup_${timestamp}"
+    local timestamp=$(date +'%Y%m%d_%H%M%S')
+    local backup_path="${BACKUP_DIR}/cms_backup_"${timestamp}
 
-  log "Creating backup at ${backup_path}"
+    log "Creating backup at "${backup_path}
 
-  mkdir -p "${backup_path}"
+    mkdir -p "${backup_path}"
 
-  # Backup core files (exclude content, config, uploads, etc.)
-  rsync -av --exclude='content/' \
-    --exclude='config/' \
-    --exclude='uploads/' \
-    --exclude='admin/uploads/' \
-    --exclude='sessions/' \
-    --exclude='cache/' \
-    --exclude='.git/' \
-    --exclude='node_modules/' \
-    --exclude='backups/' \
-    --exclude='update_temp/' \
-    --exclude='themes_backup_temp/' \
-    --exclude='*.log' \
-    --exclude='*.tmp' \
-    ./ "${backup_path}/" >/dev/null 2>&1 || {
-    error "Failed to create backup"
-    exit 1
-  }
+    # Check for rsync availability
+    local use_rsync=false
+    if command -v rsync &> /dev/null; then
+        use_rsync=true
+    fi
 
-  success "Backup created successfully at ${backup_path}"
-  echo "${backup_path}"
+    if [[ "$use_rsync" == "true" ]]; then
+        log "Using rsync for backup"
+        # Backup core files (exclude content, config, uploads, etc.)
+        rsync -av --exclude='content/' \
+                  --exclude='config/' \
+                  --exclude='uploads/' \
+                  --exclude='admin/uploads/' \
+                  --exclude='sessions/' \
+                  --exclude='cache/' \
+                  --exclude='.git/' \
+                  --exclude='backups/' \
+                  --exclude='update_temp/' \
+                  --exclude='themes_backup_temp/' \
+                  --exclude='*.log' \
+                  --exclude='*.tmp' \
+                  ./ "${backup_path}/" > /dev/null 2>&1 || {
+            error "Failed to create backup"
+            exit 1
+        }
+    else
+        log "rsync not found, using tar for backup"
+        tar -cf - \
+            --exclude='./backups' \
+            --exclude='./content' \
+            --exclude='./config' \
+            --exclude='./uploads' \
+            --exclude='./admin/uploads' \
+            --exclude='./sessions' \
+            --exclude='./cache' \
+            --exclude='./.git' \
+            --exclude='./node_modules' \
+            --exclude='./update_temp' \
+            --exclude='./themes_backup_temp' \
+            --exclude='./*.log' \
+            --exclude='./*.tmp' \
+            . | tar -xf - -C "${backup_path}" || {
+            error "Failed to create backup"
+            exit 1
+        }
+    fi
+
+    success "Backup created successfully at "${backup_path}
+    echo "${backup_path}"
 }
 
 # Download latest version
 download_update() {
-  log "Downloading latest version from ${REPO_URL} (branch: ${BRANCH})"
-
-  # Clean up any existing update directory
-  rm -rf "${UPDATE_DIR}"
-  mkdir -p "${UPDATE_DIR}"
-
-  # Clone the repository with better error handling and SSL verification bypass
-  log "Running: ${GIT_CMD} -c http.sslVerify=false clone --depth 1 --branch ${BRANCH} ${REPO_URL} ${UPDATE_DIR}"
-
-  if "${GIT_CMD}" -c http.sslVerify=false clone --depth 1 --branch "${BRANCH}" -- "${REPO_URL}" "${UPDATE_DIR}"; then
-    success "Latest version downloaded successfully"
-  else
-    error "Failed to download latest version"
-    error "Git clone command failed. Please check:"
-    error "1. Internet connection"
-    error "2. Repository URL: ${REPO_URL}"
-    error "3. Branch name: ${BRANCH}"
-    error "4. Git is properly installed"
-    exit 1
-  fi
+    log "Downloading latest version from ${REPO_URL} (branch: ${BRANCH})"
+    
+    # Clean up any existing update directory
+    rm -rf "${UPDATE_DIR}"
+    mkdir -p "${UPDATE_DIR}"
+    
+    # Clone the repository with better error handling and SSL verification bypass
+    log "Running: ${GIT_CMD} -c http.sslVerify=false clone --depth 1 --branch ${BRANCH} ${REPO_URL} ${UPDATE_DIR}"
+    
+    if "${GIT_CMD}" -c http.sslVerify=false clone --depth 1 --branch "${BRANCH}" -- "${REPO_URL}" "${UPDATE_DIR}"; then
+        success "Latest version downloaded successfully"
+    else
+        error "Failed to download latest version"
+        error "Git clone command failed. Please check:"
+        error "1. Internet connection"
+        error "2. Repository URL: ${REPO_URL}"
+        error "3. Branch name: ${BRANCH}"
+        error "4. Git is properly installed"
+        exit 1
+    fi
 }
 
 # Perform the update with complete theme preservation
 perform_update() {
-  log "Performing update..."
-
-  # Backup ALL existing themes before removing themes directory
-  backup_all_themes
-
-  # Remove old core directories (keeping content, config, uploads, etc.)
-  rm -rf admin/ includes/ themes/ plugins/ parallax/
-  rm -f *.md *.txt *.nix *.json package*
-
-  # Copy new core directories
-  cp -r "${UPDATE_DIR}/admin/" ./admin/
-  cp -r "${UPDATE_DIR}/includes/" ./includes/
-  cp -r "${UPDATE_DIR}/plugins/" ./plugins/
-  cp -r "${UPDATE_DIR}/parallax/" ./parallax/
-  cp -r "${UPDATE_DIR}/public/" ./public/ 2>/dev/null || true
-
-  # Copy all root-level PHP files that are new or changed
-  local php_updated=0
-  local php_added=0
-  for repo_php in "${UPDATE_DIR}"/*.php; do
-    [[ -f "$repo_php" ]] || continue
-    local fname
-    fname=$(basename "$repo_php")
-    if [[ ! -f "./$fname" ]]; then
-      cp "$repo_php" "./$fname"
-      log "Added new file: $fname"
-      ((php_added++))
-    elif ! diff -q "$repo_php" "./$fname" >/dev/null 2>&1; then
-      cp "$repo_php" "./$fname"
-      log "Updated changed file: $fname"
-      ((php_updated++))
+    log "Performing update..."
+    
+    # Backup ALL existing themes before removing themes directory
+    backup_all_themes
+    
+    # Remove old core directories (keeping content, config, uploads, etc.)
+    rm -rf admin/ includes/ plugins/ parallax/
+    rm -f *.md *.txt *.nix *.json package*
+    
+    # Copy new core directories
+    cp -r "${UPDATE_DIR}/admin/" ./admin/
+    cp -r "${UPDATE_DIR}/includes/" ./includes/
+    cp -r "${UPDATE_DIR}/plugins/" ./plugins/
+    cp -r "${UPDATE_DIR}/parallax/" ./parallax/
+    cp -r "${UPDATE_DIR}/public/" ./public/ 2>/dev/null || true
+    
+    # Copy all root-level PHP files that are new or changed
+    local php_updated=0
+    local php_added=0
+    for repo_php in "${UPDATE_DIR}"/*.php; do
+        [[ -f "$repo_php" ]] || continue
+        local fname
+        fname=$(basename "$repo_php")
+        if [[ ! -f "./$fname" ]]; then
+            cp "$repo_php" "./$fname"
+            log "Added new file: $fname"
+            ((php_added++))
+        elif ! diff -q "$repo_php" "./$fname" > /dev/null 2>&1; then
+            cp "$repo_php" "./$fname"
+            log "Updated changed file: $fname"
+            ((php_updated++))
+        fi
+    done
+    if [[ $php_added -gt 0 ]] || [[ $php_updated -gt 0 ]]; then
+        success "Root PHP files: $php_added added, $php_updated updated"
     fi
-  done
-  if [[ $php_added -gt 0 ]] || [[ $php_updated -gt 0 ]]; then
-    success "Root PHP files: $php_added added, $php_updated updated"
-  fi
-
-  cp "${UPDATE_DIR}/"*.md ./ 2>/dev/null || true
-  cp "${UPDATE_DIR}/"*.txt ./ 2>/dev/null || true
-  cp "${UPDATE_DIR}/"*.nix ./ 2>/dev/null || true
-  cp "${UPDATE_DIR}/"*.json ./ 2>/dev/null || true
-  cp "${UPDATE_DIR}/package*" ./ 2>/dev/null || true
-
-  # Create themes directory
-  mkdir -p themes/
-
-  # Restore all themes and merge with new ones
-  restore_and_merge_themes
-
-  # Set proper permissions
-  chmod 644 *.php *.md *.txt *.nix *.json package* 2>/dev/null || true
-  chmod 755 admin/ includes/ themes/ plugins/ parallax/ 2>/dev/null || true
-  chmod 755 admin/*.php includes/*.php 2>/dev/null || true
-
-  success "Update completed successfully"
+    
+    cp "${UPDATE_DIR}/"*.md ./ 2>/dev/null || true
+    cp "${UPDATE_DIR}/"*.txt ./ 2>/dev/null || true
+    cp "${UPDATE_DIR}/"*.nix ./ 2>/dev/null || true
+    cp "${UPDATE_DIR}/"*.json ./ 2>/dev/null || true
+    cp "${UPDATE_DIR}/package*" ./ 2>/dev/null || true
+    
+    # Create themes directory
+    mkdir -p themes/
+    
+    # Restore all themes and merge with new ones
+    restore_and_merge_themes
+    
+    # Set proper permissions
+    chmod 644 *.php *.md *.txt *.nix *.json package* 2>/dev/null || true
+    chmod 755 admin/ includes/ themes/ plugins/ parallax/ 2>/dev/null || true
+    chmod 755 admin/*.php includes/*.php 2>/dev/null || true
+    
+    success "Update completed successfully"
 }
 
 # Cleanup
 cleanup() {
-  log "Cleaning up temporary files"
-  rm -rf "${UPDATE_DIR}"
-  rm -rf "${THEMES_BACKUP_DIR}"
-  success "Cleanup completed"
+    log "Cleaning up temporary files"
+    rm -rf "${UPDATE_DIR}"
+    rm -rf "${THEMES_BACKUP_DIR}"
+    success "Cleanup completed"
 }
 
 # Show current version
 show_current_version() {
-  if [[ -f "version.php" ]]; then
-    local version=$(grep "APP_VERSION" version.php | sed "s/.*APP_VERSION', '\([^']*\)'.*/\1/")
-    if [[ -n "${version}" ]] && [[ "${version}" != "APP_VERSION" ]]; then
-      log "Current version: ${version}"
+    if [[ -f "version.php" ]]; then
+        local version=$(grep "APP_VERSION" version.php | sed "s/.*APP_VERSION', '\([^']*\)'.*/\1/")
+        if [[ -n "${version}" ]] && [[ "${version}" != "APP_VERSION" ]]; then
+            log "Current version: ${version}"
+        else
+            log "Current version: Unknown"
+        fi
     else
-      log "Current version: Unknown"
+        log "Current version: Not available"
     fi
-  else
-    log "Current version: Not available"
-  fi
 }
 
 # Show available version
 show_available_version() {
-  if [[ -d "${UPDATE_DIR}" ]] && [[ -f "${UPDATE_DIR}/version.php" ]]; then
-    local version=$(grep "APP_VERSION" "${UPDATE_DIR}/version.php" | sed "s/.*APP_VERSION', '\([^']*\)'.*/\1/")
-    if [[ -n "${version}" ]] && [[ "${version}" != "APP_VERSION" ]]; then
-      log "Available version: ${version}"
-    else
-      log "Available version: Unknown"
+    if [[ -d "${UPDATE_DIR}" ]] && [[ -f "${UPDATE_DIR}/version.php" ]]; then
+        local version=$(grep "APP_VERSION" "${UPDATE_DIR}/version.php" | sed "s/.*APP_VERSION', '\([^']*\)'.*/\1/")
+        if [[ -n "${version}" ]] && [[ "${version}" != "APP_VERSION" ]]; then
+            log "Available version: ${version}"
+        else
+            log "Available version: Unknown"
+        fi
     fi
-  fi
 }
 
 # Main update function
 update_cms() {
-  local dry_run=${1:-false}
-  local create_backup=${2:-true}
-
-  log "Starting FearlessCMS update process with complete theme preservation"
-  log "Repository: ${REPO_URL}"
-  log "Branch: ${BRANCH}"
-  log "Dry run: ${dry_run}"
-  log "Create backup: ${create_backup}"
-
-  # Check environment
-  check_environment
-
-  # Show current version
-  show_current_version
-
-  # Download latest version
-  download_update
-
-  # Show available version
-  show_available_version
-
-  if [[ "${dry_run}" == "true" ]]; then
-    warning "DRY RUN MODE - No files will be changed"
-    backup_all_themes
-    log "Would preserve the following themes:"
-    if [[ -d "${THEMES_BACKUP_DIR}" ]] && [[ "$(ls -A "${THEMES_BACKUP_DIR}" 2>/dev/null)" ]]; then
-      for theme in "${THEMES_BACKUP_DIR}"/*; do
-        if [[ -d "$theme" ]]; then
-          theme_name=$(basename "$theme")
-          log "  - $theme_name (existing theme)"
+    local dry_run=${1:-false}
+    local create_backup=${2:-true}
+    
+    log "Starting FearlessCMS update process with complete theme preservation"
+    log "Repository: ${REPO_URL}"
+    log "Branch: ${BRANCH}"
+    log "Dry run: ${dry_run}"
+    log "Create backup: ${create_backup}"
+    
+    # Check environment
+    check_environment
+    
+    # Self-repair known breakage on the receiving end BEFORE backup runs
+    post_update_repairs "./update.sh"
+    
+    # Show current version
+    show_current_version
+    
+    # Download latest version
+    download_update
+    
+    # Show available version
+    show_available_version
+    
+    if [[ "${dry_run}" == "true" ]]; then
+        warning "DRY RUN MODE - No files will be changed"
+        backup_all_themes
+        log "Would preserve the following themes:"
+        if [[ -d "${THEMES_BACKUP_DIR}" ]] && [[ "$(ls -A "${THEMES_BACKUP_DIR}" 2>/dev/null)" ]]; then
+            for theme in "${THEMES_BACKUP_DIR}"/*; do
+                if [[ -d "$theme" ]]; then
+                    theme_name=$(basename "$theme")
+                    log "  - $theme_name (existing theme)"
+                fi
+            done
         fi
-      done
-    fi
-
-    # Check for new themes in repository
-    if [[ -d "${UPDATE_DIR}/themes" ]]; then
-      log "New themes available from repository:"
-      for repo_theme in "${UPDATE_DIR}/themes"/*; do
-        if [[ -d "$repo_theme" ]]; then
-          repo_theme_name=$(basename "$repo_theme")
-          if [[ ! -d "themes/$repo_theme_name" ]]; then
-            log "  - $repo_theme_name (would be added)"
-          fi
+        
+        # Check for new themes in repository
+        if [[ -d "${UPDATE_DIR}/themes" ]]; then
+            log "New themes available from repository:"
+            for repo_theme in "${UPDATE_DIR}/themes"/*; do
+                if [[ -d "$repo_theme" ]]; then
+                    repo_theme_name=$(basename "$repo_theme")
+                    if [[ ! -d "themes/$repo_theme_name" ]]; then
+                        log "  - $repo_theme_name (would be added)"
+                    fi
+                fi
+            done
         fi
-      done
+        
+        log "Update simulation completed successfully"
+        cleanup
+        return 0
     fi
-
-    log "Update simulation completed successfully"
+    
+    # Create backup if requested
+    local backup_path=""
+    if [[ "${create_backup}" == "true" ]]; then
+        backup_path=$(create_backup)
+    fi
+    
+    # Perform the update
+    perform_update
+    
+    # Cleanup
     cleanup
-    return 0
-  fi
+    
+    success "FearlessCMS has been updated successfully with ALL themes preserved!"
+    if [[ -n "${backup_path}" ]]; then
+        log "Backup is available at: ${backup_path}"
+    fi
+    
+    log "Please test your site to ensure everything is working correctly"
+}
 
-  # Create backup if requested
-  local backup_path=""
-  if [[ "${create_backup}" == "true" ]]; then
-    backup_path=$(create_backup)
-  fi
-
-  # Perform the update
-  perform_update
-
-  # Cleanup
-  cleanup
-
-  success "FearlessCMS has been updated successfully with ALL themes preserved!"
-  if [[ -n "${backup_path}" ]]; then
-    log "Backup is available at: ${backup_path}"
-  fi
-
-  log "Please test your site to ensure everything is working correctly"
+# Post-update repairs to fix known issues on the receiving end
+post_update_repairs() {
+    log "Running post-update repairs on receiving end..."
+    
+    local target="${1:-./update.sh}"
+    
+    if [[ ! -f "$target" ]]; then
+        log "No update.sh found to repair"
+        return 0
+    fi
+    
+    local repairs_applied=0
+    
+    # Repair 1: Remove migrate_html_content_files function and invocation
+    if grep -q "migrate_html_content_files" "$target"; then
+        log "  Removing migrate_html_content_files from update.sh..."
+        
+        awk '
+            /^# Migrate \.md files containing only HTML to \.html files$/ { skip=1; next }
+            skip && /^}$/ { skip=0; next }
+            skip { next }
+            /^    # Migrate HTML content files automatically$/ { skip_inv=1; next }
+            skip_inv && /^    fi$/ { skip_inv=0; next }
+            skip_inv { next }
+            { print }
+        ' "$target" > "${target}.repaired_sh" && mv "${target}.repaired_sh" "$target"
+        
+        repairs_applied=$((repairs_applied + 1))
+    fi
+    
+    # Repair 2: Replace create_backup() with tar-fallback version if it still lacks it
+    if ! grep -q "rsync not found, using tar for backup" "$target"; then
+        log "  Replacing create_backup() with rsync-to-tar fallback version..."
+        
+        awk '
+            /^# Create backup$/ {
+                in_create=1
+                print "# Create backup"
+                print "create_backup() {"
+                print "    local timestamp=$(date +\047%Y%m%d_%H%M%S\047)"
+                print "    local backup_path=\"\${BACKUP_DIR}/cms_backup_\"\${timestamp}"
+                print ""
+                print "    log \"Creating backup at \"\${backup_path}"
+                print ""
+                print "    mkdir -p \"\${backup_path}\""
+                print ""
+                print "    # Check for rsync availability"
+                print "    local use_rsync=false"
+                print "    if command -v rsync &> /dev/null; then"
+                print "        use_rsync=true"
+                print "    fi"
+                print ""
+                print "    if [[ \"\$use_rsync\" == \"true\" ]]; then"
+                print "        log \"Using rsync for backup\""
+                print "        # Backup core files (exclude content, config, uploads, etc.)"
+                print "        rsync -av --exclude=\047content/\047 \\"
+                print "                  --exclude=\047config/\047 \\"
+                print "                  --exclude=\047uploads/\047 \\"
+                print "                  --exclude=\047admin/uploads/\047 \\"
+                print "                  --exclude=\047sessions/\047 \\"
+                print "                  --exclude=\047cache/\047 \\"
+                print "                  --exclude=\047.git/\047 \\"
+                print "                  --exclude=\047backups/\047 \\"
+                print "                  --exclude=\047update_temp/\047 \\"
+                print "                  --exclude=\047themes_backup_temp/\047 \\"
+                print "                  --exclude=\047*.log\047 \\"
+                print "                  --exclude=\047*.tmp\047 \\"
+                print "                  ./ \"\${backup_path}/\" > /dev/null 2>&1 || {"
+                print "            error \"Failed to create backup\""
+                print "            exit 1"
+                print "        }"
+                print "    else"
+                print "        log \"rsync not found, using tar for backup\""
+                print "        tar -cf - \\"
+                print "            --exclude=\047./backups\047 \\"
+                print "            --exclude=\047./content\047 \\"
+                print "            --exclude=\047./config\047 \\"
+                print "            --exclude=\047./uploads\047 \\"
+                print "            --exclude=\047./admin/uploads\047 \\"
+                print "            --exclude=\047./sessions\047 \\"
+                print "            --exclude=\047./cache\047 \\"
+                print "            --exclude=\047./.git\047 \\"
+                print "            --exclude=\047./node_modules\047 \\"
+                print "            --exclude=\047./update_temp\047 \\"
+                print "            --exclude=\047./themes_backup_temp\047 \\"
+                print "            --exclude=\047./*.log\047 \\"
+                print "            --exclude=\047./*.tmp\047 \\"
+                print "            . | tar -xf - -C \"\${backup_path}\" || {"
+                print "            error \"Failed to create backup\""
+                print "            exit 1"
+                print "        }"
+                print "    fi"
+                print ""
+                print "    success \"Backup created successfully at \"\${backup_path}"
+                print "    echo \"\${backup_path}\""
+                print "}"
+                next
+            }
+            in_create && /^}$/ { in_create=0; next }
+            in_create { next }
+            { print }
+        ' "$target" > "${target}.repaired_sh" && mv "${target}.repaired_sh" "$target"
+        
+        repairs_applied=$((repairs_applied + 1))
+    fi
+    
+    if [[ $repairs_applied -gt 0 ]]; then
+        success "Applied $repairs_applied post-update repairs to update.sh"
+    else
+        log "No post-update repairs needed for update.sh"
+    fi
 }
 
 # Restore from backup
 restore_from_backup() {
-  local backup_path="$1"
-
-  if [[ -z "${backup_path}" ]]; then
-    error "Backup path is required for restore"
-    exit 1
-  fi
-
-  if [[ ! -d "${backup_path}" ]]; then
-    error "Backup directory not found: ${backup_path}"
-    exit 1
-  fi
-
-  log "Restoring from backup: ${backup_path}"
-
-  # Simple restore: copy files back
-  # We use rsync if available, otherwise cp
-  if command -v rsync &>/dev/null; then
-    rsync -av "${backup_path}/" ./
-  else
-    cp -r "${backup_path}/"/* ./
-  fi
-
-  success "Restore completed successfully from ${backup_path}"
+    local backup_path="$1"
+    
+    if [[ -z "${backup_path}" ]]; then
+        error "Backup path is required for restore"
+        exit 1
+    fi
+    
+    if [[ ! -d "${backup_path}" ]]; then
+        error "Backup directory not found: ${backup_path}"
+        exit 1
+    fi
+    
+    log "Restoring from backup: ${backup_path}"
+    
+    # Simple restore: copy files back
+    # We use rsync if available, otherwise cp
+    if command -v rsync &> /dev/null; then
+        rsync -av "${backup_path}/" ./
+    else
+        cp -r "${backup_path}/"/* ./
+    fi
+    
+    success "Restore completed successfully from ${backup_path}"
 }
 
 # Show usage
 show_usage() {
-  echo "FearlessCMS Bash Updater with Complete Theme Preservation"
-  echo ""
-  echo "Usage: $0 [OPTIONS]"
-  echo ""
-  echo "Options:"
-  echo "  -h, --help          Show this help message"
-  echo "  -d, --dry-run       Simulate update without making changes"
-  echo "  -n, --no-backup     Skip creating backup before update"
-  echo "  -r, --repo URL      Set repository URL (default: ${REPO_URL})"
-  echo "  -b, --branch BRANCH Set branch (default: ${BRANCH})"
-  echo "  --restore PATH      Restore CMS core from a backup path"
-  echo ""
-  echo "Features:"
-  echo "  - Preserves ALL existing themes (custom and modified defaults)"
-  echo "  - Adds new themes from repository that don't exist locally"
-  echo "  - Never overwrites existing theme files"
-  echo "  - Creates backups before updating"
-  echo ""
-  echo "Examples:"
-  echo "  $0                    # Normal update with complete theme preservation"
-  echo "  $0 --dry-run         # Simulate update and show which themes would be preserved/added"
-  echo "  $0 --no-backup       # Update without backup but preserve all themes"
-  echo "  $0 -r https://github.com/user/repo.git -b develop"
-  echo ""
+    echo "FearlessCMS Bash Updater with Complete Theme Preservation"
+    echo ""
+    echo "Usage: $0 [OPTIONS]"
+    echo ""
+    echo "Options:"
+    echo "  -h, --help          Show this help message"
+    echo "  -d, --dry-run       Simulate update without making changes"
+    echo "  -n, --no-backup     Skip creating backup before update"
+    echo "  -r, --repo URL      Set repository URL (default: ${REPO_URL})"
+    echo "  -b, --branch BRANCH Set branch (default: ${BRANCH})"
+    echo "  --restore PATH      Restore CMS core from a backup path"
+    echo ""
+    echo "Features:"
+    echo "  - Preserves ALL existing themes (custom and modified defaults)"
+    echo "  - Adds new themes from repository that don't exist locally"
+    echo "  - Never overwrites existing theme files"
+    echo "  - Creates backups before updating"
+    echo ""
+    echo "Examples:"
+    echo "  $0                    # Normal update with complete theme preservation"
+    echo "  $0 --dry-run         # Simulate update and show which themes would be preserved/added"
+    echo "  $0 --no-backup       # Update without backup but preserve all themes"
+    echo "  $0 -r https://github.com/user/repo.git -b develop"
+    echo ""
 }
 
 # Parse command line arguments
 parse_args() {
-  local dry_run=false
-  local create_backup=true
-  local restore_path=""
-
-  while [[ $# -gt 0 ]]; do
-    case $1 in
-    -h | --help)
-      show_usage
-      exit 0
-      ;;
-    -d | --dry-run)
-      dry_run=true
-      shift
-      ;;
-    -n | --no-backup)
-      create_backup=false
-      shift
-      ;;
-    -r | --repo)
-      REPO_URL="$2"
-      shift 2
-      ;;
-    -b | --branch)
-      BRANCH="$2"
-      shift 2
-      ;;
-    --restore)
-      restore_path="$2"
-      shift 2
-      ;;
-    *)
-      error "Unknown option: $1"
-      show_usage
-      exit 1
-      ;;
-    esac
-  done
-
-  if [[ -n "${restore_path}" ]]; then
-    restore_from_backup "${restore_path}"
-  else
-    update_cms "${dry_run}" "${create_backup}"
-  fi
+    local dry_run=false
+    local create_backup=true
+    local restore_path=""
+    
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -h|--help)
+                show_usage
+                exit 0
+                ;;
+            -d|--dry-run)
+                dry_run=true
+                shift
+                ;;
+            -n|--no-backup)
+                create_backup=false
+                shift
+                ;;
+            -r|--repo)
+                REPO_URL="$2"
+                shift 2
+                ;;
+            -b|--branch)
+                BRANCH="$2"
+                shift 2
+                ;;
+            --restore)
+                restore_path="$2"
+                shift 2
+                ;;
+            *)
+                error "Unknown option: $1"
+                show_usage
+                exit 1
+                ;;
+        esac
+    done
+    
+    if [[ -n "${restore_path}" ]]; then
+        restore_from_backup "${restore_path}"
+    else
+        update_cms "${dry_run}" "${create_backup}"
+    fi
 }
 
 # Main execution
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  parse_args "$@"
+    parse_args "$@"
 fi
