@@ -171,24 +171,25 @@ create_backup() {
             exit 1
         }
     else
-        log "rsync not found, using cp for backup with post-copy cleanup"
-        cp -r ./ "${backup_path}/" 2>/dev/null || {
+        log "rsync not found, using tar for backup"
+        tar -cf - \
+            --exclude='./backups' \
+            --exclude='./content' \
+            --exclude='./config' \
+            --exclude='./uploads' \
+            --exclude='./admin/uploads' \
+            --exclude='./sessions' \
+            --exclude='./cache' \
+            --exclude='./.git' \
+            --exclude='./node_modules' \
+            --exclude='./update_temp' \
+            --exclude='./themes_backup_temp' \
+            --exclude='./*.log' \
+            --exclude='./*.tmp' \
+            . | tar -xf - -C "${backup_path}" || {
             error "Failed to create backup"
             exit 1
         }
-        # Remove excluded files/dirs from backup
-        rm -rf "${backup_path}/content" \
-              "${backup_path}/config" \
-              "${backup_path}/uploads" \
-              "${backup_path}/admin/uploads" \
-              "${backup_path}/sessions" \
-              "${backup_path}/cache" \
-              "${backup_path}/.git" \
-              "${backup_path}/node_modules" \
-              "${backup_path}/backups" \
-              "${backup_path}/update_temp" \
-              "${backup_path}/themes_backup_temp" 2>/dev/null || true
-        find "${backup_path}" -maxdepth 1 \( -name '*.log' -o -name '*.tmp' \) -delete 2>/dev/null || true
     fi
     
     success "Backup created successfully at ${backup_path}"
