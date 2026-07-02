@@ -47,10 +47,10 @@ if (isset($_SERVER['HTTP_HOST'])) {
 
     // Load admin path from config
     $configFile = CONFIG_DIR . '/config.json';
-    $config = file_exists($configFile) ? (json_decode(file_get_contents($configFile), true) ?: []) : [];
+    $config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
     $adminPath = $config['admin_path'] ?? 'admin';
 
-    if (strpos($script_filename, '/' . $adminPath . '/') !== false) {
+    if (strpos($script_filename, '/admin/') !== false) {
         $base_url .= '/' . $adminPath;
     }
 }

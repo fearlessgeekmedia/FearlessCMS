@@ -1,28 +1,5 @@
 <?php
-require_once dirname(__DIR__) . '/includes/session.php';
-require_once dirname(__DIR__) . '/includes/auth.php';
-require_once dirname(__DIR__) . '/includes/config.php';
-
-// Development mode check - must restrict to development only
-if (!is_development_mode()) {
-    $configFile = CONFIG_DIR . '/config.json';
-    $config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
-    $adminPath = $config['admin_path'] ?? 'admin';
-    header('Location: /' . $adminPath . '?action=dashboard');
-    exit;
-}
-
-// Authentication check
-if (!isLoggedIn()) {
-    $configFile = CONFIG_DIR . '/config.json';
-    $config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
-    $adminPath = $config['admin_path'] ?? 'admin';
-    header('Location: /' . $adminPath . '?action=login');
-    exit;
-}
-
-header('Content-Type: text/html; charset=utf-8');
-
+// Simple test script to verify redirect logic
 echo "<h1>Redirect Test</h1>";
 
 if (isset($_GET['test'])) {
@@ -54,4 +31,4 @@ if (isset($_GET['test'])) {
 
 echo "<hr>";
 echo "<p><a href='index.php'>Back to Admin</a></p>";
-?>
+?> 

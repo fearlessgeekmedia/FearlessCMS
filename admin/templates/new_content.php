@@ -1,8 +1,8 @@
 <!-- CACHE BUST: 1756936053 - FORCE REFRESH -->
 <!-- Cache bust: 1756935868 -->
 <?php
-// Get all content files for parent selection (.md and .html)
-$contentFiles = array_merge(glob(CONTENT_DIR . '/*.md'), glob(CONTENT_DIR . '/*.html'));
+// Get all content files for parent selection
+$contentFiles = glob(CONTENT_DIR . '/*.md');
 $pages = [];
 foreach ($contentFiles as $file) {
     $fileContent = file_get_contents($file);
@@ -14,11 +14,9 @@ foreach ($contentFiles as $file) {
         }
     }
     if (!$pageTitle) {
-        $extension = str_ends_with($file, '.html') ? '.html' : '.md';
-        $pageTitle = ucwords(str_replace(['-', '_'], ' ', basename($file, $extension)));
+        $pageTitle = ucwords(str_replace(['-', '_'], ' ', basename($file, '.md')));
     }
-    $extension = str_ends_with($file, '.html') ? '.html' : '.md';
-    $pages[basename($file, $extension)] = $pageTitle;
+    $pages[basename($file, '.md')] = $pageTitle;
 }
 
 // Get available templates dynamically from the active theme
@@ -43,9 +41,7 @@ if (in_array('page-with-sidebar', $templates)) {
     $templates = array_merge(['page-with-sidebar'], array_filter($templates, function($t) { return $t !== 'page-with-sidebar'; }));
 }
 ?>
- 
-<?php $editorMode = 'html'; ?>
- 
+
 <div class="bg-white shadow rounded-lg p-6">
     <!-- Success/Error Messages -->
     <?php if (isset($success) && !empty($success)): ?>
@@ -72,7 +68,6 @@ if (in_array('page-with-sidebar', $templates)) {
 
     <form method="POST" id="newPageForm" class="space-y-6">
         <input type="hidden" name="action" value="create_page">
-        <input type="hidden" name="editor_mode" value="html">
         <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
 
         <div class="grid grid-cols-2 gap-6">
@@ -113,18 +108,6 @@ if (in_array('page-with-sidebar', $templates)) {
             <label class="block mb-2 text-sm font-medium text-gray-700">Content</label>
             <p class="text-sm text-gray-600 mb-2">Create your page content using the rich editor below</p>
             
-            <!-- Content Type Selector -->
-            <div class="mb-3 flex items-center space-x-2">
-                <span class="text-sm font-medium text-gray-700">Content Type:</span>
-                <button type="button" id="contentTypeHtml" class="px-4 py-2 text-sm rounded border transition-colors <?php echo $editorMode === 'html' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'; ?>">
-                    HTML
-                </button>
-                <button type="button" id="contentTypeMarkdown" class="px-4 py-2 text-sm rounded border transition-colors <?php echo $editorMode === 'markdown' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'; ?>">
-                    Markdown
-                </button>
-                <span class="text-xs text-gray-500 ml-2" id="contentTypeShortcut">(Ctrl+Shift+M to toggle)</span>
-            </div>
-            
             <!-- Editor Mode Toggle -->
             <div class="mb-3 flex items-center space-x-2">
                 <button type="button" id="toggleMode" class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
@@ -134,31 +117,23 @@ if (in_array('page-with-sidebar', $templates)) {
                 <span class="text-xs text-gray-500">(Ctrl+Shift+C to toggle)</span>
             </div>
             
-            <div id="htmlEditorArea">
-                <!-- Rich Editor Container -->
-                <div id="richEditorContainer" class="quill-editor" style="height: 600px;"></div>
-                
-                <!-- Code Editor Container -->
-                <div id="codeEditorContainer" class="hidden">
-                    <textarea id="codeEditor" name="new_page_content" class="w-full h-96 p-4 font-mono text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter your content here..."></textarea>
-                    <div class="mt-2 text-sm text-gray-600">
-                        <p>💡 <strong>Code View Mode:</strong> Edit raw HTML code. Use this for precise formatting, custom HTML, or troubleshooting.</p>
-                    </div>
+            <!-- Rich Editor Container -->
+            <div id="richEditorContainer" class="quill-editor" style="height: 600px;"></div>
+            
+            <!-- Code Editor Container -->
+            <div id="codeEditorContainer" class="hidden">
+                <textarea id="codeEditor" name="new_page_content" class="w-full h-96 p-4 font-mono text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter your content here..."></textarea>
+                <div class="mt-2 text-sm text-gray-600">
+                    <p>💡 <strong>Code View Mode:</strong> Edit raw HTML code. Use this for precise formatting, custom HTML, or troubleshooting.</p>
                 </div>
             </div>
+        </div>
 
-            <!-- Markdown Editor Container -->
-            <div id="markdownEditorArea" class="hidden">
-                <div id="toastuiEditorContainer" style="height: 600px;"></div>
-            </div>
-
-            <div class="flex justify-end gap-4">
-                <button type="button" onclick="window.location.href='?action=dashboard'" class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">Cancel</button>
-                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Create Page</button>
-            </div>
+        <div class="flex justify-end gap-4">
+            <button type="button" onclick="window.location.href='?action=dashboard'" class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">Cancel</button>
+            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Create Page</button>
+        </div>
     </form>
-</div>
-
 </div>
 
 <!-- Quill.js Editor - CSS and JS loaded in base template -->
@@ -377,123 +352,18 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Get content from the appropriate editor
         let content;
-        var editorModeInput = document.querySelector('input[name="editor_mode"]') || document.querySelector('input[name=editor_mode]');
-        var currentMode = editorModeInput ? editorModeInput.value : 'html';
-        
-        if (currentMode === 'markdown' && typeof window.toastui !== 'undefined' && toastuiEditor) {
-            content = toastuiEditor.getMarkdown();
-            document.getElementById('codeEditor').value = content;
+        if (isRichMode && typeof Quill !== 'undefined') {
+            content = quill.root.innerHTML;
         } else {
-            if (isRichMode && typeof Quill !== 'undefined') {
-                content = quill.root.innerHTML;
-            } else {
-                content = document.getElementById('codeEditor').value;
-            }
-            document.getElementById('codeEditor').value = content;
+            content = document.getElementById('codeEditor').value;
         }
+        
+        // Set the content in the hidden textarea (which is also the code editor)
+        document.getElementById('codeEditor').value = content;
         
         // Submit the form
         this.submit();
     });
-
-        // Initialize correct editor on load based on buttons
-        if (document.getElementById('contentTypeMarkdown').classList.contains('bg-blue-600')) {
-            document.getElementById('htmlEditorArea').classList.add('hidden');
-            document.getElementById('markdownEditorArea').classList.remove('hidden');
-            initToastUIMarkdown();
-        }
-
-        // Keyboard shortcut for content type toggle (Ctrl+Shift+M)
-        document.addEventListener('keydown', function(e) {
-            if (e.ctrlKey && e.shiftKey && e.key === 'M') {
-                e.preventDefault();
-                var markdownBtn = document.getElementById('contentTypeMarkdown');
-                var htmlBtn = document.getElementById('contentTypeHtml');
-                if (markdownBtn && htmlBtn) {
-                    if (markdownBtn.classList.contains('bg-blue-600')) {
-                        htmlBtn.click();
-                    } else {
-                        markdownBtn.click();
-                    }
-                }
-            }
-        });
-
-        // Initialize ToastUI Editor for Markdown mode
-        let toastuiEditor;
-        function initToastUIMarkdown() {
-            if (typeof window.toastui !== 'undefined') {
-                if (toastuiEditor) {
-                    toastuiEditor.destroy();
-                    toastuiEditor = undefined;
-                }
-                toastuiEditor = new window.toastui.Editor({
-                    el: document.querySelector('#toastuiEditorContainer'),
-                    previewStyle: 'vertical',
-                    initialEditType: 'markdown',
-                    height: '600px',
-                    events: {
-                        change: function() {
-                            document.getElementById('codeEditor').value = toastuiEditor.getMarkdown();
-                        }
-                    },
-                    hooks: {
-                        addImageBlobHook: function(blob, callback) {
-                            var formData = new FormData();
-                            formData.append('action', 'upload_image');
-                            formData.append('file', blob);
-                            
-                            fetch('?action=upload_image', {
-                                method: 'POST',
-                                body: formData
-                            })
-                            .then(function(response) { return response.json(); })
-                            .then(function(data) {
-                                if (data.success) {
-                                    callback(data.url, 'image');
-                                } else {
-                                    alert('Upload failed: ' + (data.error || 'Unknown error'));
-                                }
-                            })
-                            .catch(function(error) {
-                                alert('Upload failed: ' + error);
-                            });
-                        }
-                    }
-                });
-            }
-        }
-
-        function getHTMLContent() {
-            if (document.getElementById('modeIndicator').textContent.includes('Code View')) {
-                return document.getElementById('codeEditor').value;
-            }
-            return quill.root.innerHTML;
-        }
-
-        // Content type button handlers
-        document.getElementById('contentTypeHtml').addEventListener('click', function() {
-            document.getElementById('htmlEditorArea').classList.remove('hidden');
-            document.getElementById('markdownEditorArea').classList.add('hidden');
-            document.querySelector('input[name="editor_mode"]').value = 'html';
-            this.classList.remove('bg-white', 'text-gray-700', 'border-gray-300');
-            this.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
-            document.getElementById('contentTypeMarkdown').classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
-            document.getElementById('contentTypeMarkdown').classList.add('bg-white', 'text-gray-700', 'border-gray-300');
-        });
-
-        document.getElementById('contentTypeMarkdown').addEventListener('click', function() {
-            document.getElementById('htmlEditorArea').classList.add('hidden');
-            document.getElementById('markdownEditorArea').classList.remove('hidden');
-            document.querySelector('input[name="editor_mode"]').value = 'markdown';
-            this.classList.remove('bg-white', 'text-gray-700', 'border-gray-300');
-            this.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
-            document.getElementById('contentTypeHtml').classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
-            document.getElementById('contentTypeHtml').classList.add('bg-white', 'text-gray-700', 'border-gray-300');
-            if (!toastuiEditor) {
-                initToastUIMarkdown();
-            }
-        });
 
     // Keyboard shortcut for mode toggle
     document.addEventListener('keydown', function(e) {
@@ -510,17 +380,10 @@ document.addEventListener('DOMContentLoaded', function() {
 // Preview function
 function previewContent() {
     let content;
-    var editorModeInput = document.querySelector('input[name="editor_mode"]') || document.querySelector('input[name=editor_mode]');
-    var currentMode = editorModeInput ? editorModeInput.value : 'html';
-    
-    if (currentMode === 'markdown' && typeof window.toastui !== 'undefined' && toastuiEditor) {
-        content = toastuiEditor.getMarkdown();
-    } else if (typeof Quill !== 'undefined') {
-        if (document.getElementById('modeIndicator').textContent.includes('Code View')) {
-            content = document.getElementById('codeEditor').value;
-        } else {
-            content = quill.root.innerHTML;
-        }
+    if (isRichMode) {
+        content = quill.root.innerHTML;
+    } else {
+        content = document.getElementById('codeEditor').value;
     }
     
     // Open preview in new window

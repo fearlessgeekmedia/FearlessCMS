@@ -11,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $content = $_POST['content'] ?? '';
         $pageTitle = sanitize_input($_POST['page_title'] ?? '', 'string');
         $parentPage = sanitize_input($_POST['parent_page'] ?? '', 'path');
-        $editorMode = sanitize_input($_POST['editor_mode'] ?? 'html', 'string');
+        $editorMode = sanitize_input($_POST['editor_mode'] ?? 'easy', 'string');
         $template = sanitize_input($_POST['template'] ?? 'page-with-sidebar', 'string');
 
         // Validate filename: allow slashes for subfolders

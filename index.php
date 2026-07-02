@@ -26,12 +26,6 @@ if (getenv('FCMS_DEBUG') === 'true') {
 }
 
 require_once __DIR__ . '/includes/config.php';
-
-// Load config early for demo redirect
-$configFile = CONFIG_DIR . "/config.json";
-$config = file_exists($configFile) ? (json_decode(file_get_contents($configFile), true) ?: []) : [];
-$adminPath = $config["admin_path"] ?? "admin";
-
 require_once PROJECT_ROOT . '/includes/ThemeManager.php';
 require_once PROJECT_ROOT . '/includes/MenuManager.php';
 require_once PROJECT_ROOT . '/includes/WidgetManager.php';
@@ -57,7 +51,7 @@ if ($demoManager->isDemoSession() || $demoManager->isDemoUserSession()) {
     if ($demoManager->isDemoSessionExpired()) {
         $demoManager->endDemoSession();
         // Redirect to login with demo expired message
-        header('Location: /' . $adminPath . '/login?demo_expired=1');
+        header('Location: /admin/login?demo_expired=1');
         exit;
     }
 }
@@ -72,12 +66,17 @@ $router->handlePreviewRequest();
 $cacheEnabled = false;
 $cacheFile = null;
 
-// Load auth and cache managers
+// Ensure session and config are loaded before checking login status
+require_once __DIR__ . '/includes/session.php';
+require_once __DIR__ . '/includes/config.php';
 require_once PROJECT_ROOT . '/includes/auth.php';
 require_once PROJECT_ROOT . '/includes/CacheManager.php';
 
 // Determine if this is a public page (not admin, not logged in, GET request)
 $requestPath = trim($_SERVER['REQUEST_URI'], '/');
+$configFile = CONFIG_DIR . "/config.json";
+$config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
+$adminPath = $config["admin_path"] ?? "admin";
 $isAdminRoute = (strpos($requestPath, $adminPath) === 0);
 $isLoggedIn = function_exists('isLoggedIn') ? isLoggedIn() : false;
 

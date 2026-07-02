@@ -142,7 +142,7 @@ function run_cmd(array $cmd, ?string $cwd = null): array {
 
 // ── CLI MODE ──────────────────────────────────────────────────────────
 if (PHP_SAPI === 'cli') {
-    $options = getopt('', ['check', 'create-dirs', 'install-tailwind', 'install-dev-deps', 'create-admin:', 'password:', 'password-file:', 'admin-path:']);
+    $options = getopt('', ['check', 'create-dirs', 'install-tailwind', 'install-dev-deps', 'create-admin:', 'password:', 'password-file:']);
     $exitCode = 0;
 
     if (isset($options['check'])) {
@@ -230,7 +230,6 @@ if (PHP_SAPI === 'cli') {
     if (isset($options['create-admin'])) {
         $username = trim($options['create-admin']);
         $password = '';
-        $adminPath = trim($options['admin-path'] ?? 'admin');
         if (isset($options['password'])) {
             $password = (string)$options['password'];
         } elseif (isset($options['password-file'])) {
@@ -248,13 +247,6 @@ if (PHP_SAPI === 'cli') {
         }
         if (!preg_match('/^[A-Za-z0-9_\-]{3,50}$/', $username)) {
             echo "Invalid username. Use 3-50 chars [A-Za-z0-9_-].\n";
-            exit(1);
-        }
-        if ($adminPath === '') {
-            $adminPath = 'admin';
-        }
-        if (!preg_match('/^[A-Za-z0-9_][A-Za-z0-9_\-]*$/', $adminPath) || strlen($adminPath) < 2 || strlen($adminPath) > 50) {
-            echo "Invalid admin_path. Use 2-50 chars [A-Za-z0-9_-], not starting with dash.\n";
             exit(1);
         }
         $usersFile = $CONFIG_DIR . '/users.json';
@@ -283,16 +275,7 @@ if (PHP_SAPI === 'cli') {
             }
         }
         if (file_put_contents($usersFile, json_encode($users, JSON_PRETTY_PRINT)) !== false) {
-            // Update admin_path in config.json
-            $configFile = $CONFIG_DIR . '/config.json';
-            $config = [];
-            if (file_exists($configFile)) {
-                $decoded = json_decode(file_get_contents($configFile), true);
-                if (is_array($decoded)) $config = $decoded;
-            }
-            $config['admin_path'] = $adminPath;
-            file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT));
-            echo "Admin account created: {$username}\nAdmin path set to: {$adminPath}\n";
+            echo "Admin account created: {$username}\n";
         } else {
             echo "Failed to write users.json\n";
             exit(1);
@@ -300,7 +283,7 @@ if (PHP_SAPI === 'cli') {
     }
 
     if (empty($options)) {
-        echo "Usage: php install.php [--check] [--create-dirs] [--install-dev-deps] [--install-tailwind] [--create-admin=<username> --password=<pwd>|--password-file=<file> [--admin-path=<path>]\n";
+        echo "Usage: php install.php [--check] [--create-dirs] [--install-dev-deps] [--install-tailwind] [--create-admin=<username> --password=<pwd>|--password-file=<file>]\n";
     }
 
     echo "\n⚠️  SECURITY WARNING: After installation, delete this file!\n";
@@ -318,7 +301,6 @@ if ($step < 1 || $step > 5) $step = 1;
 $action = $_POST['action'] ?? '';
 $resultMessages = [];
 $errorMessages = [];
-$savedAdminPath = null;
 
 // Validate CSRF token for all POST actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !validate_csrf_token()) {
@@ -415,17 +397,7 @@ if ($action === 'create_admin') {
         $username = trim($_POST['admin_user'] ?? '');
         $password = (string)($_POST['admin_pass'] ?? '');
         $confirm  = (string)($_POST['admin_pass_confirm'] ?? '');
-        $adminPath = trim($_POST['admin_path'] ?? 'admin');
 
-        if ($adminPath === '') {
-            $adminPath = 'admin';
-        }
-
-        $users = [];
-        if (file_exists($usersFile)) {
-            $decoded = json_decode(file_get_contents($usersFile), true);
-            if (is_array($decoded)) $users = $decoded;
-        }
         if ($username === '' || $password === '' || $confirm === '') {
             $errorMessages[] = 'All fields are required.';
         } elseif ($password !== $confirm) {
@@ -434,18 +406,21 @@ if ($action === 'create_admin') {
             $errorMessages[] = 'Username must be 3-50 characters (letters, numbers, underscores, dashes).';
         } elseif (strlen($password) < 8) {
             $errorMessages[] = 'Password must be at least 8 characters.';
-        } elseif (!preg_match('/^[A-Za-z0-9_][A-Za-z0-9_\-]*$/', $adminPath) || strlen($adminPath) < 2 || strlen($adminPath) > 50) {
-            $errorMessages[] = 'Admin URL Path must be 2-50 characters (letters, numbers, underscores, dashes) and not start with a dash.';
         } else {
-            $isDuplicate = false;
+            $users = [];
+            if (file_exists($usersFile)) {
+                $decoded = json_decode(file_get_contents($usersFile), true);
+                if (is_array($decoded)) $users = $decoded;
+            }
+            $duplicate = false;
             foreach ($users as $u) {
                 if (($u['username'] ?? '') === $username) {
                     $errorMessages[] = 'A user with that username already exists.';
-                    $isDuplicate = true;
+                    $duplicate = true;
                     break;
                 }
             }
-            if (!$isDuplicate) {
+            if (!$duplicate) {
                 $users[] = [
                     'id' => $username,
                     'username' => $username,
@@ -458,15 +433,6 @@ if ($action === 'create_admin') {
                     mkdir($CONFIG_DIR, 0755, true);
                 }
                 if (file_put_contents($usersFile, json_encode($users, JSON_PRETTY_PRINT)) !== false) {
-                    $configFile = $CONFIG_DIR . '/config.json';
-                    $config = [];
-                    if (file_exists($configFile)) {
-                        $decoded = json_decode(file_get_contents($configFile), true);
-                        if (is_array($decoded)) $config = $decoded;
-                    }
-                    $config['admin_path'] = $adminPath;
-                    file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT));
-                    $savedAdminPath = $adminPath;
                     $resultMessages[] = 'Admin account created successfully!';
                     $existingAdmins[] = $username;
                 } else {
@@ -475,21 +441,6 @@ if ($action === 'create_admin') {
             }
         }
     }
-}
-
-// Get admin_path from config for Step 5 (initialized early for consistency)
-$configFile = $CONFIG_DIR . '/config.json';
-if (isset($savedAdminPath)) {
-    $adminPath = $savedAdminPath;
-} elseif (file_exists($configFile)) {
-    $configData = json_decode(file_get_contents($configFile), true);
-    if (is_array($configData) && !empty($configData['admin_path'])) {
-        $adminPath = $configData['admin_path'];
-    } else {
-        $adminPath = 'admin';
-    }
-} else {
-    $adminPath = 'admin';
 }
 
 // ── Gather environment data ──
@@ -729,7 +680,6 @@ $steps = [
         box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
     }
     .form-group { margin-bottom: 1rem; }
-    .form-help { font-size: 0.75rem; color: #94a3b8; margin-top: 0.25rem; }
 
     /* Buttons */
     .btn {
@@ -1002,13 +952,6 @@ $steps = [
                        minlength="8" placeholder="Re-enter password">
             </div>
 
-            <div class="form-group">
-                <label for="admin_path">Admin URL Path</label>
-                <input type="text" id="admin_path" name="admin_path"
-                       placeholder="admin" pattern="[A-Za-z0-9_][A-Za-z0-9_\-]*" minlength="2" maxlength="50">
-                <p class="form-help">URL path for the admin panel (letters, numbers, underscores, dashes). Default: <code>admin</code></p>
-            </div>
-
             <button type="submit" class="btn btn-success">Create Account</button>
         </form>
 
@@ -1066,7 +1009,7 @@ $steps = [
         </p>
 
         <ul class="finish-list">
-            <li>📋 Visit <a href="/<?php echo htmlspecialchars($adminPath); ?>/"><code>/<?php echo htmlspecialchars($adminPath); ?>/</code></a> to log in and configure your site.</li>
+            <li>📋 Visit <a href="/admin/"><code>/admin/</code></a> to log in and configure your site.</li>
             <li>🎨 Use the Themes section to customize your site's look.</li>
             <li>🧩 Use the Store to browse and install plugins &amp; themes.</li>
             <li>📤 Use <strong>Export Site</strong> in the Dashboard for a static version.</li>
@@ -1082,7 +1025,7 @@ $steps = [
         </div>
 
         <div style="text-align:center; margin-top:1.5rem;">
-            <a href="/<?php echo htmlspecialchars($adminPath); ?>/" class="btn btn-primary">Go to Mission Control →</a>
+            <a href="/admin/" class="btn btn-primary">Go to Mission Control →</a>
         </div>
 
     <?php endif; ?>

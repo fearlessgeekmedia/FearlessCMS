@@ -237,32 +237,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         // Check for forced backup via environment variable
         $force_backup = getenv('FCMS_FORCE_BACKUP') === 'true';
         $createBackup = $force_backup || isset($_POST['create_backup']);
-
+        
         $dryRun = isset($_POST['dry_run']);
-
+        
         try {
             // Build the command for the bash updater
             $updateScript = dirname(__DIR__) . '/update.sh';
-
+            
             if (!file_exists($updateScript)) {
                 throw new Exception('Update script not found. Please ensure update.sh exists in the CMS root directory.');
             }
-
+            
             if (!is_executable($updateScript)) {
                 throw new Exception('Update script is not executable. Please run: chmod +x update.sh');
             }
-
+            
             // Build command arguments
             $cmd = escapeshellarg($updateScript);
-
+            
             if ($dryRun) {
                 $cmd .= ' --dry-run';
             }
-
+            
             if (!$createBackup) {
                 $cmd .= ' --no-backup';
             }
-
+            
             // Get custom repo/branch if set
             $configFile = CONFIG_DIR . '/config.json';
             $config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];

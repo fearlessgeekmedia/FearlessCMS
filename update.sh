@@ -5,6 +5,10 @@
 
 set -e  # Exit on any error
 
+# Ensure we run from the CMS root (script's own directory)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || SCRIPT_DIR="$(pwd)"
+cd "$SCRIPT_DIR"
+
 # Set up environment - ensure we have a proper PATH
 export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/run/current-system/sw/bin:$PATH"
 
