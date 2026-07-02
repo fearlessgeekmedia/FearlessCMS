@@ -119,7 +119,7 @@ restore_and_merge_themes() {
                 if [[ ! -d "themes/$repo_theme_name" ]]; then
                     log "Adding new theme from repository: $repo_theme_name"
                     cp -r "$repo_theme" themes/
-                    ((new_themes_added++))
+                    new_themes_added=$((new_themes_added + 1))
                 else
                     log "Theme '$repo_theme_name' already exists locally, preserving local version"
                 fi
@@ -219,11 +219,11 @@ perform_update() {
         if [[ ! -f "./$fname" ]]; then
             cp "$repo_php" "./$fname"
             log "Added new file: $fname"
-            ((php_added++))
+            php_added=$((php_added + 1))
         elif ! diff -q "$repo_php" "./$fname" > /dev/null 2>&1; then
             cp "$repo_php" "./$fname"
             log "Updated changed file: $fname"
-            ((php_updated++))
+            php_updated=$((php_updated + 1))
         fi
     done
     if [[ $php_added -gt 0 ]] || [[ $php_updated -gt 0 ]]; then
@@ -346,8 +346,7 @@ update_cms() {
     
     # Perform the update
     perform_update
-    
-    # Cleanup
+
     cleanup
     
     success "FearlessCMS has been updated successfully with ALL themes preserved!"

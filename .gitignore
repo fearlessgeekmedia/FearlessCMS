@@ -29,3 +29,15 @@ sandbox_home/*
 
 # Compiled CSS files
 public/css/output.css
+
+# Plugins (except blog)
+plugins/advanced-seo/
+plugins/ai-connector
+plugins/disabled/
+plugins/examlpe-plugin.php
+plugins/fearlesscommerce/
+plugins/forms/
+plugins/mariadb-connector/
+plugins/parallax/
+plugins/seo/
+plugins/wordpress-import/

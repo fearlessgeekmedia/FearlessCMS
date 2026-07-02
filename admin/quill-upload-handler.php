@@ -26,15 +26,16 @@ try {
         exit;
     }
 
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['image'])) {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_FILES['image']) || isset($_FILES['file']))) {
         $uploadDir = dirname(__DIR__) . '/uploads/';
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0755, true);
         }
 
-        $file = $_FILES['image'];
+        $file = $_FILES['image'] ?? $_FILES['file'];
         
         // Basic validation
+        $prefix = isset($_FILES['image']) ? 'quill_' : 'toastui_';
         $originalName = $file['name'];
         $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
         $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
@@ -46,7 +47,7 @@ try {
 
         // Sanitize filename
         $safeName = preg_replace('/[^a-zA-Z0-9._-]/', '_', pathinfo($originalName, PATHINFO_FILENAME));
-        $filename = 'quill_' . $safeName . '_' . time() . '.' . $ext;
+        $filename = $prefix . $safeName . '_' . time() . '.' . $ext;
         $target = $uploadDir . $filename;
 
         if (move_uploaded_file($file['tmp_name'], $target)) {

@@ -88,7 +88,9 @@ test('sanitize_input trims whitespace', function () {
 test('validate_file_path accepts paths within the allowed directory', function () {
     $baseDir = FCMS_TEST_DIR . '/content';
     $result = validate_file_path('pages/about.md', $baseDir);
-    expect($result)->toBe($baseDir . '/pages/about.md');
+    // Function returns path with realpath resolution
+    $expected = realpath($baseDir) . '/pages/about.md';
+    expect($result)->toBe($expected);
 });
 
 test('validate_file_path rejects directory traversal', function () {
@@ -104,8 +106,9 @@ test('validate_file_path rejects absolute paths', function () {
 test('validate_file_path rejects null bytes', function () {
     $baseDir = FCMS_TEST_DIR . '/content';
     $result = validate_file_path("page\0.md", $baseDir);
-    // After null byte removal the path should still be valid
-    expect($result)->toBeString();
+    // After null byte removal the path becomes page.md which is valid
+    $expected = realpath($baseDir) . '/page.md';
+    expect($result)->toBe($expected);
 });
 
 // --- CSRF ---

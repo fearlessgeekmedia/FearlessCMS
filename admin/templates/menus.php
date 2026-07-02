@@ -1,3 +1,4 @@
+<?php global $menu_options; ?>
 <!-- Menu Management -->
 <div class="space-y-8">
     <!-- Menu Selection -->

@@ -1,0 +1,520 @@
+/* Terminal Theme — Retro CRT / Command Line Interface */
+
+/* ============================================
+   Design Tokens
+   ============================================ */
+:root {
+  --terminal-accent: #00ff00;
+  --terminal-glow: 0 0 10px var(--terminal-accent), 0 0 40px var(--terminal-accent);
+  --terminal-bg: #0a0a0a;
+  --terminal-surface: #111111;
+  --terminal-text: #c0c0c0;
+  --terminal-text-dim: #666666;
+  --terminal-border: #333333;
+  --terminal-font: "Courier New", Courier, monospace;
+  --terminal-titlebar-bg: #1a1a1a;
+  --terminal-width: 960px;
+}
+
+/* ============================================
+   Base Reset & Typography
+   ============================================ */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--terminal-bg);
+  color: var(--terminal-text);
+  font-family: var(--terminal-font);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+a {
+  color: var(--terminal-accent);
+  text-decoration: none;
+  border-bottom: 1px solid var(--terminal-accent);
+  transition: all 0.2s ease;
+}
+
+a:hover {
+  text-shadow: var(--terminal-glow);
+  border-bottom-color: var(--terminal-accent);
+}
+
+/* ============================================
+   Layout
+   ============================================ */
+.terminal-main {
+  width: 100%;
+  max-width: var(--terminal-width);
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.terminal-window {
+  background: var(--terminal-surface);
+  border: 1px solid var(--terminal-border);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow:
+    0 0 20px rgba(0, 0, 0, 0.8),
+    inset 0 0 60px rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================
+   Terminal Window — Title Bar
+   ============================================ */
+.terminal-titlebar {
+  background: var(--terminal-titlebar-bg);
+  border-bottom: 1px solid var(--terminal-border);
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  user-select: none;
+}
+
+.terminal-titlebar-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dot-red {
+  background: #ff5f56;
+  box-shadow: 0 0 6px #ff5f56;
+}
+
+.dot-yellow {
+  background: #ffbd2e;
+  box-shadow: 0 0 6px #ffbd2e;
+}
+
+.dot-green {
+  background: #27c93f;
+  box-shadow: 0 0 6px #27c93f;
+}
+
+.terminal-titlebar-text {
+  color: var(--terminal-text-dim);
+  font-size: 0.85rem;
+  flex: 1;
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+
+.terminal-titlebar-spacer {
+  width: 52px;
+}
+
+/* ============================================
+   Terminal Window — Body Sections
+   ============================================ */
+.terminal-body {
+  padding: 1.25rem 1.5rem;
+}
+
+.terminal-page-body {
+  padding: 1rem 1.5rem 1.5rem;
+}
+
+.terminal-error-body {
+  padding: 1rem 1.5rem 1.5rem;
+}
+
+.terminal-footer-body {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--terminal-border);
+}
+
+/* ============================================
+   Header / Navigation
+   ============================================ */
+.terminal-nav {
+  margin-bottom: 0;
+}
+
+.terminal-prompt-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.terminal-prompt {
+  color: var(--terminal-accent);
+  font-weight: 700;
+  text-shadow: var(--terminal-glow);
+  font-size: 1rem;
+}
+
+.terminal-menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+}
+
+.terminal-menu-item {
+  display: inline;
+}
+
+.terminal-link {
+  color: var(--terminal-text);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  font-size: 0.95rem;
+  padding: 0.15rem 0;
+  transition: color 0.2s ease, border-color 0.2s ease, text-shadow 0.2s ease;
+}
+
+.terminal-link:hover {
+  color: var(--terminal-accent);
+  border-bottom-color: var(--terminal-accent);
+  text-shadow: var(--terminal-glow);
+}
+
+/* Menu Manager output overrides */
+.main-nav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+}
+
+.main-nav li {
+  display: inline;
+}
+
+.main-nav a {
+  color: var(--terminal-text);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  font-size: 0.95rem;
+  padding: 0.15rem 0;
+  transition: color 0.2s ease, border-color 0.2s ease, text-shadow 0.2s ease;
+}
+
+.main-nav a:hover {
+  color: var(--terminal-accent);
+  border-bottom-color: var(--terminal-accent);
+  text-shadow: var(--terminal-glow);
+}
+
+.terminal-return {
+  display: inline-block;
+  margin-top: 1rem;
+}
+
+/* ============================================
+   Main Content
+   ============================================ */
+.terminal-output {
+  display: block;
+}
+
+.terminal-ls {
+  color: var(--terminal-text-dim);
+  font-size: 0.9rem;
+  display: block;
+  margin-bottom: 1rem;
+  opacity: 0.35;
+  padding-left: 1.5rem;
+}
+
+.terminal-heading {
+  color: var(--terminal-accent);
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0.75rem 0 1rem 0;
+  text-shadow: var(--terminal-glow);
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+}
+
+.terminal-content {
+  color: var(--terminal-text);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.terminal-content h1,
+.terminal-content h2,
+.terminal-content h3,
+.terminal-content h4,
+.terminal-content h5,
+.terminal-content h6 {
+  color: var(--terminal-accent);
+  text-shadow: var(--terminal-glow);
+  margin: 1.5rem 0 0.75rem 0;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.terminal-content h1 { font-size: 1.6rem; }
+.terminal-content h2 { font-size: 1.4rem; }
+.terminal-content h3 { font-size: 1.2rem; }
+
+.terminal-content p {
+  margin: 0 0 1rem 0;
+}
+
+.terminal-content ul,
+.terminal-content ol {
+  margin: 0 0 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.terminal-content li {
+  margin-bottom: 0.35rem;
+}
+
+.terminal-content code {
+  background: rgba(0, 255, 0, 0.05);
+  color: var(--terminal-accent);
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  font-size: 0.9em;
+  text-shadow: 0 0 5px rgba(0, 255, 0, 0.3);
+}
+
+.terminal-content pre {
+  background: #050505;
+  border: 1px solid var(--terminal-border);
+  border-radius: 4px;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 0 0 1rem 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.terminal-content pre code {
+  background: transparent;
+  padding: 0;
+  text-shadow: none;
+}
+
+.terminal-content blockquote {
+  border-left: 3px solid var(--terminal-accent);
+  margin: 0 0 1rem 0;
+  padding: 0.5rem 1rem;
+  color: var(--terminal-text-dim);
+  background: rgba(0, 255, 0, 0.02);
+}
+
+.terminal-content img {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--terminal-border);
+  border-radius: 4px;
+  display: block;
+  margin: 1rem 0;
+}
+
+.terminal-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 1rem 0;
+  font-size: 0.95rem;
+}
+
+.terminal-content th,
+.terminal-content td {
+  border: 1px solid var(--terminal-border);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+
+.terminal-content th {
+  color: var(--terminal-accent);
+  background: rgba(0, 255, 0, 0.03);
+  text-shadow: 0 0 5px rgba(0, 255, 0, 0.2);
+}
+
+/* ============================================
+   Home Page
+   ============================================ */
+.terminal-directory-list {
+  display: block;
+  margin: 0 0 1.25rem 0;
+}
+
+.terminal-dir {
+  display: block;
+  color: var(--terminal-text-dim);
+  font-size: 0.9rem;
+  padding: 0.1rem 0;
+  opacity: 0.7;
+}
+
+.terminal-welcome {
+  color: var(--terminal-text-dim);
+  font-size: 0.95rem;
+  margin: 0 0 1.5rem 0;
+  opacity: 0.8;
+}
+
+/* ============================================
+   404 Error Page
+   ============================================ */
+.terminal-command-error {
+  color: #ff5f56;
+  font-size: 0.95rem;
+  display: block;
+  margin-bottom: 0.75rem;
+  text-shadow: 0 0 10px rgba(255, 95, 86, 0.4);
+}
+
+.terminal-error-text {
+  color: var(--terminal-text);
+  font-size: 1rem;
+  margin: 0 0 0.5rem 0;
+}
+
+.terminal-error-detail {
+  color: var(--terminal-text-dim);
+  font-size: 0.9rem;
+  margin: 0 0 1.5rem 0;
+}
+
+/* ============================================
+   Footer
+   ============================================ */
+.terminal-footer-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+}
+
+.terminal-status {
+  color: var(--terminal-accent);
+  text-shadow: 0 0 5px rgba(0, 255, 0, 0.3);
+}
+
+.terminal-separator {
+  color: var(--terminal-text-dim);
+  opacity: 0.4;
+}
+
+.terminal-timestamp {
+  color: var(--terminal-text-dim);
+}
+
+.terminal-brand {
+  color: var(--terminal-text-dim);
+  opacity: 0.6;
+}
+
+.terminal-footer-line {
+  margin-top: 0.75rem;
+}
+
+/* ============================================
+   Blinking Cursor
+   ============================================ */
+.terminal-cursor {
+  display: inline-block;
+  width: 0.6em;
+  height: 1.1em;
+  background: var(--terminal-accent);
+  vertical-align: text-bottom;
+  animation: terminal-blink 1s step-end infinite;
+  box-shadow: 0 0 8px var(--terminal-accent);
+  margin-left: 2px;
+}
+
+@keyframes terminal-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ============================================
+   CRT Scanlines Overlay
+   ============================================ */
+body::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 1;
+}
+
+/* ============================================
+   CRT Flicker (optional, disabled by default)
+   ============================================ */
+body.crt-flicker {
+  animation: terminal-flicker 0.15s infinite;
+}
+
+@keyframes terminal-flicker {
+  0% { opacity: 0.97; }
+  50% { opacity: 1; }
+  100% { opacity: 0.98; }
+}
+
+/* ============================================
+   Responsive
+   ============================================ */
+@media (max-width: 768px) {
+  .terminal-main {
+    padding: 1rem 0.75rem;
+  }
+
+  .terminal-titlebar-text {
+    font-size: 0.75rem;
+  }
+
+  .terminal-heading {
+    font-size: 1.3rem;
+  }
+
+  .terminal-menu {
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .terminal-footer-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+
+  .terminal-separator {
+    display: none;
+  }
+}

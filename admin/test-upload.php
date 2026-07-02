@@ -1,53 +1,60 @@
 <?php
+require_once dirname(__DIR__) . '/includes/session.php';
 require_once dirname(__DIR__) . '/includes/auth.php';
 require_once dirname(__DIR__) . '/includes/config.php';
 
 if (!isLoggedIn()) {
-    header('Location: login');
+    $redirectAdminPath = $adminPath ?? 'admin';
+    header('Location: /' . $redirectAdminPath . '/login');
     exit;
 }
 
 $error = '';
 $success = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['logo'])) {
-    error_log('Test upload - Logo upload attempt.');
-    error_log('Test upload - logo _FILES: ' . print_r($_FILES['logo'], true));
-    
-    if ($_FILES['logo']['error'] !== UPLOAD_ERR_OK) {
-        $errorMessages = [
-            UPLOAD_ERR_INI_SIZE   => 'The uploaded file exceeds the upload_max_filesize directive in php.ini.',
-            UPLOAD_ERR_FORM_SIZE  => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.',
-            UPLOAD_ERR_PARTIAL    => 'The uploaded file was only partially uploaded.',
-            UPLOAD_ERR_NO_FILE    => 'No file was uploaded.',
-            UPLOAD_ERR_NO_TMP_DIR => 'Missing a temporary folder.',
-            UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk.',
-            UPLOAD_ERR_EXTENSION  => 'A PHP extension stopped the file upload.'
-        ];
-        $err = $_FILES['logo']['error'];
-        $msg = $errorMessages[$err] ?? 'Unknown upload error.';
-        $error = "Upload Error: $msg (Code: $err)";
-        error_log('Test upload - Logo upload error: ' . $msg);
-    } else {
-        $uploadsDir = PROJECT_ROOT . '/uploads';
-        if (!is_dir($uploadsDir)) {
-            mkdir($uploadsDir, 0755, true);
-        }
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!validate_csrf_token()) {
+        $error = 'CSRF token validation failed. Please try again.';
+        error_log('Test upload - CSRF validation failed.');
+    } elseif (isset($_FILES['logo'])) {
+        error_log('Test upload - Logo upload attempt.');
+        error_log('Test upload - logo _FILES: ' . print_r($_FILES['logo'], true));
         
-        $file = $_FILES['logo'];
-        $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
-        
-        if (!in_array($ext, $allowed)) {
-            $error = 'Invalid file type for logo. Allowed: ' . implode(', ', $allowed);
+        if ($_FILES['logo']['error'] !== UPLOAD_ERR_OK) {
+            $errorMessages = [
+                UPLOAD_ERR_INI_SIZE   => 'The uploaded file exceeds the upload_max_filesize directive in php.ini.',
+                UPLOAD_ERR_FORM_SIZE  => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.',
+                UPLOAD_ERR_PARTIAL    => 'The uploaded file was only partially uploaded.',
+                UPLOAD_ERR_NO_FILE    => 'No file was uploaded.',
+                UPLOAD_ERR_NO_TMP_DIR => 'Missing a temporary folder.',
+                UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk.',
+                UPLOAD_ERR_EXTENSION  => 'A PHP extension stopped the file upload.'
+            ];
+            $err = $_FILES['logo']['error'];
+            $msg = $errorMessages[$err] ?? 'Unknown upload error.';
+            $error = "Upload Error: $msg (Code: $err)";
+            error_log('Test upload - Logo upload error: ' . $msg);
         } else {
-            $filename = 'test_logo_' . time() . '.' . $ext;
-            $target = $uploadsDir . '/' . $filename;
+            $uploadsDir = PROJECT_ROOT . '/uploads';
+            if (!is_dir($uploadsDir)) {
+                mkdir($uploadsDir, 0755, true);
+            }
             
-            if (move_uploaded_file($file['tmp_name'], $target)) {
-                $success = "Logo uploaded successfully as: $filename";
+            $file = $_FILES['logo'];
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
+            
+            if (!in_array($ext, $allowed)) {
+                $error = 'Invalid file type for logo. Allowed: ' . implode(', ', $allowed);
             } else {
-                $error = 'Failed to move uploaded logo file. Check permissions.';
+                $filename = 'test_logo_' . time() . '.' . $ext;
+                $target = $uploadsDir . '/' . $filename;
+                
+                if (move_uploaded_file($file['tmp_name'], $target)) {
+                    $success = "Logo uploaded successfully as: $filename";
+                } else {
+                    $error = 'Failed to move uploaded logo file. Check permissions.';
+                }
             }
         }
     }
@@ -82,6 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['logo'])) {
                 <h2 class="text-xl font-semibold mb-4">Test Logo Upload</h2>
                 
                 <form method="POST" enctype="multipart/form-data" class="space-y-4">
+                    <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
                     <div>
                         <label for="logo" class="block text-sm font-medium text-gray-700 mb-2">Select Logo File:</label>
                         <input type="file" name="logo" id="logo" accept="image/*" required 

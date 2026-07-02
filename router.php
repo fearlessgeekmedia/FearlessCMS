@@ -2,9 +2,13 @@
 // Router for PHP development server
 $uri = urldecode(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
 
+// Normalize URI path to prevent bypass attempts
+// Handles /./ (current dir marker) and // (consecutive slashes)
+$uri = preg_replace('#(/\./|/+)#', '/', $uri);
+
 // Load config to get admin path
 $configFile = __DIR__ . '/config/config.json';
-$config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
+$config = file_exists($configFile) ? (json_decode(file_get_contents($configFile), true) ?: []) : [];
 $adminPath = $config['admin_path'] ?? 'admin';
 
 // Special handling for admin routes
