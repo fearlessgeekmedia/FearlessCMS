@@ -1,5 +1,15 @@
 ---
-description: Before running commandss, enter nix-shell. Just use the command nix-shell, with nothing added. If you're already in nix-shell, don't run it again. Just stay in the nix-shell we're already in.
+description: Nix is optional. FearlessCMS works with or without it. When Nix is available, enter nix-shell before running commands; otherwise use system PHP, Composer, and Node.js directly.
 globs:
 alwaysApply: true
 ---
+
+Nix is an **optional** dependency. The project is intended to work with or without Nix.
+
+When Nix is installed and the repo provides `shell.nix`:
+- Before running commands, enter the dev environment with `nix-shell` (no extra arguments).
+- If you are already in nix-shell, do not run it again.
+
+When Nix is not installed, not in use, or unavailable:
+- Run commands directly with the system PHP, Composer, and Node.js tools.
+- Do not require or assume nix-shell.

@@ -76,9 +76,15 @@ A theme passes validation if it has a `templates/` directory containing both `pa
 - Fixed admin menu dropdown not populating (`$menu_options` scope issue in `admin/index.php`)
 
 ## Known Issues / Notes
-- `manage_menus` uses a closure render callback — variables must be explicitly globalized for template visibility
-- Menu AJAX handler exists at both `admin/includes/menu-handlers.php` (POST) and root `menu-ajax-handler.php` (AJAX)
-- Default theme is the most complete reference for theme structure
+- `manage_menus` uses a closure render callback — variables must be explicitly globalized **before** the closure executes, not after. Define and `global $var;` before `fcms_register_admin_section()` runs.
+- Menu AJAX handler is consolidated into root `menu-ajax-handler.php` (GET + POST). Old `admin/includes/menu-handlers.php` is dead code.
+- `menu-ajax-handler.php` uses `__DIR__` for path resolution — do NOT use `dirname(__DIR__)` or includes will break.
+- Always wrap AJAX JSON endpoints with `ob_start()` / `ob_end_clean()` to clean AND end the buffer before echoing JSON responses.
+- Template engine: `{{menu=main}}` renders the menu HTML; `{{#each menu.main}}` loops menu items. Don't confuse the two.
+- Module files use `.html.mod` extension but are referenced without `.mod`: `{{module=navigation.html}}` → `navigation.html.mod`
+- Updater (`update.sh`) preserves all existing themes and adds new ones automatically. No special handling needed when pushing to main.
+- Validate theme structure after creation: must have `page.html` and `404.html` in `templates/`
+- Default theme is the most complete reference for theme structure and patterns
 
 ## FearlessCMS Manifesto
 

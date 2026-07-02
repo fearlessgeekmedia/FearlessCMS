@@ -1,5 +1,10 @@
 # FearlessCMS Architecture Documentation
 
+> **Changelog (2026-06):**
+> - **Router Path Normalization**: Added path normalization in router to prevent authentication bypass via malformed paths.
+> - **Debug Script Security**: Added authentication and CSRF protection to all debug scripts.
+> - **Path Validation Hardening**: Improved path validation throughout codebase to prevent directory traversal attacks.
+
 > **Changelog (2026-03):**
 > - **AI Integration**: Added **AI Connector Plugin** supporting OpenAI, Google Gemini, Anthropic Claude, and Alibaba Qwen.
 > - **Local Asset Hosting**: Transitioned **Quill.js** and its dependencies to local hosting to improve reliability and harden Content Security Policy (CSP).

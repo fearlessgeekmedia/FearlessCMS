@@ -119,7 +119,7 @@ restore_and_merge_themes() {
                 if [[ ! -d "themes/$repo_theme_name" ]]; then
                     log "Adding new theme from repository: $repo_theme_name"
                     cp -r "$repo_theme" themes/
-                    ((new_themes_added++))
+                    new_themes_added=$((new_themes_added + 1))
                 else
                     log "Theme '$repo_theme_name' already exists locally, preserving local version"
                 fi
@@ -133,6 +133,85 @@ restore_and_merge_themes() {
     
     # Clean up temporary backup
     rm -rf "${THEMES_BACKUP_DIR}"
+}
+
+# Migrate .md files containing only HTML to .html files
+migrate_html_content_files() {
+    log "Starting HTML content file migration..."
+
+    if [[ ! -d "content" ]]; then
+        log "No content directory found, skipping migration"
+        return 0
+    fi
+
+    local migrated=0
+    local skipped=0
+
+    # Find all .md files (excluding demo content)
+    while IFS= read -r -d '' md_file; do
+        # Skip demo content directory
+        if [[ "$md_file" == *"demo_content"* ]]; then
+            continue
+        fi
+
+        local html_file="${md_file%.md}.html"
+
+        # Skip if .html already exists
+        if [[ -f "$html_file" ]]; then
+            skipped=$((skipped + 1))
+            continue
+        fi
+
+        # Extract content after frontmatter
+        local content
+        if grep -q '<!--[[:space:]]*json' "$md_file" 2>/dev/null; then
+            # Check if frontmatter is single-line (<!-- json {...} -->)
+            if head -1 "$md_file" | grep -q '<!--.*json.*;.*-->'; then
+                # Single-line frontmatter: skip first line
+                content=$(sed '1d' "$md_file" 2>/dev/null)
+            else
+                # Multi-line frontmatter: find the line containing --> after frontmatter start and skip to after it
+                content=$(sed '/<!--.*json/,/-->/d' "$md_file" 2>/dev/null)
+            fi
+        else
+            content=$(cat "$md_file")
+        fi
+
+        # Check for pure HTML content
+        local is_html=false
+
+        # Check if content starts with < (after frontmatter)
+        local trimmed_content
+        trimmed_content=$(echo "$content" | sed 's/^[[:space:]]*//')
+        if [[ "$trimmed_content" == "<"* ]]; then
+            is_html=true
+        else
+            # Check for HTML patterns
+            local html_patterns=('<p>' '<div>' '<span>' '<h1>' '<h2>' '<h3>' '<h4>' '<h5>' '<h6>' '<a ' '<ul>' '<ol>' '<li>' '<table' '<tr' '<td' '<th' '<strong>' '<em>' '<img ')
+            for pattern in "${html_patterns[@]}"; do
+                if echo "$content" | grep -qi "$pattern"; then
+                    # Check it's NOT markdown (headings, bold, italic, lists)
+                    if ! echo "$content" | grep -qE '^[[:space:]]*# |^[[:space:]]*## |\*\*|\* |^ - '; then
+                        is_html=true
+                        break
+                    fi
+                fi
+            done
+        fi
+
+        if [[ "$is_html" == "true" ]]; then
+            mv "$md_file" "$html_file"
+            log "Migrated: $md_file -> $html_file"
+            migrated=$((migrated + 1))
+        fi
+
+    done < <(find content -name "*.md" -type f -print0 2>/dev/null)
+
+    if [[ $migrated -gt 0 ]]; then
+        success "Migrated $migrated .md files to .html (skipped $skipped existing)"
+    else
+        log "No files migrated (skipped $skipped existing)"
+    fi
 }
 
 # Create backup
@@ -219,11 +298,11 @@ perform_update() {
         if [[ ! -f "./$fname" ]]; then
             cp "$repo_php" "./$fname"
             log "Added new file: $fname"
-            ((php_added++))
+            php_added=$((php_added + 1))
         elif ! diff -q "$repo_php" "./$fname" > /dev/null 2>&1; then
             cp "$repo_php" "./$fname"
             log "Updated changed file: $fname"
-            ((php_updated++))
+            php_updated=$((php_updated + 1))
         fi
     done
     if [[ $php_added -gt 0 ]] || [[ $php_updated -gt 0 ]]; then
@@ -346,7 +425,12 @@ update_cms() {
     
     # Perform the update
     perform_update
-    
+
+    # Migrate HTML content files automatically
+    if [[ "${dry_run}" == "false" ]]; then
+        migrate_html_content_files
+    fi
+
     # Cleanup
     cleanup
     

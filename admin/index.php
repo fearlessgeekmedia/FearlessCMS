@@ -66,15 +66,15 @@ $countContentDir = $isDemoUser ? $demoManager->getDemoContentDir() : CONTENT_DIR
 
 if (is_dir($countContentDir)) {
     // Glob for count
-    $files = glob($countContentDir . '/*.md');
+    $files = array_merge(glob($countContentDir . '/*.md'), glob($countContentDir . '/*.html'));
     $totalPages = is_array($files) ? count($files) : 0;
 
-    // Recursively get all .md files for content list
+    // Recursively get all .md and .html files for content list
     try {
         $filesIterator = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($countContentDir, RecursiveDirectoryIterator::SKIP_DOTS)
         );
-        $filesIterator = new RegexIterator($filesIterator, '/\\.md$/');
+        $filesIterator = new RegexIterator($filesIterator, '/\\.(md|html)$/');
 
         foreach ($filesIterator as $file) {
             if (strpos($file->getPathname(), '/content/_preview/') !== false) {
@@ -90,11 +90,13 @@ if (is_dir($countContentDir)) {
                 }
             }
             if (!$title) {
-                $title = ucwords(str_replace(['-', '_'], ' ', $file->getBasename('.md')));
+                $basename = $file->getBasename();
+                $basename = preg_replace('/\\.(md|html)$/', '', $basename);
+                $title = ucwords(str_replace(['-', '_'], ' ', $basename));
             }
 
             $relativePath = str_replace($countContentDir . '/', '', $file->getPathname());
-            $path = substr($relativePath, 0, -3); // Remove .md
+            $path = preg_replace('/\\.(md|html)$/', '', $relativePath);
 
             $contentList[] = [
                 'title' => $title,
@@ -137,6 +139,58 @@ $template_map = [
 ];
 
 $templateFile = ADMIN_TEMPLATE_DIR . '/' . ($template_map[$action] ?? $action . '.php');
+
+if ($action === 'edit_content' && !empty($_GET['path'])) {
+    $path = preg_replace('/\.(md|html)$/i', '', $_GET['path']);
+    $contentFile = null;
+    foreach (['.html', '.md'] as $ext) {
+        $candidate = CONTENT_DIR . '/' . $path . $ext;
+        if (file_exists($candidate)) {
+            $contentFile = $candidate;
+            break;
+        }
+    }
+
+    $contentData = $contentFile ? file_get_contents($contentFile) : '';
+    $title = '';
+    $currentTemplate = 'page-with-sidebar';
+    $editorMode = 'html';
+
+    if (!empty($contentData) && preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $contentData, $matches)) {
+        $metadata = json_decode($matches[1], true);
+        if ($metadata && is_array($metadata)) {
+            $title = $metadata['title'] ?? '';
+            $currentTemplate = $metadata['template'] ?? $currentTemplate;
+            $editorMode = $metadata['editor_mode'] ?? $editorMode;
+        }
+    }
+    if ($editorMode === 'html' && str_ends_with($contentFile, '.md')) {
+        $editorMode = 'markdown';
+    }
+
+    if (!$title) {
+        $title = ucwords(str_replace(['-', '_'], ' ', basename($path)));
+    }
+
+    $templates = [];
+    $templateDir = PROJECT_ROOT . '/themes/' . ($themeManager->getActiveTheme() ?? 'default') . '/templates';
+    if (is_dir($templateDir)) {
+        foreach (glob($templateDir . '/*.html') as $template) {
+            $templateName = basename($template, '.html');
+            if ($templateName !== '404' && !str_ends_with($template, '.html.mod')) {
+                $templates[] = $templateName;
+            }
+        }
+    }
+
+    if (empty($templates)) {
+        $templates = ['page-with-sidebar', 'page', 'home', 'blog', 'documentation'];
+    }
+
+    if (in_array('page-with-sidebar', $templates)) {
+        $templates = array_merge(['page-with-sidebar'], array_filter($templates, function($t) { return $t !== 'page-with-sidebar'; }));
+    }
+}
 
 $menu_options = '';
 $selectedMenuId = $_GET['menu_id'] ?? '';
