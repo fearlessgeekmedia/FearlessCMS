@@ -99,19 +99,12 @@ backup_all_themes() {
 
 # Restore ALL themes and add new ones from repository
 restore_and_merge_themes() {
-    log "Restoring themes and merging with new ones from repository..."
+    log "Preserving existing themes and adding new ones from repository..."
     
-    # First, restore all backed up themes
-    if [[ -d "${THEMES_BACKUP_DIR}" ]] && [[ "$(ls -A "${THEMES_BACKUP_DIR}" 2>/dev/null)" ]]; then
-        log "Restoring all backed up themes"
-        cp -r "${THEMES_BACKUP_DIR}"/* themes/
-        local restored_count=$(ls -1 "${THEMES_BACKUP_DIR}" | wc -l)
-        success "Restored $restored_count existing themes"
-    else
-        log "No themes to restore"
-    fi
+    # Clean up the temporary theme backup (no longer needed for restore)
+    rm -rf "${THEMES_BACKUP_DIR}"
     
-    # Now add any new themes from the repository that don't exist locally
+    # Add any new themes from the repository that don't exist locally
     if [[ -d "${UPDATE_DIR}/themes" ]]; then
         local new_themes_added=0
         
@@ -134,9 +127,6 @@ restore_and_merge_themes() {
             success "Added $new_themes_added new themes from repository"
         fi
     fi
-    
-    # Clean up temporary backup
-    rm -rf "${THEMES_BACKUP_DIR}"
 }
 
 # Create backup
@@ -231,7 +221,7 @@ perform_update() {
     backup_all_themes
     
     # Remove old core directories (keeping content, config, uploads, etc.)
-    rm -rf admin/ includes/ themes/ plugins/ parallax/
+    rm -rf admin/ includes/ plugins/ parallax/
     rm -f *.md *.txt *.nix *.json package*
     
     # Copy new core directories
