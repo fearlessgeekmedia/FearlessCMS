@@ -124,13 +124,8 @@ function validate_file_path($path, $allowed_base_dir) {
     // Normalize path separators
     $path = str_replace('\\', '/', $path);
 
-    // Check for path traversal patterns before constructing the full path
-    // Block ../ (parent directory), ./ (current dir), .. at start, .. at end
-    // BUT allow .. in middle of filename (e.g., file..name.md)
-    if (preg_match('#(^|/)\.\./|/\.\.$#', $path)) {
-        return false;
-    }
-    if (strpos($path, './') !== false) {
+    // Remove directory traversal attempts
+    if (strpos($path, '../') !== false || strpos($path, './') === 0) {
         return false;
     }
 
@@ -139,18 +134,13 @@ function validate_file_path($path, $allowed_base_dir) {
         return false;
     }
 
-    // Get realpath of base directory
-    $real_base_dir = realpath($allowed_base_dir);
-    if ($real_base_dir === false) {
-        return false;
-    }
+    // Build the full path
+    $full_path = $allowed_base_dir . '/' . $path;
+    $base_path = realpath($allowed_base_dir);
 
-    // Build the full path string using the realpath base
-    $full_path = $real_base_dir . '/' . $path;
+    // Simple validation: ensure no path traversal in the constructed path
     $normalized_full = str_replace('//', '/', $full_path);
-
-    // Ensure the path string starts with the real base directory (catches non-existent escapes)
-    if (strpos($normalized_full, $real_base_dir . '/') !== 0) {
+    if (strpos($normalized_full, $base_path) !== 0) {
         return false;
     }
 
@@ -158,10 +148,11 @@ function validate_file_path($path, $allowed_base_dir) {
 }
 
 function validate_content_path($path) {
+    global $CONTENT_DIR;
     if (!defined('CONTENT_DIR')) {
-        return false;
+        $CONTENT_DIR = dirname(dirname(__FILE__)) . '/content';
     }
-    return validate_file_path($path, CONTENT_DIR);
+    return validate_file_path($path, $CONTENT_DIR);
 }
 
 function validate_upload_path($path) {

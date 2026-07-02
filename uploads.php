@@ -4,13 +4,8 @@ $requestUri = $_SERVER['REQUEST_URI'];
 $filePath = __DIR__ . $requestUri;
 
 // Security check - ensure the file is within the uploads directory
-$uploadsDir = realpath(__DIR__ . '/uploads') ?: (__DIR__ . '/uploads');
-$resolvedPath = realpath($filePath);
-
-// For non-existent files, check the raw path string; for existing files, use resolved path
-$pathToCheck = $resolvedPath !== false ? $resolvedPath : $filePath;
-
-if (strpos($pathToCheck, $uploadsDir) !== 0) {
+$uploadsDir = __DIR__ . '/uploads';
+if (strpos(realpath($filePath), realpath($uploadsDir)) !== 0) {
     http_response_code(403);
     exit('Access denied');
 }

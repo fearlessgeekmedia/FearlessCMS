@@ -15,8 +15,6 @@ global $cmsModeManager;
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
     <link href="/public/vendor/quill/quill.snow.css?v=<?php echo APP_VERSION; ?>" rel="stylesheet">
     <script src="/public/vendor/quill/quill.min.js?v=<?php echo APP_VERSION; ?>"></script>
-    <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />
-    <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
     <?php fcms_do_hook('admin_head'); ?>
     <style>
         .fira-code { font-family: 'Fira Code', monospace; }

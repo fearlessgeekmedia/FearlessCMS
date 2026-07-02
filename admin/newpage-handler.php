@@ -18,22 +18,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         error_log("Parent: " . $parentPage);
         error_log("Content length: " . strlen($newPageContent));
 
-        $editorMode = sanitize_input($_POST['editor_mode'] ?? 'html', 'string');
-
-        // Remove .md or .html if user included it
-        $newPageFilename = preg_replace('/\\.(md|html)$/i', '', $newPageFilename);
+        // Remove .md if user included it
+        $newPageFilename = preg_replace('/\\.md$/i', '', $newPageFilename);
 
         // If parent is set, prepend it
         if (!empty($parentPage)) {
             $newPageFilename = $parentPage . '/' . $newPageFilename;
         }
-        // Use .html extension for html/easy mode, .md for markdown
-        $fileExtension = in_array($editorMode, ['html', 'easy']) ? '.html' : '.md';
-        $newPageFilename .= $fileExtension;
+        $newPageFilename .= '.md';
 
         // Validate filename (allow slashes for subfolders)
-        if (!preg_match('/^[a-zA-Z0-9_\\/-]+\\.(md|html)$/', $newPageFilename)) {
-            $error = 'Invalid filename. Use only letters, numbers, dashes, underscores, and slashes.';
+        if (!preg_match('/^[a-zA-Z0-9_\\/-]+\\.md$/', $newPageFilename)) {
+            $error = 'Invalid filename. Use only letters, numbers, dashes, underscores, and slashes, and end with .md';
             error_log("Invalid filename: " . $newPageFilename);
         } elseif (strpos($newPageFilename, '../') !== false || strpos($newPageFilename, './') === 0) {
             $error = 'Invalid file path - path traversal detected';
@@ -45,10 +41,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
             if ($demoManager->isDemoSession()) {
                 // Use DemoModeManager to create the content
-                $pathWithoutExt = preg_replace('/\\.(md|html)$/i', '', $newPageFilename);
-                if ($demoManager->createDemoContentFile($pathWithoutExt, $pageTitle, $newPageContent, ['editor_mode' => $editorMode, 'parent' => $parentPage, 'template' => $_POST['template'] ?? 'page-with-sidebar'])) {
+                $pathWithoutExt = preg_replace('/\\.md$/i', '', $newPageFilename);
+                if ($demoManager->createDemoContentFile($pathWithoutExt, $pageTitle, $newPageContent, ['parent' => $parentPage, 'template' => $_POST['template'] ?? 'page-with-sidebar'])) {
                     error_log("Demo file saved successfully");
-                    $redirectPath = preg_replace('/\\.(md|html)$/i', '', $newPageFilename);
+                    $redirectPath = str_replace('.md', '', $newPageFilename);
                     $_SESSION['just_created_page'] = $redirectPath;
                     $_SESSION['just_created_message'] = 'Page created successfully';
                     if (!headers_sent()) {
@@ -79,7 +75,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     // Add JSON frontmatter with title and parent if provided
                     $metadata = [
                         'title' => $pageTitle,
-                        'editor_mode' => $editorMode,
                         'template' => $_POST['template'] ?? 'page-with-sidebar' // Use selected template or default to page-with-sidebar
                     ];
                     if (!empty($parentPage)) {
@@ -93,14 +88,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
                     if (file_put_contents($filePath, $newPageContent) !== false) {
                         error_log("File saved successfully");
-                        // Remove extension for the redirect path
-                        $redirectPath = preg_replace('/\\.(md|html)$/i', '', $newPageFilename);
+                        // Remove .md extension for the redirect path
+                        $redirectPath = str_replace('.md', '', $newPageFilename);
                         error_log("About to redirect to: ?action=edit_content&path=" . urlencode($redirectPath));
-
+                        
                         // Set session variables for redirect
                         $_SESSION['just_created_page'] = $redirectPath;
                         $_SESSION['just_created_message'] = 'Page created successfully';
-
+                        
                         // Redirect to manage_content to show the new page in the list
                         if (!headers_sent()) {
                             header('Location: ?action=manage_content');

@@ -226,19 +226,15 @@ class DemoModeManager {
         }
     }
     
-/**
-      * Create a new demo content file
-      */
+    /**
+     * Create a new demo content file
+     */
     public function createDemoContent($path, $title, $content, $metadata = []) {
         if (!$this->isDemoSession() && !$this->isDemoUserSession()) {
             return false;
         }
         
-        // Determine file extension based on editor_mode
-        $editorMode = $metadata['editor_mode'] ?? 'html';
-        $fileExtension = in_array($editorMode, ['html', 'easy']) ? '.html' : '.md';
-        
-        $filePath = $this->demoContentDir . '/' . $path . $fileExtension;
+        $filePath = $this->demoContentDir . '/' . $path . '.md';
         $dir = dirname($filePath);
         
         if (!file_exists($dir)) {
@@ -359,10 +355,6 @@ class DemoModeManager {
             return false;
         }
         
-        // Determine file extension based on editor_mode
-        $editorMode = $metadata['editor_mode'] ?? 'html';
-        $fileExtension = in_array($editorMode, ['html', 'easy']) ? '.html' : '.md';
-        
         // Generate unique session-based filename to avoid conflicts
         $sessionId = $_SESSION['demo_session_id'] ?? uniqid('demo_', true);
         $timestamp = time();
@@ -372,9 +364,9 @@ class DemoModeManager {
         
         if ($isBlogPost) {
             $blogPath = substr($path, 5); // Remove 'blog/' prefix
-            $filePath = $this->demoContentDir . '/blog/' . $blogPath . $fileExtension;
+            $filePath = $this->demoContentDir . '/blog/' . $blogPath . '.md';
         } else {
-            $filePath = $this->demoContentDir . '/pages/' . $path . $fileExtension;
+            $filePath = $this->demoContentDir . '/pages/' . $path . '.md';
         }
         
         $dir = dirname($filePath);
@@ -433,7 +425,7 @@ class DemoModeManager {
             );
             
             foreach ($files as $file) {
-                if ($file->isFile() && in_array($file->getExtension(), ['md', 'html'])) {
+                if ($file->isFile() && $file->getExtension() === 'md') {
                     $content = file_get_contents($file->getPathname());
                     
                     // Check if this file belongs to current demo session or is demo content
@@ -441,7 +433,7 @@ class DemoModeManager {
                     
                     if ($sessionId === 'all') {
                         // Clean up all demo content files
-                        if (preg_match('/"(demo_content|demo_page)"\s*:\s*true/', $content)) {
+                        if (preg_match('/demo_content["\s]*:\s*true/', $content)) {
                             $shouldDelete = true;
                         }
                     } else {

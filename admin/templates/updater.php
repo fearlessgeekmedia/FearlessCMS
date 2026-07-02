@@ -129,7 +129,7 @@ $csrfToken = generate_updater_csrf_token();
                     <label for="dry_run" class="ml-2 block text-sm text-gray-900">
                         Dry run (show what would be updated without making changes)
                     </label>
-</div>
+                </div>
             </div>
             
             <div class="flex justify-end">

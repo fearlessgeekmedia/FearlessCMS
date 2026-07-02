@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($postAction) && $postAction =
         $pageTitle = $_POST['title'] ?? '';
         $parentPage = $_POST['parent'] ?? '';
         $template = $_POST['template'] ?? 'page-with-sidebar';
-        $editorMode = $_POST['editor_mode'] ?? 'html';
+        $editorMode = $_POST['editor_mode'] ?? 'easy';
 
         if (empty($fileName) || !preg_match('/^[a-zA-Z0-9_\-\/]+$/', $fileName)) {
             $error = 'Invalid filename';
@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($postAction) && $postAction =
                 ]);
                 
                 if ($result) {
-                    $redirectPath = $fileName;
+                    $redirectPath = str_replace('.md', '', $fileName);
                     header('Location: ?action=edit_content&path=' . urlencode($redirectPath) . '&saved=1');
                     exit;
                 } else {
@@ -44,96 +44,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($postAction) && $postAction =
                 if (isset($_SESSION['username']) && $_SESSION['username'] === 'demo') {
                     $error = 'Security error: Demo users cannot create real content.';
                 } else {
-                    // Determine file extension based on editor mode
-                    $fileExtension = in_array($editorMode, ['html', 'easy']) ? '.html' : '.md';
+                    $oldFilePath = $contentDir . '/' . $oldFileName . '.md';
+                    $newFilePath = $contentDir . '/' . $fileName . '.md';
                     
-                    // Find existing file if it exists
-                    $oldFileBase = $contentDir . '/' . $oldFileName;
-                    $oldFileWithExt = null;
-                    if ($oldFileName) {
-                        foreach (['.md', '.html'] as $ext) {
-                            if (file_exists($oldFileBase . $ext)) {
-                                $oldFileWithExt = $oldFileBase . $ext;
-                                break;
-                            }
-                        }
-                    }
-                    
-                    $newFileBase = $contentDir . '/' . $fileName;
-                    $newFilePath = $newFileBase . $fileExtension;
-                    
-                    // Handle file renaming/moving logic
-                    $needsRename = false;
-                    if ($oldFileName && $oldFileName !== $fileName) {
-                        // Slug changed - need to rename/move
-                        $needsRename = true;
-                    } elseif ($oldFileWithExt && $oldFileWithExt !== $newFilePath) {
-                        // Same slug but extension changed - need to rename
-                        $needsRename = true;
-                    }
-                    
-                    if ($needsRename) {
+                    if ($oldFileName !== $fileName && file_exists($oldFilePath)) {
                         if (file_exists($newFilePath)) {
                             $error = 'A page with that URL slug already exists.';
                         } else {
                             $dir = dirname($newFilePath);
                             if (!is_dir($dir)) mkdir($dir, 0755, true);
-                            
-                            // If old file exists, rename it; otherwise set up for new file
-                            if ($oldFileWithExt) {
-                                rename($oldFileWithExt, $newFilePath);
-                            }
-                            
-                            $filePath = $newFilePath;
+                            rename($oldFilePath, $newFilePath);
                         }
                     } else {
-                        // Same slug and same extension (or no existing file) - use existing path or set for new file
-                        $filePath = $oldFileWithExt ?? $newFilePath;
-                        
-                        // Ensure directory exists for new files
-                        if (!$oldFileWithExt) {
-                            $dir = dirname($filePath);
-                            if (!is_dir($dir)) mkdir($dir, 0755, true);
-                        }
+                        $newFilePath = $oldFilePath;
+                    }
+                    
+                    $filePath = $newFilePath;
+                    $dir = dirname($filePath);
+                    if (!is_dir($dir)) mkdir($dir, 0755, true);
+
+                    $hasFrontmatter = preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $content, $matches);
+                    if ($hasFrontmatter) {
+                        $metadata = json_decode($matches[1], true) ?: [];
+                        $metadata['title'] = $pageTitle;
+                        $metadata['editor_mode'] = $editorMode;
+                        $metadata['template'] = $template;
+                        if (!empty($parentPage)) $metadata['parent'] = $parentPage;
+                        elseif (isset($metadata['parent'])) unset($metadata['parent']);
+                        $newFrontmatter = '<!-- json ' . json_encode($metadata, JSON_PRETTY_PRINT) . ' -->';
+                        $content = preg_replace('/^<!--\s*json\s*.*?\s*-->/s', $newFrontmatter, $content);
+                    } else {
+                        $metadata = ['title' => $pageTitle, 'editor_mode' => $editorMode, 'template' => $template];
+                        if (!empty($parentPage)) $metadata['parent'] = $parentPage;
+                        $newFrontmatter = '<!-- json ' . json_encode($metadata, JSON_PRETTY_PRINT) . ' -->';
+                        $content = $newFrontmatter . "\n\n" . $content;
                     }
 
-                    // Only proceed if no error occurred
-                    if (empty($error)) {
-                        $hasFrontmatter = preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $content, $matches);
-                        if ($hasFrontmatter) {
-                            $metadata = json_decode($matches[1], true) ?: [];
-                            $metadata['title'] = $pageTitle;
-                            $metadata['editor_mode'] = $editorMode;
-                            $metadata['template'] = $template;
-                            if (!empty($parentPage)) $metadata['parent'] = $parentPage;
-                            elseif (isset($metadata['parent'])) unset($metadata['parent']);
-                            $newFrontmatter = '<!-- json ' . json_encode($metadata, JSON_PRETTY_PRINT) . ' -->';
-                            $content = preg_replace('/^<!--\s*json\s*.*?\s*-->/s', $newFrontmatter, $content);
-                        } else {
-                            $metadata = ['title' => $pageTitle, 'editor_mode' => $editorMode, 'template' => $template];
-                            if (!empty($parentPage)) $metadata['parent'] = $parentPage;
-                            $newFrontmatter = '<!-- json ' . json_encode($metadata, JSON_PRETTY_PRINT) . ' -->';
-                            $content = $newFrontmatter . "\n\n" . $content;
+                    if (file_put_contents($filePath, $content) !== false) {
+                        if (isset($cacheManager) && method_exists($cacheManager, 'clearCache')) {
+                            $cacheManager->clearCache();
                         }
-
-                        if (file_put_contents($filePath, $content) !== false) {
-                            if (isset($cacheManager) && method_exists($cacheManager, 'clearCache')) {
-                                $cacheManager->clearCache();
-                            }
-
-                            $redirectPath = $fileName;
-                            $redirectUrl = '?action=edit_content&path=' . urlencode($redirectPath) . '&saved=1&_t=' . time();
-
-                            if (!headers_sent()) {
-                                header('Location: ' . $redirectUrl);
-                                exit;
-                            } else {
-                                echo '<script>window.location.href = "' . addslashes($redirectUrl) . '";</script>';
-                                exit;
-                            }
+                        
+                        $redirectPath = str_replace('.md', '', $fileName);
+                        $redirectUrl = '?action=edit_content&path=' . urlencode($redirectPath) . '&saved=1&_t=' . time();
+                        
+                        if (!headers_sent()) {
+                            header('Location: ' . $redirectUrl);
+                            exit;
                         } else {
-                            $error = 'Failed to save file';
+                            echo '<script>window.location.href = "' . addslashes($redirectUrl) . '";</script>';
+                            exit;
                         }
+                    } else {
+                        $error = 'Failed to save file';
                     }
                 }
             }
