@@ -19,7 +19,7 @@ require_once dirname(__DIR__) . '/includes/CacheManager.php';
 // Create managers
 $cmsModeManager = new CMSModeManager();
 $GLOBALS['cmsModeManager'] = $cmsModeManager;
-$themeManager = new ThemeManager();
+$themeManager = new ThemeManager(THEMES_DIR);
 $cacheManager = new CacheManager();
 $GLOBALS['cacheManager'] = $cacheManager;
 
