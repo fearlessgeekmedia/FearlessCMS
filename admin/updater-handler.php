@@ -291,6 +291,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             if ($returnCode === 0) {
                 $_SESSION['success'] = 'System updated successfully!';
                 $_SESSION['update_output'] = $output;
+                @chmod($updateScript, 0755);
             } else {
                 $errorMsg = 'Update failed with return code: ' . $returnCode;
                 if (!empty($output)) {
