@@ -257,6 +257,7 @@ perform_update() {
     cp "${UPDATE_DIR}/"*.nix ./ 2>/dev/null || true
     cp "${UPDATE_DIR}/"*.json ./ 2>/dev/null || true
     cp "${UPDATE_DIR}/package*" ./ 2>/dev/null || true
+    cp "${UPDATE_DIR}/update.sh" ./update.sh 2>/dev/null || true
     
     # Create themes directory
     mkdir -p themes/
@@ -266,7 +267,7 @@ perform_update() {
     
     # Set proper permissions
     chmod 644 *.php *.md *.txt *.nix *.json package* 2>/dev/null || true
-    chmod 755 admin/ includes/ themes/ plugins/ parallax/ 2>/dev/null || true
+    chmod 755 admin/ includes/ themes/ plugins/ parallax/ *.sh 2>/dev/null || true
     chmod 755 admin/*.php includes/*.php 2>/dev/null || true
     
     success "Update completed successfully"
@@ -608,3 +609,5 @@ parse_args() {
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     parse_args "$@"
 fi
+
+chmod +x update.sh

@@ -97,6 +97,25 @@ To upgrade safely:
 
 Once the update completes, future updates will work normally from the dashboard. No further manual replacement of `update.sh` is needed.
 
+## 🚀 Upgrading from 0.1.4-2b to 0.1.4-3b
+
+**IMPORTANT:** When upgrading from version `0.1.4-2b` to `0.1.4-3b`, the updater now includes a self-update step for `update.sh`. After completing this upgrade, future updates will keep `update.sh` executable automatically.
+
+To upgrade safely from this version:
+
+1. Obtain the current `update.sh` from this repository.
+2. Manually copy the new `update.sh` to each site that needs updating.
+3. Make sure it is executable:
+   ```bash
+   chmod +x update.sh
+   ```
+4. Then run the update from the CMS root directory:
+   ```bash
+   ./update.sh
+   ```
+
+This manual step is only required for this transition. After this update, `update.sh` will update itself during future updates and remain executable.
+
 ## 🚀 Upgrading from Alpha to Beta
 
 **IMPORTANT:** If you are upgrading from a version earlier than `0.1.0b`, do **NOT** use the `Update` button in the dashboard or run your local `update.sh` script. The older version of the updater has a bug that will cause the update to fail and may result in a "500 Internal Server Error" due to missing theme files.
