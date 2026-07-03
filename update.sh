@@ -608,3 +608,5 @@ parse_args() {
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
     parse_args "$@"
 fi
+
+chmod +x update.sh
