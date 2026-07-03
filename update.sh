@@ -5,6 +5,10 @@
 
 set -e  # Exit on any error
 
+# Ensure we run from the CMS root (script's own directory)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || SCRIPT_DIR="$(pwd)"
+cd "$SCRIPT_DIR"
+
 # Set up environment - ensure we have a proper PATH
 export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/run/current-system/sw/bin:$PATH"
 
@@ -95,19 +99,12 @@ backup_all_themes() {
 
 # Restore ALL themes and add new ones from repository
 restore_and_merge_themes() {
-    log "Restoring themes and merging with new ones from repository..."
+    log "Preserving existing themes and adding new ones from repository..."
     
-    # First, restore all backed up themes
-    if [[ -d "${THEMES_BACKUP_DIR}" ]] && [[ "$(ls -A "${THEMES_BACKUP_DIR}" 2>/dev/null)" ]]; then
-        log "Restoring all backed up themes"
-        cp -r "${THEMES_BACKUP_DIR}"/* themes/
-        local restored_count=$(ls -1 "${THEMES_BACKUP_DIR}" | wc -l)
-        success "Restored $restored_count existing themes"
-    else
-        log "No themes to restore"
-    fi
+    # Clean up the temporary theme backup (no longer needed for restore)
+    rm -rf "${THEMES_BACKUP_DIR}"
     
-    # Now add any new themes from the repository that don't exist locally
+    # Add any new themes from the repository that don't exist locally
     if [[ -d "${UPDATE_DIR}/themes" ]]; then
         local new_themes_added=0
         
@@ -119,7 +116,7 @@ restore_and_merge_themes() {
                 if [[ ! -d "themes/$repo_theme_name" ]]; then
                     log "Adding new theme from repository: $repo_theme_name"
                     cp -r "$repo_theme" themes/
-                    ((new_themes_added++))
+                    new_themes_added=$((new_themes_added + 1))
                 else
                     log "Theme '$repo_theme_name' already exists locally, preserving local version"
                 fi
@@ -130,40 +127,65 @@ restore_and_merge_themes() {
             success "Added $new_themes_added new themes from repository"
         fi
     fi
-    
-    # Clean up temporary backup
-    rm -rf "${THEMES_BACKUP_DIR}"
 }
 
 # Create backup
 create_backup() {
-    local timestamp=$(date '+%Y%m%d_%H%M%S')
-    local backup_path="${BACKUP_DIR}/cms_backup_${timestamp}"
-    
-    log "Creating backup at ${backup_path}"
-    
+    local timestamp=$(date +'%Y%m%d_%H%M%S')
+    local backup_path="${BACKUP_DIR}/cms_backup_"${timestamp}
+
+    log "Creating backup at "${backup_path}
+
     mkdir -p "${backup_path}"
-    
-    # Backup core files (exclude content, config, uploads, etc.)
-    rsync -av --exclude='content/' \
-              --exclude='config/' \
-              --exclude='uploads/' \
-              --exclude='admin/uploads/' \
-              --exclude='sessions/' \
-              --exclude='cache/' \
-              --exclude='.git/' \
-              --exclude='node_modules/' \
-              --exclude='backups/' \
-              --exclude='update_temp/' \
-              --exclude='themes_backup_temp/' \
-              --exclude='*.log' \
-              --exclude='*.tmp' \
-              ./ "${backup_path}/" > /dev/null 2>&1 || {
-        error "Failed to create backup"
-        exit 1
-    }
-    
-    success "Backup created successfully at ${backup_path}"
+
+    # Check for rsync availability
+    local use_rsync=false
+    if command -v rsync &> /dev/null; then
+        use_rsync=true
+    fi
+
+    if [[ "$use_rsync" == "true" ]]; then
+        log "Using rsync for backup"
+        # Backup core files (exclude content, config, uploads, etc.)
+        rsync -av --exclude='content/' \
+                  --exclude='config/' \
+                  --exclude='uploads/' \
+                  --exclude='admin/uploads/' \
+                  --exclude='sessions/' \
+                  --exclude='cache/' \
+                  --exclude='.git/' \
+                  --exclude='backups/' \
+                  --exclude='update_temp/' \
+                  --exclude='themes_backup_temp/' \
+                  --exclude='*.log' \
+                  --exclude='*.tmp' \
+                  ./ "${backup_path}/" > /dev/null 2>&1 || {
+            error "Failed to create backup"
+            exit 1
+        }
+    else
+        log "rsync not found, using tar for backup"
+        tar -cf - \
+            --exclude='./backups' \
+            --exclude='./content' \
+            --exclude='./config' \
+            --exclude='./uploads' \
+            --exclude='./admin/uploads' \
+            --exclude='./sessions' \
+            --exclude='./cache' \
+            --exclude='./.git' \
+            --exclude='./node_modules' \
+            --exclude='./update_temp' \
+            --exclude='./themes_backup_temp' \
+            --exclude='./*.log' \
+            --exclude='./*.tmp' \
+            . | tar -xf - -C "${backup_path}" || {
+            error "Failed to create backup"
+            exit 1
+        }
+    fi
+
+    success "Backup created successfully at "${backup_path}
     echo "${backup_path}"
 }
 
@@ -199,7 +221,7 @@ perform_update() {
     backup_all_themes
     
     # Remove old core directories (keeping content, config, uploads, etc.)
-    rm -rf admin/ includes/ themes/ plugins/ parallax/
+    rm -rf admin/ includes/ plugins/ parallax/
     rm -f *.md *.txt *.nix *.json package*
     
     # Copy new core directories
@@ -219,11 +241,11 @@ perform_update() {
         if [[ ! -f "./$fname" ]]; then
             cp "$repo_php" "./$fname"
             log "Added new file: $fname"
-            ((php_added++))
+            php_added=$((php_added + 1))
         elif ! diff -q "$repo_php" "./$fname" > /dev/null 2>&1; then
             cp "$repo_php" "./$fname"
             log "Updated changed file: $fname"
-            ((php_updated++))
+            php_updated=$((php_updated + 1))
         fi
     done
     if [[ $php_added -gt 0 ]] || [[ $php_updated -gt 0 ]]; then
@@ -298,6 +320,9 @@ update_cms() {
     # Check environment
     check_environment
     
+    # Self-repair known breakage on the receiving end BEFORE backup runs
+    post_update_repairs "./update.sh"
+    
     # Show current version
     show_current_version
     
@@ -358,6 +383,119 @@ update_cms() {
     log "Please test your site to ensure everything is working correctly"
 }
 
+# Post-update repairs to fix known issues on the receiving end
+post_update_repairs() {
+    log "Running post-update repairs on receiving end..."
+    
+    local target="${1:-./update.sh}"
+    
+    if [[ ! -f "$target" ]]; then
+        log "No update.sh found to repair"
+        return 0
+    fi
+    
+    local repairs_applied=0
+    
+    # Repair 1: Remove migrate_html_content_files function and invocation
+    if grep -q "migrate_html_content_files" "$target"; then
+        log "  Removing migrate_html_content_files from update.sh..."
+        
+        awk '
+            /^# Migrate \.md files containing only HTML to \.html files$/ { skip=1; next }
+            skip && /^}$/ { skip=0; next }
+            skip { next }
+            /^    # Migrate HTML content files automatically$/ { skip_inv=1; next }
+            skip_inv && /^    fi$/ { skip_inv=0; next }
+            skip_inv { next }
+            { print }
+        ' "$target" > "${target}.repaired_sh" && mv "${target}.repaired_sh" "$target"
+        
+        repairs_applied=$((repairs_applied + 1))
+    fi
+    
+    # Repair 2: Replace create_backup() with tar-fallback version if it still lacks it
+    if ! grep -q "rsync not found, using tar for backup" "$target"; then
+        log "  Replacing create_backup() with rsync-to-tar fallback version..."
+        
+        awk '
+            /^# Create backup$/ {
+                in_create=1
+                print "# Create backup"
+                print "create_backup() {"
+                print "    local timestamp=$(date +\047%Y%m%d_%H%M%S\047)"
+                print "    local backup_path=\"\${BACKUP_DIR}/cms_backup_\"\${timestamp}"
+                print ""
+                print "    log \"Creating backup at \"\${backup_path}"
+                print ""
+                print "    mkdir -p \"\${backup_path}\""
+                print ""
+                print "    # Check for rsync availability"
+                print "    local use_rsync=false"
+                print "    if command -v rsync &> /dev/null; then"
+                print "        use_rsync=true"
+                print "    fi"
+                print ""
+                print "    if [[ \"\$use_rsync\" == \"true\" ]]; then"
+                print "        log \"Using rsync for backup\""
+                print "        # Backup core files (exclude content, config, uploads, etc.)"
+                print "        rsync -av --exclude=\047content/\047 \\"
+                print "                  --exclude=\047config/\047 \\"
+                print "                  --exclude=\047uploads/\047 \\"
+                print "                  --exclude=\047admin/uploads/\047 \\"
+                print "                  --exclude=\047sessions/\047 \\"
+                print "                  --exclude=\047cache/\047 \\"
+                print "                  --exclude=\047.git/\047 \\"
+                print "                  --exclude=\047backups/\047 \\"
+                print "                  --exclude=\047update_temp/\047 \\"
+                print "                  --exclude=\047themes_backup_temp/\047 \\"
+                print "                  --exclude=\047*.log\047 \\"
+                print "                  --exclude=\047*.tmp\047 \\"
+                print "                  ./ \"\${backup_path}/\" > /dev/null 2>&1 || {"
+                print "            error \"Failed to create backup\""
+                print "            exit 1"
+                print "        }"
+                print "    else"
+                print "        log \"rsync not found, using tar for backup\""
+                print "        tar -cf - \\"
+                print "            --exclude=\047./backups\047 \\"
+                print "            --exclude=\047./content\047 \\"
+                print "            --exclude=\047./config\047 \\"
+                print "            --exclude=\047./uploads\047 \\"
+                print "            --exclude=\047./admin/uploads\047 \\"
+                print "            --exclude=\047./sessions\047 \\"
+                print "            --exclude=\047./cache\047 \\"
+                print "            --exclude=\047./.git\047 \\"
+                print "            --exclude=\047./node_modules\047 \\"
+                print "            --exclude=\047./update_temp\047 \\"
+                print "            --exclude=\047./themes_backup_temp\047 \\"
+                print "            --exclude=\047./*.log\047 \\"
+                print "            --exclude=\047./*.tmp\047 \\"
+                print "            . | tar -xf - -C \"\${backup_path}\" || {"
+                print "            error \"Failed to create backup\""
+                print "            exit 1"
+                print "        }"
+                print "    fi"
+                print ""
+                print "    success \"Backup created successfully at \"\${backup_path}"
+                print "    echo \"\${backup_path}\""
+                print "}"
+                next
+            }
+            in_create && /^}$/ { in_create=0; next }
+            in_create { next }
+            { print }
+        ' "$target" > "${target}.repaired_sh" && mv "${target}.repaired_sh" "$target"
+        
+        repairs_applied=$((repairs_applied + 1))
+    fi
+    
+    if [[ $repairs_applied -gt 0 ]]; then
+        success "Applied $repairs_applied post-update repairs to update.sh"
+    else
+        log "No post-update repairs needed for update.sh"
+    fi
+}
+
 # Restore from backup
 restore_from_backup() {
     local backup_path="$1"
@@ -398,6 +536,7 @@ show_usage() {
     echo "  -r, --repo URL      Set repository URL (default: ${REPO_URL})"
     echo "  -b, --branch BRANCH Set branch (default: ${BRANCH})"
     echo "  --restore PATH      Restore CMS core from a backup path"
+    echo "      --update-test    Use the update-test branch (backs up theme changes and forces backup)"
     echo ""
     echo "Features:"
     echo "  - Preserves ALL existing themes (custom and modified defaults)"
@@ -431,6 +570,11 @@ parse_args() {
                 ;;
             -n|--no-backup)
                 create_backup=false
+                shift
+                ;;
+            --update-test)
+                BRANCH="update-test"
+                create_backup=true
                 shift
                 ;;
             -r|--repo)
