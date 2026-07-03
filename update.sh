@@ -257,6 +257,7 @@ perform_update() {
     cp "${UPDATE_DIR}/"*.nix ./ 2>/dev/null || true
     cp "${UPDATE_DIR}/"*.json ./ 2>/dev/null || true
     cp "${UPDATE_DIR}/package*" ./ 2>/dev/null || true
+    cp "${UPDATE_DIR}/update.sh" ./update.sh 2>/dev/null || true
     
     # Create themes directory
     mkdir -p themes/
