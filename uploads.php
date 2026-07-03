@@ -14,7 +14,6 @@ if (file_exists($filePath) && is_file($filePath)) {
     // Get file info for proper MIME type
     $finfo = finfo_open(FILEINFO_MIME_TYPE);
     $mimeType = finfo_file($finfo, $filePath);
-    finfo_close($finfo);
     
     // Set proper headers
     header('Content-Type: ' . $mimeType);
