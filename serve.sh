@@ -18,7 +18,7 @@ restore_backup=false
 # Simple argument parsing
 while [[ "$#" -gt 0 ]]; do
     case $1 in
-        --port|-p) port="$2"; shift ;;
+        --port) port="$2"; shift ;;
         --update-test) update_test=true ;;
         --restore-backup) restore_backup=true ;;
     esac
