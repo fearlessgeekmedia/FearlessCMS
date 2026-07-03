@@ -266,7 +266,7 @@ perform_update() {
     
     # Set proper permissions
     chmod 644 *.php *.md *.txt *.nix *.json package* 2>/dev/null || true
-    chmod 755 admin/ includes/ themes/ plugins/ parallax/ 2>/dev/null || true
+    chmod 755 admin/ includes/ themes/ plugins/ parallax/ *.sh 2>/dev/null || true
     chmod 755 admin/*.php includes/*.php 2>/dev/null || true
     
     success "Update completed successfully"
