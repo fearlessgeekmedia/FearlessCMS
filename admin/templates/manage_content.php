@@ -2,7 +2,7 @@
 // Get all content files
 $contentList = [];
 if (is_dir(CONTENT_DIR)) {
-    $files = glob(CONTENT_DIR . '/*.md');
+    $files = array_merge(glob(CONTENT_DIR . '/*.md'), glob(CONTENT_DIR . '/*.html'));
     foreach ($files as $file) {
         $content = file_get_contents($file);
         $title = '';
@@ -13,11 +13,13 @@ if (is_dir(CONTENT_DIR)) {
             }
         }
         if (!$title) {
-            $title = ucwords(str_replace(['-', '_'], ' ', basename($file, '.md')));
+            $extension = str_ends_with($file, '.html') ? '.html' : '.md';
+            $title = ucwords(str_replace(['-', '_'], ' ', basename($file, $extension)));
         }
+        $extension = str_ends_with($file, '.html') ? '.html' : '.md';
         $contentList[] = [
             'title' => $title,
-            'path' => basename($file, '.md'),
+            'path' => basename($file, $extension),
             'modified' => date('Y-m-d H:i:s', filemtime($file))
         ];
     }

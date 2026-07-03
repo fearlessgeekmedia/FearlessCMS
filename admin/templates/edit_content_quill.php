@@ -8,6 +8,10 @@ error_log("DEBUG: Template variables - title: " . (isset($title) ? $title : 'NOT
 error_log("DEBUG: Template variables - path: " . (isset($path) ? $path : 'NOT SET'));
 error_log("DEBUG: Template variables - contentData preview: " . (isset($contentData) ? substr($contentData, 0, 200) : 'NOT SET'));
 
+// Editor mode from admin/index.php; default to html
+$editorMode = $editorMode ?? 'html';
+$editorMode = in_array($editorMode, ['html', 'markdown']) ? $editorMode : 'html';
+
 // Extract content without metadata
 $contentWithoutMetadata = $contentData ?? '';
 $metadata = [];
@@ -43,7 +47,7 @@ if (empty($contentWithoutMetadata) && !empty($contentData)) {
 }
 
 // Get all content files for parent selection
-$contentFiles = glob(CONTENT_DIR . '/*.md');
+$contentFiles = array_merge(glob(CONTENT_DIR . '/*.md'), glob(CONTENT_DIR . '/*.html'));
 $pages = [];
 foreach ($contentFiles as $file) {
     $fileContent = file_get_contents($file);
@@ -54,12 +58,13 @@ foreach ($contentFiles as $file) {
             $pageTitle = $pageMetadata['title'];
         }
     }
+    $extension = pathinfo($file, PATHINFO_EXTENSION);
     if (!$pageTitle) {
-        $pageTitle = ucwords(str_replace(['-', '_'], ' ', basename($file, '.md')));
+        $pageTitle = ucwords(str_replace(['-', '_'], ' ', basename($file, '.' . $extension)));
     }
-    $pages[basename($file, '.md')] = $pageTitle;
+    $pages[basename($file, '.' . $extension)] = $pageTitle;
 }
-?>
+?> 
 
 <div class="bg-white shadow rounded-lg p-6">
     <!-- Success/Error Messages -->
@@ -89,7 +94,7 @@ foreach ($contentFiles as $file) {
     <form method="POST" id="editForm" class="space-y-6">
         <input type="hidden" name="action" value="save_content">
         <input type="hidden" name="path" value="<?php echo htmlspecialchars($path); ?>">
-        <input type="hidden" name="editor_mode" value="html">
+        <input type="hidden" name="editor_mode" id="editorModeInput" value="<?php echo htmlspecialchars($editorMode); ?>">
         <input type="hidden" name="content" id="content">
         <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
 
@@ -131,30 +136,49 @@ foreach ($contentFiles as $file) {
 
         <div>
             <label class="block mb-2">Content</label>
-            <p class="text-sm text-gray-600 mb-2">Editing in HTML mode with Quill.js editor</p>
-            
 
-            
-            <!-- Editor Mode Toggle -->
-            <div class="mb-3 flex items-center space-x-2">
-                <button type="button" id="toggleMode" class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
-                    Switch to Code View
+            <!-- Content Type Selector -->
+            <div class="mb-4 flex items-center gap-2">
+                <span class="text-sm font-medium text-gray-700 mr-2">Content Type:</span>
+                <button type="button" id="contentTypeHtml" class="px-4 py-2 text-sm rounded border transition-colors <?php echo $editorMode === 'html' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'; ?>">
+                    HTML
                 </button>
-                <span class="text-sm text-gray-600" id="modeIndicator">Rich Editor Mode</span>
-                <span class="text-xs text-gray-500">(Ctrl+Shift+C to toggle)</span>
+                <button type="button" id="contentTypeMarkdown" class="px-4 py-2 text-sm rounded border transition-colors <?php echo $editorMode === 'markdown' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'; ?>">
+                    Markdown
+                </button>
+                <span class="text-xs text-gray-500 ml-2" id="contentTypeShortcut">(Ctrl+Shift+M to toggle)</span>
             </div>
-            
-            <!-- Rich Editor Container -->
-            <div id="richEditorContainer" class="quill-editor" style="height: 600px;"></div>
-            
-            <!-- Code Editor Container -->
-            <div id="codeEditorContainer" class="hidden">
-                <textarea id="codeEditor" class="w-full h-96 p-4 font-mono text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Edit HTML code here..."></textarea>
-                <div class="mt-2 text-sm text-gray-600">
-                    <p>💡 <strong>Code View Mode:</strong> Edit raw HTML code. Use this for precise formatting, custom HTML, or troubleshooting.</p>
+
+            <!-- HTML Editor Area (Quill + Code View) -->
+            <div id="htmlEditorArea">
+                <p class="text-sm text-gray-600 mb-2">Editing in HTML mode with Quill.js editor</p>
+                
+                <!-- Editor Mode Toggle -->
+                <div class="mb-3 flex items-center space-x-2">
+                    <button type="button" id="toggleMode" class="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                        Switch to Code View
+                    </button>
+                    <span class="text-sm text-gray-600" id="modeIndicator">Rich Editor Mode</span>
+                    <span class="text-xs text-gray-500">(Ctrl+Shift+C to toggle)</span>
+                </div>
+                
+                <!-- Rich Editor Container -->
+                <div id="richEditorContainer" class="quill-editor" style="height: 600px;"></div>
+                
+                <!-- Code Editor Container -->
+                <div id="codeEditorContainer" class="hidden">
+                    <textarea id="codeEditor" class="w-full h-96 p-4 font-mono text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Edit HTML code here..."></textarea>
+                    <div class="mt-2 text-sm text-gray-600">
+                        <p>💡 <strong>Code View Mode:</strong> Edit raw HTML code. Use this for precise formatting, custom HTML, or troubleshooting.</p>
+                    </div>
                 </div>
             </div>
-            
+
+            <!-- Markdown Editor Area (ToastUI Editor) -->
+            <div id="markdownEditorArea" class="hidden">
+                <p class="text-sm text-gray-600 mb-2">Editing in Markdown mode with ToastUI Editor</p>
+                <div id="toastuiEditorContainer" style="height: 600px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;"></div>
+            </div>
         </div>
 
         <div class="flex justify-end gap-4">
@@ -164,8 +188,7 @@ foreach ($contentFiles as $file) {
     </form>
 </div>
 
-<!-- Quill.js Editor - CSS and JS loaded in base template -->
-
+<!-- ToastUI Editor can upload to ?action=upload_image -->
 <style>
 /* Quill.js Editor Styling */
 .quill-editor {
@@ -348,62 +371,111 @@ foreach ($contentFiles as $file) {
     margin: 0;
     line-height: 1.5;
 }
+
+/* Syntax highlighting for ToastUI Markdown editor */
+.toastui-editor-contents {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 1.5rem !important;
+    min-height: 550px;
+}
+
+.toastui-editor-md-preview .toastui-editor-contents {
+    padding: 1.5rem !important;
+}
+
+/* ToastUI tab/button styling to match admin */
+.toastui-editor-tabs .tab-item {
+    color: #475569;
+}
+
+.toastui-editor-tabs .tab-item.active {
+    color: #3b82f6;
+}
 </style>
 
 <script>
-// Make editor globally accessible
+// Make editor and toastuiEditor globally accessible
 let editor;
+let toastuiEditor;
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Quill.js
-    if (typeof Quill !== 'undefined') {
-        // Create a simple toolbar without problematic modules
-        var toolbarOptions = [
-            ['bold', 'italic', 'underline', 'strike'],
-            ['blockquote'],
-            [{ 'header': 1 }, { 'header': 2 }],
-            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-            [{ 'indent': '-1' }, { 'indent': '+1' }],
-            [{ 'color': [] }, { 'background': [] }],
-            [{ 'align': [] }],
-            ['clean'],
-            ['link']
-        ];
+    const editorModeInput = document.getElementById('editorModeInput');
+    const htmlEditorArea = document.getElementById('htmlEditorArea');
+    const markdownEditorArea = document.getElementById('markdownEditorArea');
+    const contentTypeHtmlBtn = document.getElementById('contentTypeHtml');
+    const contentTypeMarkdownBtn = document.getElementById('contentTypeMarkdown');
+    const initialEditorMode = <?php echo json_encode($editorMode); ?>;
 
-        // Initialize Quill with minimal configuration
-        editor = new Quill('#richEditorContainer', {
-            theme: 'snow',
-            modules: {
-                toolbar: toolbarOptions,
-                clipboard: {
-                    matchVisual: false
+    // Shared initial content (metadata already stripped in PHP)
+    const initialContent = <?php echo json_encode($contentWithoutMetadata, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
+
+    function setContentType(mode) {
+        editorModeInput.value = mode;
+
+        if (mode === 'markdown') {
+            htmlEditorArea.classList.add('hidden');
+            markdownEditorArea.classList.remove('hidden');
+            contentTypeHtmlBtn.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+            contentTypeHtmlBtn.classList.add('bg-white', 'text-gray-700', 'border-gray-300');
+            contentTypeMarkdownBtn.classList.remove('bg-white', 'text-gray-700', 'border-gray-300');
+            contentTypeMarkdownBtn.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+
+            if (!toastuiEditor) {
+                initToastUI();
+            } else {
+                const currentMarkdown = toastuiEditor.getMarkdown();
+                const newContent = currentMarkdown || initialContent || '';
+                toastuiEditor.setMarkdown(newContent);
+                toastuiEditor.focus();
+            }
+        } else {
+            markdownEditorArea.classList.add('hidden');
+            htmlEditorArea.classList.remove('hidden');
+            contentTypeMarkdownBtn.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+            contentTypeMarkdownBtn.classList.add('bg-white', 'text-gray-700', 'border-gray-300');
+            contentTypeHtmlBtn.classList.remove('bg-white', 'text-gray-700', 'border-gray-300');
+            contentTypeHtmlBtn.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+
+            // Initialize Quill if it hasn't been initialized yet (e.g. page loaded in markdown mode)
+            if (typeof Quill !== 'undefined' && typeof editor === 'undefined') {
+                initQuillHTML();
+            }
+
+            if (toastuiEditor) {
+                const mdContent = toastuiEditor.getMarkdown();
+                const codeEditor = document.getElementById('codeEditor');
+                codeEditor.value = mdContent;
+
+                // Also update Quill rich editor if available
+                if (typeof editor !== 'undefined' && editor) {
+                    editor.root.innerHTML = mdContent;
                 }
-            },
-            placeholder: 'Start writing your content...',
-            readOnly: false
-        });
+            }
+        }
+    }
 
-        // Add custom image handling after Quill is initialized
-        var imageButton = document.createElement('button');
-        imageButton.innerHTML = '<svg viewBox="0 0 18 18"><rect class="ql-stroke" height="10" width="12" x="3" y="4"></rect><circle class="ql-fill" cx="6" cy="6" r="1"></circle><polyline class="ql-even ql-fill" points="5 8,9 4,13 8,13 14,5 14"></polyline></svg>';
-        imageButton.type = 'button';
-        imageButton.className = 'ql-image';
-        imageButton.setAttribute('aria-label', 'Insert image');
-        
-        // Add click handler for image upload
-        imageButton.addEventListener('click', function() {
-            var input = document.createElement('input');
-            input.setAttribute('type', 'file');
-            input.setAttribute('accept', 'image/*');
-            input.click();
-            
-            input.onchange = function() {
-                var file = input.files[0];
-                if (file) {
-                    var formData = new FormData();
+    function initToastUI() {
+        if (typeof window.toastui === 'undefined') {
+            console.error('ToastUI Editor not loaded');
+            return;
+        }
+
+        let contentForMarkdown = initialContent || '';
+
+        toastuiEditor = new window.toastui.Editor({
+            el: document.querySelector('#toastuiEditorContainer'),
+            previewStyle: 'vertical',
+            initialEditType: 'markdown',
+            height: '600px',
+            usageStatistics: false,
+            hooks: {
+                addImageBlobHook: function(blob, callback) {
+                    const formData = new FormData();
                     formData.append('action', 'upload_image');
-                    formData.append('image', file);
-                    
+                    formData.append('image', blob);
+
                     fetch('?action=upload_image', {
                         method: 'POST',
                         body: formData
@@ -411,218 +483,295 @@ document.addEventListener('DOMContentLoaded', function() {
                     .then(function(response) { return response.json(); })
                     .then(function(data) {
                         if (data.success) {
-                            var range = editor.getSelection();
-                            editor.insertEmbed(range.index, 'image', data.url);
+                            callback(data.url, 'image');
                         } else {
                             alert('Upload failed: ' + (data.error || 'Unknown error'));
+                            callback('', '');
                         }
                     })
                     .catch(function(error) {
                         alert('Upload failed: ' + error);
+                        callback('', '');
                     });
-                }
-            };
-        });
-        
-        // Add the custom image button to the toolbar
-        var toolbar = editor.getModule('toolbar');
-        toolbar.addHandler('image', function() {
-            imageButton.click();
-        });
-        
-        // Insert the image button into the toolbar
-        var toolbarContainer = document.querySelector('.ql-toolbar');
-        if (toolbarContainer) {
-            toolbarContainer.appendChild(imageButton);
-        }
 
-        // Configure Quill to preserve article tags (which Quill allows)
-        editor.clipboard.addMatcher('article', function(node, delta) {
-            // Preserve article tags and their attributes
-            return delta;
-        });
-        
-        // Add matcher for any HTML element to preserve structure
-        editor.clipboard.addMatcher('*', function(node, delta) {
-            // Preserve all HTML elements and their attributes
-            return delta;
-        });
-        
-        // Function to convert div tags to article tags for Quill compatibility
-        function convertDivToArticle(html) {
-            return html.replace(/<div/g, '<article').replace(/<\/div>/g, '</article>');
-        }
-        
-        // Function to convert article tags back to div tags for display
-        function convertArticleToDiv(html) {
-            return html.replace(/<article/g, '<div').replace(/<\/article>/g, '</div>');
-        }
-        
-        // Set initial content
-        const initialContent = <?php echo json_encode($contentWithoutMetadata, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
-        
-        // Debug: Log what content we're working with
-        console.log('DEBUG: initialContent:', initialContent);
-        console.log('DEBUG: initialContent length:', initialContent ? initialContent.length : 0);
-        console.log('DEBUG: initialContent trimmed:', initialContent ? initialContent.trim() : '');
-        console.log('DEBUG: initialContent has content:', initialContent && initialContent.trim());
-        
-        // Function to load content into editor
-        function loadContentIntoEditor() {
-            console.log('DEBUG: Loading content into editor...');
-            
-            if (initialContent && initialContent.trim()) {
-                console.log('DEBUG: Using initialContent, length:', initialContent.length);
-                
-                // Check if content contains complex HTML that Quill will strip
-                // Detect complex HTML including div tags, grid layouts, custom classes, and complex structures
-                const hasComplexHTML = /<div[^>]*style=|<div[^>]*class=|grid|parallax|shortcode|\[.*?\]|<form|<input|<textarea|<select|<button|<table|<tr|<td|<th|<thead|<tbody|<tfoot|<colgroup|<col|<caption|<fieldset|<legend|<label|<optgroup|<option|<datalist|<output|<progress|<meter|<details|<summary|<dialog|<menu|<menuitem|<slot|<template|<svg|<canvas|<video|<audio|<iframe|<embed|<object|<param|<source|<track|<map|<area|<picture|<figure|<figcaption|<nav|<header|<footer|<main|<section|<article|<aside|<hgroup|<address|<blockquote|<pre|<kbd|<samp|<var|<time|<mark|<ruby|<rt|<rp|<bdi|<bdo|<span[^>]*style=|<span[^>]*class=|<ul|<li/i.test(initialContent);
-                
-                if (hasComplexHTML) {
-                    console.log('DEBUG: Complex HTML detected, starting in code view mode');
-                    // Start in code view mode for complex HTML
-                    document.getElementById('richEditorContainer').classList.add('hidden');
-                    document.getElementById('codeEditorContainer').classList.remove('hidden');
-                    document.getElementById('codeEditor').value = initialContent;
-                    document.getElementById('modeIndicator').textContent = 'Code View Mode (Complex HTML Detected)';
-                    document.getElementById('toggleMode').textContent = 'Switch to Rich Editor';
-                    document.getElementById('toggleMode').className = 'px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600 transition-colors';
-                } else {
-                    console.log('DEBUG: Simple content detected, starting in rich editor mode');
-                    // For simple content, use Quill editor
-                    try {
-                        // Use setHTML for better compatibility
-                        editor.root.innerHTML = initialContent;
-                        console.log('DEBUG: Content loaded into Quill editor');
-                        
-                        // Show rich editor
-                        document.getElementById('richEditorContainer').classList.remove('hidden');
-                        document.getElementById('codeEditorContainer').classList.add('hidden');
-                        document.getElementById('modeIndicator').textContent = 'Rich Editor Mode';
-                        document.getElementById('toggleMode').textContent = 'Switch to Code View';
-                        document.getElementById('toggleMode').className = 'px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors';
-                    } catch (e) {
-                        console.error('DEBUG: Error loading content into Quill:', e);
-                        // Fallback to code editor
-                        document.getElementById('richEditorContainer').classList.add('hidden');
-                        document.getElementById('codeEditorContainer').classList.remove('hidden');
-                        document.getElementById('codeEditor').value = initialContent;
-                    }
-                }
-            } else {
-                // Try to load from the full content data as fallback
-                const fullContent = <?php echo json_encode($contentData ?? '', JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
-                console.log('DEBUG: Using fallback fullContent:', fullContent);
-                console.log('DEBUG: fullContent length:', fullContent ? fullContent.length : 0);
-                
-                if (fullContent && fullContent.trim()) {
-                    console.log('DEBUG: Setting editor content with fullContent');
-                    try {
-                        editor.root.innerHTML = fullContent;
-                        console.log('DEBUG: Fallback content loaded successfully');
-                    } catch (e) {
-                        console.error('DEBUG: Error loading fallback content:', e);
-                    }
-                } else {
-                    console.log('DEBUG: No content available to load');
+                    return false;
                 }
             }
-        }
-        
-        // Load content after a short delay to ensure Quill.js is fully initialized
-        setTimeout(loadContentIntoEditor, 100);
-        
-        // Toggle between rich editor and code editor with content sync
-        document.getElementById('toggleMode').addEventListener('click', function() {
-            const richEditorContainer = document.getElementById('richEditorContainer');
-            const codeEditorContainer = document.getElementById('codeEditorContainer');
-            const toggleButton = document.getElementById('toggleMode');
-            const modeIndicator = document.getElementById('modeIndicator');
-            const codeEditor = document.getElementById('codeEditor');
-
-            if (richEditorContainer.classList.contains('hidden')) {
-                // Switching from Code View to Rich Editor
-                const htmlContent = codeEditor.value;
-                
-                // Check if content contains complex HTML that Quill will strip
-                // Detect complex HTML including div tags, grid layouts, custom classes, and complex structures
-                const hasComplexHTML = /<div[^>]*style=|<div[^>]*class=|grid|parallax|shortcode|\[.*?\]|<form|<input|<textarea|<select|<button|<table|<tr|<td|<th|<thead|<tbody|<tfoot|<colgroup|<col|<caption|<fieldset|<legend|<label|<optgroup|<option|<datalist|<output|<progress|<meter|<details|<summary|<dialog|<menu|<menuitem|<slot|<template|<svg|<canvas|<video|<audio|<iframe|<embed|<object|<param|<source|<track|<map|<area|<picture|<figure|<figcaption|<nav|<header|<footer|<main|<section|<article|<aside|<hgroup|<address|<blockquote|<pre|<kbd|<samp|<var|<time|<mark|<ruby|<rt|<rp|<bdi|<bdo|<span[^>]*style=|<span[^>]*class=|<ul|<li/i.test(htmlContent);
-                if (hasComplexHTML) {
-                    alert('Complex HTML detected! This content contains complex structures (grids, parallax, shortcodes, or custom styling) that will be stripped by the rich text editor. Staying in code view to preserve your HTML.');
-                    return; // Don't switch modes
-                }
-                
-                // For simple content, switch to rich editor
-                richEditorContainer.classList.remove('hidden');
-                codeEditorContainer.classList.add('hidden');
-                modeIndicator.textContent = 'Rich Editor Mode';
-                toggleButton.textContent = 'Switch to Code View';
-                toggleButton.className = 'px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors';
-                
-                // Update rich editor with code editor content
-                editor.root.innerHTML = htmlContent;
-                editor.enable();
-                
-            } else {
-                // Switching from Rich Editor to Code View
-                richEditorContainer.classList.add('hidden');
-                codeEditorContainer.classList.remove('hidden');
-                modeIndicator.textContent = 'Code View Mode';
-                toggleButton.textContent = 'Switch to Rich Editor';
-                toggleButton.className = 'px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600 transition-colors';
-                
-                // Update code editor with rich editor content
-                const htmlContent = editor.root.innerHTML;
-                codeEditor.value = htmlContent;
-            }
         });
 
-        // Keyboard shortcut for mode switching (Ctrl+Shift+C)
-        document.addEventListener('keydown', function(e) {
-            if (e.ctrlKey && e.shiftKey && e.key === 'C') {
-                e.preventDefault();
-                document.getElementById('toggleMode').click();
-            }
-        });
+        toastuiEditor.setMarkdown(contentForMarkdown);
+    }
 
-        // Sync content between editors when switching modes
-        document.getElementById('codeEditor').addEventListener('input', function() {
-            // Update the hidden content field when code editor changes
-            document.getElementById('content').value = this.value;
-        });
-
-        // Update hidden input before form submission (handle both modes)
-        document.getElementById('editForm').addEventListener('submit', function() {
-            const richEditorContainer = document.getElementById('richEditorContainer');
-            const codeEditor = document.getElementById('codeEditor');
-            
-            let contentToSave = '';
-            
-            if (richEditorContainer.classList.contains('hidden')) {
-                // In code view mode, use code editor content
-                contentToSave = codeEditor.value;
-            } else {
-                // In rich editor mode, use Quill content and convert article tags back to div tags
-                contentToSave = convertArticleToDiv(editor.root.innerHTML);
-            }
-            
-            // Set the content in the hidden field
-            document.getElementById('content').value = contentToSave;
-        });
-
+    // Initialize Quill.js
+    if (typeof Quill !== 'undefined' && initialEditorMode === 'html') {
+        initQuillHTML();
+        setContentType('html');
+    } else if (typeof Quill !== 'undefined' && initialEditorMode === 'markdown') {
+        setContentType('markdown');
+    } else if (typeof Quill !== 'undefined') {
+        initQuillHTML();
+        setContentType('html');
     } else {
         console.error('Quill.js not loaded');
+        if (initialEditorMode === 'html') {
+            setContentType('html');
+        } else {
+            setContentType('markdown');
+        }
+    }
+
+    // Content type button handlers
+    contentTypeHtmlBtn.addEventListener('click', function() {
+        setContentType('html');
+    });
+
+    contentTypeMarkdownBtn.addEventListener('click', function() {
+        setContentType('markdown');
+    });
+
+    // Keyboard shortcut to toggle content type (Ctrl+Shift+M)
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.shiftKey && (e.key === 'm' || e.key === 'M')) {
+            e.preventDefault();
+            const currentMode = document.getElementById('editorModeInput').value;
+            setContentType(currentMode === 'html' ? 'markdown' : 'html');
+        }
+    });
+
+    // Update hidden input before form submission (handle both modes)
+    document.getElementById('editForm').addEventListener('submit', function() {
+        const currentMode = document.getElementById('editorModeInput').value;
+        document.getElementById('editorModeInput').value = currentMode;
+
+        let contentToSave = '';
+
+        if (currentMode === 'markdown' && toastuiEditor) {
+            contentToSave = toastuiEditor.getMarkdown();
+        } else {
+            contentToSave = getHTMLContent();
+        }
+
+        document.getElementById('content').value = contentToSave;
+    });
+});
+
+function getHTMLContent() {
+    const richEditorContainer = document.getElementById('richEditorContainer');
+    const codeEditor = document.getElementById('codeEditor');
+
+    if (richEditorContainer.classList.contains('hidden')) {
+        return codeEditor.value;
+    }
+
+    if (typeof editor !== 'undefined' && editor) {
+        return convertArticleToDiv(editor.root.innerHTML);
+    }
+
+    return '';
+}
+
+function convertDivToArticle(html) {
+    return html.replace(/<div/g, '<article').replace(/<\/div>/g, '</article>');
+}
+
+function convertArticleToDiv(html) {
+    return html.replace(/<article/g, '<div').replace(/<\/article>/g, '</div>');
+}
+
+function initQuillHTML() {
+    if (typeof Quill === 'undefined') {
+        console.error('Quill.js not loaded');
         document.getElementById('richEditorContainer').innerHTML = '<div class="p-4 text-red-600">Error: Quill.js editor failed to load. Please refresh the page or use Code View.</div>';
-        // Force Code View if Quill fails
         document.getElementById('richEditorContainer').classList.add('hidden');
         document.getElementById('codeEditorContainer').classList.remove('hidden');
         document.getElementById('modeIndicator').textContent = 'Code View Mode (Quill Failed to Load)';
         document.getElementById('toggleMode').style.display = 'none';
+        return;
     }
-});
+
+    var toolbarOptions = [
+        ['bold', 'italic', 'underline', 'strike'],
+        ['blockquote'],
+        [{ 'header': 1 }, { 'header': 2 }],
+        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+        [{ 'indent': '-1' }, { 'indent': '+1' }],
+        [{ 'color': [] }, { 'background': [] }],
+        [{ 'align': [] }],
+        ['clean'],
+        ['link']
+    ];
+
+    editor = new Quill('#richEditorContainer', {
+        theme: 'snow',
+        modules: {
+            toolbar: toolbarOptions,
+            clipboard: {
+                matchVisual: false
+            }
+        },
+        placeholder: 'Start writing your content...',
+        readOnly: false
+    });
+
+    var imageButton = document.createElement('button');
+    imageButton.innerHTML = '<svg viewBox="0 0 18 18"><rect class="ql-stroke" height="10" width="12" x="3" y="4"></rect><circle class="ql-fill" cx="6" cy="6" r="1"></circle><polyline class="ql-even ql-fill" points="5 8,9 4,13 8,13 14,5 14"></polyline></svg>';
+    imageButton.type = 'button';
+    imageButton.className = 'ql-image';
+    imageButton.setAttribute('aria-label', 'Insert image');
+    
+    imageButton.addEventListener('click', function() {
+        var input = document.createElement('input');
+        input.setAttribute('type', 'file');
+        input.setAttribute('accept', 'image/*');
+        input.click();
+        
+        input.onchange = function() {
+            var file = input.files[0];
+            if (file) {
+                var formData = new FormData();
+                formData.append('action', 'upload_image');
+                formData.append('image', file);
+                
+                fetch('?action=upload_image', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        var range = editor.getSelection();
+                        editor.insertEmbed(range.index, 'image', data.url);
+                    } else {
+                        alert('Upload failed: ' + (data.error || 'Unknown error'));
+                    }
+                })
+                .catch(function(error) {
+                    alert('Upload failed: ' + error);
+                });
+            }
+        };
+    });
+    
+    var toolbar = editor.getModule('toolbar');
+    toolbar.addHandler('image', function() {
+        imageButton.click();
+    });
+    
+    var toolbarContainer = document.querySelector('.ql-toolbar');
+    if (toolbarContainer) {
+        toolbarContainer.appendChild(imageButton);
+    }
+
+    editor.clipboard.addMatcher('article', function(node, delta) {
+        return delta;
+    });
+    
+    editor.clipboard.addMatcher('*', function(node, delta) {
+        return delta;
+    });
+    
+    const initialContent = <?php echo json_encode($contentWithoutMetadata, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
+    
+    function loadContentIntoEditor() {
+        if (initialContent && initialContent.trim()) {
+            const hasComplexHTML = /<div[^>]*style=|<div[^>]*class=|grid|parallax|shortcode|\[.*?\]|<form|<input|<textarea|<select|<button|<table|<tr|<td|<th|<thead|<tbody|<tfoot|<colgroup|<col|<caption|<fieldset|<legend|<label|<optgroup|<option|<datalist|<output|<progress|<meter|<details|<summary|<dialog|<menu|<menuitem|<slot|<template|<svg|<canvas|<video|<audio|<iframe|<embed|<object|<param|<source|<track|<map|<area|<picture|<figure|<figcaption|<nav|<header|<footer|<main|<section|<article|<aside|<hgroup|<address|<blockquote|<pre|<kbd|<samp|<var|<time|<mark|<ruby|<rt|<rp|<bdi|<bdo|<span[^>]*style=|<span[^>]*class=|<ul|<li/i.test(initialContent);
+            
+            if (hasComplexHTML) {
+                document.getElementById('richEditorContainer').classList.add('hidden');
+                document.getElementById('codeEditorContainer').classList.remove('hidden');
+                document.getElementById('codeEditor').value = initialContent;
+                document.getElementById('modeIndicator').textContent = 'Code View Mode (Complex HTML Detected)';
+                document.getElementById('toggleMode').textContent = 'Switch to Rich Editor';
+                document.getElementById('toggleMode').className = 'px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600 transition-colors';
+            } else {
+                try {
+                    editor.root.innerHTML = initialContent;
+                    document.getElementById('richEditorContainer').classList.remove('hidden');
+                    document.getElementById('codeEditorContainer').classList.add('hidden');
+                    document.getElementById('modeIndicator').textContent = 'Rich Editor Mode';
+                    document.getElementById('toggleMode').textContent = 'Switch to Code View';
+                    document.getElementById('toggleMode').className = 'px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors';
+                } catch (e) {
+                    document.getElementById('richEditorContainer').classList.add('hidden');
+                    document.getElementById('codeEditorContainer').classList.remove('hidden');
+                    document.getElementById('codeEditor').value = initialContent;
+                }
+            }
+        } else {
+            // No body content found after metadata - leave editor empty
+            document.getElementById('richEditorContainer').classList.remove('hidden');
+            document.getElementById('codeEditorContainer').classList.add('hidden');
+            document.getElementById('modeIndicator').textContent = 'Rich Editor Mode';
+            document.getElementById('toggleMode').textContent = 'Switch to Code View';
+            document.getElementById('toggleMode').className = 'px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors';
+        }
+    }
+    
+    setTimeout(loadContentIntoEditor, 100);
+    
+    document.getElementById('toggleMode').addEventListener('click', function() {
+        const richEditorContainer = document.getElementById('richEditorContainer');
+        const codeEditorContainer = document.getElementById('codeEditorContainer');
+        const toggleButton = document.getElementById('toggleMode');
+        const modeIndicator = document.getElementById('modeIndicator');
+        const codeEditor = document.getElementById('codeEditor');
+
+        if (richEditorContainer.classList.contains('hidden')) {
+            const htmlContent = codeEditor.value;
+            const hasComplexHTML = /<div[^>]*style=|<div[^>]*class=|grid|parallax|shortcode|\[.*?\]|<form|<input|<textarea|<select|<button|<table|<tr|<td|<th|<thead|<tbody|<tfoot|<colgroup|<col|<caption|<fieldset|<legend|<label|<optgroup|<option|<datalist|<output|<progress|<meter|<details|<summary|<dialog|<menu|<menuitem|<slot|<template|<svg|<canvas|<video|<audio|<iframe|<embed|<object|<param|<source|<track|<map|<area|<picture|<figure|<figcaption|<nav|<header|<footer|<main|<section|<article|<aside|<hgroup|<address|<blockquote|<pre|<kbd|<samp|<var|<time|<mark|<ruby|<rt|<rp|<bdi|<bdo|<span[^>]*style=|<span[^>]*class=|<ul|<li/i.test(htmlContent);
+            if (hasComplexHTML) {
+                alert('Complex HTML detected! This content contains complex structures (grids, parallax, shortcodes, or custom styling) that will be stripped by the rich text editor. Staying in code view to preserve your HTML.');
+                return;
+            }
+            
+            richEditorContainer.classList.remove('hidden');
+            codeEditorContainer.classList.add('hidden');
+            modeIndicator.textContent = 'Rich Editor Mode';
+            toggleButton.textContent = 'Switch to Code View';
+            toggleButton.className = 'px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors';
+            
+            editor.root.innerHTML = htmlContent;
+            editor.enable();
+            
+        } else {
+            richEditorContainer.classList.add('hidden');
+            codeEditorContainer.classList.remove('hidden');
+            modeIndicator.textContent = 'Code View Mode';
+            toggleButton.textContent = 'Switch to Rich Editor';
+            toggleButton.className = 'px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600 transition-colors';
+            
+            const htmlContent = editor.root.innerHTML;
+            codeEditor.value = htmlContent;
+        }
+    });
+
+    // Keyboard shortcut for Quill mode switching (Ctrl+Shift+C)
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+            const htmlEditorAreaEl = document.getElementById('htmlEditorArea');
+            if (htmlEditorAreaEl.classList.contains('hidden')) {
+                return;
+            }
+            e.preventDefault();
+            document.getElementById('toggleMode').click();
+        }
+    });
+
+    // Sync content between editors when switching modes
+    document.getElementById('codeEditor').addEventListener('input', function() {
+        document.getElementById('content').value = this.value;
+    });
+}
 
 function previewContent() {
-    if (!editor) {
+    const currentEditorMode = document.getElementById('editorModeInput').value;
+    let editorContent = '';
+
+    if (currentEditorMode === 'markdown' && typeof window.toastui !== 'undefined' && toastuiEditor) {
+        editorContent = toastuiEditor.getMarkdown();
+    } else if (typeof editor !== 'undefined' && editor) {
+        editorContent = editor.root.innerHTML;
+    } else {
         alert('Editor not initialized');
         return;
     }
@@ -630,12 +779,8 @@ function previewContent() {
     const form = document.getElementById('editForm');
     const formData = new FormData(form);
     formData.append('action', 'preview_content');
-
-    // Get the current editor content
-    const editorContent = editor.root.innerHTML;
     formData.set('content', editorContent);
 
-    // Send to admin endpoint instead of root index.php
     fetch('?action=preview_content', {
         method: 'POST',
         body: formData
@@ -648,10 +793,10 @@ function previewContent() {
             alert('Failed to create preview: ' + (data.error || 'Unknown error'));
         }
     })
-            .catch(error => {
-            console.error('Error:', error);
-            alert('Failed to create preview. Please try again.');
-        });
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to create preview. Please try again.');
+    });
 }
 
 

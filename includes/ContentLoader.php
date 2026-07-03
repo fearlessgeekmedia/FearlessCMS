@@ -32,31 +32,69 @@ class ContentLoader {
     }
 
     public function findContentFile($path) {
-        $contentFile = $this->getContentFile($path);
-
+        // Try .html first
+        $contentFile = $this->contentDir . '/' . $path . '.html';
         if (file_exists($contentFile)) {
             return $contentFile;
         }
 
-        // Try parent/child relationship
+        // Try .md if .html not found
+        $contentFile = $this->contentDir . '/' . $path . '.md';
+        if (file_exists($contentFile)) {
+            return $contentFile;
+        }
+
+        // Try parent/child relationship - check both extensions
         $parts = explode('/', $path);
         if (count($parts) > 1) {
             $childPath = array_pop($parts);
             $parentPath = implode('/', $parts);
-            $parentFile = $this->contentDir . '/' . $parentPath . '.md';
 
+            // Try parent with .html
+            $parentFile = $this->contentDir . '/' . $parentPath . '.html';
             if (file_exists($parentFile)) {
                 $parentContent = file_get_contents($parentFile);
                 $parentMetadata = [];
-                if (preg_match('/^<!--\\s*json\\s*(.*?)\\s*-->/s', $parentContent, $matches)) {
+                if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $parentContent, $matches)) {
                     $parentMetadata = json_decode($matches[1], true);
                 }
 
-                $childFile = $this->contentDir . '/' . $childPath . '.md';
+                // Try child with both extensions
+                $childFile = $this->contentDir . '/' . $childPath . '.html';
+                if (!file_exists($childFile)) {
+                    $childFile = $this->contentDir . '/' . $childPath . '.md';
+                }
                 if (file_exists($childFile)) {
                     $childContent = file_get_contents($childFile);
                     $childMetadata = [];
-                    if (preg_match('/^<!--\\s*json\\s*(.*?)\\s*-->/s', $childContent, $matches)) {
+                    if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $childContent, $matches)) {
+                        $childMetadata = json_decode($matches[1], true);
+                    }
+
+                    if (isset($childMetadata['parent']) && $childMetadata['parent'] === $parentPath) {
+                        return $childFile;
+                    }
+                }
+            }
+
+            // Try parent with .md
+            $parentFile = $this->contentDir . '/' . $parentPath . '.md';
+            if (file_exists($parentFile)) {
+                $parentContent = file_get_contents($parentFile);
+                $parentMetadata = [];
+                if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $parentContent, $matches)) {
+                    $parentMetadata = json_decode($matches[1], true);
+                }
+
+                // Try child with both extensions
+                $childFile = $this->contentDir . '/' . $childPath . '.html';
+                if (!file_exists($childFile)) {
+                    $childFile = $this->contentDir . '/' . $childPath . '.md';
+                }
+                if (file_exists($childFile)) {
+                    $childContent = file_get_contents($childFile);
+                    $childMetadata = [];
+                    if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $childContent, $matches)) {
                         $childMetadata = json_decode($matches[1], true);
                     }
 
@@ -78,7 +116,7 @@ class ContentLoader {
         $metadata = [];
 
         // Extract JSON frontmatter
-        if (preg_match('/^<!--\\s*json\\s*(.*?)\\s*-->/s', $fileContent, $matches)) {
+        if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $fileContent, $matches)) {
             $metadata = json_decode($matches[1], true);
             if ($metadata) {
                 $pageTitle = $metadata['title'] ?? '';
@@ -86,12 +124,22 @@ class ContentLoader {
             } else {
                 $metadata = [];
             }
-            $pageContent = preg_replace('/^<!--\\s*json\\s*.*?\\s*-->\\s*/s', '', $fileContent);
+            $pageContent = preg_replace('/^<!--\s*json\s*.*?\s*-->\s*/s', '', $fileContent);
         }
 
         // Fallback to filename as title
         if (!$pageTitle) {
-            $pageTitle = ucwords(str_replace(['-', '_'], ' ', basename(str_replace('.md', '', $contentFile))));
+            $pageTitle = ucwords(str_replace(['-', '_'], ' ', basename(str_replace(['.md', '.html'], '', $contentFile))));
+        }
+
+        // Determine editor_mode based on file extension and content
+        if (isset($metadata['editor_mode'])) {
+            $editorMode = $metadata['editor_mode'];
+        } elseif (substr($contentFile, -5) === '.html') {
+            $editorMode = 'html';
+        } else {
+            // .md file - auto-detect based on content
+            $editorMode = $this->detectFileType($pageContent);
         }
 
         return [
@@ -99,8 +147,27 @@ class ContentLoader {
             'description' => $pageDescription,
             'content' => $pageContent,
             'metadata' => $metadata,
-            'editor_mode' => $metadata['editor_mode'] ?? 'markdown'
+            'editor_mode' => $editorMode
         ];
+    }
+
+    private function detectFileType($content) {
+        $trimmedContent = ltrim($content);
+
+        // Check if content starts with < (HTML tag)
+        if (strpos($trimmedContent, '<') === 0) {
+            return 'html';
+        }
+
+        // Check for common HTML patterns
+        $htmlPatterns = ['<p>', '<div>', '<span>', '<h1>', '<h2>', '<h3>', '<h4>', '<h5>', '<h6>', '<a ', '<ul>', '<ol>', '<li>', '<table', '<tr', '<td', '<th', '<strong>', '<em>', '<img '];
+        foreach ($htmlPatterns as $pattern) {
+            if (stripos($trimmedContent, $pattern) !== false) {
+                return 'html';
+            }
+        }
+
+        return 'markdown';
     }
 
     public function processContent($content, $editorMode) {
