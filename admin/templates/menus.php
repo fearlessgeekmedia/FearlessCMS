@@ -1,5 +1,8 @@
 <!-- Menu Management -->
 <div class="space-y-8">
+    <script>
+    window.FCMSCSRFToken = '<?php echo generate_csrf_token(); ?>';
+    </script>
     <!-- Menu Selection -->
     <div class="bg-white shadow rounded-lg p-6">
         <div class="flex justify-between items-center mb-4">
@@ -457,7 +460,8 @@ function saveMenu() {
         menu_id: currentMenu,
         label: currentMenu,
         class: menuClass,
-        items: menuData.items
+        items: menuData.items,
+        csrf_token: window.FCMSCSRFToken
     };
     
     console.log('Sending menu data:', menuDataToSave);
@@ -509,7 +513,8 @@ document.getElementById('new-menu-form').addEventListener('submit', function(e) 
         body: JSON.stringify({ 
             action: 'create_menu',
             name,
-            class: menuClass
+            class: menuClass,
+            csrf_token: window.FCMSCSRFToken
         })
     })
     .then(response => {
@@ -556,7 +561,8 @@ function confirmDeleteMenu() {
         },
         body: JSON.stringify({
             action: 'delete_menu',
-            menu_id: currentMenu
+            menu_id: currentMenu,
+            csrf_token: window.FCMSCSRFToken
         })
     })
     .then(response => response.json())

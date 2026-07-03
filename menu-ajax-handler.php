@@ -77,6 +77,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         echo json_encode(['success' => false, 'error' => 'No action specified']);
         exit;
     }
+
+    if (empty($data['csrf_token']) || !isset($_SESSION['csrf_token']) || $data['csrf_token'] !== $_SESSION['csrf_token']) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'error' => 'Invalid security token. Please refresh the page and try again.']);
+        exit;
+    }
     
     $menuFile = CONFIG_DIR . '/menus.json';
     $menus = file_exists($menuFile) ? json_decode(file_get_contents($menuFile), true) : [];

@@ -164,6 +164,7 @@ fcms_register_admin_section('manage_menus', [
     'menu_order' => 25,
     'parent' => 'site_management',
     'render_callback' => function() {
+        global $menu_options;
         include PROJECT_ROOT . '/admin/templates/menus.php';
     }
 ]);
