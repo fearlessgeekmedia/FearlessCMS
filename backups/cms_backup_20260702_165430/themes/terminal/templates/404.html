@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    {{module=head.html}}
+  </head>
+  <body>
+    <main class="terminal-main">
+      <div class="terminal-window">
+        {{module=header.html}}
+
+        <div class="terminal-body terminal-error-body">
+          <div class="terminal-output">
+            <span class="terminal-command-error">./run {{url}}</span>
+            <p class="terminal-error-text">bash: ./run {{url}}: No such file or directory</p>
+            <p class="terminal-error-detail">error 404 — the requested resource could not be located in the filesystem.</p>
+            <div class="terminal-prompt-line">
+              <span class="terminal-prompt">guest@{{siteName}}:~$</span>
+              <a href="/" class="terminal-link terminal-return">cd /home</a>
+              <span class="terminal-cursor"></span>
+            </div>
+          </div>
+        </div>
+
+        {{module=footer.html}}
+      </div>
+    </main>
+  </body>
+</html>

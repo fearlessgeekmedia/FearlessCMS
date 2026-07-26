@@ -1,0 +1,33 @@
+{
+    "main": {
+        "menu_class": "main-nav",
+        "items": [
+            {
+                "label": "Home",
+                "url": "\/",
+                "target": "",
+                "class": "nav-item"
+            },
+            {
+                "label": "About",
+                "url": "\/about",
+                "target": "",
+                "class": "nav-item"
+            },
+            {
+                "label": "Contact",
+                "url": "\/contact",
+                "target": "",
+                "class": "nav-item"
+            },
+            {
+                "id": 1746563924503,
+                "label": "Test",
+                "url": "\/test",
+                "target": "_blank",
+                "children": [],
+                "class": "nav-item"
+            }
+        ]
+    }
+}

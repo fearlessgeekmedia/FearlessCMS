@@ -1,0 +1,23 @@
+{
+  "name": "Terminal",
+  "version": "1.0.0",
+  "author": "FearlessCMS",
+  "description": "A retro terminal / command-line interface theme with CRT effects and phosphor glow",
+  "options": {
+    "accentColor": {
+      "type": "color",
+      "label": "Accent Color",
+      "default": "#00ff00"
+    },
+    "showScanlines": {
+      "type": "checkbox",
+      "label": "CRT Scanlines",
+      "default": true
+    },
+    "crtFlicker": {
+      "type": "checkbox",
+      "label": "CRT Flicker Effect",
+      "default": false
+    }
+  }
+}

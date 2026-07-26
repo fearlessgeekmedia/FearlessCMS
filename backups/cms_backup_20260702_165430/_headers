@@ -1,0 +1,6 @@
+# RSS Feed headers
+/blog/rss.xml
+  Content-Type: application/rss+xml; charset=utf-8
+
+/blog/rss
+  Content-Type: application/rss+xml; charset=utf-8

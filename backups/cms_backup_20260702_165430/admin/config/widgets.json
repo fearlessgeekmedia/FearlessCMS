@@ -1,0 +1,12 @@
+{
+    "main": {
+        "id": "main",
+        "classes": "main-sidebar",
+        "widgets": []
+    },
+    "right-sidebar": {
+        "id": "right-sidebar",
+        "classes": "right-sidebar",
+        "widgets": []
+    }
+}

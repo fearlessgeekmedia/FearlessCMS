@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    {{module=head.html}}
+  </head>
+  <body>
+    <main class="terminal-main">
+      <div class="terminal-window">
+        {{module=header.html}}
+
+        <div class="terminal-body terminal-page-body">
+          <div class="terminal-output">
+            <span class="terminal-ls">cat {{url}}</span>
+            <h1 class="terminal-heading">{{title}}</h1>
+            <div class="terminal-content">
+              {{content}}
+            </div>
+            <div class="terminal-prompt-line">
+              <span class="terminal-prompt">❯</span>
+              <span class="terminal-cursor"></span>
+            </div>
+          </div>
+        </div>
+
+        {{module=footer.html}}
+      </div>
+    </main>
+  </body>
+</html>
