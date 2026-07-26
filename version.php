@@ -37,4 +37,4 @@
  * FearlessCMS through its documented Theme/Plugin API.
  */
 
-define('APP_VERSION', '0.1.4-3b');
+define('APP_VERSION', '0.1.5');
