@@ -19,6 +19,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($postAction) && $postAction =
         $template = $_POST['template'] ?? 'page-with-sidebar';
         $editorMode = $_POST['editor_mode'] ?? 'html';
 
+        if (empty($fileName) && !empty($pageTitle)) {
+            $fileName = fcms_create_slug($pageTitle);
+        }
+
         if (empty($fileName) || !preg_match('/^[a-zA-Z0-9_\-\/]+$/', $fileName)) {
             $error = 'Invalid filename';
         } else {
@@ -175,7 +179,91 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($postAction) && $postAction =
         }
         $themeOptions['social_links'] = $socialLinks;
 
+        $activeTheme = $themeManager->getActiveTheme();
+        $activeThemeConfigFile = THEMES_DIR . "/$activeTheme/config.json";
+        if (file_exists($activeThemeConfigFile)) {
+            $activeThemeConfig = json_decode(file_get_contents($activeThemeConfigFile), true);
+            $themeConfigOptions = $activeThemeConfig['options'] ?? [];
+            foreach ($themeConfigOptions as $optionKey => $option) {
+                if (!is_array($option)) continue;
+                $type = $option['type'] ?? 'text';
+                if ($type === 'image') continue;
+                
+                if ($type === 'checkbox' || $type === 'boolean') {
+                    $themeOptions[$optionKey] = isset($_POST[$optionKey]);
+                } else {
+                    $themeOptions[$optionKey] = $_POST[$optionKey] ?? ($option['default'] ?? '');
+                }
+            }
+        }
+
+        $uploadsDir = PROJECT_ROOT . '/uploads';
+        if (!is_dir($uploadsDir)) {
+            mkdir($uploadsDir, 0755, true);
+        }
+
+        if (isset($_POST['remove_logo']) && $_POST['remove_logo'] === '1') {
+            if (!empty($themeOptions['logo'])) {
+                $oldLogoPath = PROJECT_ROOT . '/' . $themeOptions['logo'];
+                if (file_exists($oldLogoPath)) {
+                    @unlink($oldLogoPath);
+                }
+            }
+            $themeOptions['logo'] = '';
+        }
+
+        if (isset($_FILES['logo']) && $_FILES['logo']['error'] !== UPLOAD_ERR_NO_FILE && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
+            if (!empty($themeOptions['logo'])) {
+                $oldLogoPath = PROJECT_ROOT . '/' . $themeOptions['logo'];
+                if (file_exists($oldLogoPath)) {
+                    @unlink($oldLogoPath);
+                }
+            }
+            $file = $_FILES['logo'];
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
+            if (in_array($ext, $allowed)) {
+                $filename = 'logo_' . time() . '.' . $ext;
+                $target = $uploadsDir . '/' . $filename;
+                if (move_uploaded_file($file['tmp_name'], $target)) {
+                    $themeOptions['logo'] = 'uploads/' . $filename;
+                }
+            }
+        }
+
+        if (isset($_POST['remove_herobanner']) && $_POST['remove_herobanner'] === '1') {
+            if (!empty($themeOptions['herobanner'])) {
+                $oldBannerPath = PROJECT_ROOT . '/' . $themeOptions['herobanner'];
+                if (file_exists($oldBannerPath)) {
+                    @unlink($oldBannerPath);
+                }
+            }
+            $themeOptions['herobanner'] = '';
+        }
+
+        if (isset($_FILES['herobanner']) && $_FILES['herobanner']['error'] !== UPLOAD_ERR_NO_FILE && $_FILES['herobanner']['error'] === UPLOAD_ERR_OK) {
+            if (!empty($themeOptions['herobanner'])) {
+                $oldBannerPath = PROJECT_ROOT . '/' . $themeOptions['herobanner'];
+                if (file_exists($oldBannerPath)) {
+                    @unlink($oldBannerPath);
+                }
+            }
+            $file = $_FILES['herobanner'];
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            if (in_array($ext, $allowed)) {
+                $filename = 'herobanner_' . time() . '.' . $ext;
+                $target = $uploadsDir . '/' . $filename;
+                if (move_uploaded_file($file['tmp_name'], $target)) {
+                    $themeOptions['herobanner'] = 'uploads/' . $filename;
+                }
+            }
+        }
+
         if (file_put_contents($themeOptionsFile, json_encode($themeOptions, JSON_PRETTY_PRINT))) {
+            if (isset($cacheManager) && method_exists($cacheManager, 'clearCache')) {
+                $cacheManager->clearCache();
+            }
             $success = 'Theme options updated successfully!';
         } else {
             $error = 'Failed to update theme options';

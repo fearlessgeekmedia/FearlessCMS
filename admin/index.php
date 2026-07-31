@@ -102,6 +102,15 @@ if (!$isDemoUser && isset($_SESSION['username']) && $_SESSION['username'] === 'd
 
 $countContentDir = $isDemoUser ? $demoManager->getDemoContentDir() : CONTENT_DIR;
 
+$homePagePath = 'home';
+$configFile = CONFIG_DIR . '/config.json';
+if (file_exists($configFile)) {
+    $config = json_decode(file_get_contents($configFile), true);
+    if (!empty($config['home_page'])) {
+        $homePagePath = $config['home_page'];
+    }
+}
+
 if (is_dir($countContentDir)) {
     // Glob for count
     $files = array_merge(glob($countContentDir . '/*.md'), glob($countContentDir . '/*.html'));
@@ -139,7 +148,8 @@ if (is_dir($countContentDir)) {
             $contentList[] = [
                 'title' => $title,
                 'path' => $path,
-                'modified' => date('Y-m-d H:i:s', $file->getMTime())
+                'modified' => date('Y-m-d H:i:s', $file->getMTime()),
+                'is_home_page' => ($path === $homePagePath)
             ];
         }
 

@@ -8,5 +8,6 @@
     "active_theme": "terminal",
     "update_repo_url": "https:\/\/github.com\/fearlessgeekmedia\/FearlessCMS.git",
     "update_branch": "main",
-    "favicon": "\/uploads\/fgm-favicon.ico"
+    "favicon": "\/uploads\/fgm-favicon.ico",
+    "home_page": "page2"
 }

@@ -61,6 +61,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         // Remove .md or .html if user included it
         $newPageFilename = preg_replace('/\\.(md|html)$/i', '', $newPageFilename);
 
+        // Auto-generate slug from title if user left slug field empty
+        if (empty($newPageFilename) && !empty($pageTitle)) {
+            $newPageFilename = fcms_create_slug($pageTitle);
+        }
+
         // If parent is set, prepend it
         if (!empty($parentPage)) {
             $newPageFilename = $parentPage . '/' . $newPageFilename;

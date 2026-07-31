@@ -33,17 +33,33 @@ $themes = $themeManager->getThemes();
             <input type="hidden" name="action" value="save_theme_options">
             <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
             <?php foreach ($themeOptionFields as $optionKey => $option):
-                if (!is_array($option) || ($option['type'] ?? '') !== 'image') continue;
+                if (!is_array($option)) continue;
+                $type = $option['type'] ?? 'text';
                 $label = $option['label'] ?? ucfirst($optionKey);
+                $value = $themeOptions[$optionKey] ?? $option['default'] ?? '';
             ?>
             <div>
                 <label class="block mb-1"><?php echo htmlspecialchars($label); ?></label>
+                <?php if ($type === 'image'): ?>
                 <div class="flex items-center space-x-4">
                     <?php if (!empty($themeOptions[$optionKey])): ?>
                     <img src="/<?php echo htmlspecialchars($themeOptions[$optionKey]); ?>" alt="Current <?php echo htmlspecialchars($label); ?>" class="h-12">
                     <?php endif; ?>
                     <input type="file" name="<?php echo htmlspecialchars($optionKey); ?>" accept="image/*" class="flex-1 px-3 py-2 border border-gray-300 rounded" id="file_<?php echo htmlspecialchars($optionKey); ?>">
                 </div>
+                <?php elseif ($type === 'checkbox' || $type === 'boolean'): ?>
+                <input type="checkbox" name="<?php echo htmlspecialchars($optionKey); ?>" value="1" <?php echo (!empty($value) || $value === true) ? 'checked' : ''; ?> class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500">
+                <?php elseif ($type === 'color'): ?>
+                <input type="color" name="<?php echo htmlspecialchars($optionKey); ?>" value="<?php echo htmlspecialchars($value); ?>" class="h-10 w-full px-3 py-2 border border-gray-300 rounded">
+                <?php elseif ($type === 'select'): ?>
+                <select name="<?php echo htmlspecialchars($optionKey); ?>" class="px-3 py-2 border border-gray-300 rounded">
+                    <?php foreach ($option['options'] ?? [] as $opt): ?>
+                    <option value="<?php echo htmlspecialchars($opt['value']); ?>" <?php echo $value == $opt['value'] ? 'selected' : ''; ?>><?php echo htmlspecialchars($opt['label']); ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <?php else: ?>
+                <input type="text" name="<?php echo htmlspecialchars($optionKey); ?>" value="<?php echo htmlspecialchars($value); ?>" class="px-3 py-2 border border-gray-300 rounded">
+                <?php endif; ?>
             </div>
             <?php endforeach; ?>
             <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Save Theme Options</button>

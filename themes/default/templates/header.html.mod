@@ -5,10 +5,12 @@
 <header class="site-header" role="banner">
   <div class="container header-inner">
     <a class="brand" href="/" aria-label="Go to {{site_name}} homepage">
+      {{#if themeOptions.showTitle}}
       {{#if themeOptions.logo}}
-        <img class="brand-logo" src="/{{themeOptions.logo}}" alt="{{site_name}} logo" aria-hidden="true">
+        <img class="brand-logo" src="/{{themeOptions.logo}}" alt="{{site_name}} logo" aria-hidden="true"{{#if themeOptions.logoSize}} style="height: {{themeOptions.logoSize}};"{{/if}}>
       {{/if}}
       <span class="brand-text">{{site_name}}</span>
+      {{/if}}
     </a>
     
     <!-- Accessibility controls -->

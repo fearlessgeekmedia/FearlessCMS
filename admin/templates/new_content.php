@@ -82,8 +82,8 @@ if (in_array('page-with-sidebar', $templates)) {
             </div>
             <div>
                 <label class="block mb-2 text-sm font-medium text-gray-700">URL Slug</label>
-                <input type="text" name="new_page_filename" required class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="page-url-slug">
-                <p class="text-xs text-gray-500 mt-1">Use lowercase letters, numbers, dashes, and underscores only</p>
+                <input type="text" name="new_page_filename" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="page-url-slug" id="newPageFilename">
+                <p class="text-xs text-gray-500 mt-1">Use lowercase letters, numbers, dashes, and underscores only. Leave blank to auto-generate from title.</p>
             </div>
         </div>
 
@@ -256,6 +256,10 @@ if (in_array('page-with-sidebar', $templates)) {
 let quill;
 let isRichMode = true;
 
+function generateSlugFromTitle(title) {
+    return fcms_create_slug(title);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Quill editor
     if (typeof Quill !== 'undefined') {
@@ -359,6 +363,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 isRichMode = true;
             }
         });
+
+        // Auto-generate slug from title if slug field is empty
+        const titleInput = document.querySelector('input[name="page_title"]');
+        const slugInput = document.getElementById('newPageFilename');
+        if (titleInput && slugInput) {
+            titleInput.addEventListener('input', function() {
+                if (!slugInput.value.trim()) {
+                    slugInput.value = generateSlugFromTitle(this.value);
+                }
+            });
+        }
 
     } else {
         console.error('Quill.js not loaded');

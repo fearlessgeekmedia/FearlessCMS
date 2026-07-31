@@ -154,6 +154,16 @@ function sanitize_input($input, $type = 'string') {
     }
 }
 
+function fcms_create_slug($text) {
+    $text = preg_replace('~[^\pL\d]+~u', '-', $text);
+    $text = preg_replace('~[^-\w]+~', '', $text);
+    $text = trim($text, '-');
+    $text = preg_replace('~-+~', '-', $text);
+    $text = strtolower($text);
+
+    return $text;
+}
+
 // Secure path validation functions
 function validate_file_path($path, $allowed_base_dir) {
     // Remove any null bytes

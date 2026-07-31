@@ -83,7 +83,7 @@ test('createDemoContentFile creates files in demo content dir', function () {
     $result = $this->demoModeManager->createDemoContentFile('test-page', 'Test Title', 'Test Content');
     expect($result)->toBeTrue();
     
-    $expectedPath = FCMS_TEST_DIR . '/demo_content/pages/test-page.md';
+    $expectedPath = FCMS_TEST_DIR . '/demo_content/pages/test-page.html';
     expect(file_exists($expectedPath))->toBeTrue();
     
     $content = file_get_contents($expectedPath);
@@ -100,17 +100,17 @@ test('cleanupDemoContent removes only session files', function () {
     
     // Simulate another session
     $otherSessionId = 'demo_other123';
-    $otherFile = FCMS_TEST_DIR . '/demo_content/pages/page2.md';
+    $otherFile = FCMS_TEST_DIR . '/demo_content/pages/page2.html';
     $otherContent = "<!-- json " . json_encode(['demo_content' => true, 'demo_session_id' => $otherSessionId]) . " -->Content 2";
     file_put_contents($otherFile, $otherContent);
     
-    expect(file_exists(FCMS_TEST_DIR . '/demo_content/pages/page1.md'))->toBeTrue();
+    expect(file_exists(FCMS_TEST_DIR . '/demo_content/pages/page1.html'))->toBeTrue();
     expect(file_exists($otherFile))->toBeTrue();
     
     $this->demoModeManager->cleanupDemoContent();
     
     // page1 should be gone, page2 should remain
-    expect(file_exists(FCMS_TEST_DIR . '/demo_content/pages/page1.md'))->toBeFalse();
+    expect(file_exists(FCMS_TEST_DIR . '/demo_content/pages/page1.html'))->toBeFalse();
     expect(file_exists($otherFile))->toBeTrue();
 });
 

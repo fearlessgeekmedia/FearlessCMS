@@ -110,6 +110,7 @@ $currentPageItems = array_slice($contentList, $offset, $itemsPerPage);
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Path</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Modified</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Home Page</th>
                     <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
             </thead>
@@ -127,6 +128,29 @@ $currentPageItems = array_slice($contentList, $offset, $itemsPerPage);
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <?php echo htmlspecialchars($item['modified']); ?>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <?php if ($item['is_home_page']): ?>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                <svg class="-ml-0.5 mr-1.5 h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                                </svg>
+                                Home Page
+                            </span>
+                            <form method="POST" class="inline-block ml-2" data-no-ajax="true">
+                                <input type="hidden" name="action" value="unset_home_page">
+                                <input type="hidden" name="path" value="<?php echo htmlspecialchars($item['path']); ?>">
+                                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(generate_csrf_token()); ?>">
+                                <button type="submit" class="text-xs text-red-600 hover:text-red-900">Unset</button>
+                            </form>
+                        <?php else: ?>
+                            <form method="POST" class="inline-block" data-no-ajax="true">
+                                <input type="hidden" name="action" value="set_home_page">
+                                <input type="hidden" name="path" value="<?php echo htmlspecialchars($item['path']); ?>">
+                                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(generate_csrf_token()); ?>">
+                                <button type="submit" class="text-xs text-indigo-600 hover:text-indigo-900">Set as Home</button>
+                            </form>
+                        <?php endif; ?>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div class="flex justify-end space-x-3">

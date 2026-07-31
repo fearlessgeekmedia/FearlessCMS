@@ -90,6 +90,16 @@ You have several options for content migration:
 - **Hybrid approach** - Use HTML for new content, keep Markdown for existing
 - **Automatic detection** - System automatically detects and handles both formats
 
+## URL Slug Management
+
+FearlessCMS automatically handles page URLs through a slug system tied to your content filenames:
+
+- **Auto-generation**: If you leave the slug field blank when creating or editing a page, the CMS generates a slug automatically from the page title
+- **Manual override**: You can type a custom slug at any time to override the auto-generated value
+- **Format**: Slugs use lowercase letters, numbers, dashes, and underscores
+- **Nested pages**: Use forward slashes to create subdirectory-style URLs, e.g. `blog/my-post`
+- **File renaming**: Changing a slug on an existing page renames the underlying content file automatically
+
 ## Feature Cards and Layout
 
 Both content types maintain all your existing layouts:

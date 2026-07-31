@@ -65,8 +65,19 @@ class Router {
         }
     }
 
+    public function getHomePagePath() {
+        $configFile = CONFIG_DIR . '/config.json';
+        if (file_exists($configFile)) {
+            $config = json_decode(file_get_contents($configFile), true);
+            if (!empty($config['home_page'])) {
+                return $config['home_page'];
+            }
+        }
+        return 'home';
+    }
+
     public function getRequestPath() {
-        return $this->requestPath === '' ? 'home' : $this->requestPath;
+        return $this->requestPath === '' ? $this->getHomePagePath() : $this->requestPath;
     }
 
     public function isPreviewRequest() {
@@ -168,11 +179,12 @@ class Router {
     }
 
     public function getDefaultPath() {
-        return $this->requestPath === '' ? 'home' : $this->requestPath;
+        return $this->requestPath === '' ? $this->getHomePagePath() : $this->requestPath;
     }
 
     public function getDefaultTemplate($path) {
-        return $path === 'home' ? 'home' : 'page-with-sidebar';
+        $homePage = $this->getHomePagePath();
+        return $path === $homePage ? 'home' : 'page-with-sidebar';
     }
 }
 ?>
