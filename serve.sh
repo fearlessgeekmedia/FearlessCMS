@@ -12,6 +12,7 @@ rm -f serve-log.tmp
 
 # set default port or use ENV variable
 port=${PORT:-8000}
+public=false
 update_test=false
 restore_backup=false
 
@@ -19,8 +20,21 @@ restore_backup=false
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         --port|-p) port="$2"; shift ;;
+        --public) public=true ;;
         --update-test) update_test=true ;;
         --restore-backup) restore_backup=true ;;
+        --help|-h)
+            echo "Usage: $0 [OPTIONS]"
+            echo ""
+            echo "Options:"
+            echo "  -p, --port PORT        Port number to serve on (default: 8000)"
+            echo "      --public           Bind to 0.0.0.0 instead of localhost (allows external access)"
+            echo "      --update-test      Enable update test mode"
+            echo "      --restore-backup   Restore the latest backup"
+            echo "  -h, --help             Show this help message"
+            exit 0
+            ;;
+        *) echo "Unknown option: $1"; exit 1 ;;
     esac
     shift
 done
@@ -72,8 +86,14 @@ else
     echo "Using custom PHP configuration from php-config/99-custom.ini"
 fi
 
-echo "Starting FearlessCMS server on http://localhost:$port..."
-php $php_config -S localhost:$port router.php > serve-log.tmp 2>&1 &
+if [ "$public" = true ]; then
+    address="0.0.0.0"
+else
+    address="localhost"
+fi
+
+echo "Starting FearlessCMS server on http://$address:$port..."
+php $php_config -S $address:$port router.php > serve-log.tmp 2>&1 &
 pid=$!
 
 echo "Server started with PID $pid"
