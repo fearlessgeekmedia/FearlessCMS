@@ -25,6 +25,25 @@ The export system crawls your running FearlessCMS site and downloads all HTML pa
 nix-shell -p php83 --run "export FCMS_DEBUG=true && ./serve.sh"
 ```
 
+For advanced usage, `serve.sh` supports several options:
+
+```bash
+# Public access (binds to 0.0.0.0, shows detected LAN IP)
+./serve.sh --public
+
+# Open browser automatically (runs on port 80 via sudo/doas)
+./serve.sh --public --open
+
+# Run on port 80 (no port in URL, requires sudo or doas)
+./serve.sh --public --http
+
+# Specify a hostname for the URL
+./serve.sh --public --open --hostname mysite.test
+
+# Custom port
+./serve.sh --public --port 8080
+```
+
 ### Installing wget (Recommended)
 
 **Ubuntu/Debian:**
@@ -98,7 +117,7 @@ You can customize the export process by editing the script variables:
 ```bash
 # In export-wget.sh or export-curl.sh
 EXPORT_DIR="export"           # Output directory
-BASE_URL="http://localhost:8000"  # Source URL
+BASE_URL="http://localhost:8000"  # Source URL (change if using --http or custom port)
 DEPTH=3                       # Crawl depth
 WAIT=1                        # Wait between requests (wget only)
 ```
@@ -232,6 +251,18 @@ jobs:
 - Ensure development server is running
 - Check if port 8000 is available
 - Verify firewall settings
+- If using `--public`, use the detected LAN IP instead of localhost
+
+**"Cannot connect to the displayed IP address"**
+- Verify both machines are on the same network
+- Check host firewall allows incoming connections on the server port
+- For `--http` (port 80), ensure no other service is using port 80
+- For `--public`, try accessing via the LAN IP shown in the terminal output
+
+**"Permission denied" when using `--http` or `--open`**
+- Ensure you have sudo/doas privileges
+- On Void Linux, ensure doas is configured if using `doas`
+- Check that the escalate command (sudo/doas) is available in PATH
 
 **Empty or incomplete exports**
 - Increase wait time between requests

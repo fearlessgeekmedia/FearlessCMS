@@ -55,15 +55,10 @@ Once in the nix-shell, you'll have access to these aliases:
 ```bash
 # PHP development server
 serve                    # Start PHP server on localhost:8000
-
-# Installation commands
-install-check           # Check environment status
-install-dirs            # Create required directories
-install-deps            # Install Node.js dependencies
-
-# Export functionality
-export-site             # Export static site
-npm install             # Install Node.js dependencies
+serve --public           # Bind to 0.0.0.0 and show detected LAN IP
+serve --public --open    # Public access + open browser on port 80
+serve --public --http    # Public access on port 80 (no port in URL)
+serve --hostname mysite.test  # Use a specific domain in the URL
 ```
 
 ## Environment Variables
