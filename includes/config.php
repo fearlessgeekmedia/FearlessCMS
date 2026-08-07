@@ -41,6 +41,36 @@
  * Core configuration file
  */
 
+// Load .env file if present
+if (!function_exists('load_env_file')) {
+    function load_env_file(string $path): void {
+        if (!is_file($path) || !is_readable($path)) {
+            return;
+        }
+        $lines = @file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if ($lines === false) {
+            return;
+        }
+        foreach ($lines as $line) {
+            $trimmed = trim($line);
+            if ($trimmed === '' || strpos($trimmed, '#') === 0) {
+                continue;
+            }
+            $parts = explode('=', $trimmed, 2);
+            if (count($parts) === 2) {
+                $key = trim($parts[0]);
+                $value = trim($parts[1]);
+                if ($key !== '' && getenv($key) === false) {
+                    putenv("$key=$value");
+                }
+            }
+        }
+    }
+}
+
+$envPath = dirname(__DIR__) . '/.env';
+load_env_file($envPath);
+
 // Get the document root and script filename
 $script_filename = $_SERVER['SCRIPT_FILENAME'];
 $document_root = $_SERVER['DOCUMENT_ROOT'];

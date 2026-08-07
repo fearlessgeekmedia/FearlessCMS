@@ -145,7 +145,7 @@ class SiteExporter {
             $files = new RecursiveIteratorIterator(
                 new RecursiveDirectoryIterator($contentDir, RecursiveDirectoryIterator::SKIP_DOTS)
             );
-            $files = new RegexIterator($files, '/\\.md$/');
+            $files = new RegexIterator($files, '/\.(md|html)$/');
             
             foreach ($files as $file) {
                 error_log("Export: Found content file: " . $file->getPathname());
@@ -155,9 +155,12 @@ class SiteExporter {
                 }
                 
                 $relativePath = str_replace($contentDir . '/', '', $file->getPathname());
-                $pathWithoutExt = substr($relativePath, 0, -3);
+                $pathWithoutExt = substr($relativePath, 0, -strlen($file->getExtension()));
                 
-                $this->exportPage($pathWithoutExt);
+                // Determine the URL path for this content file
+                $urlPath = $this->getContentUrlPath($contentDir . '/' . $relativePath);
+                
+                $this->exportPage($urlPath);
             }
         }
 
@@ -220,6 +223,28 @@ class SiteExporter {
         return false;
     }
 
+    private function getContentUrlPath($contentFile) {
+        $fileContent = file_get_contents($contentFile);
+        $parent = '';
+        
+        if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $fileContent, $matches)) {
+            $metadata = json_decode($matches[1], true);
+            if ($metadata && isset($metadata['parent'])) {
+                $parent = $metadata['parent'];
+            }
+        }
+        
+        $filename = basename($contentFile);
+        $nameWithoutExt = substr($filename, 0, -strlen(pathinfo($filename, PATHINFO_EXTENSION)) - 1);
+        
+        if ($parent) {
+            return $parent . '/' . $nameWithoutExt;
+        }
+        
+        $relativePath = str_replace(CONTENT_DIR . '/', '', $contentFile);
+        return substr($relativePath, 0, -strlen(pathinfo($filename, PATHINFO_EXTENSION)) - 1);
+    }
+    
     private function exportRssFeed() {
         if (function_exists('blog_generate_rss')) {
             $rss = blog_generate_rss();

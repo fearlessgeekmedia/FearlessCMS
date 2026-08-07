@@ -105,14 +105,55 @@ function check_rate_limit(string $action, int $max_attempts = 3, int $time_windo
     return true;
 }
 
+// Load .env file if present (for FCMS_CONFIG_DIR, FCMS_ADMIN_CONFIG_DIR, etc.)
+function load_env_file(string $path): void {
+    if (!is_file($path) || !is_readable($path)) {
+        return;
+    }
+    $lines = @file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if ($lines === false) {
+        return;
+    }
+    foreach ($lines as $line) {
+        $trimmed = trim($line);
+        if ($trimmed === '' || strpos($trimmed, '#') === 0) {
+            continue;
+        }
+        $parts = explode('=', $trimmed, 2);
+        if (count($parts) === 2) {
+            $key = trim($parts[0]);
+            $value = trim($parts[1]);
+            if ($key !== '' && getenv($key) === false) {
+                putenv("$key=$value");
+            }
+        }
+    }
+}
+
+load_env_file(__DIR__ . '/.env');
+
 // Minimal bootstrap for filesystem paths with validation
 $projectRoot = __DIR__;
 $CONFIG_DIR = getenv('FCMS_CONFIG_DIR') ?: ($projectRoot . '/config');
+$ADMIN_CONFIG_DIR = getenv('FCMS_ADMIN_CONFIG_DIR') ?: ($projectRoot . '/admin/config');
 
-// Validate CONFIG_DIR is within project root for security
-if (strpos(realpath($CONFIG_DIR), realpath($projectRoot)) !== 0) {
-    $CONFIG_DIR = $projectRoot . '/config';
+// Validate paths don't escape filesystem root
+function validate_path(string $path, string $fallback): string {
+    $normalized = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
+    $parts = explode(DIRECTORY_SEPARATOR, $normalized);
+    $depth = 0;
+    foreach ($parts as $part) {
+        if ($part === '..') {
+            $depth--;
+        } elseif ($part !== '') {
+            $depth++;
+        }
+    }
+    return $depth < 0 ? $fallback : $path;
 }
+
+$CONFIG_DIR = validate_path($CONFIG_DIR, $projectRoot . '/config');
+$ADMIN_CONFIG_DIR = validate_path($ADMIN_CONFIG_DIR, $projectRoot . '/admin/config');
 
 $ADMIN_UPLOADS_DIR = $projectRoot . '/admin/uploads';
 $UPLOADS_DIR = $projectRoot . '/uploads';
@@ -180,8 +221,15 @@ function run_cmd(array $cmd, ?string $cwd = null): array {
 
 // ── CLI MODE ──────────────────────────────────────────────────────────
 if (PHP_SAPI === 'cli') {
-    $options = getopt('', ['check', 'create-dirs', 'install-tailwind', 'install-dev-deps', 'create-admin:', 'password:', 'password-file:']);
+    $options = getopt('', ['check', 'create-dirs', 'install-tailwind', 'install-dev-deps', 'create-admin:', 'password:', 'password-file:', 'config-dir:', 'admin-config-dir:']);
     $exitCode = 0;
+
+    if (isset($options['config-dir'])) {
+        $CONFIG_DIR = $options['config-dir'];
+    }
+    if (isset($options['admin-config-dir'])) {
+        $ADMIN_CONFIG_DIR = $options['admin-config-dir'];
+    }
 
     if (isset($options['check'])) {
         echo "FearlessCMS Installer (CLI)\n";
@@ -321,7 +369,7 @@ if (PHP_SAPI === 'cli') {
     }
 
     if (empty($options)) {
-        echo "Usage: php install.php [--check] [--create-dirs] [--install-dev-deps] [--install-tailwind] [--create-admin=<username> --password=<pwd>|--password-file=<file>]\n";
+        echo "Usage: php install.php [--check] [--create-dirs] [--install-dev-deps] [--install-tailwind] [--create-admin=<username> --password=<pwd>|--password-file=<file>] [--config-dir=<path>] [--admin-config-dir=<path>]\n";
     }
 
     echo "\n⚠️  SECURITY WARNING: After installation, delete this file!\n";
@@ -347,6 +395,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !validate_csrf_token()) {
 }
 
 // ── Handle POST actions ──
+
+if ($action === 'configure_dirs') {
+    $newConfigDir = trim($_POST['config_dir'] ?? '');
+    $newAdminConfigDir = trim($_POST['admin_config_dir'] ?? '');
+
+    $envPath = $projectRoot . '/.env';
+    $envData = [];
+    if (file_exists($envPath)) {
+        $lines = @file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if ($lines !== false) {
+            foreach ($lines as $line) {
+                $trimmed = trim($line);
+                if ($trimmed === '' || strpos($trimmed, '#') === 0) continue;
+                $parts = explode('=', $trimmed, 2);
+                if (count($parts) === 2) {
+                    $envData[trim($parts[0])] = trim($parts[1]);
+                }
+            }
+        }
+    }
+
+    if ($newConfigDir !== '' && $newConfigDir !== $projectRoot . '/config') {
+        if (validate_path($newConfigDir, $projectRoot . '/config') !== $newConfigDir) {
+            $errorMessages[] = 'Invalid config directory path.';
+        } else {
+            $envData['FCMS_CONFIG_DIR'] = $newConfigDir;
+        }
+    } else {
+        unset($envData['FCMS_CONFIG_DIR']);
+    }
+
+    if ($newAdminConfigDir !== '' && $newAdminConfigDir !== $projectRoot . '/admin/config') {
+        if (validate_path($newAdminConfigDir, $projectRoot . '/admin/config') !== $newAdminConfigDir) {
+            $errorMessages[] = 'Invalid admin config directory path.';
+        } else {
+            $envData['FCMS_ADMIN_CONFIG_DIR'] = $newAdminConfigDir;
+        }
+    } else {
+        unset($envData['FCMS_ADMIN_CONFIG_DIR']);
+    }
+
+    if (empty($errorMessages)) {
+        $envContent = '';
+        foreach ($envData as $key => $value) {
+            $envContent .= $key . '=' . $value . "\n";
+        }
+        if (file_put_contents($envPath, $envContent) !== false) {
+            $resultMessages[] = 'Custom config directory configuration saved to .env.';
+            load_env_file($envPath);
+            $CONFIG_DIR = getenv('FCMS_CONFIG_DIR') ?: ($projectRoot . '/config');
+            $ADMIN_CONFIG_DIR = getenv('FCMS_ADMIN_CONFIG_DIR') ?: ($projectRoot . '/admin/config');
+            $CONFIG_DIR = validate_path($CONFIG_DIR, $projectRoot . '/config');
+            $ADMIN_CONFIG_DIR = validate_path($ADMIN_CONFIG_DIR, $projectRoot . '/admin/config');
+        } else {
+            $errorMessages[] = 'Failed to write .env file.';
+        }
+    }
+}
 
 if ($action === 'create_dirs') {
     $dirs = [$CONFIG_DIR, $ADMIN_UPLOADS_DIR, $UPLOADS_DIR, $CONTENT_DIR, $SESSIONS_DIR, $CACHE_DIR, $BACKUPS_DIR, $UPDATES_DIR, $projectRoot . '/public/css'];
@@ -928,6 +1034,34 @@ $steps = [
 
     <?php elseif ($step === 2): // ── STEP 2: Directories ── ?>
         <h2>Directories &amp; Permissions</h2>
+
+        <div style="margin-bottom: 1.5rem; padding: 1rem; background: #0f172a; border-radius: 8px; border: 1px solid #334155;">
+            <h3 style="font-size: 0.95rem; font-weight: 600; color: #e2e8f0; margin-bottom: 0.75rem;">
+                Advanced: Custom Config Directory
+            </h3>
+            <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 1rem; line-height: 1.5;">
+                For enhanced security, store config files outside the web root. Leave blank to use the default locations inside the project.
+            </p>
+            <form method="POST" action="?step=2">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+                <input type="hidden" name="action" value="configure_dirs">
+                <div class="form-group">
+                    <label for="config_dir">Config Directory (CONFIG_DIR)</label>
+                    <input type="text" id="config_dir" name="config_dir"
+                           value="<?php echo htmlspecialchars(getenv('FCMS_CONFIG_DIR') ?: ($projectRoot . '/config')); ?>"
+                           placeholder="/etc/fearlesscms-config"
+                           style="font-family: 'Fira Code', monospace; font-size: 0.85rem;">
+                </div>
+                <div class="form-group">
+                    <label for="admin_config_dir">Admin Config Directory (ADMIN_CONFIG_DIR)</label>
+                    <input type="text" id="admin_config_dir" name="admin_config_dir"
+                           value="<?php echo htmlspecialchars(getenv('FCMS_ADMIN_CONFIG_DIR') ?: ($projectRoot . '/admin/config')); ?>"
+                           placeholder="/etc/fearlesscms-admin-config"
+                           style="font-family: 'Fira Code', monospace; font-size: 0.85rem;">
+                </div>
+                <button type="submit" class="btn btn-secondary">Save Configuration</button>
+            </form>
+        </div>
 
         <?php foreach ($directories as $d): ?>
             <div class="dir-item">
