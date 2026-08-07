@@ -56,8 +56,8 @@ Once in the nix-shell, you'll have access to these aliases:
 # PHP development server
 serve                    # Start PHP server on localhost:8000
 serve --public           # Bind to 0.0.0.0 and show detected LAN IP
-serve --public --open    # Public access + open browser on port 80
-serve --public --http    # Public access on port 80 (no port in URL)
+serve --open             # Run on port 80, no port in URL
+serve --public --open    # Public access on port 80, no port in URL
 serve --hostname mysite.test  # Use a specific domain in the URL
 ```
 

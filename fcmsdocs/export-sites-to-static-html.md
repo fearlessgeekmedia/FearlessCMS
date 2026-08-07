@@ -31,11 +31,11 @@ For advanced usage, `serve.sh` supports several options:
 # Public access (binds to 0.0.0.0, shows detected LAN IP)
 ./serve.sh --public
 
-# Open browser automatically (runs on port 80 via sudo/doas)
-./serve.sh --public --open
+# Run without port number in URL (port 80, requires sudo or doas)
+./serve.sh --open
 
-# Run on port 80 (no port in URL, requires sudo or doas)
-./serve.sh --public --http
+# Public + no port number
+./serve.sh --public --open
 
 # Specify a hostname for the URL
 ./serve.sh --public --open --hostname mysite.test
@@ -117,7 +117,7 @@ You can customize the export process by editing the script variables:
 ```bash
 # In export-wget.sh or export-curl.sh
 EXPORT_DIR="export"           # Output directory
-BASE_URL="http://localhost:8000"  # Source URL (change if using --http or custom port)
+BASE_URL="http://localhost:8000"  # Source URL (change if using --open or custom port)
 DEPTH=3                       # Crawl depth
 WAIT=1                        # Wait between requests (wget only)
 ```
@@ -256,10 +256,10 @@ jobs:
 **"Cannot connect to the displayed IP address"**
 - Verify both machines are on the same network
 - Check host firewall allows incoming connections on the server port
-- For `--http` (port 80), ensure no other service is using port 80
+- For `--open` (port 80), ensure no other service is using port 80
 - For `--public`, try accessing via the LAN IP shown in the terminal output
 
-**"Permission denied" when using `--http` or `--open`**
+**"Permission denied" when using `--open`**
 - Ensure you have sudo/doas privileges
 - On Void Linux, ensure doas is configured if using `doas`
 - Check that the escalate command (sudo/doas) is available in PATH
