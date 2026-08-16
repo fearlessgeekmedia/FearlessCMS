@@ -2,9 +2,6 @@
 <img src="https://3ofrpz7mhw.ufs.sh/f/9h8vN5CCYibJCfOnkrzL5RTenxN0PakwUA41YgmtJo8ZrK7C" alt="FearlessCMS Logo" style="width:200px"></img>
 </p>
 
-# Note: Funding Required for FearlessCMS Development to Continue 
-More at <a href="https://ko-fi.com/post/Funding-Required-For-FearelessCMS-Development-To-C-D1D31IVNKP" target="_blank">Ko-Fi</a>.
-
 Welcome to FearlessCMS, a new content management system centered around simplicity and respect for the open source community. The project is currently in beta testing stages, so while it is becoming more robust, please report any issues you find.
 
 ## ✍️ HTML Editing with Markdown Support
