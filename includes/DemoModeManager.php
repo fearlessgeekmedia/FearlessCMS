@@ -520,23 +520,9 @@ class DemoModeManager {
         
         $originalCount = count($posts);
         
-        // Remove posts that appear to be demo content (based on titles/content patterns)
+        // Remove posts explicitly marked as demo posts
         $posts = array_filter($posts, function($post) {
-            $title = strtolower($post['title'] ?? '');
-            $content = strtolower($post['content'] ?? '');
-            
-            // Remove posts with demo/test indicators
-            $demoPatterns = [
-                'demo', 'test', 'no post', 'not a post', 'should not work', 'hopefully be deleted'
-            ];
-            
-            foreach ($demoPatterns as $pattern) {
-                if (strpos($title, $pattern) !== false || strpos($content, $pattern) !== false) {
-                    return false;
-                }
-            }
-            
-            return true;
+            return !(isset($post['demo_post']) && $post['demo_post']);
         });
         
         // Save cleaned posts back to file

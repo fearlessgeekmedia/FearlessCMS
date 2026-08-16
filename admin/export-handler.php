@@ -356,7 +356,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 session_start();
             }
             $_SESSION['success'] = "Site exported successfully! " . $stats['html'] . " pages, " . $stats['assets'] . " assets.";
-            header('Location: /admin/?action=dashboard');
+            header('Location: /' . ($adminPath ?? 'admin') . '/?action=dashboard');
         }
     } catch (Exception $e) {
         error_log('Export error: ' . $e->getMessage());

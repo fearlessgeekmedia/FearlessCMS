@@ -73,6 +73,27 @@ require_once PROJECT_ROOT . '/includes/Router.php';
 require_once PROJECT_ROOT . '/includes/ContentLoader.php';
 require_once PROJECT_ROOT . '/includes/PageRenderer.php';
 
+// Admin front-controller routing: handle admin paths dynamically via config
+$adminPath = $config['admin_path'] ?? 'admin';
+$requestPath = trim($_SERVER['REQUEST_URI'], '/');
+
+if (strpos($requestPath, $adminPath) === 0) {
+    $adminSegment = substr($requestPath, strlen($adminPath));
+    $adminSegment = trim($adminSegment, '/');
+
+    if ($adminSegment === 'login' || $adminSegment === '') {
+        require_once PROJECT_ROOT . '/admin/login.php';
+        exit;
+    } elseif ($adminSegment === 'logout') {
+        require_once PROJECT_ROOT . '/admin/logout.php';
+        exit;
+    } else {
+        $_GET['action'] = $adminSegment ?: 'dashboard';
+        require_once PROJECT_ROOT . '/admin/index.php';
+        exit;
+    }
+}
+
 // Check for demo mode session and handle demo content
 require_once PROJECT_ROOT . '/includes/DemoModeManager.php';
 $demoManager = new DemoModeManager();
@@ -89,7 +110,7 @@ if ($demoManager->isDemoSession() || $demoManager->isDemoUserSession()) {
     if ($demoManager->isDemoSessionExpired()) {
         $demoManager->endDemoSession();
         // Redirect to login with demo expired message
-        header('Location: /admin/login?demo_expired=1');
+        header('Location: /' . $adminPath . '/login?demo_expired=1');
         exit;
     }
 }
