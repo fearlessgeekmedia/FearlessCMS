@@ -40,6 +40,9 @@
 // Router for PHP development server
 $uri = urldecode(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
 
+$uri = preg_replace('#/\./#', '/', $uri);
+$uri = preg_replace('#/{2,}#', '/', $uri);
+
 // Load config to get admin path
 $configFile = __DIR__ . '/config/config.json';
 $config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
