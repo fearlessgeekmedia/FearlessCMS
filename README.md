@@ -1,3 +1,7 @@
+<h1>FearlessCMS is being discontinued, but the code will be used in a new project, FearlessGen Static Site Generator.</h1>
+
+If you'd like to see this live on as a CMS, feel free to fork it. 
+
 <p style="width: 100%; text-align:center">
 <img src="https://3ofrpz7mhw.ufs.sh/f/9h8vN5CCYibJCfOnkrzL5RTenxN0PakwUA41YgmtJo8ZrK7C" alt="FearlessCMS Logo" style="width:200px"></img>
 </p>
