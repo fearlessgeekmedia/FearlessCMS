@@ -1,4 +1,42 @@
 <?php
+
+/**
+ * FearlessCMS
+ *
+ * Copyright (C) 2026 FearlessCMS
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/**
+ * As a special exception to the GNU General Public License version 2
+ * ("GPL"), the copyright holder(s) of FearlessCMS give you permission
+ * to link, load, or combine this software with independent modules
+ * ("Themes" and "Plugins") that are not derived from or based on this
+ * software, regardless of the license terms of those Themes or
+ * Plugins, including proprietary or commercial licenses, and to
+ * convey the resulting combination under terms of your choice,
+ * provided that you also convey the corresponding source code of the
+ * FearlessCMS portions under the terms of the GPL.
+ *
+ * This exception does not affect any of your obligations under the
+ * GPL with respect to the FearlessCMS core software itself, and it
+ * does not extend to modifications of FearlessCMS core files — only
+ * to independent Theme and Plugin modules that interact with
+ * FearlessCMS through its documented Theme/Plugin API.
+ */
+
 /**
  * FearlessCMS Pure PHP Export Handler
  * Exports the site to a static HTML directory without shell scripts
@@ -107,7 +145,7 @@ class SiteExporter {
             $files = new RecursiveIteratorIterator(
                 new RecursiveDirectoryIterator($contentDir, RecursiveDirectoryIterator::SKIP_DOTS)
             );
-            $files = new RegexIterator($files, '/\\.md$/');
+            $files = new RegexIterator($files, '/\.(md|html)$/');
             
             foreach ($files as $file) {
                 error_log("Export: Found content file: " . $file->getPathname());
@@ -117,9 +155,12 @@ class SiteExporter {
                 }
                 
                 $relativePath = str_replace($contentDir . '/', '', $file->getPathname());
-                $pathWithoutExt = substr($relativePath, 0, -3);
+                $pathWithoutExt = substr($relativePath, 0, -strlen($file->getExtension()));
                 
-                $this->exportPage($pathWithoutExt);
+                // Determine the URL path for this content file
+                $urlPath = $this->getContentUrlPath($contentDir . '/' . $relativePath);
+                
+                $this->exportPage($urlPath);
             }
         }
 
@@ -182,6 +223,28 @@ class SiteExporter {
         return false;
     }
 
+    private function getContentUrlPath($contentFile) {
+        $fileContent = file_get_contents($contentFile);
+        $parent = '';
+        
+        if (preg_match('/^<!--\s*json\s*(.*?)\s*-->/s', $fileContent, $matches)) {
+            $metadata = json_decode($matches[1], true);
+            if ($metadata && isset($metadata['parent'])) {
+                $parent = $metadata['parent'];
+            }
+        }
+        
+        $filename = basename($contentFile);
+        $nameWithoutExt = substr($filename, 0, -strlen(pathinfo($filename, PATHINFO_EXTENSION)) - 1);
+        
+        if ($parent) {
+            return $parent . '/' . $nameWithoutExt;
+        }
+        
+        $relativePath = str_replace(CONTENT_DIR . '/', '', $contentFile);
+        return substr($relativePath, 0, -strlen(pathinfo($filename, PATHINFO_EXTENSION)) - 1);
+    }
+    
     private function exportRssFeed() {
         if (function_exists('blog_generate_rss')) {
             $rss = blog_generate_rss();
@@ -293,7 +356,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 session_start();
             }
             $_SESSION['success'] = "Site exported successfully! " . $stats['html'] . " pages, " . $stats['assets'] . " assets.";
-            header('Location: /admin/?action=dashboard');
+            header('Location: /' . ($adminPath ?? 'admin') . '/?action=dashboard');
         }
     } catch (Exception $e) {
         error_log('Export error: ' . $e->getMessage());

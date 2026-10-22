@@ -22,6 +22,7 @@ BETA_ROADMAP_SUMMARY.md
 IMPLEMENTATION_GUIDE_TIER1.md
 BETA_LAUNCH_CHECKLIST.md
 ANALYSIS_INDEX.md
+AGENTS.md
 
 # Sandbox and development directories
 sandbox_home/
@@ -41,3 +42,9 @@ plugins/mariadb-connector/
 plugins/parallax/
 plugins/seo/
 plugins/wordpress-import/
+
+
+CRUSH.md
+UPDATER_CSRF_FIX.md
+corporate_sponsorship_pitch.txt
+config/users.json

@@ -1,0 +1,137 @@
+<?php
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_site_settings') {
+    // Validate CSRF token
+    if (!function_exists('validate_csrf_token') || !validate_csrf_token()) {
+        $error_message = 'Invalid security token. Please refresh the page and try again.';
+    } else {
+        // Load current config
+        $configFile = CONFIG_DIR . '/config.json';
+        $config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
+        
+        // Update settings
+        $config['site_name'] = trim($_POST['site_name'] ?? '');
+        $config['site_description'] = trim($_POST['site_description'] ?? '');
+        $config['site_url'] = trim($_POST['site_url'] ?? '');
+        
+        // Ensure site_url doesn't end with a slash
+        $config['site_url'] = rtrim($config['site_url'], '/');
+        
+        // Save config
+        if (file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT))) {
+            $success_message = 'Site settings saved successfully!';
+        } else {
+            $error_message = 'Failed to save site settings. Please check file permissions.';
+        }
+    }
+}
+
+// Load current settings
+$configFile = CONFIG_DIR . '/config.json';
+$config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
+
+$site_name = $config['site_name'] ?? '';
+$site_description = $config['site_description'] ?? '';
+$site_url = $config['site_url'] ?? '';
+?>
+
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-8">Site Settings</h1>
+    
+    <?php if (isset($success_message)): ?>
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
+            <?= htmlspecialchars($success_message) ?>
+        </div>
+    <?php endif; ?>
+    
+    <?php if (isset($error_message)): ?>
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+            <?= htmlspecialchars($error_message) ?>
+        </div>
+    <?php endif; ?>
+    
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <form method="POST" class="space-y-6">
+            <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
+            <input type="hidden" name="action" value="save_site_settings">
+            
+            <div>
+                <label for="site_name" class="block text-sm font-medium text-gray-700 mb-2">
+                    Site Name
+                </label>
+                <input type="text" 
+                       id="site_name" 
+                       name="site_name" 
+                       value="<?= htmlspecialchars($site_name) ?>" 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                       placeholder="Your Site Name">
+                <p class="text-sm text-gray-500 mt-1">
+                    The name of your website (used in titles, RSS feeds, and meta tags)
+                </p>
+            </div>
+            
+            <div>
+                <label for="site_description" class="block text-sm font-medium text-gray-700 mb-2">
+                    Site Tagline/Description
+                </label>
+                <textarea id="site_description" 
+                          name="site_description" 
+                          rows="3" 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="A brief description of your website"><?= htmlspecialchars($site_description) ?></textarea>
+                <p class="text-sm text-gray-500 mt-1">
+                    A short description of your website (used in meta tags and RSS feeds)
+                </p>
+            </div>
+            
+            <div>
+                <label for="site_url" class="block text-sm font-medium text-gray-700 mb-2">
+                    Site URL
+                </label>
+                <input type="url" 
+                       id="site_url" 
+                       name="site_url" 
+                       value="<?= htmlspecialchars($site_url) ?>" 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                       placeholder="https://yourdomain.com">
+                <p class="text-sm text-gray-500 mt-1">
+                    The full URL of your website (used in RSS feeds, sitemaps, and structured data)
+                </p>
+            </div>
+            
+            <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
+                <h3 class="text-sm font-medium text-blue-800 mb-2">Important Notes:</h3>
+                <ul class="text-sm text-blue-700 space-y-1">
+                    <li>• The Site URL should be the full domain (e.g., https://fearlesscms.online)</li>
+                    <li>• This URL is used in RSS feeds, sitemaps, and other generated content</li>
+                    <li>• Changes to these settings will affect how your site appears in search engines and RSS readers</li>
+                </ul>
+            </div>
+            
+            <div class="flex justify-end">
+                <button type="submit" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Save Settings
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <div class="mt-8 bg-gray-50 rounded-lg p-6">
+        <h2 class="text-xl font-semibold mb-4">Current Configuration</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <h3 class="font-medium text-gray-700">Site Name:</h3>
+                <p class="text-gray-900"><?= htmlspecialchars($site_name ?: 'Not set') ?></p>
+            </div>
+            <div>
+                <h3 class="font-medium text-gray-700">Site URL:</h3>
+                <p class="text-gray-900"><?= htmlspecialchars($site_url ?: 'Not set') ?></p>
+            </div>
+            <div class="md:col-span-2">
+                <h3 class="font-medium text-gray-700">Site Description:</h3>
+                <p class="text-gray-900"><?= htmlspecialchars($site_description ?: 'Not set') ?></p>
+            </div>
+        </div>
+    </div>
+</div> 

@@ -165,8 +165,18 @@ Choose from available themes or create your own:
 
 ### 4. Create Your First Content
 - Use the Content Editor to create pages
-- Add navigation menus
-- Configure site settings
+- Enter a **Title** for your page
+- The **URL Slug** field auto-generates from the title if left blank
+  - If you prefer a custom URL, type it manually into the slug field
+  - Slugs may contain lowercase letters, numbers, dashes, and underscores
+  - To create nested pages, use slashes, e.g. `blog/my-post`
+- Select a **Template** and choose a **Parent Page** if needed
+- Add navigation menus and configure site settings
+
+### 5. Set Your Home Page
+- Go to **Content Management** in the admin panel
+- Click **Set as Home** on any page to make it the site's home page
+- The home page is stored in `config/config.json` under `home_page`
 
 ## 🔧 Configuration
 

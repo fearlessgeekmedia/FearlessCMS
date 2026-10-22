@@ -410,6 +410,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Shared initial content (metadata already stripped in PHP)
     const initialContent = <?php echo json_encode($contentWithoutMetadata, JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>;
+    const originalPath = <?php echo json_encode($path); ?>;
+
+    function generateSlugFromTitle(title) {
+        return fcms_create_slug(title);
+    }
 
     function setContentType(mode) {
         editorModeInput.value = mode;
@@ -537,6 +542,17 @@ document.addEventListener('DOMContentLoaded', function() {
             setContentType(currentMode === 'html' ? 'markdown' : 'html');
         }
     });
+
+    // Auto-generate slug from title if slug field is empty or matches original path
+    const editTitleInput = document.querySelector('input[name="title"]');
+    const editSlugInput = document.querySelector('input[name="new_slug"]');
+    if (editTitleInput && editSlugInput) {
+        editTitleInput.addEventListener('input', function() {
+            if (!editSlugInput.value.trim() || editSlugInput.value.trim() === originalPath) {
+                editSlugInput.value = generateSlugFromTitle(this.value);
+            }
+        });
+    }
 
     // Update hidden input before form submission (handle both modes)
     document.getElementById('editForm').addEventListener('submit', function() {

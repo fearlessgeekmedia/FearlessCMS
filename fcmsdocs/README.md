@@ -18,6 +18,7 @@ Welcome to the FearlessCMS documentation. Here you will find guides and referenc
 - [Content Editing](content-editing.md)
 - [Menu Editor](menueditor.md)
 - [Sidebars and Widgets](sidebars-widgets.md)
+- [Home Page Configuration](home-page-configuration.md) - Set any page as your site's home page
 
 ### Development Guides
 - [Theme Development](theme-development-index.md)
@@ -35,6 +36,14 @@ Welcome to the FearlessCMS documentation. Here you will find guides and referenc
 - [Development Roadmap](devroadmap.md)
 
 ## 🆕 Recent Updates
+
+### Home Page Configuration
+FearlessCMS now supports designating any content page as the site's home page:
+
+- **Set any page as home** - Use the Content Management admin panel to mark a page as the home page
+- **Automatic cleanup** - Deleting the home page automatically clears the setting
+- **Config-driven** - Stored in `config/config.json` under `home_page`
+- **Fallback behavior** - Reverts to `content/home.md` when unset
 
 ### HTML Editing with Markdown Support (Latest)
 FearlessCMS now features **HTML content creation** with **Markdown content compatibility**:

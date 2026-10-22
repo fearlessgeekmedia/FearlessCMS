@@ -79,11 +79,18 @@ function blog_save_posts($posts) {
     }
 
     $json = json_encode($posts, JSON_PRETTY_PRINT);
+    if ($json === false) {
+        error_log("Blog plugin - JSON encoding failed: " . json_last_error_msg());
+        return false;
+    }
     if (getenv('FCMS_DEBUG') === 'true') {
         error_log("Blog plugin - JSON to write: " . $json);
     }
 
     $result = file_put_contents(BLOG_POSTS_FILE, $json);
+    if ($result === false) {
+        error_log("Blog plugin - File write failed for: " . BLOG_POSTS_FILE);
+    }
     if (getenv('FCMS_DEBUG') === 'true') {
         error_log("Blog plugin - Save result: " . ($result !== false ? "success" : "failed"));
     }
@@ -304,6 +311,11 @@ fcms_register_admin_section('blog', [
                             $posts[] = $newPost;
                         }
                         blog_save_posts($posts);
+                        
+                        if (isset($GLOBALS['cacheManager']) && method_exists($GLOBALS['cacheManager'], 'clearCache')) {
+                            $GLOBALS['cacheManager']->clearCache();
+                        }
+                        
                         // Set success message in session and let admin system handle the flow
                         if (getenv('FCMS_DEBUG') === 'true') {
                             error_log("Blog plugin - Post saved successfully");
@@ -317,6 +329,10 @@ fcms_register_admin_section('blog', [
                         echo '<script>window.location.href = "?action=blog";</script>';
                         return ob_get_clean();
                     } else {
+                        if (function_exists('session_start') && session_status() === PHP_SESSION_NONE) {
+                            session_start();
+                        }
+                        $_SESSION['blog_error'] = 'Title and slug are required to save a blog post.';
                         if (getenv('FCMS_DEBUG') === 'true') {
                             error_log("Blog plugin - Invalid title or slug, skipping save");
                         }
@@ -324,6 +340,11 @@ fcms_register_admin_section('blog', [
                 } elseif (isset($_POST['action']) && $_POST['action'] === 'delete_post' && isset($_POST['id'])) {
                     $posts = array_filter($posts, fn($p) => $p['id'] != $_POST['id']);
                     blog_save_posts($posts);
+                    
+                    if (isset($GLOBALS['cacheManager']) && method_exists($GLOBALS['cacheManager'], 'clearCache')) {
+                        $GLOBALS['cacheManager']->clearCache();
+                    }
+                    
                     // Set success message in session and let admin system handle the flow
                     if (getenv('FCMS_DEBUG') === 'true') {
                         error_log("Blog plugin - Post deleted successfully");
@@ -349,6 +370,10 @@ fcms_register_admin_section('blog', [
         if (isset($_SESSION['blog_deleted'])) {
             echo '<div class="bg-blue-100 text-blue-700 p-4 rounded mb-4">' . htmlspecialchars($_SESSION['blog_deleted']) . '</div>';
             unset($_SESSION['blog_deleted']);
+        }
+        if (isset($_SESSION['blog_error'])) {
+            echo '<div class="bg-red-100 text-red-700 p-4 rounded mb-4">' . htmlspecialchars($_SESSION['blog_error']) . '</div>';
+            unset($_SESSION['blog_error']);
         }
         
         echo '<a href="?action=blog&new=1" class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600">New Post</a><br><br>';

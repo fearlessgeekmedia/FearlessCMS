@@ -1,4 +1,42 @@
 <?php
+
+/**
+ * FearlessCMS
+ *
+ * Copyright (C) 2026 FearlessCMS
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+/**
+ * As a special exception to the GNU General Public License version 2
+ * ("GPL"), the copyright holder(s) of FearlessCMS give you permission
+ * to link, load, or combine this software with independent modules
+ * ("Themes" and "Plugins") that are not derived from or based on this
+ * software, regardless of the license terms of those Themes or
+ * Plugins, including proprietary or commercial licenses, and to
+ * convey the resulting combination under terms of your choice,
+ * provided that you also convey the corresponding source code of the
+ * FearlessCMS portions under the terms of the GPL.
+ *
+ * This exception does not affect any of your obligations under the
+ * GPL with respect to the FearlessCMS core software itself, and it
+ * does not extend to modifications of FearlessCMS core files — only
+ * to independent Theme and Plugin modules that interact with
+ * FearlessCMS through its documented Theme/Plugin API.
+ */
+
 /**
  * Router class for handling URL routing and plugin integration
  */
@@ -27,8 +65,19 @@ class Router {
         }
     }
 
+    public function getHomePagePath() {
+        $configFile = CONFIG_DIR . '/config.json';
+        if (file_exists($configFile)) {
+            $config = json_decode(file_get_contents($configFile), true);
+            if (!empty($config['home_page'])) {
+                return $config['home_page'];
+            }
+        }
+        return 'home';
+    }
+
     public function getRequestPath() {
-        return $this->requestPath === '' ? 'home' : $this->requestPath;
+        return $this->requestPath === '' ? $this->getHomePagePath() : $this->requestPath;
     }
 
     public function isPreviewRequest() {
@@ -130,11 +179,12 @@ class Router {
     }
 
     public function getDefaultPath() {
-        return $this->requestPath === '' ? 'home' : $this->requestPath;
+        return $this->requestPath === '' ? $this->getHomePagePath() : $this->requestPath;
     }
 
     public function getDefaultTemplate($path) {
-        return $path === 'home' ? 'home' : 'page-with-sidebar';
+        $homePage = $this->getHomePagePath();
+        return $path === $homePage ? 'home' : 'page-with-sidebar';
     }
 }
 ?>

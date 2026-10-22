@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission Control - Plugin Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code&display=swap" rel="stylesheet">
+    <style>
+        .fira-code { font-family: 'Fira Code', monospace; }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <nav class="bg-green-600 text-white p-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <h1 class="text-xl font-bold fira-code"><a href="admin">Mission Control</a></h1>
+                <span class="text-sm">Welcome, {{username}}</span>
+                <a href="/" target="_blank">Your site</a>
+            </div>
+            <div class="flex items-center space-x-4">
+                <a href="?action=manage_users" class="hover:text-green-200">Users</a>
+                <a href="?action=files" class="hover:text-green-200">Files</a>
+                <a href="?action=manage_themes" class="hover:text-green-200">Themes</a>
+                <a href="?action=manage_menus" class="hover:text-green-200">Menus</a>
+                <a href="?action=manage_widgets" class="hover:text-green-200">Widgets</a>
+                <a href="?action=manage_plugins" class="hover:text-green-200">Plugins</a>
+                {{plugin_nav_items}}
+                <a href="?action=logout" class="hover:text-green-200">Logout</a>
+            </div>
+        </div>
+    </nav>
+    {{error}}
+    {{success}}
+
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-2xl font-bold mb-6 fira-code">Plugin Management</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {{#plugins}}
+                <div class="border rounded-lg p-4 {{#active}}ring-2 ring-green-500{{/active}}">
+                    <h3 class="text-lg font-medium mb-2">{{name}}</h3>
+                    <p class="text-sm text-gray-600 mb-4">{{description}}</p>
+                    <div class="text-sm text-gray-500 mb-4">
+                        <p>Version: {{version}}</p>
+                        <p>Author: {{author}}</p>
+                    </div>
+                    {{#active}}
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">Active</span>
+                    <form method="POST" action="">
+                        <input type="hidden" name="action" value="toggle_plugin" />
+                        <input type="hidden" name="plugin_name" value="{{id}}" />
+                        <input type="hidden" name="active" value="false" />
+                        <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 mt-2">Deactivate</button>
+                    </form>
+                    {{/active}}
+                    {{^active}}
+                    <form method="POST" action="">
+                        <input type="hidden" name="action" value="toggle_plugin" />
+                        <input type="hidden" name="plugin_name" value="{{id}}" />
+                        <input type="hidden" name="active" value="true" />
+                        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Activate</button>
+                    </form>
+                    {{/active}}
+                </div>
+                {{/plugins}}
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

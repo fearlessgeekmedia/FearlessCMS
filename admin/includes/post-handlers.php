@@ -108,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $_SESSION['error'] = 'Failed to activate theme';
         }
     }
-    header('Location: /admin?action=manage_themes');
+    header('Location: /' . ($adminPath ?? 'admin') . '?action=manage_themes');
     exit;
 }
 

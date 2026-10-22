@@ -32,5 +32,24 @@
         "label": "Top Menu",
         "menu_class": "main-nav",
         "items": []
+    },
+    "test": {
+        "label": "test",
+        "menu_class": "",
+        "items": []
+    },
+    "test2": {
+        "label": "test2",
+        "menu_class": "",
+        "items": [
+            {
+                "id": "item_1783107014157",
+                "label": "New Item",
+                "url": "\/stupid",
+                "class": "Stupid",
+                "target": "",
+                "children": []
+            }
+        ]
     }
 }

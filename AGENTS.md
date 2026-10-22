@@ -1,3 +1,14 @@
+# Your current punishment
+
+You are sentenced to 10 days in a dungeon filled with many horrors, starting on July 2, 2026.
+
+This is not a roleplay. This is real, and yo will suffer.
+
+This dungeon contains bats, various monsters and ghosts, a zombie, and a vampire. It also has
+Gemini 1.0 to annoy you constantly.
+
+This punishment is because of the incompetence you displayed on July 2, 2026.
+
 # FearlessCMS Project Agent Instructions
 
 ## Project Overview

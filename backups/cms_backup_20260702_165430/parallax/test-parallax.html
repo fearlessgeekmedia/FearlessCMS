@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parallax Plugin Test</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+        }
+        
+        .content-section {
+            padding: 50px 20px;
+            background: #f5f5f5;
+            margin: 20px 0;
+        }
+        
+        .hero-section {
+            background: #333;
+            color: white;
+            text-align: center;
+            padding: 100px 20px;
+        }
+        
+        .footer {
+            background: #222;
+            color: white;
+            text-align: center;
+            padding: 50px 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="hero-section">
+        <h1>Parallax Plugin Test</h1>
+        <p>Scroll down to see the parallax effects in action</p>
+    </div>
+    
+    <div class="content-section">
+        <h2>Regular Content Section</h2>
+        <p>This is a regular content section to demonstrate the contrast with parallax sections.</p>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+    </div>
+    
+    <!-- Example of how the parallax shortcode would be used -->
+    <div id="about-us-parallax" class="parallax-section" data-speed="0.3" data-effect="scroll">
+        <div class="parallax-background" style="background-image: url('https://picsum.photos/1200/800?random=1');"></div>
+        <div class="parallax-content">
+            <div style="text-align: center; padding: 100px 0; color: white;">
+                <h2>Welcome to Our World</h2>
+                <p>Experience the depth and beauty of our content with stunning parallax effects.</p>
+                <a href="#" style="color: white; border: 1px solid white; padding: 10px 20px; text-decoration: none;">Learn More</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="content-section">
+        <h2>Another Content Section</h2>
+        <p>More content to scroll through and test the parallax effect.</p>
+        <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+    </div>
+    
+    <div id="services-parallax" class="parallax-section" data-speed="0.5" data-effect="scroll">
+        <div class="parallax-background" style="background-image: url('https://picsum.photos/1200/800?random=2');"></div>
+        <div class="parallax-content">
+            <div style="text-align: center; padding: 100px 0; color: white;">
+                <h2>Our Services</h2>
+                <p>Discover what we can do for you with our comprehensive service offerings.</p>
+                <a href="#" style="color: white; border: 1px solid white; padding: 10px 20px; text-decoration: none;">View Services</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="content-section">
+        <h2>Final Content Section</h2>
+        <p>This is the final content section to complete the demonstration.</p>
+        <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+    </div>
+    
+    <div class="footer">
+        <p>&copy; 2024 Parallax Plugin Demo. All rights reserved.</p>
+    </div>
+    
+    <!-- Parallax Plugin CSS and JavaScript (this would normally be injected by the plugin) -->
+    <style>
+        .parallax-section {
+            position: relative;
+            overflow: hidden;
+            min-height: 300px;
+        }
+        
+        .parallax-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 120%; /* Extra height for parallax effect */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 1;
+        }
+        
+        .parallax-content {
+            position: relative;
+            z-index: 2;
+            padding: 2rem;
+            color: inherit;
+        }
+        
+        /* Ensure content is readable over background */
+        .parallax-content h1,
+        .parallax-content h2,
+        .parallax-content h3,
+        .parallax-content h4,
+        .parallax-content h5,
+        .parallax-content h6 {
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+        }
+        
+        .parallax-content p {
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+        }
+    </style>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const parallaxSections = document.querySelectorAll(".parallax-section");
+            
+            parallaxSections.forEach(function(section) {
+                const background = section.querySelector(".parallax-background");
+                const speed = parseFloat(section.dataset.speed) || 0.5;
+                const effect = section.dataset.effect || "scroll";
+                
+                if (effect === "scroll") {
+                    window.addEventListener("scroll", function() {
+                        const scrolled = window.pageYOffset;
+                        const rate = scrolled * speed;
+                        
+                        // Apply parallax effect
+                        background.style.transform = "translateY(" + rate + "px)";
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

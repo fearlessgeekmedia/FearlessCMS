@@ -1,0 +1,60 @@
+--- plugins/blog/blog.php.backup
++++ plugins/blog/blog.php
+@@ -260,7 +260,7 @@
+         // Add file manager script only if file management is allowed
+         if (isset($GLOBALS['cmsModeManager']) && $GLOBALS['cmsModeManager']->canManageFiles()) {
+             echo '<script>
+-            function openFileManager() {
++            function openFileUpload() {
+                 const input = document.createElement("input");
+                 input.type = "file";
+                 input.accept = "image/*";
+@@ -270,7 +270,7 @@
+                     if (file) {
+                         const formData = new FormData();
+                         formData.append("action", "upload_image");
+                         formData.append("image", file);
+-                        
++
+                         fetch("?action=upload_image", {
+                             method: "POST",
+                             body: formData
+@@ -280,7 +280,7 @@
+                             if (data.success) {
+                                 document.querySelector("input[name=\'featured_image\']").value = data.url;
+                                 // Update preview
+-                                const previewContainer = document.querySelector("input[name=\'featured_image\']").closest("div").nextElementSibling;
++                                const previewContainer = document.querySelector("input[name=\'featured_image\']").closest("div").nextElementSibling;
+                                 if (previewContainer) {
+                                     previewContainer.innerHTML = `<img src="${data.url}" alt="Featured image preview" class="max-w-xs h-auto">`;
+                                 } else {
+@@ -290,7 +290,7 @@
+                                     document.querySelector("input[name=\'featured_image\']").closest("div").after(newPreview);
+                                 }
+                             } else {
+-                                alert("Upload failed: " + (data.error || "Unknown error"));
++                                alert("Upload failed: " + (data.error || "Unknown error"));
+                             }
+                         })
+                         .catch(error => {
+@@ -300,7 +300,7 @@
+                 };
+             }
+             </script>';
+         }
+@@ -325,7 +325,7 @@
+                 echo '<input type="text" name="featured_image" value="' . htmlspecialchars($edit['featured_image'] ?? '') . '" class="border rounded px-2 py-1 flex-grow" placeholder="Image URL or path">';
+                 if (isset($GLOBALS['cmsModeManager']) && $GLOBALS['cmsModeManager']->canManageFiles()) {
+-                    echo '<button type="button" onclick="openFileManager()" class="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600">Select Image</button>';
++                    echo '<button type="button" onclick="openFileUpload()" class="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600">Upload Image</button>';
+                 }
+                 echo '</div>';
+                 if (!empty($edit['featured_image'])) {
+@@ -450,7 +450,7 @@
+             echo '<input type="text" name="featured_image" class="border rounded px-2 py-1 flex-grow" placeholder="Image URL or path">';
+             if (isset($GLOBALS['cmsModeManager']) && $GLOBALS['cmsModeManager']->canManageFiles()) {
+-                echo '<button type="button" onclick="openFileManager()" class="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600">Select Image</button>';
++                echo '<button type="button" onclick="openFileUpload()" class="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600">Upload Image</button>';
+             }
+             echo '</div>';
+             echo '</div>';

@@ -8,6 +8,11 @@
       "type": "image",
       "label": "Logo"
     },
+    "logoSize": {
+      "type": "text",
+      "label": "Logo Size (CSS)",
+      "default": "2rem"
+    },
     "herobanner": {
       "type": "image",
       "label": "Hero Banner"
@@ -21,7 +26,11 @@
       "type": "checkbox",
       "label": "Show Home Marketing Sections",
       "default": true
+    },
+    "showTitle": {
+      "type": "checkbox",
+      "label": "Show Site Title",
+      "default": true
     }
   }
 }
-

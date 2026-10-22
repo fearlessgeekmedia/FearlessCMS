@@ -12,15 +12,35 @@ rm -f serve-log.tmp
 
 # set default port or use ENV variable
 port=${PORT:-8000}
+public=false
+open=false
+hostname=""
 update_test=false
 restore_backup=false
 
 # Simple argument parsing
 while [[ "$#" -gt 0 ]]; do
     case $1 in
-        --port) port="$2"; shift ;;
+        --port|-p) port="$2"; shift ;;
+        --public) public=true ;;
+        --open) open=true ;;
+        --hostname) hostname="$2"; shift ;;
         --update-test) update_test=true ;;
         --restore-backup) restore_backup=true ;;
+        --help|-h)
+            echo "Usage: $0 [OPTIONS]"
+            echo ""
+            echo "Options:"
+            echo "  -p, --port PORT        Port number to serve on (default: 8000)"
+            echo "      --public           Bind to 0.0.0.0 instead of localhost (shows detected IP)"
+            echo "      --open             Run on port 80, no port number in URL (requires sudo or doas)"
+            echo "      --hostname HOST    Use a specific domain name in the URL (requires hosts file edit)"
+            echo "      --update-test      Enable update test mode"
+            echo "      --restore-backup   Restore the latest backup"
+            echo "  -h, --help             Show this help message"
+            exit 0
+            ;;
+        *) echo "Unknown option: $1"; exit 1 ;;
     esac
     shift
 done
@@ -44,13 +64,6 @@ if [ "$restore_backup" = true ]; then
     fi
 fi
 
-# check if port is in use
-if lsof -i:$port > /dev/null
-then
-    echo "Port $port is already in use"
-    exit
-fi
-
 # check if php is installed
 if ! command -v php &> /dev/null
 then
@@ -68,15 +81,77 @@ if [ ! -f "php-config/99-custom.ini" ]; then
     echo "Warning: Custom PHP configuration not found (php-config/99-custom.ini)."
     php_config=""
 else
-    php_config="-d include_path=. $(sed -E '/^\s*(;|$)/d' php-config/99-custom.ini | while IFS='=' read -r key val; do printf -- '-d %s=%s ' "$(echo "$key" | xargs)" "$(echo "$val" | xargs)"; done)"
+    php_config="-d include_path=$SCRIPT_DIR $(sed -E '/^\s*(;|$)/d' php-config/99-custom.ini | while IFS='=' read -r key val; do printf -- '-d %s=%s ' "$(echo "$key" | xargs)" "$(echo "$val" | xargs)"; done)"
     echo "Using custom PHP configuration from php-config/99-custom.ini"
 fi
 
-echo "Starting FearlessCMS server on http://localhost:$port..."
-php $php_config -S localhost:$port router.php > serve-log.tmp 2>&1 &
+if [ "$open" = true ]; then
+    port=80
+    if command -v sudo &> /dev/null; then
+        escalate_cmd="sudo"
+    elif command -v doas &> /dev/null; then
+        escalate_cmd="doas"
+    else
+        echo "Error: --open requires sudo or doas, but neither was found."
+        exit 1
+    fi
+fi
+
+# check if port is in use (after port is finalized)
+port_in_use=false
+if command -v lsof &> /dev/null; then
+    lsof -i:$port > /dev/null && port_in_use=true
+elif command -v ss &> /dev/null; then
+    ss -tulpn 2>/dev/null | grep -q ":$port " && port_in_use=true
+elif command -v fuser &> /dev/null; then
+    fuser $port/tcp &> /dev/null && port_in_use=true
+else
+    echo "Warning: Neither lsof, ss, nor fuser found. Skipping port-in-use check."
+fi
+
+if [ "$port_in_use" = true ]; then
+    echo "Port $port is already in use"
+    exit
+fi
+
+if [ "$public" = true ]; then
+    address="0.0.0.0"
+    if [ -n "$hostname" ]; then
+        display_address="$hostname"
+    else
+        display_address=$(ip -4 addr show scope global 2>/dev/null | awk '/inet /{split($2,a,"/"); print a[1]}' | head -n 1)
+        if [ -z "$display_address" ]; then
+            display_address=$(ip route get 1.1.1.1 2>/dev/null | awk '/src/{for(i=1;i<=NF;i++) if($i=="src") print $(i+1)}')
+        fi
+        if [ -z "$display_address" ]; then
+            display_address=$(ip addr show 2>/dev/null | awk '/inet /{split($2,a,"/"); print a[1]}' | grep -v '^127\.' | head -n 1)
+        fi
+        if [ -z "$display_address" ]; then
+            display_address="0.0.0.0"
+        fi
+    fi
+else
+    address="localhost"
+    display_address="localhost"
+fi
+
+if [ "$open" = true ]; then
+    echo "Starting FearlessCMS server on http://$display_address/ (using $escalate_cmd)"
+else
+    echo "Starting FearlessCMS server on http://$display_address:$port..."
+fi
+if [ "$open" = true ]; then
+    $escalate_cmd php $php_config -S $address:$port "$SCRIPT_DIR/router.php" > serve-log.tmp 2>&1 &
+else
+    php $php_config -S $address:$port "$SCRIPT_DIR/router.php" > serve-log.tmp 2>&1 &
+fi
 pid=$!
 
-echo "Server started with PID $pid"
+if [ "$open" = true ]; then
+    echo "Server started with PID $pid (running with $escalate_cmd)"
+else
+    echo "Server started with PID $pid"
+fi
 echo "To stop the server, run: kill $pid"
 echo "To view logs, run: tail -f serve-log.tmp"
 echo "🚀"

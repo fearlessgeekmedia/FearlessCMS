@@ -4,7 +4,7 @@
     <span class="dot dot-yellow"></span>
     <span class="dot dot-green"></span>
   </span>
-  <span class="terminal-titlebar-text">guest@{{siteName}}:~</span>
+  <span class="terminal-titlebar-text">{{#if themeOptions.showTitle}}guest@{{siteName}}:~{{/if}}</span>
   <span class="terminal-titlebar-spacer"></span>
 </div>
 

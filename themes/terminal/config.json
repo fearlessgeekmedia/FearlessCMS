@@ -9,6 +9,11 @@
       "label": "Accent Color",
       "default": "#00ff00"
     },
+    "logoSize": {
+      "type": "text",
+      "label": "Logo Size (CSS)",
+      "default": "2rem"
+    },
     "showScanlines": {
       "type": "checkbox",
       "label": "CRT Scanlines",
@@ -18,6 +23,11 @@
       "type": "checkbox",
       "label": "CRT Flicker Effect",
       "default": false
+    },
+    "showTitle": {
+      "type": "checkbox",
+      "label": "Show Site Title",
+      "default": true
     }
   }
 }

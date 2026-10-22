@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+# FearlessCMS Development Server Launcher
+# This script changes to the FearlessCMS directory and starts the development server
+
+# Change to the FearlessCMS directory
+cd ~/devel/FearlessCMS || {
+    echo "Error: Could not change to FearlessCMS directory: ~/devel/FearlessCMS"
+    echo "Please make sure the directory exists and you have access to it."
+    exit 1
+}
+
+# Check if serve.sh exists and is executable
+if [ ! -x "./serve.sh" ]; then
+    echo "Error: serve.sh not found or not executable in ~/devel/FearlessCMS"
+    echo "Falling back to direct PHP server command..."
+    php -S localhost:8000 router.php
+else
+    echo "Starting FearlessCMS development server..."
+    ./serve.sh
+fi 

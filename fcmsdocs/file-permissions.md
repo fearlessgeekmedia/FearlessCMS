@@ -79,6 +79,17 @@ sudo chmod 644 /path/to/fearlesscms/debug.log
 - `uploads/` - 755 (directory, owned by web server user)
 - `admin/uploads/` - 755 (directory, owned by web server user)
 
+### Blog Plugin
+- `content/blog_posts.json` - 664 (file, owned by web server user or shared group)
+- If web server user is `wwwrun` or similar, create a shared group and add the web user to it:
+  ```bash
+  sudo groupadd -f fcms
+  sudo usermod -aG fcms wwwrun
+  sudo chown wwwrun:fcms /path/to/fearlesscms/content/blog_posts.json
+  sudo chmod 664 /path/to/fearlesscms/content/blog_posts.json
+  ```
+- This allows the web server to write new posts while keeping the file from being world-writable.
+
 ### Debug and Log Files
 - `debug.log` - 644 (owned by web server user)
 - `error.log` - 644 (owned by web server user)
@@ -129,6 +140,13 @@ sudo chown $WEB_USER:$WEB_USER /path/to/fearlesscms/sitemap.xml
 sudo chown $WEB_USER:$WEB_USER /path/to/fearlesscms/robots.txt
 sudo chown $WEB_USER:$WEB_USER /path/to/fearlesscms/debug.log
 
+# Blog plugin: use shared group if web server user differs from your login user
+# Example for wwwrun on openSUSE:
+#   sudo groupadd -f fcms
+#   sudo usermod -aG fcms wwwrun
+#   sudo chown wwwrun:fcms /path/to/fearlesscms/content/blog_posts.json
+#   sudo chmod 664 /path/to/fearlesscms/content/blog_posts.json
+
 # Set proper permissions
 sudo chmod 755 /path/to/fearlesscms/sessions/
 sudo chmod 755 /path/to/fearlesscms/content/forms/
@@ -153,6 +171,18 @@ find /path/to/fearlesscms -type f -exec chmod 666 {} \;
 ```
 
 ## Common Permission Errors and Solutions
+
+### Blog Save/Delete Failures
+- **Error**: `Failed to save blog post. Please check file permissions and try again.` or `Failed to delete blog post. Please check file permissions and try again.`
+- **Cause**: `content/blog_posts.json` is not writable by the PHP-FPM/web server user.
+- **Solution**: Use a shared group so the web server user can write without making the file world-writable:
+  ```bash
+  sudo groupadd -f fcms
+  sudo usermod -aG fcms wwwrun
+  sudo chown wwwrun:fcms /path/to/fearlesscms/content/blog_posts.json
+  sudo chmod 664 /path/to/fearlesscms/content/blog_posts.json
+  ```
+  Replace `wwwrun` with your actual PHP-FPM user. Avoid `777`/`667` unless absolutely necessary for debugging.
 
 ### Session Errors
 - **Error**: `session_start(): open(...) failed: Permission denied`

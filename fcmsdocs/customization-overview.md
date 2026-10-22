@@ -177,6 +177,8 @@ Customize how content is organized and displayed:
 
 **Content Fields:**
 - **Title**: Page/post title
+- **Slug**: URL-friendly filename (auto-generated from title if left blank)
+- **Template**: Layout template used to render the page
 - **Content**: Main content (HTML editing in CMS, Markdown support for externally-created content)
 - **Meta**: Custom metadata
 - **Tags**: Content categorization

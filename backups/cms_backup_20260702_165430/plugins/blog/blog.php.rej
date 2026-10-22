@@ -1,0 +1,20 @@
+--- plugins/blog/blog.php.backup
++++ plugins/blog/blog.php
+@@ -260,7 +260,7 @@
+         // Add file manager script only if file management is allowed
+         if (isset($GLOBALS['cmsModeManager']) && $GLOBALS['cmsModeManager']->canManageFiles()) {
+             echo '<script>
+-            function openFileManager() {
++            function openFileUpload() {
+                 const input = document.createElement("input");
+                 input.type = "file";
+                 input.accept = "image/*";
+@@ -270,7 +270,7 @@
+                     if (file) {
+                         const formData = new FormData();
+                         formData.append("action", "upload_image");
+                         formData.append("image", file);
+-                        
++
+                         fetch("?action=upload_image", {
+                             method: "POST",

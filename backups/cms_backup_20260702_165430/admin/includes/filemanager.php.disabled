@@ -1,0 +1,13 @@
+<?php
+// File manager functions - minimal version for debugging
+
+function fcms_render_file_manager() {
+    error_log("DEBUG: fcms_render_file_manager() called");
+    return '<div class="p-4"><h2>File Manager</h2><p>File manager is working but simplified for debugging.</p></div>';
+}
+
+function fcms_render_file_manager_internal() {
+    // This function is not used in the minimal version
+    return '';
+}
+?> 

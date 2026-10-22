@@ -4,6 +4,88 @@
  * Handles page/content deletion and bulk operations
  */
 
+// Handle set home page
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'set_home_page') {
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
+
+    if (!isLoggedIn()) {
+        $_SESSION['error'] = 'You must be logged in to set the home page';
+    } elseif (!validate_csrf_token()) {
+        $_SESSION['error'] = 'Invalid security token. Please refresh the page and try again.';
+    } else {
+        $path = trim($_POST['path'] ?? '');
+        if (empty($path) || !preg_match('/^[a-zA-Z0-9_\/-]+$/', $path)) {
+            $_SESSION['error'] = 'Invalid page path';
+        } else {
+            $contentDir = CONTENT_DIR;
+            $fileExists = false;
+            foreach (['.md', '.html'] as $ext) {
+                if (file_exists($contentDir . '/' . $path . $ext)) {
+                    $fileExists = true;
+                    break;
+                }
+            }
+
+            if (!$fileExists) {
+                $_SESSION['error'] = 'Page not found';
+            } else {
+                $configFile = CONFIG_DIR . '/config.json';
+                $config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
+                $config['home_page'] = $path;
+                if (file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT))) {
+                    $_SESSION['success'] = 'Home page updated successfully';
+                } else {
+                    $_SESSION['error'] = 'Failed to update home page';
+                }
+            }
+        }
+    }
+
+    $redirectUrl = $_SERVER['HTTP_REFERER'] ?? 'index.php?action=manage_content';
+    if (headers_sent()) {
+        echo '<script>window.location.href = "' . htmlspecialchars($redirectUrl) . '";</script>';
+        exit;
+    }
+    header('Location: ' . $redirectUrl);
+    exit;
+}
+
+// Handle unset home page
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'unset_home_page') {
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
+
+    if (!isLoggedIn()) {
+        $_SESSION['error'] = 'You must be logged in to unset the home page';
+    } elseif (!validate_csrf_token()) {
+        $_SESSION['error'] = 'Invalid security token. Please refresh the page and try again.';
+    } else {
+        $configFile = CONFIG_DIR . '/config.json';
+        $config = file_exists($configFile) ? json_decode(file_get_contents($configFile), true) : [];
+        if (isset($config['home_page'])) {
+            unset($config['home_page']);
+            if (file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT))) {
+                $_SESSION['success'] = 'Home page unset successfully';
+            } else {
+                $_SESSION['error'] = 'Failed to unset home page';
+            }
+        } else {
+            $_SESSION['success'] = 'Home page was already unset';
+        }
+    }
+
+    $redirectUrl = $_SERVER['HTTP_REFERER'] ?? 'index.php?action=manage_content';
+    if (headers_sent()) {
+        echo '<script>window.location.href = "' . htmlspecialchars($redirectUrl) . '";</script>';
+        exit;
+    }
+    header('Location: ' . $redirectUrl);
+    exit;
+}
+
 // Handle content deletion
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && in_array($_POST['action'], ['delete_page', 'delete_content'])) {
     error_log("DEBUG: Content deletion handler triggered!");
@@ -81,6 +163,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && in_array
                         }
                     }
 
+                    // If deleted page was the home page, clear the setting
+                    $configFile = CONFIG_DIR . '/config.json';
+                    if (file_exists($configFile)) {
+                        $config = json_decode(file_get_contents($configFile), true);
+                        if (!empty($config['home_page']) && $config['home_page'] === $fileNameBase) {
+                            unset($config['home_page']);
+                            file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT));
+                        }
+                    }
+
                     // Log security event
                     error_log("SECURITY: Content file '{$fileName}' deleted by '{$_SESSION['username']}' from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
                 } else {
@@ -125,6 +217,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $deletedCount = 0;
             $errorCount = 0;
             $errors = [];
+            $deletedHomePagePaths = [];
             
             foreach ($itemPaths as $itemPath) {
                 $itemPath = trim($itemPath);
@@ -193,6 +286,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
                 if (unlink($itemFilePath)) {
                     $deletedCount++;
+                    $deletedHomePagePaths[] = $itemPathBase;
                     error_log("SECURITY: Content file '{$itemPath}' deleted by '{$_SESSION['username']}'");
                 } else {
                     $errors[] = "Failed to delete: $itemPath";
@@ -205,6 +299,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             if (is_dir($cacheDir)) {
                 foreach (glob($cacheDir . '/*.html') as $cacheFile) {
                     @unlink($cacheFile);
+                }
+            }
+
+            // If any deleted page was the home page, clear the setting
+            if (!empty($deletedHomePagePaths)) {
+                $configFile = CONFIG_DIR . '/config.json';
+                if (file_exists($configFile)) {
+                    $config = json_decode(file_get_contents($configFile), true);
+                    if (!empty($config['home_page']) && in_array($config['home_page'], $deletedHomePagePaths)) {
+                        unset($config['home_page']);
+                        file_put_contents($configFile, json_encode($config, JSON_PRETTY_PRINT));
+                    }
                 }
             }
             
